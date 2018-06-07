@@ -1,0 +1,49 @@
+* Changelog
+All notable changes to this project will be documented in this file.
+The format is based on [[http://keepachangelog.com/en/1.0.0/][Keep a Changelog]] and this project adheres to [[http://semver.org/spec/v2.0.0.html][Semantic Versioning]].
+
+** [[Unreleased]]
+*** Added
+- Features to add which requested by user.
+
+*** Fixed
+- Bugs to fix which reported by user.
+
+*** Changed
+- Changes to made according to requirements.
+
+*** Deprecated
+- Features replaced by better ones, paired with Added.
+
+*** Removed
+- 
+
+
+** [[1.0.0]] - 2017-06-20
+*** Added
+- Added for new features.
+
+*** Fixed
+- Fixed for any bug fixes.
+
+*** Changed
+- Changed for changes in existing functionality.
+
+*** Deprecated
+- Deprecated for soon-to-be removed features.
+
+*** Removed
+- Removed for now removed features.
+
+*** Security
+- Security in case of vulnerabilities.
+
+** [[0.0.1]] - 2015-02-17
+*** Changed
+- Update year to match in every README example.
+- Reluctantly stop making fun of Brits only, since most of the world
+  writes dates in a strange way.
+
+<<Unreleased>>: https://github.com/olivierlacan/keep-a-changelog/compare/v1.0.0...HEAD
+<<1.0.0>>: https://github.com/olivierlacan/keep-a-changelog/compare/v0.0.1...v1.0.0
+<<0.0.1>>: https://github.com/olivierlacan/keep-a-changelog/compare/v0.0.1
