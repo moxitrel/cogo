@@ -9,7 +9,7 @@ cd lib           #切换至lib
 git clone   https://github.com/ThrowTheSwitch/Unity.git
 
 # macro lib: p99, http://p99.gforge.inria.fr
-git clone   https://scm.gforge.inria.fr/anonscm/git/p99/p99.git
+#git clone   https://scm.gforge.inria.fr/anonscm/git/p99/p99.git
 
 # implement c11 threads
-git clone   https://github.com/tinycthread/tinycthread.git
+#git clone   https://github.com/tinycthread/tinycthread.git

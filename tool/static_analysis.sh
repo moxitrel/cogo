@@ -1,11 +1,17 @@
-#!/usr/bin/env sh
+#!/bin/sh
 #
 # cppcheck
 #
-clang
- -fsyntax-only #preprocess, parse and type checking
- -Wpadded      #warnings about structure padding
 
+STD="c++17"
 
+# clang [options] filename a|
+cmd=" clang "
+cmd="$cmd ${STD:+ -std=$STD} "   # language standard
+cmd=" $cmd -fsyntax-only "      # preprocess, parse and type checking
 
-gcc   -Wall         #enable all warnings
+#cmd=" $cmd -Wpadded"            # warnings about structure padding
+
+$cmd $*                         # 添加命令行额外的选项参数
+
+#gcc   -Wall         #enable all warnings

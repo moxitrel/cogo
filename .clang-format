@@ -1,0 +1,519 @@
+---
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+Language:        Cpp
+# BasedOnStyle:  LLVM
+
+# public、private 等的偏移, -IndentWidth
+AccessModifierOffset: -2
+
+# Align      : someLongFunction(argument1,
+#                               argument2);
+#
+# DontAlign  : someLongFunction(argument1,
+#                  argument2);
+#
+# AlwaysBreak: someLongFunction(
+#                  argument1, argument2);
+#
+AlignAfterOpenBracket: Align
+
+# true:
+# int aaaa        = 12;
+# float b         = 23;
+# std::string ccc = 23;
+AlignConsecutiveAssignments: true
+
+# true:
+# int         aaaa = 12;
+# float       b = 23;
+# std::string ccc = 23;
+AlignConsecutiveDeclarations: true
+
+# DontAlign: #define A \
+#             int aaaa; \
+#             int b; \
+#             int dddddddddd;
+#
+# Left     : #define A  \
+#             int aaaa; \
+#             int b;    \
+#             int dddddddddd;
+#
+# Right    : #define A                                                        \
+#             int aaaa;                                                       \
+#             int b;                                                          \
+#             int dddddddddd;
+AlignEscapedNewlines: Left
+
+# true: int aaa = bbbbbbbbbbbbbbb +
+#                 ccccccccccccccc;
+AlignOperands:   true
+
+# true:                                   false:
+# int a;     // My comment a      vs.     int a; // My comment a
+# int b = 2; // comment  b                int b = 2; // comment about b
+AlignTrailingComments: true
+
+# true:
+# void myFunction(
+#   int a, int b, int c, int d, int e);
+#
+# false:
+# void myFunction(int a,
+#                 int b,
+#                 int c,
+#                 int d,
+#                 int e);
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# true: if (a) { return; }
+AllowShortBlocksOnASingleLine: false
+
+# true:                                   false:
+# switch (a) {                    vs.     switch (a) {
+# case 1: x = 1; break;                   case 1:
+# case 2: return;                           x = 1;
+# }                                         break;
+#                                         case 2:
+#                                           return;
+#                                         }
+AllowShortCaseLabelsOnASingleLine: true
+
+# None      : Never merge functions
+#
+# Empty     : Only empty functions.
+#             void f() {}
+#
+# InlineOnly: Only functions defined inside a class
+#             class Foo {
+#               void f() { foo(); }
+#             };
+#
+# Inline    : Only functions defined inside a class. Implies “Empty”.
+#             class Foo {
+#               void f() { foo(); }
+#             };
+#             void f() {}
+#
+# All       : All functions fitting on a single line
+AllowShortFunctionsOnASingleLine: Inline
+
+# true: if (a) return;
+AllowShortIfStatementsOnASingleLine: false
+
+# true: while (true) continue;
+AllowShortLoopsOnASingleLine: false
+
+# deprecated
+AlwaysBreakAfterDefinitionReturnType: None
+
+# None:
+#   class A {
+#     int f() { return 0; };
+#   };
+#   int f();
+#   int f() { return 1; }
+#
+# All:
+#   class A {
+#     int
+#     f() {
+#       return 0;
+#     };
+#   };
+#
+#   int
+#   f();
+#
+#   int
+#   f() {
+#     return 1;
+#   }
+#
+# TopLevel:
+#   class A {
+#     int f() { return 0; };
+#   };
+#
+#   int
+#   f();
+#
+#   int
+#   f() {
+#     return 1;
+#   }
+#
+# AllDefinitions:
+#   class A {
+#     int
+#     f() {
+#       return 0;
+#     };
+#
+#   };
+#
+#   int f();
+#
+#   int
+#   f() {
+#     return 1;
+#   }
+#
+# TopLevelDefinitions:
+#   class A {
+#     int f() { return 0; };
+#   };
+#
+#   int f();
+#
+#   int
+#   f() {
+#     return 1;
+#   }
+AlwaysBreakAfterReturnType: None
+
+# true:                                  false:
+# aaaa =                         vs.     aaaa = "bbbb"
+#     "bbbb"                                    "cccc";
+#     "cccc";
+AlwaysBreakBeforeMultilineStrings: false
+
+# No:
+#   template <typename T> T foo() {
+#   }
+#
+#   template <typename T> T foo(int aaaaaaaaaaaaaaaaaaaaa,
+#                               int bbbbbbbbbbbbbbbbbbbbb) {
+#   }
+#
+# MultiLine:
+#   template <typename T> T foo() {
+#   }
+#
+#   template <typename T>
+#   T foo(int aaaaaaaaaaaaaaaaaaaaa,
+#         int bbbbbbbbbbbbbbbbbbbbb) {
+#   }
+#
+# Yes:
+#   template <typename T>
+#   T foo() {
+#   }
+#
+#   template <typename T>
+#   T foo(int aaaaaaaaaaaaaaaaaaaaa,
+#         int bbbbbbbbbbbbbbbbbbbbb) {
+#   }
+AlwaysBreakTemplateDeclarations: true
+
+# true:
+#  void f() {
+#  f(aaaaaaaaaaaaaaaaaaaa, aaaaaaaaaaaaaaaaaaaa,
+#    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa);
+#  }
+#
+# false:
+#  void f() {
+#  f(aaaaaaaaaaaaaaaaaaaa,
+#    aaaaaaaaaaaaaaaaaaaa,
+#    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa);
+#  }
+BinPackArguments: false
+
+# true:
+#  void f(int aaaaaaaaaaaaaaaaaaaa, int aaaaaaaaaaaaaaaaaaaa,
+#         int aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa) {}
+#
+# false:
+#  void f(int aaaaaaaaaaaaaaaaaaaa,
+#         int aaaaaaaaaaaaaaaaaaaa,
+#         int aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa) {}
+BinPackParameters: false
+
+
+BraceWrapping:
+  # true:
+  #  class foo {};
+  #
+  # false:
+  #  class foo
+  #  {};
+  AfterClass:      false
+
+  # true:
+  #  if (foo())
+  #  {
+  #    ;
+  #  } else
+  #  {
+  #    ;
+  #  }
+  #  for (int i = 0; i < 10; ++i)
+  #  {}
+  #
+  # false:
+  #  if (foo()) {
+  #    ;
+  #  } else {
+  #    ;
+  #  }
+  #  for (int i = 0; i < 10; ++i) {
+  #    ;
+  #  }
+  AfterControlStatement: false
+
+  # true:
+  #  enum X : int
+  #  {
+  #    B
+  #  };
+  #
+  # false:
+  #  enum X : int { B };
+  AfterEnum:       false
+
+  # true:
+  #  void foo()
+  #  {
+  #    bar();
+  #    bar2();
+  #  }
+  #
+  # false:
+  #  void foo() {
+  #    bar();
+  #    bar2();
+  #  }
+  AfterFunction:   false
+
+  # true:
+  #  namespace
+  #  {
+  #    int foo();
+  #    int bar();
+  #  }
+  #
+  # false:
+  #  namespace {
+  #    int foo();
+  #    int bar();
+  #  }
+  AfterNamespace:  false
+
+  AfterObjCDeclaration: false
+
+  # true:
+  #  struct foo
+  #  {
+  #    int x;
+  #  };
+  #
+  # false:
+  #  struct foo {
+  #    int x;
+  #  };
+  AfterStruct:     false
+
+  # true:
+  #  union foo
+  #  {
+  #    int x;
+  #  }
+  #
+  # false:
+  #  union foo {
+  #    int x;
+  #  }
+  AfterUnion:      false
+
+  # true:
+  #  extern "C"
+  #  {
+  #    int foo();
+  #  }
+  #
+  # false:
+  #  extern "C" {
+  #    int foo();
+  #  }
+  AfterExternBlock: false
+
+  # true:
+  #  try {
+  #    foo();
+  #  }
+  #  catch () {
+  #    ;
+  #  }
+  #
+  # false:
+  #  try {
+  #    foo();
+  #  } catch () {
+  #    ;
+  #  }
+  BeforeCatch:     false
+
+  # true:
+  #  if (foo()) {
+  #    ;
+  #  }
+  #  else {
+  #    ;
+  #  }
+  #
+  # false:
+  #  if (foo()) {
+  #    ;
+  #  } else {
+  #    ;
+  #  }
+  BeforeElse:      false
+
+  IndentBraces:    false
+
+  # true: require (AfterFunction:true) (AllowShortFunctionsOnASingleLine:None)
+  #
+  # false:           true:
+  #  int f()   vs.    inf f()
+  #  {}               {
+  #                   }
+  SplitEmptyFunction: true
+
+  # true: require (AfterClass:true)
+  #
+  # false:            true:
+  #  class Foo   vs.   class Foo
+  #  {}                {
+  #                    }
+  SplitEmptyRecord: true
+
+  # true: require (AfterNamespace:true)
+  #
+  # false:                true:
+  #  namespace Foo   vs.   namespace Foo
+  #  {}                    {
+  #                        }
+  SplitEmptyNamespace: true
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
+BreakBeforeInheritanceComma: false
+
+# true:
+#  veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongDescription
+#   ? firstValue
+#   : SecondValueVeryVeryVeryVeryLong;
+#
+# false:
+#  veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongDescription ?
+#   firstValue :
+#   SecondValueVeryVeryVeryVeryLong;
+BreakBeforeTernaryOperators: true
+
+BreakConstructorInitializersBeforeComma: false
+
+# BeforeColon:
+#  Constructor()
+#   : initializer1(),
+#     initializer2()
+#
+# BeforeComma:
+#  Constructor()
+#   : initializer1()
+#   , initializer2()
+#
+# AfterColon:
+#  Constructor() :
+#   initializer1(),
+#   initializer2()
+BreakConstructorInitializers: BeforeComma
+
+# true:                                  false:
+#  @Partial                       vs.     @Partial @Mock DataLoad loader;
+#  @Mock
+#  DataLoad loader;
+BreakAfterJavaFieldAnnotations: true
+
+BreakStringLiterals: true
+
+# 0: no limit, respect the input’s line breaking decisions within statements
+ColumnLimit: 80
+
+
+CommentPragmas:  '^ IWYU pragma:'
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+
+# true:                                    false:
+#  vector<int> x{1, 2, 3, 4};       vs.     vector<int> x{ 1, 2, 3, 4 };
+#  vector<T>   x{{}, {}, {}, {}};           vector<T>   x{ {}, {}, {}, {} };
+#  f(MyMap[{composite, key}]);              f(MyMap[{ composite, key }]);
+#  new int[3]{1, 2, 3};                     new int[3]{ 1, 2, 3 };
+Cpp11BracedListStyle: true
+
+
+DerivePointerAlignment: false
+DisableFormat:   false
+ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: true
+ForEachMacros:   
+  - foreach
+  - Q_FOREACH
+  - BOOST_FOREACH
+IncludeBlocks:   Preserve
+IncludeCategories: 
+  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
+    Priority:        2
+  - Regex:           '^(<|"(gtest|gmock|isl|json)/)'
+    Priority:        3
+  - Regex:           '.*'
+    Priority:        1
+IncludeIsMainRegex: '(Test)?$'
+IndentCaseLabels: false
+IndentPPDirectives: None
+IndentWidth:     2
+IndentWrappedFunctionNames: false
+JavaScriptQuotes: Leave
+JavaScriptWrapImports: true
+KeepEmptyLinesAtTheStartOfBlocks: true
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+ObjCBinPackProtocolList: Auto
+ObjCBlockIndentWidth: 2
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: true
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
+PointerAlignment: Right
+ReflowComments:  true
+SortIncludes:    true
+SortUsingDeclarations: true
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles:  false
+SpacesInContainerLiterals: true
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard:        Cpp11
+TabWidth:        8
+UseTab:          Never
+...
+

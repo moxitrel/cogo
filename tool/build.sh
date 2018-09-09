@@ -32,8 +32,12 @@ clang [options]  <file> …
   -Os        #like -O2, reduce code size
   -Oz        #like -Os, reduce code size further
   -Ofast     #further than -O3, may violate language standard
-  -finline-hint-functions #Inline functions marked inline
-  -finline-functions      #Inline suitable functions
+
+  -f[no-]exceptions         # disable exceptions
+  -f[no-]rtti               # disable RTTI
+
+  -finline-hint-functions   #Inline functions marked inline
+  -finline-functions        #Inline suitable functions
   -fno-inline-functions
 
 pkg-config [opts] <lib> | <path-to-pc>  #PKG_CONFIG_PATH

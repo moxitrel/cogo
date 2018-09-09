@@ -17,21 +17,28 @@ include:
 # If not defined, default to: build, test, deploy
 stages:
   - build
-  - test      #. default stage if not defined in job
+  - test      # default stage if not defined in job
   - deploy
+
+# for all jobs 
+image: <docker image>   # the container where to run the job, default using Docker Hub
+  name: <docker image>  #
+  entrypoint: ["", ...] # --entrypoint
+services:               # docker image work assist <image>, for network accessible
+  - <docker image>      # container name: user/image -> user-image | user__image
+  - name:       <docker image>
+    entrypoint: <...>
+    command:    <...>
+    alias:      <...>
+  - <...>
 
 # env, can be referenced in script
 variables:
   <var>: <val>
 
-  GIT_STRATEGY: clone   # git clone for each job
-              | fetch   # git clean to undo any changes made by the last job
-              | none    # nop, ** repo is certain to be out of date **, e.g. operate cache, artifacts
-  GIT_CHECKOUT: true    # when GIT_STRATEGY: clone | fetch, default true
-
   GIT_SUBMODULE_STRATEGY: <...>
 
-  CI_PROJECT_DIR: /builds   # set project root, default cloned into "/builds/<user>/<repo>"
+  CI_PROJECT_DIR: /builds         # set project root, default cloned into "/builds/<user>/<repo>"
 
   GET_SOURCES_ATTEMPTS: 1         # Number to fetch    sources  , default 1
   ARTIFACT_DOWNLOAD_ATTEMPTS: 1   # Number to download artifacts, defualt 1
@@ -40,6 +47,9 @@ variables:
 # run before all jobs, after the restoration of artifacts
 # before_script and job script run in a single context/container
 before_script:
+  - 'apt update && apt install -y --no-install-recommends <pkg>'  # for gitlab.com shared runner
+  - "./depend.sh"                                                 # install dependency
+
   - <shell cmd>
 
 # run separately after each job, * even job failed *.
@@ -61,12 +71,25 @@ cache:
 <unique-job-name>:
   stage: test     # default: test stage
 
+  tags:                   # use Runner has these tags
+    - <runner tag>
+  image: <docker image>   # the container where to run the job, default using Docker Hub
+    name: <docker image>  #
+    entrypoint: ["", ...] # --entrypoint
+  services:               # docker image work assist <image>, for network accessible
+    - <docker image>      # container name: user/image -> user-image | user__image
+    - name:       <docker image>
+      entrypoint: <...>
+      command:    <...>
+      alias:      <...>
+    - <...>
+
   variables:      # Override global vars
     <var>: <val>
+
   before_script:  # override global before_script
     - <shell cmd>
   script:         #*required, need to quote :, {, }, [, ], ,, &, *, #, ?, |, -, <, >, =, !, %, @, `
-    - "apt update && apt install -y --no-install-recommends <pkg>"
     - <shell cmd>
   after_script:   # override global after_script
     - <shell cmd>
@@ -105,25 +128,12 @@ cache:
   dependencies:       # Include artifacts from previous jobs (default).
     []                # Not include artifacts from previous jobs.
     - <job>
+
   environment: [name]     # Hint this job actually deploys to an environment.
     name: <deploy-name>   # <deploy-name> can contains: letters | digits | - | _ | $ | { | } | spaces | /
     url : <https://...>   #
     on_stop: <job>        # run <job> when this job is successfully finished
     action : stop         # used with on_stop
-
-  tags:                   # use Runner has these tags
-    - <runner tag>
-  image: [docker image]   # the container where to run the job, default using Docker Hub
-    name: <docker image>  #
-    entrypoint: ["", ...] # --entrypoint
-  services:               # work with image, network accessible
-    - <docker image>      # container name: user/image -> user-image | user__image
-
-    - name:       <docker image>
-      entrypoint: <...>
-      command:    <...>
-      alias:      <...>
-    - <...>
 
   cache:                  # file and dirs should be cached between jobs. only paths within the project
     key: <id>
