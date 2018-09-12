@@ -33,13 +33,9 @@ void Stack_Destroy(Stack **o)
 {
     assert(o);
 
-    if (*o) {
-        while ((*o)->size > 0) {
-            Stack_Pop(*o);
-        }
-        Stack_Gc(*o);
-        DELETE(*o);
-    }
+    (*o)->size = 0;
+    Stack_Gc(*o);
+    DELETE(*o);
 
     return;
 }
