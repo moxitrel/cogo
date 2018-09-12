@@ -13,9 +13,9 @@
 //
 // alignas(N|T) T x: _Alignas
 // alignof(T)      : _Alignof
+#include <stdalign.h>
 #include <stdbool.h>
 #include <stdnoreturn.h>
-#include <stdalign.h>
 
 // int, size_t, intptr_t, intmax_t
 //
@@ -25,13 +25,16 @@
 // int64_t  uint64_t  int_fast64_t uint_fast64_t
 // intptr_t uintptr_t
 // intmax_t uintmax_t
-typedef unsigned int uint;  // nat: natural number
+typedef unsigned int uint; // nat: natural number
 #include <stdint.h>
 
 // NULL
 // offsetof(type, member-designator)
 #include <stddef.h>
 
+// CHAR_BIT
+//  INT_MAX, INT_MIN
+// UINT_MAX
 #include <limits.h>
 
 // NDEBUG
@@ -42,13 +45,13 @@ typedef unsigned int uint;  // nat: natural number
 //
 // EDOM  : Mathematics argument out of domain of function
 // ERANGE: Result too large
-// EILSEQ: Illegal byte sequence, a byte sequence does not form a valid wide-character code
+// EILSEQ: Illegal byte sequence, a byte sequence does not form a valid
+// wide-character code
 //
 // POSIX:
 //   EINVAL: Invalid argument
 //   ENOMEM: Not enough space
 #include <errno.h>
-
 #include <stdarg.h>
 
-#endif  //NSTD_TYPE_H
+#endif // NSTD_TYPE_H

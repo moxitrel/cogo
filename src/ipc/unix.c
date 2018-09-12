@@ -1,10 +1,9 @@
 #include "unix.h"
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/socket.h>
 #include "../memory.h"
-
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 // path: truncated silently if too long
 UnixIpcAddr UnixIpcAddr_New(const char *path)
@@ -38,7 +37,7 @@ UnixIpc UnixIpc_New(const char *localPath, const char *remotePath)
 
     UnixIpcAddr v_local = UnixIpcAddr_New(localPath);
     if (v_local) {
-        (void) remove(v_local->sun_path);    //delete if exists
+        (void)remove(v_local->sun_path); // delete if exists
         int err = bind(v_socket, (struct sockaddr *)v_local, sizeof *v_local);
         if (err) {
             goto ERROR_BIND;
@@ -47,16 +46,16 @@ UnixIpc UnixIpc_New(const char *localPath, const char *remotePath)
 
     UnixIpcAddr v_remote = UnixIpcAddr_New(remotePath);
 
-    v = NEW(v);
+    v         = NEW(v);
     v->socket = v_socket;
-    v->local = v_local;
+    v->local  = v_local;
     v->remote = v_remote;
 
 FINALLY:
     return v;
 ERROR_BIND:
     UnixIpcAddr_Gc(&v_local);
-    (void) close(v_socket);
+    (void)close(v_socket);
 ERROR_SOCKET:
     goto FINALLY;
 }
@@ -70,7 +69,7 @@ int UnixIpc_Gc(UnixIpc *o)
 
     int err = close((*o)->socket);
     if ((*o)->local != NULL) {
-        (void) remove((*o)->local->sun_path);
+        (void)remove((*o)->local->sun_path);
     }
     UnixIpcAddr_Gc(&(*o)->local);
     UnixIpcAddr_Gc(&(*o)->remote);
@@ -103,11 +102,11 @@ int UnixIpc_Write(UnixIpc o, UnixIpcAddr remote, size_t bufferSize, const char b
     assert(remote || o->remote);
     assert(buffer);
 
-    remote = remote ? remote :
-             o->remote;
+    remote = remote ? remote : o->remote;
 
     for (;;) {
-        ssize_t n = sendto(o->socket, buffer, bufferSize, 0, (struct sockaddr *)remote, sizeof *remote);
+        ssize_t n
+            = sendto(o->socket, buffer, bufferSize, 0, (struct sockaddr *)remote, sizeof *remote);
         assert(n < bufferSize);
         if (n < 0) {
             return errno;
@@ -130,8 +129,7 @@ int UnixIpc_With(const char *localPath, const char *remotePath, int callback(Uni
     }
 
     int err_callback = callback(o);
-    int err_gc   = UnixIpc_Gc(&o);
+    int err_gc       = UnixIpc_Gc(&o);
 
-    return err_callback ? err_callback :
-           err_gc;
+    return err_callback ? err_callback : err_gc;
 }

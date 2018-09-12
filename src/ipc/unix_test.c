@@ -2,9 +2,9 @@
 // Created by m2 on 18/1/22.
 //
 
+#include "../memory.h"
 #include "../test/unity/unity.h"
 #include "unix.h"
-#include "../memory.h"
 #include <stdio.h>
 
 void test_UnixIpcAddr_path_null(void);
@@ -25,8 +25,6 @@ int main(void)
 
     return UNITY_END();
 }
-
-
 
 void test_UnixIpcAddr_path_null(void)
 {
