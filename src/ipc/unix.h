@@ -5,21 +5,23 @@
 #ifndef NSTD_IPC_UNIX_H
 #define NSTD_IPC_UNIX_H
 
-#include "../type.h"
 #include "../memory.h"
+#include "../type.h"
 #include <sys/un.h>
 
-typedef struct UnixIpc     *UnixIpc;
+typedef struct UnixIpc *    UnixIpc;
 typedef struct sockaddr_un *UnixIpcAddr;
 typedef int (*UnixIpcCallback)(UnixIpc);
 
 UnixIpcAddr UnixIpcAddr_New(const char *);
-void UnixIpcAddr_Gc(UnixIpcAddr *);
+void        UnixIpcAddr_Gc(UnixIpcAddr *);
 
-// UnixIpc_New: create a new socket at localPath, and connected to the server at remotePath.
+// UnixIpc_New: create a new socket at localPath, and connected to the server at
+// remotePath.
 //
 // localPath: socket file created by self.
-//   NULL: without creating the socket at localPath. (act as a client can only sending)
+//   NULL: without creating the socket at localPath. (act as a client can only
+//   sending)
 // remotePath: socket file path will connect to.
 //   NULL: without connecting to the server at remotePath. (act as a server)
 // return:
@@ -56,7 +58,7 @@ int UnixIpc_Read(UnixIpc, UnixIpcAddr, size_t *, char[]);
 // return:
 //   0: ok
 //  !0: error
-int UnixIpc_Write(UnixIpc, UnixIpcAddr, size_t  , const char[]);
+int UnixIpc_Write(UnixIpc, UnixIpcAddr, size_t, const char[]);
 
 // UnixIpc_With: Create an unix-socket , destory when finished the callback.
 //  UnixIpc_New() -> callback() -> UnixIpc_Gc()
@@ -64,8 +66,7 @@ int UnixIpc_Write(UnixIpc, UnixIpcAddr, size_t  , const char[]);
 //        !0: error = errno
 int UnixIpc_With(const char *localPath, const char *remotePath, UnixIpcCallback);
 
-
-#define SOCKET_FILE_PATH_MAX (sizeof(ZERO_OF(UnixIpcAddr)->sun_path) - 1)  //NULL terminated
+#define SOCKET_FILE_PATH_MAX (sizeof(ZERO_OF(UnixIpcAddr)->sun_path) - 1) // NULL terminated
 
 struct UnixIpc {
     int         socket;
@@ -73,4 +74,4 @@ struct UnixIpc {
     UnixIpcAddr remote;
 };
 
-#endif //NSTD_IPC_UNIX_H
+#endif // NSTD_IPC_UNIX_H

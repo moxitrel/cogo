@@ -1,17 +1,14 @@
 /*
- * void *NEW    (uint n): allocate memory of size n
- * void  DELETE (T *)   : release memory
- *
- * noreturn void ASSERT_MSG(exp, char msg[])
- *   abort with <msg> if <exp> eval to false.
+ * void *NEW    (size_t): C++ ::operator new()   , allocate memory of size n
+ * void  DELETE (T *)   : C++ ::operator delete(), release  memory
  *
  * */
 #ifndef NSTD_MEMORY_H
 #define NSTD_MEMORY_H
 
 #include "type.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 //#define ASSERT_MSG(E, ...)                                                                  \
 //(                                                                                           \
@@ -23,27 +20,35 @@
 
 // alignas(N|T) char (*p)[N];   // object of compatible type
 //
-// void *NEW(uint): allocate memory, =C++ operator new()
-// e.g. T *p    = NEW(sizeof *p);
-//      T *p[n] = NEW(sizeof *p * n);
-#define NEW(N)                                      \
-(                                                   \
-    malloc(N)   ||                                  \
-    ( printf("[%s %s %u] ENOMEM: malloc(%s)\n",     \
-            __FILE__, __func__, __LINE__, #N)       \
-    , abort()                                       \
-    , NULL                                          \
-    )                                               \
-)
+#define NEW(N) malloc_assert((N), __FILE__, __func__, __LINE__)
+inline static void *malloc_assert(size_t n, const char *file, const char *func, int line)
+{
+    void *v = malloc(n);
+    if (!v) {
+        printf("[%s %s %u] ENOMEM: malloc(%zd)\n", file, func, line, n);
+        exit(EXIT_FAILURE);
+    }
+    return v;
+}
+
+#define CALLOC(N, M) calloc_assert((N), (M), __FILE__, __func__, __LINE__)
+inline static void *calloc_assert(size_t n, size_t m, const char *file, const char *func, int line)
+{
+    void *v = calloc(n, m);
+    if (!v) {
+        printf("[%s %s %u] ENOMEM: calloc(%zd)\n", file, func, line, n);
+        exit(EXIT_FAILURE);
+    }
+    return v;
+}
 
 // free(NULL): "nop"
 //
 // void DELETE(T *): release memory, =C++ operator delete()
 #define DELETE(P) ((void)(free(P), (P) = NULL))
 
-
 // T: Pointer Type
-#define SIZE_OF(T)   (sizeof *(T){0})
-#define ZERO_OF(T)   ((T)&(char[SIZE_OF(T)]){})
+#define SIZE_OF(T) (sizeof *(T){0})
+#define ZERO_OF(T) ((T) & (char[SIZE_OF(T)]){})
 
-#endif //NSTD_MEMORY_H
+#endif // NSTD_MEMORY_H

@@ -15,8 +15,6 @@ STYLE="file"                            # coding style: file, LLVM, Google, Chro
                                         #   file: .clang-format in one of the parent directories of the source file directory
 
 
-cd src
-
 cmd="clang-format "                     #
 cmd="$cmd ${STYLE:+ -style=$STYLE} "    # -style,          coding style
 #cmd="$cmd -fallback-style=Google "      # -fallback-style, in case .clang-format not exist
@@ -24,4 +22,15 @@ cmd="$cmd -sort-includes "              # -sort-includes,  sort touched include 
 cmd="$cmd -i "                          # -i,              edit files in-place
 cmd="$cmd -verbose "                    # -verbose,        shows the list of processed files
 
-$cmd $*                     # 添加命令行额外的选项参数
+
+# 切换至 project root 目录
+cd $(dirname $0)/..
+
+for file in $(find src  -type f \
+                        -iname '*.c'  -or \
+                        -iname '*.h'  -or \
+                        -iname '*.cc' -or \
+                        -iname '*.cpp')
+do
+    $cmd $file
+done

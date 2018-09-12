@@ -9,16 +9,15 @@
 typedef struct Loop *Loop;
 typedef int (*LoopCallback)(void *);
 
-inline static Loop    Loop_New      (LoopCallback fun, void *arg);
-inline static void    Loop_Destroy  (Loop *);
+inline static Loop Loop_New(LoopCallback fun, void *arg);
+inline static void Loop_Destroy(Loop *);
 
 // Loop run fun() if fun() return 0
-inline static void    Loop_Do       (Loop);
-
+inline static void Loop_Do(Loop);
 
 struct Loop {
     LoopCallback fun;
-    void *arg;
+    void *       arg;
 };
 
 static Loop Loop_New(LoopCallback fun, void *arg)
@@ -45,4 +44,4 @@ static void Loop_Do(Loop o)
     }
 }
 
-#endif //NSTD_LOOP_H
+#endif // NSTD_LOOP_H
