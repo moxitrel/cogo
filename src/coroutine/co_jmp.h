@@ -3,7 +3,8 @@
 
 #define ID(X) X;
 #define CO_FUNC(F, ...)       \
-    typedef struct {          \
+    typedef struct            \
+    {                         \
         int     yield;        \
         jmp_buf jmp_buf;      \
                               \

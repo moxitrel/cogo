@@ -12,4 +12,4 @@ git clone   https://github.com/ThrowTheSwitch/Unity.git
 #git clone   https://scm.gforge.inria.fr/anonscm/git/p99/p99.git
 
 # implement c11 threads
-#git clone   https://github.com/tinycthread/tinycthread.git
+git clone   https://github.com/tinycthread/tinycthread.git
