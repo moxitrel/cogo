@@ -77,7 +77,7 @@ void coroutine(coroutine_ctx_t *ctx)    // coroutine_ctx_t 类型由自己定义
 
 
   // YIELD()
-  ctx->yield = 10;      // 1. save restore point, next call will be case 19: goto yield_19
+  ctx->yield = 19;      // 1. save restore point, next call will be case 19: goto yield_19
   return;               // 2. return
 yield_19:;              // 3. put a label after each *return* as the restore point
 
