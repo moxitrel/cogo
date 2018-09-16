@@ -1,7 +1,7 @@
 #ifndef NSTD_TYPE_H
 #define NSTD_TYPE_H
 
-// char[]
+// unsigned char[]
 // sizeof
 // alignas(), alignof(T)
 
@@ -19,10 +19,10 @@
 
 // int, size_t, intptr_t, intmax_t
 //
-// int8_t   uint8_t   int_fast8_t  uint_fast8_t
-// int16_t  uint16_t  int_fast16_t uint_fast16_t
-// int32_t  uint32_t  int_fast32_t uint_fast32_t
-// int64_t  uint64_t  int_fast64_t uint_fast64_t
+// int8_t   uint8_t   int_fast8_t  uint_fast8_t  int_least8_t  uint_least8_t
+// int16_t  uint16_t  int_fast16_t uint_fast16_t int_least16_t uint_least16_t
+// int32_t  uint32_t  int_fast32_t uint_fast32_t int_least32_t uint_least32_t
+// int64_t  uint64_t  int_fast64_t uint_fast64_t int_least64_t uint_least64_t
 // intptr_t uintptr_t
 // intmax_t uintmax_t
 typedef unsigned int uint; // nat: natural number

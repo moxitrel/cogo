@@ -26,11 +26,7 @@ cmake_minimum_required(VERSION 3.11)
 # LANGUAGES: C | CXX | ASM, default to C and C++
 #   | NONE: no language specific
 #   C++ : C support will be loaded too
-project(<PROJECT-NAME>
-        VERSION 0.0.0           # <major>[.<minor>[.<patch>[.<tweak>]]]]
-#        DESCRIPTION <project-description-string>
-        LANGUAGES C CXX
-        )
+project(<PROJECT-NAME>)
 
 enable_testing()
 

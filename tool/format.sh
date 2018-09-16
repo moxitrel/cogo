@@ -26,11 +26,17 @@ cmd="$cmd -verbose "                    # -verbose,        shows the list of pro
 # 切换至 project root 目录
 cd $(dirname $0)/..
 
-for file in $(find src  -type f \
-                        -iname '*.c'  -or \
-                        -iname '*.h'  -or \
-                        -iname '*.cc' -or \
-                        -iname '*.cpp')
+for file in $(find src test example  \
+                   -type f           \
+                   -iname '*.c'  -or \
+                   -iname '*.h'  -or \
+                   -iname '*.cc' -or \
+                   -iname '*.cpp'    )
 do
-    $cmd $file
+    if [ $file != "src/coroutine/co_goto.h" -a \
+         $file != "src/memory.h"            -a \
+         $file != "src/coroutine/_m_list.h" ]
+    then
+        $cmd $file
+    fi
 done

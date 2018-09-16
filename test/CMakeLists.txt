@@ -3,6 +3,7 @@
 # command (args ...)
 #
 
+add_subdirectory(coroutine)
 
 add_executable(test_stack
         stack_test.c
