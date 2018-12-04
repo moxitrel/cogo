@@ -6,7 +6,7 @@ CO_BEGIN(...)   : 协程开始
 CO_END()        : 协程结束
 YIELD()         : 返回
 
-RESUME(F, ...)  : 运行协程 F(...) 直至结束    (前台)
+AWAIT(F, ...)   : 运行协程 F(...) 直至结束    (前台)
 CO_SCHED(F, ...): 添加协程 F(...) 至调度器执行 (后台)
 
 CO_VAL(F, X)    : 获取协程F(...)返回值,
@@ -28,7 +28,7 @@ CO_FUNC(f, T x, T v)
     //
     // 协程开始
     //
-    CO_BEGIN(35,39,42);   // 33,39, ...: 列出所有 YIELD() 和 RESUME() 所在的行号, 即 __LINE__ 的值
+    CO_BEGIN(35,39,42);   // 33,39, ...: 列出所有 YIELD() 和 AWAIT() 所在的行号, 即 __LINE__ 的值
 
 
     //
@@ -118,14 +118,13 @@ yield_27:;              // 3. label the restore point
 // CO_BEGIN(), YIELD(), CO_END() 三者不是表达式, 必须作为独立的语句使用
 
 typedef struct ctx_t {
-    /* save the restore point */
-    /*  0: ready */
-    /* >0: running */
-    /* <0: finish */
-    int yield;
-
     // coroutine function
     void (*fun)(struct ctx_t *);
+
+    // save the restore point
+    // >=0: running
+    // < 0: finish
+    int yield;
 
     // child coroutine context
     struct ctx_t *ctx;
@@ -141,7 +140,7 @@ typedef struct {          \
 void F(ctx_t *ctx)
 
 // 返回 实参X 的指针
-#define CO_ARG(F, X)    (&((F##_ctx_t *)ctx) -> X)
+#define CO_ARG(F, X)    (& ((F##_ctx_t *)ctx)->X)
 
 #define CO_BEGIN(...)                   \
     switch (ctx->yield) {               \
@@ -171,7 +170,7 @@ finally:                                 \
 ,   *(F##_ctx_t *)tmp = (F##_ctx_t){{.fun = (F)}, __VA_ARGS__}  \
 ,   ctx->ctx = (ctx_t *)tmp                                     \
 )
-#define RESUME(F, ...)          \
+#define AWAIT(F, ...)           \
 {                               \
     CO_SCHED(F, __VA_ARGS__);   \
     YIELD();                    \

@@ -8,6 +8,7 @@
 #define NSTD_MEMORY_H
 
 #include "type.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -39,7 +39,7 @@ typedef unsigned int uint; // nat: natural number
 
 // NDEBUG
 // static_assert: _Static_assert
-#include <assert.h>
+//#include <assert.h>
 
 // errno : int, thread local storage duration
 //
@@ -51,7 +51,7 @@ typedef unsigned int uint; // nat: natural number
 // POSIX:
 //   EINVAL: Invalid argument
 //   ENOMEM: Not enough space
-#include <errno.h>
+//#include <errno.h>
 #include <stdarg.h>
 
 #endif // NSTD_TYPE_H
