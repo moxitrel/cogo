@@ -29,7 +29,7 @@ CO_FUN(gen_0_13, int value, int i)
 
     // 返回 0, 1, ... 9
     for (; *i < 10; (*i)++) {
-        YIELD(*value = *i);     //存储返回值, 并返回
+        YIELD(*value = *i); //存储返回值, 并返回
     }
 
     YIELD(*value = (*i)++); // value=10, i=11
@@ -63,7 +63,7 @@ int main(void)
 {
     UNITY_BEGIN();
 
-//    RUN_TEST(test_gen_0_13);
+    //    RUN_TEST(test_gen_0_13);
     RUN_TEST(test_call);
 
     return UNITY_END();

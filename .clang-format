@@ -21,7 +21,7 @@ Language: Cpp
 # LS_Cpp03 (in configuration: Cpp03) Use C++03-compatible syntax.
 # LS_Cpp11 (in configuration: Cpp11) Use features of C++11, C++14 and C++1z (e.g. A<A<int>> instead of A<A<int> >).
 # LS_Auto (in configuration: Auto) Automatic detection based on the input.
-Standard:        Cpp11
+Standard:        Auto
 
 # Align      : someLongFunction(argument1,
 #                               argument2);

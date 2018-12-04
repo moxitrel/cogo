@@ -7,28 +7,6 @@
      _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,       \
     _11, _12, _13, _14, _15, _16, _17, _18, _19,   N, ...)  N
 
-//#define GET(N, ...)   GET_##N(__VA_ARGS__)
-//#define GET_0(X, ...) X
-//#define GET_1(X, ...) GET_0(__VA_ARGS__)
-//#define GET_2(X, ...) GET_1(__VA_ARGS__)
-//#define GET_3(X, ...) GET_2(__VA_ARGS__)
-//#define GET_4(X, ...) GET_3(__VA_ARGS__)
-//#define GET_5(X, ...) GET_4(__VA_ARGS__)
-//#define GET_6(X, ...) GET_5(__VA_ARGS__)
-//#define GET_7(X, ...) GET_6(__VA_ARGS__)
-//#define GET_8(X, ...) GET_7(__VA_ARGS__)
-//
-//
-//#define REST(N, ...)   REST_##N(__VA_ARGS__)
-//#define REST_0(...)    __VA_ARGS__
-//#define REST_1(X, ...) REST_0(__VA_ARGS__)
-//#define REST_2(X, ...) REST_1(__VA_ARGS__)
-//#define REST_3(X, ...) REST_2(__VA_ARGS__)
-//#define REST_4(X, ...) REST_3(__VA_ARGS__)
-//#define REST_5(X, ...) REST_4(__VA_ARGS__)
-//#define REST_6(X, ...) REST_5(__VA_ARGS__)
-//#define REST_7(X, ...) REST_6(__VA_ARGS__)
-//#define REST_8(X, ...) REST_7(__VA_ARGS__)
 
 #define MAP(F, ...)       MAP_N_(LEN(__VA_ARGS__), F, __VA_ARGS__)
 #define MAP_N_(...)       MAP_N(__VA_ARGS__)
