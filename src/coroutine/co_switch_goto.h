@@ -61,88 +61,114 @@ void fun(co_t *co)
 #ifndef CO_SWITCH_GOTO_H
 #define CO_SWITCH_GOTO_H
 
-#include "../stack.h"
+#include "../memory.h"
 
-// The base structure of coroutine context.
-//
-// co_t must be inherited (as first field) by user-defined type.
+// co_t: coroutine context, must be inherited (as first field) by user-defined type.
 // e.g.
 //   typedef struct {
-//     co_t co_t;
+//     co_t co;
 //     ...
 //   } user_defined_t;
-//
-typedef struct co_t {
+typedef struct co_t co_t;
+typedef void (*co_fun_t)(co_t *);
+struct co_t {
     // coroutine function
-    void (*_fun)(struct co_t *);
+    co_fun_t fun;
 
     // save the restore point
     // >=0: running
-    // < 0: finish
-    int _state;
+    // < 0: finished
+    int state;
 
-    // when self finished, run _caller next
-    struct co_t *_caller;
-    // when co_call(), pause self, run _callee until finished
-    struct co_t *_callee;
+    // when fun finished, run caller next
+    co_t *caller;
+    // coroutine called by co_call()
+    co_t *callee;
     // the coroutines run concurrently with me
-    struct co_t *_concurrent;
-} co_t;
+    //co_t *concurrent;
+};
 
-// get co_t._state
-#define co_state(CO)    ((int)                      {((co_t *)(CO)) -> _state })
-// get co_t._fun
-#define co__fun(CO)     ((void (*)(struct co_t *))  {((co_t *)(CO)) -> _fun   })
-// get co_t._caller
-#define co__caller(CO)  ((co_t *)                   {((co_t *)(CO)) -> _caller})
-// get co_t._callee
-#define co__callee(CO)  ((co_t *)                   {((co_t *)(CO)) -> _callee})
+// make a new co_t in stack
+#define CO(FUN)         ((co_t){.fun = (co_fun_t)(FUN),})
+// get co_t.fun
+#define CO_FUN(CO)      (((co_t *)(CO))->fun)
+// get co_t.state
+#define CO_STATE(CO)    (((co_t *)(CO))->state)
+// get co_t.caller
+#define CO_CALLER(CO)   (((co_t *)(CO))->caller)
+// get co_t.callee
+#define CO_CALLEE(CO)   (((co_t *)(CO))->callee)
 
+// get co_t.state
+inline static int co_state(const co_t *o)
+{
+    assert(o);
+    return CO_STATE(o);
+}
 
 //
 // co_begin(), co_end(), co_return(), co_call() 不是函数表达式, 必须作为独立的语句使用
 //
 
 // Make goto label.
-// e.g. RETURN_LINE(13)       -> return_13
-//      RETURN_LINE(__LINE__) -> return_108
-#define RETURN_LINE(N)      RETURN_LINE_(N)
-#define RETURN_LINE_(N)     return_##N
+// e.g. RETURN_LABEL(13)       -> return_13
+//      RETURN_LABEL(__LINE__) -> return_118
+#define RETURN_LABEL(N)     RETURN_LABEL_(N)
+#define RETURN_LABEL_(N)    return_##N
 
-#define CASE_GOTO(N)        case N: goto RETURN_LINE(N);
-
-
-#define co_begin(CO, ...)               \
-    switch (co_state(CO)) {             \
-    default:    /* invalid state */     \
-        ASSERT(0, "co_state():%d isn't valid.", co_state(CO)); \
-        break;                          \
-    case -1: goto finally;  /* end   */ \
-    case  0: break;         /* begin */ \
- /* case  N: goto return_N;  */         \
- /* ...                      */         \
-    MAP(CASE_GOTO, __VA_ARGS__);        \
-    }                                   \
+#define CASE_GOTO(N)        case N: goto RETURN_LABEL(N);
 
 
-#define co_return(CO, ...)                                                                          \
-    __VA_ARGS__;                            /* run before return, intent for handle return value */ \
-    (((co_t *)(CO))->_state) = __LINE__;    /* 1. set the restore point, at lable return_N */       \
-    goto finally;                           /* 2. return */                                         \
-RETURN_LINE(__LINE__):                      /* 3. put label after each *return* as restore point */ \
+#define co_begin(CO, ...)                           \
+do {                                                \
+    const int state = CO_STATE(CO);                 \
+    switch (state) {                                \
+    default:                /* invalid state */     \
+        ASSERT(0, "co_state():%d isn't valid.", state); \
+        break;                                      \
+    case -1: goto finally;  /* coroutine end   */   \
+    case  0: break;         /* coroutine begin */   \
+ /* case  N: goto return_N;  */                     \
+ /* ...                      */                     \
+    MAP(CASE_GOTO, __VA_ARGS__);                    \
+    }                                               \
+} while (0)
 
+#define co_return(CO, ...)                                                              \
+    __VA_ARGS__;                /* run before return, intent for handle return value */ \
+    CO_STATE(CO) = __LINE__;    /* 1. set the restore point, at lable return_N */       \
+    goto finally;               /* 2. return */                                         \
+RETURN_LABEL(__LINE__):         /* 3. put label after each *return* as restore point */ \
 
-#define co_end(CO)                      \
-    (((co_t *)(CO))->_state) = -1;      \
-finally:                                \
+#define co_end(CO)                          \
+    CO_STATE(CO) = -1;                      \
+    finally:                                \
 
+#define co_call(CO, CALLEE)                 \
+do {                                        \
+    co_t *_co_         = (CO);              \
+    co_t *_callee_     = (CALLEE);          \
+    CO_CALLEE(_co)     = _callee_;          \
+    CO_CALLER(_callee) = _co_;              \
+    co_return(_co_)                         \
+} while (0)
 
-#define co_call(CO, CALLEE)                             \
-    ((co_t *)(CO))     -> _callee = (co_t *)(CALLEE);   \
-    ((co_t *)(CALLEE)) -> _caller = (co_t *)(CO);       \
-    co_return(CO)                                       \
+inline static void co_run(co_t *co)
+{
+    while (co != NULL) {
+        co_fun_t fun = CO_FUN(co);
+        co_t *caller = CO_CALLER(co);
+        co_t *callee = CO_CALLEE(co);
 
-
+        if (CO_STATE(co) < 0) {
+            co = caller;
+        } else if (callee != NULL && CO_STATE(callee) >= 0) {
+            co = callee;
+        } else {
+            fun(co);
+        }
+    }
+}
 
 // Count the number of arguments.
 // e.g. LEN(A)       -> 1
@@ -183,37 +209,5 @@ finally:                                \
 #define MAP_17(F, X, ...) F(X) MAP_16(F, __VA_ARGS__)
 #define MAP_18(F, X, ...) F(X) MAP_17(F, __VA_ARGS__)
 #define MAP_19(F, X, ...) F(X) MAP_18(F, __VA_ARGS__)
-
-////////////////////////////////////////////////////////////////
-
-
-/*_Thread_local*/ Stack coStack;
-/*_Thread_local*/ void *tmp;
-
-#define CO_SCHED(F, ...)                                        \
-(   tmp = Stack_Emplace(&coStack, sizeof(F##_ctx_t)) -> ptr     \
-,   *(F##_ctx_t *)tmp = (F##_ctx_t){{.fun = (F)}, __VA_ARGS__}  \
-,   ctx->ctx = (co_t *)tmp                                     \
-)
-#define AWAIT(F, ...)           \
-{                               \
-    CO_SCHED(F, __VA_ARGS__);   \
-    co_return();                    \
-}
-#define CO_VAL(F, X)    (& ((const F##_ctx_t *)ctx->ctx)->X )
-
-#define CO_RUN(F, ...)                                          \
-co_t *ctx = (co_t *)&(F##_ctx_t){};                           \
-{                                                               \
-    CO_SCHED(F, __VA_ARGS__);                                   \
-    while (Stack_Size(&coStack) > 0) {                          \
-        co_t *ctx =  Stack_Top(&coStack) -> ptr;               \
-        ctx->fun(ctx);                                          \
-        if (ctx->_state < 0) {                                   \
-            Stack_Pop(&coStack);                                \
-        }                                                       \
-    }                                                           \
-    Stack_Gc(&coStack, Object_Gc);                              \
-}
 
 #endif // CO_SWITCH_GOTO_H
