@@ -6,8 +6,9 @@
 //
 
 // define coroutine which print i, i+1, ..., j
-// must inherited co_t
-class PrintN : protected co_t {
+// must inherit co_t
+class PrintN : protected co_t
+{
     int i;
     int j;
 
@@ -15,13 +16,14 @@ public:
     PrintN(int first, int last)
         : i(first)
         , j(last)
-    {}
+    {
+    }
 
     // print i, i+1, ..., j
     void operator()()
     {
         // 协程开始
-        co_begin(this, 29);
+        co_begin(this, 31);
 
         // return i, i+1, ..., max
         for (; i <= j; i++) {
@@ -34,8 +36,7 @@ public:
     }
 };
 
-
-int main(void)
+void Test_PrintN(void)
 {
     // make a coroutine which print 1,2,3
     auto print13 = PrintN(1, 3);
@@ -46,6 +47,11 @@ int main(void)
 
     print13(); // do nothing, coroutine is finished
     print13(); // do nothing, coroutine is finished
+}
+
+int main()
+{
+    Test_PrintN();
 }
 
 // clang -std=c++17 co_switch_goto_example.cpp -o /tmp/x && /tmp/x

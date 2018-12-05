@@ -5,7 +5,7 @@ co_end()    : 协程结束
 co_return() : 返回
 co_state()  : 获取协程运行状态
                 >=0: 正在运行
-                 -1: 运行结束
+                < 0: 运行结束
 *** 用法
 
 // 1. 包含头文件
@@ -84,10 +84,13 @@ struct co_t {
     // coroutine function
     co_fun_t fun;
 
-    // save the restore point
+    // coroutine state
     // >=0: running
-    //  -1: finished
+    // < 0: finished
     int state;
+
+    // save the restore point
+    void *label;
 
     // when fun finished, run caller next
     co_t *caller;
@@ -103,6 +106,8 @@ struct co_t {
 #define CO_FUN(CO)      (((co_t *)(CO))->fun)
 // get co_t.state
 #define CO_STATE(CO)    (((co_t *)(CO))->state)
+// get co_t.label
+#define CO_LABEL(CO)    (((co_t *)(CO))->label)
 // get co_t.caller
 #define CO_CALLER(CO)   (((co_t *)(CO))->caller)
 // get co_t.callee
@@ -130,24 +135,23 @@ inline static int co_state(const void *o)
 
 #define co_begin(CO, ...)                           \
 do {                                                \
-    const int state = CO_STATE(CO);                 \
-    switch (state) {                                \
-    default:                /* invalid state   */   \
-        ASSERT(0, "co_state():%d isn't valid.", state); \
+    const co_t *_co = (co_t *)(CO);                 \
+    switch (CO_STATE(_co)) {                        \
+    case -1:                                        \
+        goto finally;  /* coroutine end   */        \
+    case  0:                /* coroutine begin */   \
+        CO_STATE(CO) = 1;                           \
         break;                                      \
-    case -1: goto finally;  /* coroutine end   */   \
-    case  0: break;         /* coroutine begin */   \
- /* case  N: goto return_N;  */                     \
- /* ...                      */                     \
-    MAP(CASE_GOTO, __VA_ARGS__);                    \
+    default:                                        \
+        goto *CO_LABEL(_co);                        \
     }                                               \
 } while (0)
 
-#define co_return(CO, ...)                                                              \
-    __VA_ARGS__;                /* run before return, intent for handle return value */ \
-    CO_STATE(CO) = __LINE__;    /* 1. set the restore point, at lable return_N */       \
-    goto finally;               /* 2. return */                                         \
-RETURN_LABEL(__LINE__):         /* 3. put label after each *return* as restore point */ \
+#define co_return(CO, ...)                                                                              \
+    __VA_ARGS__;                                /* run before return, intent for handle return value */ \
+    CO_LABEL(CO) = &&RETURN_LABEL(__LINE__);    /* 1. set the restore point, at lable return_N */       \
+    goto finally;                               /* 2. return */                                         \
+RETURN_LABEL(__LINE__):                         /* 3. put label after each *return* as restore point */ \
 
 #define co_end(CO)                          \
     CO_STATE(CO) = -1;                      \
@@ -155,11 +159,11 @@ RETURN_LABEL(__LINE__):         /* 3. put label after each *return* as restore p
 
 #define co_call(CO, CALLEE)                 \
 do {                                        \
-    co_t *_co_          = (co_t *)(CO);     \
-    co_t *_callee_      = (co_t *)(CALLEE); \
-    CO_CALLEE(_co_)     = _callee_;         \
-    CO_CALLER(_callee_) = _co_;             \
-    co_return(_co_);                        \
+    co_t *_co           = (co_t *)(CO);     \
+    co_t *_callee       = (co_t *)(CALLEE); \
+    CO_CALLEE(_co)      = _callee;          \
+    CO_CALLER(_callee)  = _co;              \
+    co_return(_co);                         \
 } while (0)
 
 
