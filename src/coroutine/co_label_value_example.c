@@ -1,4 +1,4 @@
-#include "co_switch_goto.h"
+#include "co_label_value.h"
 #include <stdio.h>
 
 //
@@ -19,7 +19,7 @@ typedef struct {
 void generate_n(generate_n_t *co)
 {
     // 协程开始
-    co_begin(co, 26);
+    co_begin(co);   // no line number need
 
     // return i, i+1, ..., max
     for (; co->i <= co->max; co->i++) {
@@ -57,7 +57,7 @@ typedef struct {
 void print(print_t *co)
 {
     // 协程开始
-    co_begin(co, 65);
+    co_begin(co);   // no line number need
 
     // return i, i+1, ..., max
     for (; co->n < 10; co->n += 2) {
@@ -86,7 +86,7 @@ typedef struct {
 void print_example(print_example_t *co)
 {
     // 协程开始
-    co_begin(co, 96, 97);
+    co_begin(co);   // no line number need
 
     co->print_odd  = MALLOC(sizeof(*co->print_odd));
     co->print_even = MALLOC(sizeof(*co->print_even));
