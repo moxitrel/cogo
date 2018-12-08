@@ -23,12 +23,11 @@ public:
     void operator()()
     {
         // 协程开始
-        co_begin(this, 31);
+        co_begin(this, 30);
 
-        // return i, i+1, ..., max
         for (; i <= j; i++) {
             printf("%d\n", i);
-            co_return(this);
+            co_return(this);    // 协程返回, 下次调用从此处开始执行
         }
 
         // 协程结束
@@ -38,7 +37,7 @@ public:
 
 void Test_PrintN(void)
 {
-    // make a coroutine which print 1,2,3
+    // make a generator which print 1,2,3
     auto print13 = PrintN(1, 3);
 
     print13(); // print 1
