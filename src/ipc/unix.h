@@ -6,7 +6,7 @@
 #define NSTD_IPC_UNIX_H
 
 #include "../memory.h"
-#include "../type.h"
+#include "../freestanding.h"
 #include <sys/un.h>
 
 typedef struct UnixIpc *    UnixIpc;

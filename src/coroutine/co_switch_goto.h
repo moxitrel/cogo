@@ -1,11 +1,13 @@
 /*
 
+CO(FUN)     : 新建协程
 co_begin()  : 协程开始
 co_end()    : 协程结束
 co_return() : 返回
-co_state()  : 获取协程运行状态
+co_state()     : 获取协程运行状态
                 >=0: 正在运行
                  -1: 运行结束
+
 *** 用法
 
 // 1. 包含头文件
@@ -26,8 +28,9 @@ void fun(fun_t *co)
     //
     // co_begin()之前的代码，每次调用都会被执行
     //
-
-    // 设置别名
+    assert(co);
+    
+    // 别名关联
     T &x = co->x;
     T &v = co->v;
 
@@ -42,6 +45,13 @@ void fun(fun_t *co)
     //
     co_return(co);          // 返回，下次被调用，从此处开始执行，***局部变量无法被恢复***
 
+    for (; co->i < 9; co->i ++) {
+        v = x;
+        co_return(co);
+    }
+
+    v += 1;
+    co_return(co);
 
     //
     // 协程结束
@@ -55,8 +65,11 @@ void fun(fun_t *co)
 }
 
 // 4. define initializer
-void *fun_init(fun_t *o, ...)
+void fun_init(fun_t *o, co_fun_t fun,...)
 {
+    assert(o);
+    assert(fun);
+
     *o = (fun_t){
         // init co_t
         .co = CO(fun),
@@ -66,11 +79,52 @@ void *fun_init(fun_t *o, ...)
     };
 }
 
+ *** 原理: 将 *栈变量* 保存到堆上,
+
+// 展开后
+void coroutine(coroutine_t *co) // coroutine_t 由自己定义, 可添加任意字段
+{
+  // co_begin();
+  switch (co->pc) {             // co->pc 存储 从哪里开始继续运行
+  case 0:    break;             // 协程开始
+  case 19:   goto return_19;    // 还原点
+  case 23:   goto return_23;    // 还原点
+  case 26:   goto return_26;    // 还原点
+  case -1:   return;            // 协程结束
+  }
+
+
+  // co_return()
+  co->pc = 19;      // 1. save restore point, next call will be case 19: goto return_19
+  return;           // 2. return
+return_19:;         // 3. put a label after each *return* as the restore point
+
+  for (; co->i < 9; co->i ++) {
+    co->v = co->x;
+
+    // co_return()
+    co->pc = 23;    // 1. save restore point, next call will be case 23: goto return_23
+    return;         // 2. return
+return_23:;         // 3. label the restore point
+  }
+
+  co->v += 1;
+
+  // co_return()
+  co->pc = 26;      // 1. save restore point, next call will be case 26: goto return_26
+  return;           // 2. return
+return_26:;         // 3. label the restore point
+
+  // co_end()
+  co->pc = -1;      //协程运行结束
+}
+
 */
 #ifndef CO_SWITCH_GOTO_H
 #define CO_SWITCH_GOTO_H
 
 #include "../memory.h"
+#include <stdint.h>
 
 // co_t: coroutine context, must be inherited (as first field) by user-defined type.
 // e.g.
@@ -84,35 +138,42 @@ struct co_t {
     // coroutine function
     co_fun_t fun;
 
-    // save the restore point
+    // save the start point where coroutine continue to run when yield
     // >=0: running
     //  -1: finished
-    int state;
+    intptr_t pc;
 
     // when fun finished, run caller next
     co_t *caller;
     // coroutine called by co_call()
     co_t *callee;
-    // the coroutines run concurrently with me
-    //co_t *concurrent;
 };
 
-// make a new co_t in stack
+// make a co_t in stack
 #define CO(FUN)         ((co_t){.fun = (co_fun_t)(FUN),})
-// get co_t.fun
+// return co_t.fun
 #define CO_FUN(CO)      (((co_t *)(CO))->fun)
-// get co_t.state
-#define CO_STATE(CO)    (((co_t *)(CO))->state)
-// get co_t.caller
+// return co_t.pc
+#define CO_PC(CO)       (((co_t *)(CO))->pc)
+// return co_t.caller
 #define CO_CALLER(CO)   (((co_t *)(CO))->caller)
-// get co_t.callee
+// return co_t.callee
 #define CO_CALLEE(CO)   (((co_t *)(CO))->callee)
 
-// get co_t.state
-inline static int co_state(const void *o)
+// return co_t.pc
+inline static int co_state(const void *co)
 {
-    assert(o);
-    return CO_STATE(o);
+    assert(co);
+    return CO_PC(co);
+}
+
+inline static co_t *co_add_callee(co_t *co, co_t *callee)
+{
+    assert(co);
+    assert(callee);
+    CO_CALLEE(co)     = callee;
+    CO_CALLER(callee) = co;
+    return co;
 }
 
 //
@@ -123,50 +184,57 @@ inline static int co_state(const void *o)
 // e.g. RETURN_LABEL(13)       -> return_13
 //      RETURN_LABEL(__LINE__) -> return_118
 #define RETURN_LABEL(N)     RETURN_LABEL_(N)
-#define RETURN_LABEL_(N)    return_##N
+#define RETURN_LABEL_(N)    RETURN_##N
 
 #define CASE_GOTO(N)        case N: goto RETURN_LABEL(N);
 
-
+// co_return(co_t *, ...)
 #define co_begin(CO, ...)                           \
 do {                                                \
-    const int state = CO_STATE(CO);                 \
-    switch (state) {                                \
-    default:                /* invalid state   */   \
-        ASSERT(0, "co_state():%d isn't valid.", state); \
-        break;                                      \
-    case -1: goto finally;  /* coroutine end   */   \
+    const co_t *const _co = (co_t *)(CO);           \
+    assert(_co);                                    \
+                                                    \
+    switch (CO_PC(_co)) {                           \
     case  0: break;         /* coroutine begin */   \
  /* case  N: goto return_N;  */                     \
  /* ...                      */                     \
     MAP(CASE_GOTO, __VA_ARGS__);                    \
+    case -1: goto finally;  /* coroutine end   */   \
+    default: FATAL("pc:%td isn't valid.", CO_PC(_co));  \
     }                                               \
 } while (0)
 
+// co_return(co_t *)
 #define co_return(CO, ...)                                                              \
+do {                                                                                    \
+    co_t *const _co = (co_t *)(CO);                                                     \
+    assert(_co);                                                                        \
+                                                                                        \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
-    CO_STATE(CO) = __LINE__;    /* 1. set the restore point, at lable return_N */       \
+    CO_PC(_co) = __LINE__;      /* 1. save the restore point, at label return_N */      \
     goto finally;               /* 2. return */                                         \
-RETURN_LABEL(__LINE__):         /* 3. put label after each *return* as restore point */ \
-
-#define co_end(CO)                          \
-    CO_STATE(CO) = -1;                      \
-    finally:                                \
-
-#define co_call(CO, CALLEE)                 \
-do {                                        \
-    co_t *_co_          = (co_t *)(CO);     \
-    co_t *_callee_      = (co_t *)(CALLEE); \
-    CO_CALLEE(_co_)     = _callee_;         \
-    CO_CALLER(_callee_) = _co_;             \
-    co_return(_co_);                        \
+RETURN_LABEL(__LINE__):;        /* 3. put label after each *return* as restore point */ \
 } while (0)
+
+// co_end(co_t *)
+#define co_end(CO)                          \
+do {                                        \
+    co_t * const _co = (co_t *)(CO);        \
+    assert(_co);                            \
+                                            \
+    CO_PC(_co) = -1;   /* finish */         \
+finally:;                                   \
+} while (0)
+
+// co_call(co_t *co, co_t *callee)
+#define co_call(CO, CALLEE)                 \
+    co_return(co_add_callee((co_t *)(CO), (co_t *)(CALLEE)))
 
 
 inline static void co_run(void *co)
 {
     for (;;) {
-        if (CO_STATE(co) < 0) {
+        if (CO_PC(co) < 0) {
             if (CO_CALLER(co) == NULL) {
                 return;
             }

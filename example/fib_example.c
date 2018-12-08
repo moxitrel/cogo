@@ -1,4 +1,4 @@
-#include "/Users/m2/Dropbox/projects/lib/clib/src/coroutine/co_goto.h"
+#include "../src/coroutine/co_goto.h"
 
 CO_FUN(g, uintmax_t x, uintmax_t v, uintmax_t v_1, uintmax_t v_2)
 {
