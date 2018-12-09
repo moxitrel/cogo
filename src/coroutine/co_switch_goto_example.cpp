@@ -7,7 +7,7 @@
 
 // define coroutine which print i, i+1, ..., j
 // must inherit co_t
-class PrintN : protected co_t
+class PrintN : private co_t
 {
     int i;
     int j;
