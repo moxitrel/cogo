@@ -4,9 +4,10 @@ CO(FUN)     : 新建协程
 co_begin()  : 协程开始
 co_end()    : 协程结束
 co_return() : 返回
-co_state()     : 获取协程运行状态
-                >=0: 正在运行
-                 -1: 运行结束
+co_call()   : 调用协程
+co_state()  : 获取协程运行状态
+              >=0: 正在运行
+               -1: 运行结束
 
 *** 用法
 
@@ -126,6 +127,10 @@ return_26:;         // 3. label the restore point
 #include "../memory.h"
 #include <stdint.h>
 
+//
+// API is *** not type safe ***
+//
+
 // co_t: coroutine context, must be inherited (as first field) by user-defined type.
 // e.g.
 //   typedef struct {
@@ -188,65 +193,60 @@ inline static co_t *co_add_callee(co_t *co, co_t *callee)
 
 #define CASE_GOTO(N)        case N: goto RETURN_LABEL(N);
 
-// co_return(co_t *, ...)
+// co_begin(co_t *, ...);
 #define co_begin(CO, ...)                           \
 do {                                                \
-    const co_t *const _co = (co_t *)(CO);           \
-    assert(_co);                                    \
-                                                    \
-    switch (CO_PC(_co)) {                           \
+    const intptr_t pc = CO_PC(CO);                  \
+    switch (pc) {                                   \
     case  0: break;         /* coroutine begin */   \
  /* case  N: goto return_N;  */                     \
  /* ...                      */                     \
     MAP(CASE_GOTO, __VA_ARGS__);                    \
     case -1: goto finally;  /* coroutine end   */   \
-    default: FATAL("pc:%td isn't valid.", CO_PC(_co));  \
+    default: FATAL("pc:%td isn't valid.", pc);      \
     }                                               \
 } while (0)
 
-// co_return(co_t *)
+// Yield from the coroutine.
+// co_return(co_t *);
 #define co_return(CO, ...)                                                              \
-do {                                                                                    \
-    co_t *const _co = (co_t *)(CO);                                                     \
-    assert(_co);                                                                        \
-                                                                                        \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
-    CO_PC(_co) = __LINE__;      /* 1. save the restore point, at label return_N */      \
+    CO_PC(CO) = __LINE__;       /* 1. save the restore point, at label return_N */      \
     goto finally;               /* 2. return */                                         \
 RETURN_LABEL(__LINE__):;        /* 3. put label after each *return* as restore point */ \
-} while (0)
 
 // co_end(co_t *)
 #define co_end(CO)                          \
-do {                                        \
-    co_t * const _co = (co_t *)(CO);        \
-    assert(_co);                            \
-                                            \
-    CO_PC(_co) = -1;   /* finish */         \
+    CO_PC(CO) = -1;   /* finish */          \
 finally:;                                   \
-} while (0)
 
-// co_call(co_t *co, co_t *callee)
+// Call another coroutine.
+// co_call(co_t *co, co_t *callee);
 #define co_call(CO, CALLEE)                 \
     co_return(co_add_callee((co_t *)(CO), (co_t *)(CALLEE)))
 
-
+// Loop running the coroutine until finished.
 inline static void co_run(void *co)
 {
     for (;;) {
-        if (CO_PC(co) < 0) {
+        if (CO_PC(co) < 0) {    // finished
+            // stop or return to caller
             if (CO_CALLER(co) == NULL) {
                 return;
+            } else {
+                co = CO_CALLER(co);
+                CO_CALLEE(co) = NULL;
             }
-            co = CO_CALLER(co);
-            CO_CALLEE(co) = NULL;
-        } else if (CO_CALLEE(co) != NULL) {
+        } else if (CO_CALLEE(co) != NULL) { // call another coroutine
             co = CO_CALLEE(co);
-        } else {
+        } else {    // continue run
             CO_FUN(co) ((co_t *)co);
         }
     }
 }
+
+
+
 
 // Count the number of arguments.
 // e.g. LEN(A)       -> 1
