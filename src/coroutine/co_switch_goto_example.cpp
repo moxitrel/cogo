@@ -1,4 +1,4 @@
-#include "co_switch_goto.h"
+#include "co_switch_goto.hpp"
 #include <stdio.h>
 
 //
@@ -7,7 +7,7 @@
 
 // define coroutine which print i, i+1, ..., j
 // must inherit co_t
-class PrintN : private co_t
+class PrintN : public co_t
 {
     int i;
     int j;
@@ -16,22 +16,23 @@ public:
     PrintN(int first, int last)
         : i(first)
         , j(last)
+        , co_t()
     {
     }
 
     // print i, i+1, ..., j
-    void operator()()
+    void operator()() override
     {
         // 协程开始
-        co_begin(this, 30);
+        co_begin(31);
 
         for (; i <= j; i++) {
             printf("%d\n", i);
-            co_return(this);    // 协程返回, 下次调用从此处开始执行
+            co_return();    // 协程返回, 下次调用从此处开始执行
         }
 
         // 协程结束
-        co_end(this);
+        co_end();
     }
 };
 
@@ -46,6 +47,10 @@ void Test_PrintN(void)
 
     print13(); // do nothing, coroutine is finished
     print13(); // do nothing, coroutine is finished
+    printf("\n");
+
+    // print 11, 12, 13
+    co_run(PrintN(11,13));
 }
 
 int main()
