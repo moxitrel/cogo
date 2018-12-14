@@ -4,7 +4,7 @@ CO(FUN)     : 新建协程
 co_begin()  : 协程开始
 co_end()    : 协程结束
 co_return() : 返回
-co_call()   : 调用协程
+co_call()   : 调用其他协程
 co_state()  : 获取协程运行状态
               >=0: 正在运行
                -1: 运行结束
@@ -207,23 +207,27 @@ do {                                                \
     }                                               \
 } while (0)
 
+
 // Yield from the coroutine.
 // co_return(co_t *);
 #define co_return(CO, ...)                                                              \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
     CO_PC(CO) = __LINE__;       /* 1. save the restore point, at label return_N */      \
     goto finally;               /* 2. return */                                         \
-RETURN_LABEL(__LINE__):;        /* 3. put label after each *return* as restore point */ \
+RETURN_LABEL(__LINE__):         /* 3. put label after each *return* as restore point */ \
+
 
 // co_end(co_t *)
 #define co_end(CO)                          \
     CO_PC(CO) = -1;   /* finish */          \
-finally:;                                   \
+finally:                                    \
+
 
 // Call another coroutine.
 // co_call(co_t *co, co_t *callee);
 #define co_call(CO, CALLEE)                 \
     co_return(co_add_callee((co_t *)(CO), (co_t *)(CALLEE)))
+
 
 // Loop running the coroutine until finished.
 inline static void co_run(void *co)
@@ -244,7 +248,6 @@ inline static void co_run(void *co)
         }
     }
 }
-
 
 
 
