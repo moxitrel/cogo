@@ -12,12 +12,19 @@
 #include <stdio.h>
 
 // FATAL(format, arg, ...)
-#define FATAL(...)                                                  \
-(   printf("[F %s %d %s()] ", __FILE__, __LINE__, __func__)         \
-,   printf("" __VA_ARGS__)      /* append string literal */         \
-,   printf("\n")                                                    \
-,   exit(EXIT_FAILURE)          /* abort() */                       \
-)
+#define FATAL(...)  fatal(__FILE__, __LINE__, __func__, __VA_ARGS__)
+/*noreturn*/ void fatal(const char *file, int line, const char *func, const char *format, ...)
+{
+    printf("[F %s %d %s()] ", file, line, func);
+
+    va_list arg;
+    va_start(arg, format);
+    vprintf(format, arg);
+    va_end(arg);
+
+    printf("\n");
+    exit(EXIT_FAILURE);
+}
 
 
 #ifndef NDEBUG

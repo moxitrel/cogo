@@ -1,0 +1,120 @@
+CO(FUN)     : 新建协程
+co_begin()  : 协程开始
+co_end()    : 协程结束
+co_return() : 返回
+co_call()   : 调用其他协程
+co_state()  : 获取协程运行状态
+              >=0: 正在运行
+               -1: 运行结束
+
+*** 用法
+
+// 1. 包含头文件
+#include "co_switch_goto.h"
+
+// 2. 自定义协程结构 (局部变量, 返回值), 必须继承 co_t
+typedef struct {
+    // must inherit co_t (put co_t first).
+    co_t co;
+
+    // user definitions
+    ...
+} fun_t;
+
+// 3. 定义协程函数, 类型必须为 void(co_t *)
+void fun(fun_t *co)
+{
+    //
+    // co_begin()之前的代码，每次调用都会被执行
+    //
+    assert(co);
+
+    // 别名关联
+    T &x = co->x;
+    T &v = co->v;
+
+    //
+    // 协程开始
+    //
+    co_begin(co,35,39,...); // 35,39, ...: 列出所有 co_return(), co_call() 所在的行号, 即 __LINE__ 的值
+
+
+    //
+    // 用户代码:  !!! 禁用局部变量 !!!
+    //
+    co_return(co);          // 返回，下次被调用，从此处开始执行，***局部变量无法被恢复***
+
+    for (; co->i < 9; co->i ++) {
+        v = x;
+        co_return(co);
+    }
+
+    v += 1;
+    co_return(co);
+
+    //
+    // 协程结束
+    //
+    co_end(co);
+
+
+    //
+    // co_end()之后的代码，每次co_return()返回前 都会被执行
+    //
+}
+
+// 4. define initializer
+void fun_init(fun_t *o, co_fun_t fun,...)
+{
+    assert(o);
+    assert(fun);
+
+    *o = (fun_t){
+        // init co_t
+        .co = CO(fun),
+
+        // init user definitions
+        ...
+    };
+}
+
+ *** 原理: 将 *栈变量* 保存到堆上,
+
+// 展开后
+void coroutine(coroutine_t *co) // coroutine_t 由自己定义, 可添加任意字段
+{
+  // co_begin();
+  switch (co->pc) {             // co->pc 存储 从哪里开始继续运行
+  case 0:    break;             // 协程开始
+  case 19:   goto YIELD_19;     // 还原点
+  case 23:   goto YIELD_23;     // 还原点
+  case 26:   goto YIELD_26;     // 还原点
+  case -1:   return;            // 协程结束
+  }
+
+
+  // co_return()
+  co->pc = 19;      // 1. save restore point, next call will be case 19: goto YIELD_19
+  return;           // 2. return
+YIELD_19:;          // 3. put a label after each *return* as the restore point
+
+  for (; co->i < 9; co->i ++) {
+    co->v = co->x;
+
+    // co_return()
+    co->pc = 23;    // 1. save restore point, next call will be case 23: goto YIELD_23
+    return;         // 2. return
+YIELD_23:;          // 3. label the restore point
+  }
+
+  co->v += 1;
+
+  // co_return()
+  co->pc = 26;      // 1. save restore point, next call will be case 26: goto YIELD_26
+  return;           // 2. return
+YIELD_26:;          // 3. label the restore point
+
+  // co_end()
+  co->pc = -1;      //协程运行结束
+}
+
