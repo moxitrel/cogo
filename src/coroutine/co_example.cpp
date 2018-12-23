@@ -1,18 +1,20 @@
-#include "co.hpp"
+#include "co.hpp"               // 1. include co.hpp
 #include <stdio.h>
 
 class CoroutineExample1 : public co_t {
     // a coroutine print 1:0, 1:1, ... 1:5
-    class : public co_t {       // must inherent co_t
+    class : public co_t {       // 2. inherent co_t
         int i;
-        void operator()()       // must override operator(), which has the type "void ()"
+        void operator()()       // 3. override operator(), which has the type "void ()"
         {
-            co_begin(13);       // begin
+            co_begin(14);       // 4. mark coroutine begin
+
             for (i = 0; i < 5; i++) {
                 printf("1:%d\n", i);
                 co_return();    // yield
             }
-            co_end();           // end
+
+            co_end();           // 4. mark coroutine end
         }
     } coroutine1;
 
