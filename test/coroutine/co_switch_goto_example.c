@@ -1,5 +1,6 @@
-#include "co_label_value.h"
+#include "../../src/coroutine/gen_switch.h"
 #include <stdio.h>
+#include "../../src/nstd.h"
 
 //
 // Used as generator
@@ -19,10 +20,11 @@ typedef struct {
 void generate_n(generate_n_t *co)
 {
     // 协程开始
-    co_begin(co);   // no line number need
+    co_begin(co, 28);
 
     // return i, i+1, ..., max
-    for (; co->i <= co->max; co->i++) {
+    for (; co->i < co->max; co->i++) {
+        printf("%i ", co->i);
         co_return(co);
     }
 
@@ -35,24 +37,19 @@ void generate_example(void)
 {
     // init coroutine
     generate_n_t co = (generate_n_t){
-        .i   = 1, // start from 1
-        .max = 9, // stop  at   9
+            .co  = CO(generate_n),
+            .i   = 1, // start from 1
+            .max = 9, // stop  at   9
     };
 
-    // run co until finished, when co_state() < 0
-    for (;;) {
-        generate_n(&co);
-        if (co_state(&co) < 0) { // finished?
-            break;
-        }
-        printf("gen: %d\n", co.i);
-    }
+    co_run(&co);
+    printf("\n");
 }
-
 
 int main(void)
 {
     generate_example();
+    return 0;
 }
 
-// clang -std=c11 co_switch_goto_example.c -o /tmp/x && /tmp/x
+// clang -std=c17 co_switch_goto_example.c -o /tmp/x && /tmp/x
