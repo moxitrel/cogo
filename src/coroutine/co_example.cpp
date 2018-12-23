@@ -3,9 +3,9 @@
 
 class CoroutineExample1 : public co_t {
     // a coroutine print 1:0, 1:1, ... 1:5
-    class : public co_t {
+    class : public co_t {       // must inherent co_t
         int i;
-        void operator()()
+        void operator()()       // must override operator(), which has the type "void ()"
         {
             co_begin(13);       // begin
             for (i = 0; i < 5; i++) {
