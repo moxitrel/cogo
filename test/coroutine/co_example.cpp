@@ -1,4 +1,5 @@
-#include "co.hpp"               // 1. include co.hpp
+
+#include "../../src/coroutine/co.hpp"               // 1. include co.hpp
 #include <stdio.h>
 
 class CoroutineExample1 : public co_t {
@@ -7,7 +8,7 @@ class CoroutineExample1 : public co_t {
         int i;
         void operator()()       // 3. override operator(), which has the type "void ()"
         {
-            co_begin(14);       // 4. mark coroutine begin
+            co_begin(15);       // 4. mark coroutine begin
 
             for (i = 0; i < 5; i++) {
                 printf("1:%d\n", i);
@@ -23,11 +24,13 @@ class CoroutineExample1 : public co_t {
         int i;
         void operator()()
         {
-            co_begin(27);               // begin
+            co_begin(31);               // begin
+
             for (i = 0; i < 5; i++) {
                 printf("2:%d\n", i);
                 co_return();            // yield
             }
+
             co_end();                   // end
         }
     } coroutine2;
@@ -35,7 +38,7 @@ class CoroutineExample1 : public co_t {
     // run coroutine1, coroutine2 concurrently
     void operator()()
     {
-        co_begin(38,39);
+        co_begin(43,44);
 
         co_sched(coroutine1);   // schedule to run coroutine1 concurrently
         co_sched(coroutine2);   // schedule to run coroutine2 concurrently

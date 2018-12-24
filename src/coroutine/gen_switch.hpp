@@ -113,15 +113,11 @@ CO_RETURN_26:;          // 3. label the restore point
 }
 
 */
-#ifndef COROUTINE_GEN_SWITCH_HPP
-#define COROUTINE_GEN_SWITCH_HPP
+#ifndef COROUTINE_GEN_H
+#define COROUTINE_GEN_H
 
-#ifndef FATAL
-    #ifndef assert
-        #define FATAL(...)  goto CO_END
-    #else
-        #define FATAL(...)  assert(((void)(__VA_ARGS), false))
-    #endif
+#ifndef assert
+#   define assert(...)  /* nop */
 #endif
 
 // gen_t: coroutine context.
@@ -151,7 +147,7 @@ public:
 #define CO_LABEL(N)     CO_LABEL_(N)
 #define CO_LABEL_(N)    CO_RETURN_##N
 
-#define CASE_GOTO(N)        case N: goto CO_LABEL(N)
+#define CASE_GOTO(N)    case N: goto CO_LABEL(N)
 
 // gen_t::co_begin(...);
 #define co_begin(...)                                   \
@@ -164,7 +160,8 @@ public:
  /*     goto CO_RETURN_N; */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                                            \
-        FATAL("pc:%d isn't valid.", gen_t::_pc);        \
+        assert(((void)"pc isn't valid.", false));       \
+        goto CO_END;                                    \
     }
 
 
@@ -172,7 +169,7 @@ public:
 // gen_t::co_return();
 #define co_return(...)                                                                  \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
-    gen_t::_pc = __LINE__;       /* 1. save the restore point, at label CO_RETURN_N */  \
+    gen_t::_pc = __LINE__;      /* 1. save the restore point, at label CO_RETURN_N */   \
     goto CO_END;                /* 2. return */                                         \
 CO_LABEL(__LINE__):             /* 3. put label after each *return* as restore point */ \
 
@@ -227,4 +224,4 @@ CO_END:                                     \
 #define MAP_18(F, X, ...) F(X); MAP_17(F, __VA_ARGS__)
 #define MAP_19(F, X, ...) F(X); MAP_18(F, __VA_ARGS__)
 
-#endif // COROUTINE_GEN_SWITCH_HPP
+#endif // COROUTINE_GEN_H

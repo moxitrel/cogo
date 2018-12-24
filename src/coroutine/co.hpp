@@ -1,5 +1,5 @@
-#ifndef COROUTINE_CO_HPP
-#define COROUTINE_CO_HPP
+#ifndef COROUTINE_CO_H
+#define COROUTINE_CO_H
 
 #include "fun.hpp"
 
@@ -25,20 +25,16 @@ protected:
 public:
     void run()
     {
-        q_tail = q_head = this;
-        while (q_head != nullptr) {
-            for (co_t **node = &q_head; *node != nullptr;) {
-                co_t **node_next = &(*node)->q_next;
+        for (q_tail = q_head = this; q_head != nullptr;) {
+            co_t **node_next;
+            for (co_t **node = &q_head; *node != nullptr; node = node_next) {
+                node_next = &(*node)->q_next;
 
-                co_t *co = *node;
-                co = (co_t *) co->step();
-                if (co == nullptr) {
+                *node = (co_t *)(*node)->step();
+                // delete node if finished.
+                if (*node == nullptr) {
                     *node = *node_next;
-                } else {
-                    *node = co;
                 }
-
-                node = node_next;
             }
         }
     }
@@ -54,4 +50,4 @@ public:
     co_t::_sched(CO);           \
     co_return()
 
-#endif //COROUTINE_CO_HPP
+#endif //COROUTINE_CO_H
