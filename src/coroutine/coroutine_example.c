@@ -5,7 +5,7 @@
 // a coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
 //
 typedef struct {
-    co_t co;            // 2. inherent co_t (as first field)
+    co_t co;            // 2. inherit co_t (as first field)
     int i;              // as local variable
 } co_print_t;
 
@@ -27,7 +27,7 @@ void co_print(co_print_t *co)   // 3. define coroutine function which has the ty
 
 
 typedef struct {
-    co_t co;    // inherent co_t
+    co_t co;    // inherit co_t
     co_print_t coroutine1;
     co_print_t coroutine2;
 } coroutine_example_t;
@@ -36,8 +36,8 @@ void coroutine_example(coroutine_example_t *co) // coroutine function
 {
     co_begin(co,39,40);
 
-    co_sched(co, &co->coroutine1);  // schedule to run coroutine1 concurrently
-    co_sched(co, &co->coroutine2);  // schedule to run coroutine2 concurrently
+    co_sched(co, &co->coroutine1);  // run coroutine1 concurrently
+    co_sched(co, &co->coroutine2);  // run coroutine2 concurrently
 
     co_end(co);
 }
