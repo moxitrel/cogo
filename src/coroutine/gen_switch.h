@@ -14,16 +14,16 @@ co_state()  : 获取协程运行状态
 // 1. 包含头文件
 #include "co_switch_goto.h"
 
-// 2. 自定义协程结构 (局部变量, 返回值), 必须继承 co_t
+// 2. 自定义协程结构 (局部变量, 返回值), 必须继承 gen_t
 typedef struct {
-    // must inherit co_t (put co_t first).
-    co_t co;
+    // must inherit gen_t (put gen_t first).
+    gen_t co;
 
     // user definitions
     ...
 } fun_t;
 
-// 3. 定义协程函数, 类型必须为 void(co_t *)
+// 3. 定义协程函数, 类型必须为 void(gen_t *)
 void fun(fun_t *co)
 {
     //
@@ -72,7 +72,7 @@ void fun_init(fun_t *o, co_fun_t fun,...)
     assert(fun);
 
     *o = (fun_t){
-        // init co_t
+        // init gen_t
         .co = CO(fun),
 
         // init user definitions
@@ -121,148 +121,79 @@ YIELD_26:;          // 3. label the restore point
 }
 
 */
-#ifndef CO_SWITCH_GOTO_H
-#define CO_SWITCH_GOTO_H
+#ifndef COROUTINE_GEN_H
+#define COROUTINE_GEN_H
 
-#include <stddef.h>
-
-#ifndef FATAL
-    #define FATAL(...)  goto FINALLY
-#endif
 #ifndef assert
-    #define assert(E) ((void)((E) == NULL))
+#   define assert(...)  /* nop */
 #endif
 
-//
-// API is *** not type safe ***
-//
-
-// co_t: coroutine context, must be inherited (as first field) by user-defined type.
+// gen_t: coroutine context, must be inherited (as first field) by user-defined type.
 // e.g.
 //   typedef struct {
-//     co_t co;
+//     gen_t co;
 //     ...
 //   } user_defined_t;
-typedef struct co_t co_t;
-typedef void (*co_fun_t)(co_t *);
-struct co_t {
-    // coroutine function
-    co_fun_t fun;
-
-    // save the start point where coroutine continue to run when yield
-    // >=0: running
-    //  -1: finished
+typedef struct {
+    // Start point where coroutine continue to run after yield.
+    //   0: inited
+    //  >0: running
+    //  <0: finished
     int pc;
+} gen_t;
 
-    // when fun finished, run caller next
-    co_t *caller;
-    // coroutine called by co_call()
-    co_t *callee;
-};
+// return gen_t.pc
+#define GEN_PC(CO)      (((gen_t *)(CO))->pc)
 
-// make a co_t in stack
-#define CO(FUN)         ((co_t){.fun = (co_fun_t)(FUN),})
-// return co_t.fun
-//#define CO_FUN(CO)      (((co_t *)(CO))->fun)
-// return co_t.pc
-#define CO_PC(CO)       (((co_t *)(CO))->pc)
-// return co_t.caller
-//#define CO_CALLER(CO)   (((co_t *)(CO))->caller)
-// return co_t.callee
-//#define CO_CALLEE(CO)   (((co_t *)(CO))->callee)
-
-inline static co_t *co_push_callee(co_t *co, co_t *callee)
-{
-    assert(co);
-    assert(callee);
-    co->callee     = callee;
-    callee->caller = co;
-    return co;
-}
-
-inline static int co_state(co_t *co)
+inline static int co_state(const gen_t *const co)
 {
     assert(co);
     return co->pc;
 }
 
 
+// API is *** not type safe ***
 //
-// co_begin(), co_end(), co_return(), co_call() 不是函数表达式, 必须作为独立的语句使用
+// co_begin(), co_end(), co_return() 不是函数表达式, 必须作为独立的语句使用
 //
 
 // Make goto label.
-// e.g. CO_LABEL(13)       -> YIELD_13
-//      CO_LABEL(__LINE__) -> YIELD_118
+// e.g. CO_LABEL(13)       -> CO_RETURN_13
+//      CO_LABEL(__LINE__) -> CO_RETURN_118
 #define CO_LABEL(N)     CO_LABEL_(N)
-#define CO_LABEL_(N)    YIELD_##N
+#define CO_LABEL_(N)    CO_RETURN_##N
 
-#define CASE_GOTO(N)        case N: goto CO_LABEL(N);
+#define CASE_GOTO(N)    case N: goto CO_LABEL(N)
 
 // co_begin(co_t *, ...);
-#define co_begin(CO, ...)                           \
-do {                                                \
-    const int pc = CO_PC(CO);                       \
-    switch (pc) {                                   \
-    case  0:                /* coroutine begin */   \
-        break;                                      \
- /* case -1:              *//* coroutine end   */   \
- /*     goto FINALLY;       */                      \
- /* case  N:                */                      \
- /*     goto YIELD_N;       */                      \
-    MAP(CASE_GOTO, __VA_ARGS__);                    \
-    default:                                        \
-        FATAL("pc:%d isn't valid.", pc);            \
-    }                                               \
-} while (0)
+#define co_begin(CO, ...)                               \
+    switch (GEN_PC(CO)) {                               \
+    case  0:                /* coroutine begin */       \
+        break;                                          \
+ /* case -1:              *//* coroutine end   */       \
+ /*     goto CO_END;      */                            \
+ /* case  N:              */                            \
+ /*     goto CO_RETURN_N; */                            \
+    MAP(CASE_GOTO, __VA_ARGS__);                        \
+    default:                                            \
+        assert(((void)"pc isn't valid.", false));       \
+        goto CO_END;                                    \
+    }
 
 
 // Yield from the coroutine.
 // co_return(co_t *);
 #define co_return(CO, ...)                                                              \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
-    CO_PC(CO) = __LINE__;       /* 1. save the restore point, at label YIELD_N */       \
-    goto FINALLY;               /* 2. return */                                         \
+    GEN_PC(CO) = __LINE__;      /* 1. save the restore point, at label YIELD_N */       \
+    goto CO_END;                /* 2. return */                                         \
 CO_LABEL(__LINE__):             /* 3. put label after each *return* as restore point */ \
 
 
 // co_end(co_t *)
 #define co_end(CO)                          \
-    CO_PC(CO) = -1;   /* finish */          \
-FINALLY:                                    \
-
-
-// Call another coroutine.
-// co_call(co_t *co, co_t *callee);
-#define co_call(CO, CALLEE)                 \
-    co_return(co_push_callee((co_t *)(CO), (co_t *)(CALLEE)))
-
-
-inline static co_t *co_step(co_t *co)
-{
-    assert(co);
-    if (co_state(co) < 0) {
-        if (co->caller != NULL) {
-            co->caller->callee = NULL;
-        }
-        return co->caller;
-    }
-    if (co->callee != NULL) {
-        return co->callee;
-    }
-    co->fun(co);
-    return co;
-}
-
-
-// Loop running the coroutine until finished.
-inline static void co_run(co_t *co)
-{
-    while (co != NULL) {
-        co = co_step(co);
-    }
-}
-
+    GEN_PC(CO) = -1;   /* finish */         \
+CO_END:                                     \
 
 
 // Count the number of arguments.
@@ -270,39 +201,43 @@ inline static void co_run(co_t *co)
 //      LEN(A,B)     -> 2
 //      LEN(A,B,C,D) -> 4
 //
-// BUG: LEN() -> 1, excepted 0
-#define LEN(...)        LEN_PATT_(__VA_ARGS__, LEN_PATT_PADDING)
-#define LEN_PATT_(...)  LEN_PATT(__VA_ARGS__)
-#define LEN_PATT_PADDING                                    \
-     19,  18,  17,  16,  15,  14,  13,  12,  11,  10,       \
-      9,   8,   7,   6,   5,   4,   3,   2,   1,   0
-#define LEN_PATT(                                           \
+#define ARG_PAT(                                            \
      _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,       \
     _11, _12, _13, _14, _15, _16, _17, _18, _19,   N, ...)  N
+#define LEN_PADDING                                         \
+     19,  18,  17,  16,  15,  14,  13,  12,  11,  10,       \
+      9,   8,   7,   6,   5,   4,   3,   2,   1,   0
+#define BOOL_PADDING                                        \
+      1,   1,   1,   1,   1,   1,   1,   1,   1,   1,       \
+      1,   1,   1,   1,   1,   1,   1,   1,   1,   0
+#define ARG_PAT_(...)       ARG_PAT(__VA_ARGS__)
+#define GET_COMMA(...)      ,
+
+#define LEN(...)            ARG_PAT_(__VA_ARGS__, LEN_PADDING)
 
 
 #define MAP(F, ...)       MAP_N_(LEN(__VA_ARGS__), F, __VA_ARGS__)
 #define MAP_N_(...)       MAP_N(__VA_ARGS__)
 #define MAP_N(N, F, ...)  MAP_##N(F, __VA_ARGS__)
 #define MAP_0( F, ...)
-#define MAP_1( F, X, ...) F(X) MAP_0( F, __VA_ARGS__)
-#define MAP_2( F, X, ...) F(X) MAP_1( F, __VA_ARGS__)
-#define MAP_3( F, X, ...) F(X) MAP_2( F, __VA_ARGS__)
-#define MAP_4( F, X, ...) F(X) MAP_3( F, __VA_ARGS__)
-#define MAP_5( F, X, ...) F(X) MAP_4( F, __VA_ARGS__)
-#define MAP_6( F, X, ...) F(X) MAP_5( F, __VA_ARGS__)
-#define MAP_7( F, X, ...) F(X) MAP_6( F, __VA_ARGS__)
-#define MAP_8( F, X, ...) F(X) MAP_7( F, __VA_ARGS__)
-#define MAP_9( F, X, ...) F(X) MAP_8( F, __VA_ARGS__)
-#define MAP_10(F, X, ...) F(X) MAP_9( F, __VA_ARGS__)
-#define MAP_11(F, X, ...) F(X) MAP_10(F, __VA_ARGS__)
-#define MAP_12(F, X, ...) F(X) MAP_11(F, __VA_ARGS__)
-#define MAP_13(F, X, ...) F(X) MAP_12(F, __VA_ARGS__)
-#define MAP_14(F, X, ...) F(X) MAP_13(F, __VA_ARGS__)
-#define MAP_15(F, X, ...) F(X) MAP_14(F, __VA_ARGS__)
-#define MAP_16(F, X, ...) F(X) MAP_15(F, __VA_ARGS__)
-#define MAP_17(F, X, ...) F(X) MAP_16(F, __VA_ARGS__)
-#define MAP_18(F, X, ...) F(X) MAP_17(F, __VA_ARGS__)
-#define MAP_19(F, X, ...) F(X) MAP_18(F, __VA_ARGS__)
+#define MAP_1( F, X, ...) F(X)
+#define MAP_2( F, X, ...) F(X); MAP_1( F, __VA_ARGS__)
+#define MAP_3( F, X, ...) F(X); MAP_2( F, __VA_ARGS__)
+#define MAP_4( F, X, ...) F(X); MAP_3( F, __VA_ARGS__)
+#define MAP_5( F, X, ...) F(X); MAP_4( F, __VA_ARGS__)
+#define MAP_6( F, X, ...) F(X); MAP_5( F, __VA_ARGS__)
+#define MAP_7( F, X, ...) F(X); MAP_6( F, __VA_ARGS__)
+#define MAP_8( F, X, ...) F(X); MAP_7( F, __VA_ARGS__)
+#define MAP_9( F, X, ...) F(X); MAP_8( F, __VA_ARGS__)
+#define MAP_10(F, X, ...) F(X); MAP_9( F, __VA_ARGS__)
+#define MAP_11(F, X, ...) F(X); MAP_10(F, __VA_ARGS__)
+#define MAP_12(F, X, ...) F(X); MAP_11(F, __VA_ARGS__)
+#define MAP_13(F, X, ...) F(X); MAP_12(F, __VA_ARGS__)
+#define MAP_14(F, X, ...) F(X); MAP_13(F, __VA_ARGS__)
+#define MAP_15(F, X, ...) F(X); MAP_14(F, __VA_ARGS__)
+#define MAP_16(F, X, ...) F(X); MAP_15(F, __VA_ARGS__)
+#define MAP_17(F, X, ...) F(X); MAP_16(F, __VA_ARGS__)
+#define MAP_18(F, X, ...) F(X); MAP_17(F, __VA_ARGS__)
+#define MAP_19(F, X, ...) F(X); MAP_18(F, __VA_ARGS__)
 
-#endif // CO_SWITCH_GOTO_H
+#endif // COROUTINE_GEN_H

@@ -1,11 +1,12 @@
-#ifndef COROUTINE_FUN_HPP
-#define COROUTINE_FUN_HPP
+#ifndef COROUTINE_FUN_H
+#define COROUTINE_FUN_H
 
 #include "gen.hpp"
 
 // fun_t: support call stack.
 //  .state(): return the running state.
-//  .run() : run the coroutine until finished.
+//  .step() : run the coroutine until yield.
+//  .run()  : run the coroutine until finished.
 class fun_t : public gen_t {
     // the coroutine function
     virtual void operator()() = 0;
@@ -57,4 +58,4 @@ public:
     co_return()
 
 
-#endif // COROUTINE_FUN_HPP
+#endif // COROUTINE_FUN_H
