@@ -10,7 +10,7 @@ Coroutine library in pure C and C++.
 
 class CoroutineExample : public co_t {
     // a coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
-    class Print: public co_t {  // 2. inherent co_t
+    class Print: public co_t {  // 2. inherit co_t
         // local variables
         int i;
 
@@ -70,7 +70,7 @@ int main()
 // a coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
 //
 typedef struct {
-    co_t co;            // 2. inherent co_t (as first field)
+    co_t co;            // 2. inherit co_t (as first field)
     int i;              // as local variable
 } co_print_t;
 
@@ -92,7 +92,7 @@ void co_print(co_print_t *co)   // 3. define coroutine function which has the ty
 
 
 typedef struct {
-    co_t co;    // inherent co_t
+    co_t co;    // inherit co_t
     co_print_t coroutine1;
     co_print_t coroutine2;
 } coroutine_example_t;
