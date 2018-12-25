@@ -14,9 +14,9 @@ A stackless coroutine library written in pure C and C++.
 #include "coroutine.h"
 
 //
-// 2. 自定义协程类，必须继承 gen_t
+// 2. 自定义协程类，必须继承 co_t
 //
-class PrintNat : public gen_t {
+class PrintNat : public co_t {
     //
     // 定义 局部变量, 返回值, ...
     //
