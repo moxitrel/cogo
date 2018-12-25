@@ -6,6 +6,84 @@ A stackless coroutine library written in pure C and C++.
 - Reenterable
 - Small
 
+* Getting Start
+#+BEGIN_SRC C++
+//
+// 1. 包含头文件
+//
+#include "coroutine.h"
+
+//
+// 2. 自定义协程类，必须继承 gen_t
+//
+struct PrintNat : public gen_t {
+    //
+    // 3.1. 定义 局部变量, 返回值, ...
+    //
+    int i;
+
+
+    //
+    // 3.2. 重载运算符operator(), 类型必须为 void()
+    //
+    void operator()()
+    {
+        //
+        // 3.3. 标识 协程开始 (必须)
+        //
+        co_begin(21,24,...);    // 21,24,...: 列出所有 co_return(), co_call(), co_sched() 所在的行号, 即 __LINE__ 的值
+     // co_begin();             // 若开启GNUC扩展，可省略行号
+
+        //
+        // 3.4. 用户代码 (*** 无法使用局部变量 ***)
+        //
+        for (i = 0; i < 9; i++) {
+            printf("%d\n", i);
+            co_return();    // 3.4. 返回，下次被调用，从此处开始执行；不要使用 return
+        }
+
+        printf("%d\n", i);
+        co_return();        // 3.4. 返回，下次被调用，从此处开始执行；不要使用 return
+
+
+        //
+        // 3.3. 标识 协程结束 (必须)
+        //
+        co_end();
+    }
+};
+
+//
+// 4. 使用
+//
+void example()
+{
+    PrintNat printNat;
+
+    // Run until finish.
+    // Print:
+    //  0
+    //  1
+    //  2
+    //  ...
+    printNat.run();
+}
+#+END_SRC
+
+* API
+- co_begin()  : coroutine begin
+- co_end()    : coroutine end
+- co_return() : yield
+- co_call()   : call another coroutine (block current coroutine)
+- co_sched()  : add a coroutine to the scheduler to run
+
+- obj.state() : return running state
+                0 , ready
+                >0, running
+                <0, stop, coroutine is finished
+
+- obj.run()   : loop running until finish all coroutines
+
 * EXAMPLE
 *** C++
 #+BEGIN_SRC C++
@@ -19,7 +97,7 @@ class Print: public co_t {  // 2. inherit co_t
 
     void operator()()       // 3. override operator(), which has the type "void ()"
     {
-        co_begin(16);       // 4. coroutine begin, 16: the line number of co_return(), co_call(), co_sched()
+        co_begin(16);       // 4. coroutine begin, 16: the line number where co_return(), co_call(), co_sched() appear
      // co_begin();         //    you can omit line numbers if enable gnuc extension
 
         for (i = 0; i < 7; i++) {
@@ -128,84 +206,6 @@ int main()
     //  ...
     coroutine_example_t co = COROUTINE_EXAMPLE();
     co_run((co_t *)&co);
-}
-#+END_SRC
-
-* API
-- co_begin()  : coroutine begin
-- co_end()    : coroutine end
-- co_return() : yield
-- co_call()   : call another coroutine (block current coroutine)
-- co_sched()  : add a coroutine to the scheduler to run
-
-- obj.state() : return running state
-                0 , ready
-                >0, running
-                <0, stop, coroutine is finished
-
-- obj.run()   : loop running until finish all coroutines
-
-* Getting Start
-#+BEGIN_SRC C++
-//
-// 1. 包含头文件
-//
-#include "coroutine.h"
-
-//
-// 2. 自定义协程类，必须继承 gen_t
-//
-struct PrintNat : public gen_t {
-    //
-    // 3.1. 定义 局部变量, 返回值, ...
-    //
-    int i;
-
-
-    //
-    // 3.2. 重载运算符operator(), 类型必须为 void()
-    //
-    void operator()()
-    {
-        //
-        // 3.3. 标识 协程开始 (必须)
-        //
-        co_begin(45, 49, ...);      // 45, 49, ...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
-
-
-        //
-        // 3.4. 用户代码 (*** 无法使用局部变量 ***)
-        //
-        for (i = 0; i < 9; i++) {
-            printf("%d\n", i);
-            co_return();    // 3.4. 返回，下次被调用，从此处开始执行
-        }
-
-        printf("%d\n", i);
-        co_return();        // 3.4. 返回，下次被调用，从此处开始执行
-
-
-        //
-        // 3.3. 标识 协程结束 (必须)
-        //
-        co_end();
-    }
-};
-
-//
-// 4. 使用
-//
-void example()
-{
-    PrintNat printNat;
-
-    // run until finish
-    // result:
-    //  0
-    //  1
-    //  2
-    //  ...
-    printNat.run();
 }
 #+END_SRC
 
