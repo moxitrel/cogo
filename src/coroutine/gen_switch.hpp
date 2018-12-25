@@ -1,116 +1,91 @@
-/*
+/* 示例
 
-co_begin()  : 协程开始
-co_end()    : 协程结束
-co_return() : 协程返回, yield
+#include "gen_switch.hpp"
 
-obj.state() : 获取运行状态
-           0: 准备就绪
-          >0: 正在运行
-          <0: 结束
-
-*** 用法
-
-//
-// 1. 包含头文件
-//
-#include "gen.hpp"
-
-//
-// 2. 自定义协程结构，必须继承 gen_t
-//
-struct T : public gen_t {
-    //
-    // 3.1. 定义 局部变量, 返回值, ...
-    //
+// 必须继承 gen_t
+struct Nat : public gen_t {
+    // 定义 局部变量, 返回值, ...
     int i;
 
 
-    //
-    // 3.2. 定义协程函数, 返回类型必须为 void
-    //
+    // 定义协程函数, 返回类型必须为 void
     void f(...)
     {
-        //
         // 协程开始
-        //
-        co_begin(45, 49, ...);      // 45, 49, ...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
+        co_begin(21,24);      // 21,24,...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
 
 
-        //
-        // 用户代码 (*** 无法使用局部变量 ***)
-        //
+        // 用户代码
         for (i = 0; i < 9; i++) {
             printf("%d\n", i);
             co_return();    // 返回，下次被调用，从此处开始执行
         }
-
         printf("%d\n", i);
         co_return();
 
 
-        //
         // 协程结束
-        //
         co_end();
     }
 };
 
-//
-// 4. 使用
-//
 void example()
 {
-    T gen;
+    Nat gen;
 
     // gen.state(): 获取运行状态
-    //    0: 准备就绪
-    //   >0: 正在运行
+    //  >=0: 正在运行
     //   <0: 结束
     while (gen.state() >= 0) {
         gen.f(...);
     }
 }
 
-*** 原理: 将 *栈变量* 保存到堆上,
 
-// 展开后
-void coroutine(coroutine_t *co) // coroutine_t 由自己定义, 可添加任意字段
+/// 原理
+//
+// 展开 f(...)
+//
+void T::f(...)  
 {
-  // co_begin();
-  switch (co->_pc) {             // co->_pc 存储 从哪里开始继续运行
-  case 0:    break;             // 协程开始
-  case 19:   goto CO_RETURN_19; // 还原点
-  case 23:   goto CO_RETURN_23; // 还原点
-  case 26:   goto CO_RETURN_26; // 还原点
-  case -1:   return;            // 协程结束
-  }
+    //
+    // co_begin(21,24);
+    //
+    switch (get_t::_pc) {         // get_t::_pc 存储 从哪里开始继续运行
+    case  0:  break;              // 协程开始
+    case 21:  goto CO_RETURN_21;  // 还原点
+    case 24:  goto CO_RETURN_24;  // 还原点
+    default:  return;             // 协程结束
+    }
 
 
-  // co_return()
-  co->_pc = 19;      // 1. save restore point, next call will be case 19: goto CO_RETURN_19
-  return;           // 2. return
-CO_RETURN_19:;          // 3. put a label after each *return* as the restore point
+    for (i = 0; i < 9; i++) {
+        printf("%d\n", i);
+        //
+        // co_return();
+        //
+        get_t::_pc = 21;    // 1. save restore point, next call will be "case 21: goto CO_RETURN_21"
+        return;             // 2. return
+CO_RETURN_21:;              // 3. put a label after each *return* as restore point
+    }
+    printf("%d\n", i);
+    //
+    // co_return();
+    //
+    get_t::_pc = 24;        // 1. save restore point, next call will be "case 24: goto CO_RETURN_24"
+    return;                 // 2. return
+CO_RETURN_24:;              // 3. label the restore point
 
-  for (; co->i < 9; co->i ++) {
-    co->v = co->x;
-
-    // co_return()
-    co->_pc = 23;    // 1. save restore point, next call will be case 23: goto CO_RETURN_23
-    return;         // 2. return
-CO_RETURN_23:;          // 3. label the restore point
-  }
-
-  co->v += 1;
-
-  // co_return()
-  co->_pc = 26;      // 1. save restore point, next call will be case 26: goto CO_RETURN_26
-  return;           // 2. return
-CO_RETURN_26:;          // 3. label the restore point
-
-  // co_end()
-  co->_pc = -1;      //协程运行结束
+    //
+    // co_end();
+    //
+    get_t::_pc = -1;
 }
+
+
+* 参考
+- Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
+- Protothreads (http://dunkels.com/adam/pt/)
 
 */
 #ifndef COROUTINE_GEN_H
