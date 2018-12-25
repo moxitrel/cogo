@@ -138,7 +138,7 @@ typedef struct {
     // Start point where coroutine continue to run after yield.
     //   0: inited
     //  >0: running
-    //  <0: finished
+    //  <0: finished (-1: ok, -2: invalid pc)
     int pc;
 } gen_t;
 
@@ -177,6 +177,7 @@ inline static int co_state(const gen_t *const co)
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                                            \
         assert(((void)"pc isn't valid.", false));       \
+        GEN_PC(CO) = -2;   /* invalid _pc, kill */      \
         goto CO_END;                                    \
     }
 

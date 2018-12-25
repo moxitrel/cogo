@@ -1,20 +1,17 @@
 #include "coroutine.h"  // 1. include coroutine.h
 #include <stdio.h>
 
-//
 // a coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
-//
 typedef struct {
     co_t co;            // 2. inherit co_t (as first field)
-    int i;              // as local variable
+    int i;              // declare coroutine local variable as struct field
 } co_print_t;
 
 void co_print(co_print_t *co)   // 3. define coroutine function which has the type "void (co_t *)"
 {
-    co_begin(co, 20);   // 4. coroutine begin. 20: line number of co_return(), co_call(), co_sched()
+    co_begin(co, 17);   // 4. coroutine begin; 17: line number of co_return(), co_call(), co_sched()
  // co_begin(co);       //    you can omit line numbers if enable gnuc extension
 
- // int i;              // local variable isn't allowed, define as struct field instead
     for (co->i = 0; co->i < 7; co->i++) {
         printf("%p:%d\n", co, co->i);
         co_return(co);  // 5. yield
@@ -27,21 +24,23 @@ void co_print(co_print_t *co)   // 3. define coroutine function which has the ty
 
 
 typedef struct {
-    co_t co;    // inherit co_t
-    co_print_t coroutine1;
-    co_print_t coroutine2;
+    co_t co;                // inherit co_t
+    co_print_t coroutine1;  // declare coroutine local variable
+    co_print_t coroutine2;  // declare coroutine local variable
 } coroutine_example_t;
 
-void coroutine_example(coroutine_example_t *co) // coroutine function
+// a coroutine run two co_print coroutine concurrently
+void coroutine_example(coroutine_example_t *co) // define coroutine function
 {
-    co_begin(co,39,40);
+    co_begin(co, 37, 38);
 
     co_sched(co, &co->coroutine1);  // run coroutine1 concurrently
     co_sched(co, &co->coroutine2);  // run coroutine2 concurrently
 
     co_end(co);
 }
-//
+
+// coroutine_example_t constructor
 #define COROUTINE_EXAMPLE() ((coroutine_example_t){ \
     .co = CO(coroutine_example),                    \
     .coroutine1 = CO_PRINT(),                       \

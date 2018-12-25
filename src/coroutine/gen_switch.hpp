@@ -127,7 +127,7 @@ protected:
     // Start point where coroutine continue to run after yield.
     //   0: inited
     //  >0: running
-    //  <0: finished
+    //  <0: finished (-1: ok, -2: invalid _pc)
     int _pc = 0;
 public:
     // Get the running state.
@@ -161,6 +161,7 @@ public:
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                                            \
         assert(((void)"pc isn't valid.", false));       \
+        gen_t::_pc = -2;   /* invalid _pc, kill */      \
         goto CO_END;                                    \
     }
 
