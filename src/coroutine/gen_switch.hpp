@@ -12,7 +12,7 @@ struct Nat : public gen_t {
     void f(...)
     {
         // 协程开始
-        co_begin(21,24);      // 21,24,...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
+        co_begin(21,24);    // 21,24,...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
 
 
         // 用户代码
