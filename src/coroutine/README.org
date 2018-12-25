@@ -55,7 +55,7 @@ struct PrintNat : public gen_t {
 };
 
 //
-// 4. 使用
+// 6. 使用
 //
 void example()
 {
@@ -91,7 +91,7 @@ void example()
 #include "coroutine.h"      // 1. include coroutine.h
 #include <stdio.h>
 
-// a coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
+// A coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
 class Print: public co_t {  // 2. inherit co_t
     // define local variables for coroutine function
     int i;
@@ -110,7 +110,7 @@ class Print: public co_t {  // 2. inherit co_t
     }
 };
 
-// a coroutine run two Print coroutine concurrently
+// A coroutine create two Print coroutine which run concurrently.
 class CoroutineExample : public co_t {  // inherit co_t
     // define local variables
     Print coroutine1;
