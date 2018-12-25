@@ -20,13 +20,13 @@ class Print: public co_t {
     void operator()()
     {
         //
-        // 4. Set coroutine begin, 33: the line number of co_return(), co_call(), co_sched()
+        // 4. Set coroutine begin, 33: the line numbers of co_return(), co_call(), co_sched()
         //
         co_begin(33);
      // co_begin();         // you can omit line numbers if enable GNUC extension
 
         //
-        // 5. User codes
+        // 5. User code
         //
         for (i = 0; i < 7; i++) {
             printf("%p:%d\n", this, i);
