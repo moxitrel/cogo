@@ -42,7 +42,7 @@ public:
     }                                               \
 
 
-// Yield from the coroutine.
+// Yield from the coroutine. (yield)
 // co_t::co_return();
 #define co_return(...)                                                                          \
     __VA_ARGS__;                        /* run before return, intent for handle return value */ \

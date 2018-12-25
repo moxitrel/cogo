@@ -40,12 +40,13 @@ public:
     }
 };
 
+// await
 #undef co_call
 #define co_call(CALLEE)         \
     co_t::_call(CALLEE);        \
     co_return()
 
-
+// Add a new coroutine to the scheduler. (create)
 #define co_sched(CO)            \
     co_t::_sched(CO);           \
     co_return()

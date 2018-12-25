@@ -182,7 +182,7 @@ inline static int co_state(const gen_t *const co)
     }
 
 
-// Yield from the coroutine.
+// Yield from the coroutine. (yield)
 // co_return(co_t *);
 #define co_return(CO, ...)                                                              \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \

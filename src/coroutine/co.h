@@ -30,7 +30,7 @@ void co_run(co_t *co)
     }
 }
 
-// Append co to the coroutine queue.
+// Add a new coroutine to the scheduler. (create)
 #define co_sched(CO, NEWCO)                 \
 do {                                        \
     co_t *const _co = (co_t *)(CO);         \
