@@ -130,3 +130,85 @@ int main()
     co_run((co_t *)&co);
 }
 #+END_SRC
+
+* API
+- co_begin()  : coroutine begin
+- co_end()    : coroutine end
+- co_return() : yield
+- co_call()   : call another coroutine (block current coroutine)
+- co_sched()  : add a coroutine to the scheduler to run
+
+- obj.state() : return running state
+                0 , ready
+                >0, running
+                <0, stop, coroutine is finished
+
+- obj.run()   : loop running until finish all coroutines
+
+* Getting Start
+#+BEGIN_SRC C++
+//
+// 1. 包含头文件
+//
+#include "gen.hpp"
+
+//
+// 2. 自定义协程结构，必须继承 gen_t
+//
+struct T : public gen_t {
+    //
+    // 3.1. 定义 局部变量, 返回值, ...
+    //
+    int i;
+
+
+    //
+    // 3.2. 定义协程函数, 返回类型必须为 void
+    //
+    void f(...)
+    {
+        //
+        // 协程开始
+        //
+        co_begin(45, 49, ...);      // 45, 49, ...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
+
+
+        //
+        // 用户代码 (*** 无法使用局部变量 ***)
+        //
+        for (i = 0; i < 9; i++) {
+            printf("%d\n", i);
+            co_return();    // 返回，下次被调用，从此处开始执行
+        }
+
+        printf("%d\n", i);
+        co_return();
+
+
+        //
+        // 协程结束
+        //
+        co_end();
+    }
+};
+
+//
+// 4. 使用
+//
+void example()
+{
+    T gen;
+
+    // gen.state(): 获取运行状态
+    //    0: 准备就绪
+    //   >0: 正在运行
+    //   <0: 结束
+    while (gen.state() >= 0) {
+        gen.f(...);
+    }
+}
+#+END_SRC
+
+* SEE ALSO
+- Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
+- Protothreads    (http://dunkels.com/adam/pt/)
