@@ -150,12 +150,12 @@ int main()
 //
 // 1. 包含头文件
 //
-#include "gen.hpp"
+#include "coroutine.h"
 
 //
-// 2. 自定义协程结构，必须继承 gen_t
+// 2. 自定义协程类，必须继承 gen_t
 //
-struct T : public gen_t {
+struct PrintNat : public gen_t {
     //
     // 3.1. 定义 局部变量, 返回值, ...
     //
@@ -163,30 +163,30 @@ struct T : public gen_t {
 
 
     //
-    // 3.2. 定义协程函数, 返回类型必须为 void
+    // 3.2. 重载运算符operator(), 类型必须为 void()
     //
-    void f(...)
+    void operator()()
     {
         //
-        // 协程开始
+        // 3.3. 标识 协程开始 (必须)
         //
         co_begin(45, 49, ...);      // 45, 49, ...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
 
 
         //
-        // 用户代码 (*** 无法使用局部变量 ***)
+        // 3.4. 用户代码 (*** 无法使用局部变量 ***)
         //
         for (i = 0; i < 9; i++) {
             printf("%d\n", i);
-            co_return();    // 返回，下次被调用，从此处开始执行
+            co_return();    // 3.4. 返回，下次被调用，从此处开始执行
         }
 
         printf("%d\n", i);
-        co_return();
+        co_return();        // 3.4. 返回，下次被调用，从此处开始执行
 
 
         //
-        // 协程结束
+        // 3.3. 标识 协程结束 (必须)
         //
         co_end();
     }
@@ -197,15 +197,15 @@ struct T : public gen_t {
 //
 void example()
 {
-    T gen;
+    PrintNat printNat;
 
-    // gen.state(): 获取运行状态
-    //    0: 准备就绪
-    //   >0: 正在运行
-    //   <0: 结束
-    while (gen.state() >= 0) {
-        gen.f(...);
-    }
+    // run until finish
+    // result:
+    //  0
+    //  1
+    //  2
+    //  ...
+    printNat.run();
 }
 #+END_SRC
 
