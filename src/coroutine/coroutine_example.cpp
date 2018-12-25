@@ -7,10 +7,10 @@
 //
 // 2. Define a class that inherit co_t
 //
-// A coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
-class Print: public co_t {
+// Print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
+class PrintN : public co_t {
     //
-    // Define local variables, parameters, return values of coroutine function
+    // Declare local variables, parameters, return values for coroutine function
     //
     int i;
 
@@ -20,13 +20,13 @@ class Print: public co_t {
     void operator()()
     {
         //
-        // 4. Set coroutine begin, 33: the line numbers of co_return(), co_call(), co_sched()
+        // 4. Set coroutine begin
         //
-        co_begin(33);
-     // co_begin();         // you can omit line numbers if enable GNUC extension
+        co_begin(33);       // 33: list the line numbers of co_return(), co_call(), co_sched(), i.e. the value of __LINE__
+        // co_begin();         // you can omit line numbers if enable GNUC extension
 
         //
-        // 5. User code
+        // 5. User code (*** No stack variable allowed, use member variable instead ***)
         //
         for (i = 0; i < 7; i++) {
             printf("%p:%d\n", this, i);
@@ -36,52 +36,35 @@ class Print: public co_t {
         //
         // 4. Set coroutine end
         //
-        co_end();           // 4. coroutine end
-    }
-};
-
-//
-// 2. Define a class that inherit co_t
-//
-// A coroutine create two Print coroutine which run concurrently
-class CoroutineExample : public co_t {
-    //
-    // Define local variables, parameters, return values of coroutine function
-    //
-    Print coroutine1;
-    Print coroutine2;
-
-    //
-    // 3. Override operator() with the type "void()"
-    //
-    void operator()()
-    {
-        //
-        // 4. Set coroutine begin
-        //
-        co_begin(68, 69);
-     // co_begin();             // you can omit line numbers if enable GNUC extension
-
-        //
-        // 5. User codes
-        //
-        co_sched(coroutine1);   // run coroutine1 concurrently
-        co_sched(coroutine2);   // run coroutine2 concurrently
-
-        //
-        // 4. Set coroutine end
-        //
         co_end();
     }
 };
 
-//
+// Create two PrintN coroutine
+class CoroutineExample : public co_t {  // 2. Define a class that inherit co_t
+    PrintN coroutine1;          // Declare local variables of coroutine function
+    PrintN coroutine2;          //
+
+    void operator()()           // 3. Override operator()
+    {
+        co_begin(56,57);        // 4. Coroutine begin
+        // co_begin();
+
+        //
+        // 5. User code
+        //
+        co_sched(coroutine1);   // add coroutine1 to scheduler
+        co_sched(coroutine2);   // add coroutine2 to scheduler
+
+        co_end();               // 4. Coroutine end
+    }
+};
+
 // 6. Use it
-//
 int main()
 {
     // Run until finish all coroutines.
-    // Print:
+    // Output:
     //  0x8f0:0
     //  0x8f0:1
     //  0x918:0
@@ -91,5 +74,3 @@ int main()
     //  ...
     CoroutineExample().run();
 }
-
-// clang -std=c++17 coroutine_example.cpp -lstdc++ -o /tmp/CoroutineExample && /tmp/CoroutineExample
