@@ -1,70 +1,39 @@
-// outfile=$(mktemp); clang co_goto_test.c ../../lib/Unity/src/unity.c -o
-// $outfile && $outfile
+// Count the number of arguments.
+// e.g. LEN(1)      -> 1
+//      LEN(1,2)    -> 2
+//      LEN(1,2,3)  -> 3
+// BUG: LEN1()      -> 1, expect 0
+#define LEN1(...)   ARG_PAT(__VA_ARGS__, LEN_PADDING)
 
-#include "../../lib/Unity/src/unity.h"
-#include "../../src/coroutine/co_goto.h"
+#define ARG_PAT(...)       ARG_PAT_(__VA_ARGS__)
+#define ARG_PAT_(                                           \
+     _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,       \
+    _11, _12, _13, _14, _15, _16, _17, _18, _19,   N, ...)  N
+#define LEN_PADDING                                         \
+     19,  18,  17,  16,  15,  14,  13,  12,  11,  10,       \
+      9,   8,   7,   6,   5,   4,   3,   2,   1,   0
 
-// gen_0_13: 生成器, 返回 0, 1, 2, ... 13
 //
-// DEFINE_CO(gen_0_13, int value, int i) 等价于:
+// Count the number of arguments. (Solve the LEN1(...)'s BUG)
 //
-//    typedef struct {
-//        CoroutineContext;
+// e.g. LEN()       -> LEN_(0,1,1) -> LEN_01(1) -> 0
+//      LEN(1)      -> LEN_(0,0,1) -> LEN_00(1) -> 1
+//      LEN(1,2)    -> LEN_(1,1,2) -> LEN_11(2) -> 2
+//      LEN(1,2,3)  -> LEN_(1,1,3) -> LEN_11(3) -> 3
+//      LEN(1,2,...)-> LEN_(1,1,N) -> LEN_11(N) -> N
 //
-//        int value;    // 保存返回值
-//        int i;        // 局部变量
-//    } gen_0_13_ctx_t;
+// SEE: http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
+//      P99, advanced macro tricks (http://p99.gforge.inria.fr/p99-html/index.html)
 //
-// void gen_0_13(ctx_t *ctx)
-//
-CO_FUN(gen_0_13, int value, int i)
-{
-    // BEGIN() 之前的代码，每次调用都会被执行
-    int *value = CO_ARG(gen_0_13, value); // & ((gen_0_13_ctx_t *)ctx) -> value
-    int *i     = CO_ARG(gen_0_13, i);     // & ((gen_0_13_ctx_t *)ctx) -> i
+#define LEN(...)            LEN_(HAS_COMMA(__VA_ARGS__), HAS_COMMA(GET_COMMA __VA_ARGS__ ()), LEN1(__VA_ARGS__))
 
-    CO_BEGIN(32, 35, 36, 37, 38); // 协程开始
-                                  // 33,37, ...: YIELD() 所在的行号; 若不正确, 则会编译失败
-                                  // (e.g. use of undeclared label 'yield_32')
-
-    // 返回 0, 1, ... 9
-    for (; *i < 10; (*i)++) {
-        YIELD(*value = *i); //存储返回值, 并返回
-    }
-
-    YIELD(*value = (*i)++); // value=10, i=11
-    YIELD(*value = (*i)++); // value=11, i=12
-    YIELD(*value = (*i)++); // value=12, i=13
-    YIELD(*value = (*i)++); // value=13, i=14
-
-    CO_END(); //协程结束
-}
-
-//void test_gen_0_13(void)
-//{
-//    gen_0_13_ctx_t ctx = {};
-//
-//    for (int i = 0; i < 14; i++) {
-//        gen_0_13((ctx_t *)&ctx);
-//        TEST_ASSERT(ctx.value == i);
-//    }
-//
-//    TEST_ASSERT(ctx.yield > 0); // 此时，协程未运行完毕，即END()未执行
-//    gen_0_13((ctx_t *)&ctx);    // 运行END()
-//    TEST_ASSERT(ctx.yield < 0); // 协程已运行结束
-//}
-
-void test_call(void)
-{
-    CO_RUN(gen_0_13, 0, 0);
-}
-
-int main(void)
-{
-    UNITY_BEGIN();
-
-    //    RUN_TEST(test_gen_0_13);
-    RUN_TEST(test_call);
-
-    return UNITY_END();
-}
+#define HAS_COMMA_PADDING                                   \
+      1,   1,   1,   1,   1,   1,   1,   1,   1,   1,       \
+      1,   1,   1,   1,   1,   1,   1,   1,   0,   0
+#define HAS_COMMA(...)      ARG_PAT(__VA_ARGS__, HAS_COMMA_PADDING)
+#define GET_COMMA(...)      ,
+#define LEN_(D1, D2, N)     LEN_01N(D1, D2, N)
+#define LEN_01N(D1, D2, N)  LEN_##D1##D2(N)
+#define LEN_01(N)           0
+#define LEN_00(N)           1
+#define LEN_11(N)           N

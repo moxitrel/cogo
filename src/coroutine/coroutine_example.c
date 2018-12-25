@@ -11,7 +11,7 @@ typedef struct {
 
 void co_print(co_print_t *co)   // 3. define coroutine function which has the type "void (co_t *)"
 {
-    co_begin(co, 20);   // 4. coroutine begin. 17: line number of co_return(), co_call(), co_sched()
+    co_begin(co, 20);   // 4. coroutine begin. 20: line number of co_return(), co_call(), co_sched()
  // co_begin(co);       //    you can omit line numbers if enable gnuc extension
 
  // int i;              // local variable isn't allowed, define as struct field instead
