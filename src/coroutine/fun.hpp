@@ -51,7 +51,7 @@ public:
     }
 };
 
-// Call another coroutine.
+// Call another coroutine. (await)
 // fun_t::co_call(fun_t &callee);
 #define co_call(CALLEE)                     \
     fun_t::_call(CALLEE);                   \

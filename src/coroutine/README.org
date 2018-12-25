@@ -19,7 +19,7 @@ class Print: public co_t {  // 2. inherit co_t
 
     void operator()()       // 3. override operator(), which has the type "void ()"
     {
-        co_begin(16);       // 4. coroutine begin, 20: the line number of co_return(), co_call(), co_sched()
+        co_begin(16);       // 4. coroutine begin, 16: the line number of co_return(), co_call(), co_sched()
      // co_begin();         //    you can omit line numbers if enable gnuc extension
 
         for (i = 0; i < 7; i++) {
