@@ -7,11 +7,14 @@ A stackless coroutine library written in pure C and C++.
 - Small
 
 * Getting Start
+*** C++
 #+BEGIN_SRC C++
 //
-// 1. 包含头文件
+// 1. 包含头文件 "coroutine.h"
 //
 #include "coroutine.h"
+
+#include <stdio.h>
 
 //
 // 2. 自定义协程类，必须继承 co_t
@@ -36,15 +39,15 @@ class PrintNat : public co_t {
 
         //
         // 5. 用户代码 (*** 无法使用局部变量, 用 类成员变量替代 ***)
-        //            (用 co_return() 返回, 不要使用 return )
+        //            (不要使用 return)
         //
         for (i = 0; i < 9; i++) {
             printf("%d\n", i);
-            co_return();    // 返回，下次被调用，从此处开始执行；不要使用 return
+            co_return();    // 返回，下次被调用，从此处开始执行
         }
 
         printf("%d\n", i);
-        co_return();        // 返回，下次被调用，从此处开始执行；不要使用 return
+        co_return();        // 返回，下次被调用，从此处开始执行
 
 
         //
@@ -71,19 +74,107 @@ void example()
 }
 #+END_SRC
 
+*** C
+#+BEGIN_SRC C
+//
+// 1. 包含头文件 "coroutine.h"
+//
+#include "coroutine.h"
+
+#include <stdio.h>
+
+//
+// 2. 自定义协程结构，必须继承 co_t
+//
+typedef struct {
+    //
+    // 继承co_t (作为第1个字段)
+    //
+    co_t co;
+
+    //
+    // 定义 局部变量, 返回值, ...
+    //
+    int i;
+} print_nat_t;
+
+//
+// 3. 定义协程函数, 类型必须为 void (co_t *)
+//
+void print_nat(print_nat_t *co)
+{
+    //
+    // 4. 标识 协程开始 (必须)
+    //
+    co_begin(co, 21,24,...);    // 21,24,...: 列出所有 co_return(), co_call(), co_sched() 所在的行号, 即 __LINE__ 的值
+ // co_begin(co);               // 若开启GNUC扩展，可省略行号
+
+    //
+    // 5. 用户代码 (*** 不要使用局部变量, 无法被恢复; 定义到 struct字段 中 ***)
+    //            (不要使用 return)
+    //
+    for (co->i = 0; co->i < 9; co->i++) {
+        printf("%d\n", co->i);
+        co_return(co);          // 返回，下次被调用，从此处开始执行
+    }
+
+    printf("%d\n", co->i);
+    co_return(co);              // 返回，下次被调用，从此处开始执行
+
+
+    //
+    // 4. 标识 协程结束 (必须)
+    //
+    co_end(co);
+}
+
+//
+// 6. 使用
+//
+void example()
+{
+    // 7. 初始化 协程结构
+    print_nat_t printNat = {
+        .co = CO(print_nat),    // 初始化 co_t
+    //  .i = ???,               // 忽略 i 的初始化
+    };
+
+    // Run until finish.
+    // Print:
+    //  0
+    //  1
+    //  2
+    //  ...
+    co_run((co_t *)&printNat);
+}
+#+END_SRC
+
 * API
-- co_begin()  : coroutine begin
-- co_end()    : coroutine end
-- co_return() : yield
-- co_call()   : call another coroutine (block current coroutine)
-- co_sched()  : add a coroutine to the scheduler to run
+*** C++
+- co_begin (...)    : coroutine begin
+- co_end   ()       : coroutine end
+- co_return()       : yield
+- co_call  (co_t &) : call another coroutine (block current coroutine)
+- co_sched (co_t &) : add a coroutine to the scheduler to run
 
 - obj.state() : return running state
-                0 , ready
+                 0, ready
                 >0, running
                 <0, stop, coroutine is finished
-
 - obj.run()   : loop running until finish all coroutines
+
+*** C
+- co_begin (co_t *, ...)    : coroutine begin
+- co_end   (co_t *)         : coroutine end
+- co_return(co_t *)         : yield
+- co_call  (co_t *, co_t *) : call another coroutine (block current coroutine)
+- co_sched (co_t *, co_t *) : add a coroutine to the scheduler to run
+
+- co_state(co_t *)  : return running state
+                       0, ready
+                      >0, running
+                      <0, stop, coroutine is finished
+- co_run(co_t *)    : loop running until finish all coroutines
 
 * EXAMPLE
 *** C++
