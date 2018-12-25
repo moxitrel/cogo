@@ -12,7 +12,7 @@ A stackless coroutine library written in pure C and C++.
 //
 // 1. 包含头文件 "coroutine.h"
 //
-#include "../../src/coroutine/coroutine.h"
+#include "coroutine.h"
 #include <stdio.h>
 
 //
