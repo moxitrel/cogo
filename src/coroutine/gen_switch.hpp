@@ -1,116 +1,91 @@
-/*
+/* 示例
 
-co_begin()  : 协程开始
-co_end()    : 协程结束
-co_return() : 协程返回, yield
+#include "gen_switch.hpp"
 
-obj.state() : 获取运行状态
-           0: 准备就绪
-          >0: 正在运行
-          <0: 结束
-
-*** 用法
-
-//
-// 1. 包含头文件
-//
-#include "gen.hpp"
-
-//
-// 2. 自定义协程结构，必须继承 gen_t
-//
-struct T : public gen_t {
-    //
-    // 3.1. 定义 局部变量, 返回值, ...
-    //
+// 必须继承 gen_t
+struct Nat : public gen_t {
+    // 定义 局部变量, 返回值, ...
     int i;
 
 
-    //
-    // 3.2. 定义协程函数, 返回类型必须为 void
-    //
+    // 定义协程函数, 返回类型必须为 void
     void f(...)
     {
-        //
         // 协程开始
-        //
-        co_begin(45, 49, ...);      // 45, 49, ...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
+        co_begin(21,24);    // 21,24,...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
 
 
-        //
-        // 用户代码 (*** 无法使用局部变量 ***)
-        //
+        // 用户代码
         for (i = 0; i < 9; i++) {
             printf("%d\n", i);
             co_return();    // 返回，下次被调用，从此处开始执行
         }
-
         printf("%d\n", i);
         co_return();
 
 
-        //
         // 协程结束
-        //
         co_end();
     }
 };
 
-//
-// 4. 使用
-//
 void example()
 {
-    T gen;
+    Nat gen;
 
     // gen.state(): 获取运行状态
-    //    0: 准备就绪
-    //   >0: 正在运行
+    //  >=0: 正在运行
     //   <0: 结束
     while (gen.state() >= 0) {
         gen.f(...);
     }
 }
 
-*** 原理: 将 *栈变量* 保存到堆上,
 
-// 展开后
-void coroutine(coroutine_t *co) // coroutine_t 由自己定义, 可添加任意字段
+/// 原理
+//
+// 展开 f(...)
+//
+void T::f(...)  
 {
-  // co_begin();
-  switch (co->_pc) {             // co->_pc 存储 从哪里开始继续运行
-  case 0:    break;             // 协程开始
-  case 19:   goto CO_RETURN_19; // 还原点
-  case 23:   goto CO_RETURN_23; // 还原点
-  case 26:   goto CO_RETURN_26; // 还原点
-  case -1:   return;            // 协程结束
-  }
+    //
+    // co_begin(21,24);
+    //
+    switch (get_t::_pc) {         // get_t::_pc 存储 从哪里开始继续运行
+    case  0:  break;              // 协程开始
+    case 21:  goto CO_RETURN_21;  // 还原点
+    case 24:  goto CO_RETURN_24;  // 还原点
+    default:  return;             // 协程结束
+    }
 
 
-  // co_return()
-  co->_pc = 19;      // 1. save restore point, next call will be case 19: goto CO_RETURN_19
-  return;           // 2. return
-CO_RETURN_19:;          // 3. put a label after each *return* as the restore point
+    for (i = 0; i < 9; i++) {
+        printf("%d\n", i);
+        //
+        // co_return();
+        //
+        get_t::_pc = 21;    // 1. save restore point, next call will be "case 21: goto CO_RETURN_21"
+        return;             // 2. return
+CO_RETURN_21:;              // 3. put a label after each *return* as restore point
+    }
+    printf("%d\n", i);
+    //
+    // co_return();
+    //
+    get_t::_pc = 24;        // 1. save restore point, next call will be "case 24: goto CO_RETURN_24"
+    return;                 // 2. return
+CO_RETURN_24:;              // 3. label the restore point
 
-  for (; co->i < 9; co->i ++) {
-    co->v = co->x;
-
-    // co_return()
-    co->_pc = 23;    // 1. save restore point, next call will be case 23: goto CO_RETURN_23
-    return;         // 2. return
-CO_RETURN_23:;          // 3. label the restore point
-  }
-
-  co->v += 1;
-
-  // co_return()
-  co->_pc = 26;      // 1. save restore point, next call will be case 26: goto CO_RETURN_26
-  return;           // 2. return
-CO_RETURN_26:;          // 3. label the restore point
-
-  // co_end()
-  co->_pc = -1;      //协程运行结束
+    //
+    // co_end();
+    //
+    get_t::_pc = -1;
 }
+
+
+* 参考
+- Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
+- Protothreads (http://dunkels.com/adam/pt/)
 
 */
 #ifndef COROUTINE_GEN_H
@@ -127,7 +102,7 @@ protected:
     // Start point where coroutine continue to run after yield.
     //   0: inited
     //  >0: running
-    //  <0: finished
+    //  <0: finished (-1: ok, -2: invalid _pc)
     int _pc = 0;
 public:
     // Get the running state.
@@ -161,11 +136,12 @@ public:
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                                            \
         assert(((void)"pc isn't valid.", false));       \
+        gen_t::_pc = -2;   /* invalid _pc, kill */      \
         goto CO_END;                                    \
     }
 
 
-// Yield from the coroutine.
+// Yield from the coroutine. (yield)
 // gen_t::co_return();
 #define co_return(...)                                                                  \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
@@ -180,24 +156,51 @@ CO_LABEL(__LINE__):             /* 3. put label after each *return* as restore p
 CO_END:                                     \
 
 
+
 // Count the number of arguments.
-// e.g. LEN(A)       -> 1
-//      LEN(A,B)     -> 2
-//      LEN(A,B,C,D) -> 4
-//
-#define ARG_PAT(                                            \
+// e.g. LEN(1)      -> 1
+//      LEN(1,2)    -> 2
+//      LEN(1,2,3)  -> 3
+// BUG: LEN1()      -> 1, expect 0
+#define LEN1(...)       ARG_PAT(__VA_ARGS__, LEN_PADDING)
+
+#define ARG_PAT(...)    ARG_PAT_(__VA_ARGS__)
+#define ARG_PAT_(                                           \
      _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,       \
     _11, _12, _13, _14, _15, _16, _17, _18, _19,   N, ...)  N
 #define LEN_PADDING                                         \
      19,  18,  17,  16,  15,  14,  13,  12,  11,  10,       \
       9,   8,   7,   6,   5,   4,   3,   2,   1,   0
-#define BOOL_PADDING                                        \
-      1,   1,   1,   1,   1,   1,   1,   1,   1,   1,       \
-      1,   1,   1,   1,   1,   1,   1,   1,   1,   0
-#define ARG_PAT_(...)       ARG_PAT(__VA_ARGS__)
-#define GET_COMMA(...)      ,
 
-#define LEN(...)            ARG_PAT_(__VA_ARGS__, LEN_PADDING)
+// Count the number of arguments. (Solve the LEN1(...)'s BUG)
+//
+// e.g. LEN()       -> LEN_(0,1,1) -> LEN_01(1) -> 0
+//      LEN(1)      -> LEN_(0,0,1) -> LEN_00(1) -> 1
+//      LEN(1,2)    -> LEN_(1,1,2) -> LEN_11(2) -> 2
+//      LEN(1,2,3)  -> LEN_(1,1,3) -> LEN_11(3) -> 3
+//      LEN(1,2,...)-> LEN_(1,1,N) -> LEN_11(N) -> N
+//
+// SEE: https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments
+//      http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
+//      P99, advanced macro tricks (http://p99.gforge.inria.fr/p99-html/index.html)
+//
+#define LEN(...)                            \
+LEN_(                                       \
+    HAS_COMMA(__VA_ARGS__),                 \
+    HAS_COMMA(GET_COMMA __VA_ARGS__ ()),    \
+    LEN1(__VA_ARGS__)                       \
+)
+#define LEN_(D1, D2, N)     LEN_01N(D1, D2, N)
+#define LEN_01N(D1, D2, N)  LEN_##D1##D2(N)
+#define LEN_01(N)           0
+#define LEN_00(N)           1
+#define LEN_11(N)           N
+
+#define HAS_COMMA_PADDING                                   \
+      1,   1,   1,   1,   1,   1,   1,   1,   1,   1,       \
+      1,   1,   1,   1,   1,   1,   1,   1,   0,   0
+#define HAS_COMMA(...)      ARG_PAT(__VA_ARGS__, HAS_COMMA_PADDING)
+#define GET_COMMA(...)      ,
 
 
 #define MAP(F, ...)       MAP_N_(LEN(__VA_ARGS__), F, __VA_ARGS__)

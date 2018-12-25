@@ -46,7 +46,7 @@ void fun_run(fun_t *co)
     }
 }
 
-// Call another coroutine.
+// Call another coroutine. (await)
 // co_call(co_t *, co_t *);
 #define co_call(CO, CALLEE)                     \
 do {                                            \

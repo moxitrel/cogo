@@ -1,120 +1,215 @@
-CO(FUN)     : 新建协程
-co_begin()  : 协程开始
-co_end()    : 协程结束
-co_return() : 返回
-co_call()   : 调用其他协程
-co_state()  : 获取协程运行状态
-              >=0: 正在运行
-               -1: 运行结束
+* INTRODUCTION
+A stackless coroutine library written in pure C and C++.
 
-*** 用法
+* FEATURES
+- Portable: pure C/C++
+- Reenterable
+- Small
 
+* Getting Start
+#+BEGIN_SRC C++
+//
 // 1. 包含头文件
-#include "co_switch_goto.h"
+//
+#include "coroutine.h"
 
-// 2. 自定义协程结构 (局部变量, 返回值), 必须继承 co_t
-typedef struct {
-    // must inherit co_t (put co_t first).
-    co_t co;
+//
+// 2. 自定义协程类，必须继承 gen_t
+//
+class PrintNat : public gen_t {
+    //
+    // 定义 局部变量, 返回值, ...
+    //
+    int i;
 
-    // user definitions
-    ...
-} fun_t;
 
-// 3. 定义协程函数, 类型必须为 void(co_t *)
-void fun(fun_t *co)
+    //
+    // 3. 重载运算符operator(), 类型必须为 void()
+    //
+    void operator()()
+    {
+        //
+        // 4. 标识 协程开始 (必须)
+        //
+        co_begin(21,24,...);    // 21,24,...: 列出所有 co_return(), co_call(), co_sched() 所在的行号, 即 __LINE__ 的值
+     // co_begin();             // 若开启GNUC扩展，可省略行号
+
+        //
+        // 5. 用户代码 (*** 无法使用局部变量, 用 类成员变量替代 ***)
+        //            (用 co_return() 返回, 不要使用 return )
+        //
+        for (i = 0; i < 9; i++) {
+            printf("%d\n", i);
+            co_return();    // 返回，下次被调用，从此处开始执行；不要使用 return
+        }
+
+        printf("%d\n", i);
+        co_return();        // 返回，下次被调用，从此处开始执行；不要使用 return
+
+
+        //
+        // 4. 标识 协程结束 (必须)
+        //
+        co_end();
+    }
+};
+
+//
+// 6. 使用
+//
+void example()
 {
-    //
-    // co_begin()之前的代码，每次调用都会被执行
-    //
-    assert(co);
+    PrintNat printNat;
 
-    // 别名关联
-    T &x = co->x;
-    T &v = co->v;
+    // Run until finish.
+    // Print:
+    //  0
+    //  1
+    //  2
+    //  ...
+    printNat.run();
+}
+#+END_SRC
 
-    //
-    // 协程开始
-    //
-    co_begin(co,35,39,...); // 35,39, ...: 列出所有 co_return(), co_call() 所在的行号, 即 __LINE__ 的值
+* API
+- co_begin()  : coroutine begin
+- co_end()    : coroutine end
+- co_return() : yield
+- co_call()   : call another coroutine (block current coroutine)
+- co_sched()  : add a coroutine to the scheduler to run
 
+- obj.state() : return running state
+                0 , ready
+                >0, running
+                <0, stop, coroutine is finished
 
-    //
-    // 用户代码:  !!! 禁用局部变量 !!!
-    //
-    co_return(co);          // 返回，下次被调用，从此处开始执行，***局部变量无法被恢复***
+- obj.run()   : loop running until finish all coroutines
 
-    for (; co->i < 9; co->i ++) {
-        v = x;
-        co_return(co);
+* EXAMPLE
+*** C++
+#+BEGIN_SRC C++
+#include "coroutine.h"      // 1. include coroutine.h
+#include <stdio.h>
+
+// A coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
+class Print: public co_t {  // 2. inherit co_t
+    // define local variables for coroutine function
+    int i;
+
+    void operator()()       // 3. override operator(), which has the type "void ()"
+    {
+        co_begin(16);       // 4. coroutine begin, 16: the line number where co_return(), co_call(), co_sched() appear
+     // co_begin();         //    you can omit line numbers if enable gnuc extension
+
+        for (i = 0; i < 7; i++) {
+            printf("%p:%d\n", this, i);
+            co_return();    // 5. yield
+        }
+
+        co_end();           // 4. coroutine end
+    }
+};
+
+// A coroutine create two Print coroutine which run concurrently.
+class CoroutineExample : public co_t {  // inherit co_t
+    // define local variables
+    Print coroutine1;
+    Print coroutine2;
+
+    void operator()()           // override operator()
+    {
+        co_begin(34, 35);
+     // co_begin();
+
+        co_sched(coroutine1);   // run coroutine1 concurrently
+        co_sched(coroutine2);   // run coroutine2 concurrently
+
+        co_end();
+    }
+};
+
+int main()
+{
+    // Run until finish all coroutines.
+    // Print:
+    //  0x8f0:0
+    //  0x8f0:1
+    //  0x918:0
+    //  0x8f0:2
+    //  0x918:1
+    //  0x8f0:3
+    //  ...
+    CoroutineExample().run();
+}
+#+END_SRC
+
+*** C
+#+BEGIN_SRC C
+#include "coroutine.h"  // 1. include coroutine.h
+#include <stdio.h>
+
+// a coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
+typedef struct {
+    co_t co;            // 2. inherit co_t (as first field)
+    int i;              // declare coroutine local variable as struct field
+} co_print_t;
+
+void co_print(co_print_t *co)   // 3. define coroutine function which has the type "void (co_t *)"
+{
+    co_begin(co, 17);   // 4. coroutine begin; 17: line number of co_return(), co_call(), co_sched()
+ // co_begin(co);       //    you can omit line numbers if enable gnuc extension
+
+    for (co->i = 0; co->i < 7; co->i++) {
+        printf("%p:%d\n", co, co->i);
+        co_return(co);  // 5. yield
     }
 
-    v += 1;
-    co_return(co);
+    co_end(co);         // 4. coroutine end
+}
+// co_print_t constructor
+#define CO_PRINT() ((co_print_t){.co = CO(co_print),})
 
-    //
-    // 协程结束
-    //
+
+typedef struct {
+    co_t co;                // inherit co_t
+    co_print_t coroutine1;  // declare coroutine local variable
+    co_print_t coroutine2;  // declare coroutine local variable
+} coroutine_example_t;
+
+// a coroutine run two co_print coroutine concurrently
+void coroutine_example(coroutine_example_t *co) // define coroutine function
+{
+    co_begin(co, 37, 38);
+
+    co_sched(co, &co->coroutine1);  // run coroutine1 concurrently
+    co_sched(co, &co->coroutine2);  // run coroutine2 concurrently
+
     co_end(co);
-
-
-    //
-    // co_end()之后的代码，每次co_return()返回前 都会被执行
-    //
 }
 
-// 4. define initializer
-void fun_init(fun_t *o, co_fun_t fun,...)
+// coroutine_example_t constructor
+#define COROUTINE_EXAMPLE() ((coroutine_example_t){ \
+    .co = CO(coroutine_example),                    \
+    .coroutine1 = CO_PRINT(),                       \
+    .coroutine2 = CO_PRINT(),                       \
+})
+
+int main()
 {
-    assert(o);
-    assert(fun);
-
-    *o = (fun_t){
-        // init co_t
-        .co = CO(fun),
-
-        // init user definitions
-        ...
-    };
+    // Run until finish all coroutines.
+    // Print:
+    //  0x8f0:0
+    //  0x8f0:1
+    //  0x918:0
+    //  0x8f0:2
+    //  0x918:1
+    //  0x8f0:3
+    //  ...
+    coroutine_example_t co = COROUTINE_EXAMPLE();
+    co_run((co_t *)&co);
 }
+#+END_SRC
 
- *** 原理: 将 *栈变量* 保存到堆上,
-
-// 展开后
-void coroutine(coroutine_t *co) // coroutine_t 由自己定义, 可添加任意字段
-{
-  // co_begin();
-  switch (co->pc) {             // co->pc 存储 从哪里开始继续运行
-  case 0:    break;             // 协程开始
-  case 19:   goto YIELD_19;     // 还原点
-  case 23:   goto YIELD_23;     // 还原点
-  case 26:   goto YIELD_26;     // 还原点
-  case -1:   return;            // 协程结束
-  }
-
-
-  // co_return()
-  co->pc = 19;      // 1. save restore point, next call will be case 19: goto YIELD_19
-  return;           // 2. return
-YIELD_19:;          // 3. put a label after each *return* as the restore point
-
-  for (; co->i < 9; co->i ++) {
-    co->v = co->x;
-
-    // co_return()
-    co->pc = 23;    // 1. save restore point, next call will be case 23: goto YIELD_23
-    return;         // 2. return
-YIELD_23:;          // 3. label the restore point
-  }
-
-  co->v += 1;
-
-  // co_return()
-  co->pc = 26;      // 1. save restore point, next call will be case 26: goto YIELD_26
-  return;           // 2. return
-YIELD_26:;          // 3. label the restore point
-
-  // co_end()
-  co->pc = -1;      //协程运行结束
-}
-
+* SEE ALSO
+- Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
+- Protothreads    (http://dunkels.com/adam/pt/)
