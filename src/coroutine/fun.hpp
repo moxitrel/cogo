@@ -4,20 +4,18 @@
 #include "gen.hpp"
 
 // fun_t: support call stack.
-//  .state(): return the running state.
-//  .step() : run the coroutine until yield.
-//  .run()  : run the coroutine until finished.
-class fun_t : public gen_t {
-    // the coroutine function
+//  .step () -> fun_t *: run until yield, return the next coroutine to be run.
+//  .run  ()           : run until finished.
+class fun_t : protected gen_t {
+    // The coroutine function
     virtual void operator()() = 0;
 
-    // The parent who call me. (call stack)
+    // The parent who call me. (build call stack)
     fun_t *caller = nullptr;
-
-    // Temporarily store the coroutine who called by me. Used by co_call()
+    // Temporarily store the coroutine who called by me (the new call stack top), used by co_call(), step()
     inline thread_local static fun_t *tmp_callee = nullptr;
 protected:
-    // Push callee into call stack.
+    // Push callee to call stack.
     void _call(fun_t &callee)
     {
         callee.caller = this;
@@ -33,6 +31,7 @@ public:
             next = caller;
         } else {
             operator()();
+            // Refresh call stack top.
             if (tmp_callee != nullptr) {
                 next = tmp_callee;
                 tmp_callee = nullptr;
