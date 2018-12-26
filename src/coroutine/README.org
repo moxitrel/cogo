@@ -6,6 +6,36 @@ A stackless coroutine library written in pure C and C++.
 - Reenterable
 - Small
 
+* EXAMPLE
+#+BEGIN_SRC C++
+#include "coroutine.h"
+
+// Natural number generator
+struct Nat : public co_t {
+    unsigned int value;
+
+    void operator()()
+    {
+        co_begin(13);
+     // co_begin();         // if enable GNUC extension
+
+        for (value = 0; ; value++) {
+            co_return();
+        }
+
+        co_end();
+    }
+};
+
+int main()
+{
+    Nat nat;
+    nat(); // nat.value: 0
+    nat(); // nat.value: 1
+    nat(); // nat.value: 2
+}
+#+END_SRC
+
 * Getting Start
 *** C++
 #+BEGIN_SRC C++
@@ -106,24 +136,28 @@ int main()
 
 // 2. 定义协程结构，必须继承 co_t
 typedef struct {
-    co_t co;    // 继承co_t (作为第1个字段)
+    // 继承co_t (作为第1个字段)
+    co_t co;
 
     // 声明协程的 局部变量, 返回值, ...
     int value;
-} nat_gen_t;    // 自然数生成器
+} nat_gen_t;        // 自然数生成器
 
 // 3. 定义协程函数, 类型必须为 void (co_t *)
 void nat_gen(nat_gen_t *co)
 {
-    co_begin(co, 20);   // 4. 标识 协程开始, 并列出所有 co_return(), co_call(), co_sched() 所在的行号, 即 __LINE__ 的值
- // co_begin(co);       // 若开启GNUC扩展，可省略行号
+    // 4. 标识 协程开始, 并列出所有 co_return(), co_call(), co_sched() 所在的行号, 即 __LINE__ 的值
+    co_begin(co, 23);
+ // co_begin(co);    // 若开启GNUC扩展，可省略行号
 
     // 5. 用户代码 (不要使用局部变量, 无法被恢复; 定义到 struct 中)
     for (co->value = 0; ; co->value++) {
-        co_return(co);  // 返回，下次被调用，从此处开始执行
+        // 返回，下次被调用，从此处开始执行
+        co_return(co);
     }
 
-    co_end(co);         // 4. 标识 协程结束
+    // 4. 标识 协程结束
+    co_end(co);
 }
 // 6. 定义构造器, 用 CO() 初始化 co_t 成员
 #define NAT_GEN()   ((nat_gen_t){.co = CO(nat_gen),})
