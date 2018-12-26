@@ -2,7 +2,7 @@
 A stackless coroutine library written in pure C and C++.
 
 * FEATURES
-- Portable: pure C/C++
+- Portable
 - Reenterable
 - Small
 
@@ -36,7 +36,7 @@ int main()
 }
 #+END_SRC
 
-* Getting Start
+* Getting Started
 *** C++
 #+BEGIN_SRC C++
 //
