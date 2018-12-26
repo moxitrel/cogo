@@ -1,19 +1,50 @@
 #include "../../src/coroutine/coroutine.h"
 
+/*
+ *
+ * co_wait(lock):
+ *   lock.locked == true  => lock.add(this)
+ *                            delete-from-concurrent-queue
+ *                           co_return()
+ *
+ *
+ *
+ * */
 // A natural number generator
-struct Nat : public co_t {
-    unsigned int value;
 
-    void operator()()
+struct co_lock_t {
+    bool locked = false;
+    co_t *head = nullptr;
+    co_t *tail = nullptr;
+
+    void lock()
     {
-        co_begin(13);
-     // co_begin();         // if enable GNUC extension
+        locked = true
+    }
 
-        for (value = 0; ; value++) {
-            co_return();
+    void unlock()
+    {
+        locked = false
+    }
+
+    bool is_locked()
+    {
+        return locked
+    }
+
+    void add(co_t &co)
+    {
+        if (tail == nullptr) {
+            head = tail = &co;
+        } else {
+            tail->q_next = &co;
+            tail = &co;
         }
+    }
 
-        co_end();
+    void clear()
+    {
+        // restore to queue
     }
 };
 
