@@ -171,16 +171,16 @@ int main(void)
 
 * API
 *** C++
-- co_begin (...)    :: set coroutine begin, with line numbers of co_return, co_call, co_sched, co_wait, co_broadcast
-- co_end   ()       :: set coroutine end
-- co_return()       :: yield
-- co_call  (co_t &) :: await a coroutine to finish
-- co_sched (co_t &) :: add   a coroutine to scheduler to run
-- co_wait      (co_blocking_t &) :: block current coroutine until notified.
-- co_broadcast (co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
+co_begin (...)    :: set coroutine begin, with line numbers of co_return, co_call, co_sched, co_wait, co_broadcast
+co_end   ()       :: set coroutine end
+co_return()       :: yield
+co_call  (co_t &) :: await a coroutine to finish
+co_sched (co_t &) :: add   a coroutine to scheduler to run
+co_wait     (co_blocking_t &) :: block current coroutine until notified.
+co_broadcast(co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
 
-- obj.run()     :: loop running until finish all coroutines
-- obj.state()   :: return running state
+obj.run()     :: loop running until finish all coroutines
+obj.state()   :: return running state
                  0, ready
                 >0, running
                 <0, stop, coroutine is finished
