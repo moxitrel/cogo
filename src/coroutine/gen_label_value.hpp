@@ -1,6 +1,10 @@
 #ifndef COROUTINE_GEN_H
 #define COROUTINE_GEN_H
 
+#ifndef assert
+#   define assert(...)  /* nop */
+#endif
+
 // gen_t: coroutine context.
 class gen_t {
 protected:

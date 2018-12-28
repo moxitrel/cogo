@@ -1,8 +1,8 @@
 //
 // 1. Include header "coroutine.h"
 //
-#include "coroutine.h"
 #include <stdio.h>
+#include "coroutine.h"
 
 //
 // 2. Define a class that inherit co_t

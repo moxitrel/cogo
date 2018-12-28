@@ -1,80 +1,74 @@
-/* 示例
+/*
 
+* Example
 #include "gen_switch.hpp"
 
-// 必须继承 gen_t
-struct Nat : public gen_t {
-    // 定义 局部变量, 返回值, ...
+// Must inherit gen_t
+struct T : public gen_t {
+    // Declare variables for coroutine function
     int i;
 
-
-    // 定义协程函数, 返回类型必须为 void
+    // Define coroutine function with the return type void
     void f(...)
     {
-        // 协程开始
-        co_begin(21,24);    // 21,24,...: 列出所有 co_return() 所在的行号, 即 __LINE__ 的值
+        // coroutine begin
+        co_begin(17,20);    // 17,20: the line numbers of co_return(), i.e. the value of __LINE__
 
-
-        // 用户代码
+        // user codes
         for (i = 0; i < 9; i++) {
             printf("%d\n", i);
-            co_return();    // 返回，下次被调用，从此处开始执行
+            co_return();    // yield
         }
         printf("%d\n", i);
         co_return();
 
-
-        // 协程结束
+        // coroutine end
         co_end();
     }
 };
 
 void example()
 {
-    Nat gen;
+    T gen;
 
-    // gen.state(): 获取运行状态
-    //  >=0: 正在运行
-    //   <0: 结束
+    // gen.state(): return the running state
+    //  >=0: running
+    //   <0: finished
     while (gen.state() >= 0) {
         gen.f(...);
     }
 }
 
 
-/// 原理
-//
-// 展开 f(...)
-//
+* Internal
 void T::f(...)  
 {
     //
-    // co_begin(21,24);
+    // co_begin(17,20)
     //
-    switch (get_t::_pc) {         // get_t::_pc 存储 从哪里开始继续运行
-    case  0:  break;              // 协程开始
-    case 21:  goto CO_RETURN_21;  // 还原点
-    case 24:  goto CO_RETURN_24;  // 还原点
-    default:  return;             // 协程结束
+    switch (get_t::_pc) {         // where to continue
+    case  0:  break;              // coroutine begin
+    case 17:  goto CO_RETURN_17;  // restore
+    case 20:  goto CO_RETURN_20;  // restore
+    default:  return;             // coroutine end
     }
-
 
     for (i = 0; i < 9; i++) {
         printf("%d\n", i);
         //
         // co_return();
         //
-        get_t::_pc = 21;    // 1. save restore point, next call will be "case 21: goto CO_RETURN_21"
+        get_t::_pc = 17;    // 1. save restore point, next call will be "case 17: goto CO_RETURN_17"
         return;             // 2. return
-CO_RETURN_21:;              // 3. put a label after each *return* as restore point
+CO_RETURN_17:;              // 3. put a label after each return as restore point
     }
     printf("%d\n", i);
     //
     // co_return();
     //
-    get_t::_pc = 24;        // 1. save restore point, next call will be "case 24: goto CO_RETURN_24"
+    get_t::_pc = 20;        // 1. save restore point, next call will be "case 20: goto CO_RETURN_20"
     return;                 // 2. return
-CO_RETURN_24:;              // 3. label the restore point
+CO_RETURN_20:;              // 3. label the restore point
 
     //
     // co_end();
@@ -83,7 +77,7 @@ CO_RETURN_24:;              // 3. label the restore point
 }
 
 
-* 参考
+* Reference
 - Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
 - Protothreads (http://dunkels.com/adam/pt/)
 
@@ -95,8 +89,8 @@ CO_RETURN_24:;              // 3. label the restore point
 #   define assert(...)  /* nop */
 #endif
 
-// gen_t: coroutine context.
-//  .state(): return running state.
+// gen_t: generator context.
+//  .state() -> int: return the current running state.
 class gen_t {
 protected:
     // Start point where coroutine continue to run after yield.
@@ -113,51 +107,53 @@ public:
 };
 
 //
-// co_begin(), co_end(), co_return() 不是函数表达式, 必须作为独立的语句使用
+// co_begin(), co_end(), co_return() are not expressions. They are statements.
 //
 
-// Make goto label.
-// e.g. CO_LABEL(13)       -> CO_RETURN_13
-//      CO_LABEL(__LINE__) -> CO_RETURN_118
+// Generate switch case clause. (case N: goto CO_RETURN_N)
+// e.g. CO_LABEL(13)        -> CO_RETURN_13
+//      CASE_GOTO(__LINE__) -> case 118: goto CO_RETURN_118
 #define CO_LABEL(N)     CO_LABEL_(N)
 #define CO_LABEL_(N)    CO_RETURN_##N
-
 #define CASE_GOTO(N)    case N: goto CO_LABEL(N)
 
+
+// Mark coroutine begin.
 // gen_t::co_begin(...);
 #define co_begin(...)                                   \
     switch (gen_t::_pc) {                               \
     case  0:                /* coroutine begin */       \
         break;                                          \
- /* case -1:              *//* coroutine end   */       \
- /*     goto CO_END;      */                            \
+    case -1:                /* coroutine end   */       \
+        goto CO_END;                                    \
  /* case  N:              */                            \
  /*     goto CO_RETURN_N; */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
-    default:                                            \
-        assert(((void)"pc isn't valid.", false));       \
-        gen_t::_pc = -2;   /* invalid _pc, kill */      \
+    default:                /* invalid _pc     */       \
+        gen_t::_pc = -2;                                \
+        assert(((void)"_pc isn't valid.", false));      \
         goto CO_END;                                    \
     }
 
 
-// Yield from the coroutine. (yield)
+// Yield from the coroutine.
 // gen_t::co_return();
-#define co_return(...)                                                                  \
-    __VA_ARGS__;                /* run before return, intent for handle return value */ \
-    gen_t::_pc = __LINE__;      /* 1. save the restore point, at label CO_RETURN_N */   \
-    goto CO_END;                /* 2. return */                                         \
-CO_LABEL(__LINE__):             /* 3. put label after each *return* as restore point */ \
+#define co_return(...)                                                                          \
+    __VA_ARGS__;                /* run before return, intent for handle return value */         \
+    gen_t::_pc = __LINE__;      /* 1. save the restore point, at label CO_LABEL(__LINE__) */    \
+    goto CO_END;                /* 2. return */                                                 \
+CO_LABEL(__LINE__):             /* 3. put a label after each return as restore point */         \
 
 
+// Mark coroutine end.
 // gen_t::co_end()
-#define co_end()                            \
-    gen_t::_pc = -1;   /* finish */         \
-CO_END:                                     \
+#define co_end()                                            \
+    gen_t::_pc = -1;   /* finish coroutine successfully */  \
+CO_END:                                                     \
 
 
 
-// Count the number of arguments.
+// Count the number of arguments. (BUG)
 // e.g. LEN(1)      -> 1
 //      LEN(1,2)    -> 2
 //      LEN(1,2,3)  -> 3
@@ -172,7 +168,8 @@ CO_END:                                     \
      19,  18,  17,  16,  15,  14,  13,  12,  11,  10,       \
       9,   8,   7,   6,   5,   4,   3,   2,   1,   0
 
-// Count the number of arguments. (Solve the LEN1(...)'s BUG)
+//
+// Count the number of arguments. (Solved the LEN1(...)'s BUG)
 //
 // e.g. LEN()       -> LEN_(0,1,1) -> LEN_01(1) -> 0
 //      LEN(1)      -> LEN_(0,0,1) -> LEN_00(1) -> 1

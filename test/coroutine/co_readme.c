@@ -1,51 +1,30 @@
-//
 // 1. 包含头文件 "coroutine.h"
-//
+#undef __GNUC__
 #include "../../src/coroutine/coroutine.h"
-
-//
-// 2. 定义协程结构，必须继承 co_t
-//
+// 2. Define a struct inherit co_t
 typedef struct {
-    //
-    // 继承co_t (作为第1个字段)
-    //
-    co_t co;
+    co_t co;    // inherit co_t (as first field)
 
-    //
-    // 声明协程的 局部变量, 返回值, ...
-    //
-    int value;  // 返回值
-} nat_gen_t;    // 自然数生成器
+    // Declare local variables, return values of coroutine function
+    int value;
+} nat_gen_t;
 
-//
-// 3. 定义协程函数, 类型必须为 void (co_t *)
-//
-// 自然数生成器
-void nat_gen(nat_gen_t *co)
+void nat_gen(nat_gen_t *co) // 3. Define coroutine function with the type "void (co_t *)"
 {
-    //
-    // 4. 标识 协程开始
-    //
-    co_begin(co, 37);           // 37, ...: 列出所有 co_return(), co_call(), co_sched() 所在的行号, 即 __LINE__ 的值
-    // co_begin(co);               // 若开启GNUC扩展，可省略行号
+    co_begin(co, 19);       // 4. Set Coroutine begin
+ // co_begin(co);           // you can omit line numbers if enable GNUC extension
 
-    //
-    // 5. 用户代码 (*** 不要使用局部变量, 无法被恢复; 定义到 struct 字段中 ***)
-    //
+    // 5. User code
     for (co->value = 0; ; co->value++) {
-        co_return(co);          // 返回，下次被调用，从此处开始执行
+        co_return(co);      // yield
     }
 
-    //
-    // 4. 标识 协程结束
-    //
-    co_end(co);
+    co_end(co);             // 4. Set coroutine end
 }
-// 6. 定义构造器, 用 CO() 初始化 co_t 成员
+// 6. Define constructor, init co_t member with CO()
 #define NAT_GEN()   ((nat_gen_t){.co = CO(nat_gen),})
 
-// 7. 使用
+// 7. Use it
 #include <stdio.h>
 int main(void)
 {
