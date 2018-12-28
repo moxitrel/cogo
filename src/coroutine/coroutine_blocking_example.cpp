@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
-#include <iostream>
 
 class Waiter: public co_t {
     co_blocking_t  &blk;

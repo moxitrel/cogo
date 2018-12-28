@@ -125,4 +125,5 @@ inline void co_queue_t::join(co_queue_t &q)
         }
     }
 }
+
 #endif //COROUTINE_CO_H
