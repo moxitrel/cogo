@@ -45,7 +45,7 @@ class Counter: public co_t {
 
         for (i = 0; i < ((intmax_t)1 << 31); i++) {
             if (i == ((intmax_t)1 << 30)) {
-                co_broadcast(blk);  // wake up waiter
+                co_broadcast(blk);  // wake up coroutines blocked by blk
             }
         }
 
