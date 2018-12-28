@@ -175,17 +175,17 @@ int main(void)
                        List with the line numbers of *co_return*, *co_call*, *co_sched*, *co_wait*, *co_broadcast*,
                        or omit if enable GNUC extension.
 - co_end   ()       :: Set coroutine end.
-- co_return()       :: yield
-- co_call  (co_t &) :: await a coroutine to finish
-- co_sched (co_t &) :: add   a coroutine to scheduler to run
+- co_return()       :: Yield
+- co_call  (co_t &) :: Await a coroutine to finish.
+- co_sched (co_t &) :: Add   a coroutine to current scheduler.
 - co_wait     (co_blocking_t &) :: block current coroutine until notified.
 - co_broadcast(co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
 
-- o.run()   :: loop running until finish all coroutines
-- o.state() :: return running state
-                 0, ready
-                >0, running
-                <0, stop, coroutine is finished
+- o.run()   :: Run until all coroutines finished.
++ o.state() :: Return current running state.
+  -  0: ready.
+  - >0: running.
+  - <0: stop, coroutine is finished.
 *** C
 - co_begin (co_t *, ...)    :: set coroutine begin
 - co_end   (co_t *)         :: set coroutine end
