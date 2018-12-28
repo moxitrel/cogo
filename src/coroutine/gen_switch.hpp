@@ -130,8 +130,8 @@ public:
  /*     goto CO_RETURN_N; */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                /* invalid _pc     */       \
-        assert(((void)"_pc isn't valid.", false));      \
         gen_t::_pc = -2;                                \
+        assert(((void)"_pc isn't valid.", false));      \
         goto CO_END;                                    \
     }
 

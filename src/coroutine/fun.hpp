@@ -12,8 +12,8 @@ class fun_t : protected gen_t {
 
     // The parent who call me. (build call stack)
     fun_t *caller = nullptr;
-    // Temporarily store the coroutine who called by me (the new call stack top), used by co_call(), step()
-    inline thread_local static fun_t *tmp_callee = nullptr;
+    // Temporarily store the coroutine who called by me (the new call stack top), used by co_call() and step()
+    inline thread_local static fun_t *tmp_callee;
 protected:
     // Push callee to call stack.
     void _call(fun_t &callee)
@@ -30,11 +30,10 @@ public:
         if (state() < 0) {
             next = caller;
         } else {
+            tmp_callee = nullptr;
             operator()();
-            // Refresh call stack top.
             if (tmp_callee != nullptr) {
                 next = tmp_callee;
-                tmp_callee = nullptr;
             }
         }
 
