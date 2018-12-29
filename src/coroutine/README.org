@@ -193,13 +193,14 @@ int main(void)
 
 * API
 *** C++
-- co_begin (...)    :: Set coroutine begin.
-                       List with the line numbers of *co_yield*, *co_await*, *co_sched*, *co_wait*, *co_broadcast*,
-                       or omit if GNUC extension enabled.
-- co_end   ()       :: Set coroutine end.
+- co_begin (...)   :: Set coroutine begin.
+                      List with the line numbers of *co_yield*, *co_await*, *co_sched*, *co_wait*, *co_broadcast*,
+                      or omit if GNUC extension enabled.
+- co_end  ()       :: Set coroutine end.
 - co_yield()       :: Yield.
-- co_await  (co_t &) :: Await a coroutine to finish.
-- co_sched (co_t &) :: Add   a coroutine to current scheduler to run.
+- co_return()      :: Return with coroutine finish.
+- co_await(co_t &) :: Await a coroutine to finish.
+- co_sched(co_t &) :: Add   a coroutine to current scheduler to run.
 - co_wait     (co_blocking_t &) :: block current coroutine until notified.
 - co_broadcast(co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
 
