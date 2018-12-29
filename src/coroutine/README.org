@@ -8,6 +8,7 @@ A stackless coroutine library written in pure C and C++.
 - Small
 
 * OVERVIEW
+*** C++
 #+BEGIN_SRC C++
 #include "coroutine.h"
 
@@ -27,6 +28,30 @@ class <T> : public co_t {
         co_end();
     }
 };
+#+END_SRC
+
+*** C
+#+BEGIN_SRC C
+#include "coroutine.h"
+
+typedef struct {
+    co_t co;
+
+    //
+    // declare local variables, return values as struct filed
+    //
+} <T>;
+
+void fun(<T> *co)
+{
+    co_begin(co, ...);
+
+    //
+    // user code
+    //
+
+    co_end(co);
+}
 #+END_SRC
 
 * EXAMPLE
@@ -119,7 +144,7 @@ class PrintN : public co_t {
                                 // 2. inherit co_t
 class CoroutineExample : public co_t {
                                 //
-    PrintN coroutine1;          // Declare local variables
+    PrintN coroutine1;          // declare local variables
     PrintN coroutine2;          //
 
     void operator()()           // 3. override operator()
