@@ -13,7 +13,7 @@ class print_t : public fun_t {
 
         for (c = 'a'; c < 'f'; c ++) {
             printf("%c\n", c);
-            co_return();
+            co_yield();
         }
 
         co_end();
@@ -30,7 +30,7 @@ class loop3_t : public fun_t {
         co_begin(33);
 
         for (i = 0; i < 3; i ++) {
-            co_call(print);
+            co_await(print);
             printf("%d\n",i);
         }
 

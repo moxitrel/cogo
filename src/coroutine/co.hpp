@@ -34,9 +34,9 @@ class co_t : protected fun_t {
     inline thread_local static co_t *tmp_wait = nullptr;
 protected:
     // Only allow co_t. (forbid fun_t)
-    void _call(co_t &callee) /* hide fun_t::_call() */
+    void _await(co_t &callee) /* hide fun_t::_await() */
     {
-        fun_t::_call(callee);
+        fun_t::_await(callee);
     }
     void _sched(co_t &co)
     {
@@ -59,11 +59,11 @@ public:
 };
 
 // await
-#undef co_call
-#define co_call(CO)             \
+#undef co_await
+#define co_await(CO)            \
 do {                            \
-    co_t::_call(CO);            \
-    co_return();                \
+    co_t::_await(CO);           \
+    co_yield();                 \
 } while (0)
 
 // Add a new coroutine CO to the scheduler. (create)
@@ -71,7 +71,7 @@ do {                            \
 #define co_sched(CO)            \
 do {                            \
     co_t::_sched(CO);           \
-    co_return();                \
+    co_yield();                 \
 } while (0)
 
 // Wait until notified.
@@ -79,7 +79,7 @@ do {                            \
 #define co_wait(Q)              \
 do {                            \
     co_t::_wait(Q);             \
-    co_return();                \
+    co_yield();                 \
 } while (0)
 
 // Notify all coroutines blocked by Q.
@@ -87,7 +87,7 @@ do {                            \
 #define co_broadcast(Q)         \
 do {                            \
     co_t::_broadcast(Q);        \
-    co_return();                \
+    co_yield();                 \
 } while (0)
 
 //
@@ -131,7 +131,7 @@ inline void co_queue_t::append(co_queue_t &wq)
 //
 co_t *co_t::step()
 {
-    co_t *next = (co_t *)fun_t::step(); // cast ensured by _call(co_t &)
+    co_t *next = (co_t *)fun_t::step(); // cast ensured by _await(co_t &)
     if (tmp_wait != nullptr) {
         // delete from coroutine queue if blocked
         next = nullptr;

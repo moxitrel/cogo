@@ -25,7 +25,7 @@ void generate_n(generate_n_t *co)
     // return i, i+1, ..., max
     for (; co->i < co->max; co->i++) {
         printf("%i ", co->i);
-        co_return(co);
+        co_yield(co);
     }
 
     // 协程结束

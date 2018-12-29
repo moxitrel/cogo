@@ -26,14 +26,14 @@ inline static int co_state(const gen_t *const co)
 }
 
 //
-// co_begin(), co_end(), co_return() 不是函数表达式, 必须作为独立的语句使用
+// co_begin(), co_end(), co_yield() 不是函数表达式, 必须作为独立的语句使用
 //
 
 // Make goto label.
-// e.g. CO_LABEL(13)       -> CO_RETURN_13
-//      CO_LABEL(__LINE__) -> CO_RETURN_118
+// e.g. CO_LABEL(13)       -> CO_YIELD_13
+//      CO_LABEL(__LINE__) -> CO_YIELD_118
 #define CO_LABEL(N)     CO_LABEL_(N)
-#define CO_LABEL_(N)    CO_RETURN_##N
+#define CO_LABEL_(N)    CO_YIELD_##N
 
 
 // co_begin(co_t *, ...);
@@ -53,11 +53,11 @@ do {                                                \
 
 
 // Yield from the coroutine. (yield)
-// co_return(co_t *);
-#define co_return(CO, ...)                                                                      \
+// co_yield(co_t *);
+#define co_yield(CO, ...)                                                                       \
 do {                                                                                            \
     __VA_ARGS__;                        /* run before return, intent for handle return value */ \
-    GEN_PC(CO) = &&CO_LABEL(__LINE__);  /* 1. save the restore point, at label CO_RETURN_N */   \
+    GEN_PC(CO) = &&CO_LABEL(__LINE__);  /* 1. save the restore point, at label CO_YIELD_N */    \
     goto CO_END;                        /* 2. return */                                         \
 CO_LABEL(__LINE__):;                    /* 3. put label after each *return* as restore point */ \
 } while (0)

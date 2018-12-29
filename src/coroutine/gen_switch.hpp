@@ -12,15 +12,15 @@ struct T : public gen_t {
     void f(...)
     {
         // coroutine begin
-        co_begin(17,20);    // 17,20: the line numbers of co_return(), i.e. the value of __LINE__
+        co_begin(17,20);    // 17,20: the line numbers of co_yield(), i.e. the value of __LINE__
 
         // user codes
         for (i = 0; i < 9; i++) {
             printf("%d\n", i);
-            co_return();    // yield
+            co_yield();    // yield
         }
         printf("%d\n", i);
-        co_return();
+        co_yield();
 
         // coroutine end
         co_end();
@@ -48,27 +48,27 @@ void T::f(...)
     //
     switch (get_t::_pc) {         // where to continue
     case  0:  break;              // coroutine begin
-    case 17:  goto CO_RETURN_17;  // restore
-    case 20:  goto CO_RETURN_20;  // restore
+    case 17:  goto CO_YIELD_17;  // restore
+    case 20:  goto CO_YIELD_20;  // restore
     default:  return;             // coroutine end
     }
 
     for (i = 0; i < 9; i++) {
         printf("%d\n", i);
         //
-        // co_return();
+        // co_yield();
         //
-        get_t::_pc = 17;    // 1. save restore point, next call will be "case 17: goto CO_RETURN_17"
+        get_t::_pc = 17;    // 1. save restore point, next call will be "case 17: goto CO_YIELD_17"
         return;             // 2. return
-CO_RETURN_17:;              // 3. put a label after each return as restore point
+CO_YIELD_17:;              // 3. put a label after each return as restore point
     }
     printf("%d\n", i);
     //
-    // co_return();
+    // co_yield();
     //
-    get_t::_pc = 20;        // 1. save restore point, next call will be "case 20: goto CO_RETURN_20"
+    get_t::_pc = 20;        // 1. save restore point, next call will be "case 20: goto CO_YIELD_20"
     return;                 // 2. return
-CO_RETURN_20:;              // 3. label the restore point
+CO_YIELD_20:;              // 3. label the restore point
 
     //
     // co_end();
@@ -107,14 +107,14 @@ public:
 };
 
 //
-// co_begin(), co_end(), co_return() are not expressions. They are statements.
+// co_begin(), co_end(), co_yield() are not expressions. They are statements.
 //
 
-// Generate switch case clause. (case N: goto CO_RETURN_N)
-// e.g. CO_LABEL(13)        -> CO_RETURN_13
-//      CASE_GOTO(__LINE__) -> case 118: goto CO_RETURN_118
+// Generate switch case clause. (case N: goto CO_YIELD_N)
+// e.g. CO_LABEL(13)        -> CO_YIELD_13
+//      CASE_GOTO(__LINE__) -> case 118: goto CO_YIELD_118
 #define CO_LABEL(N)     CO_LABEL_(N)
-#define CO_LABEL_(N)    CO_RETURN_##N
+#define CO_LABEL_(N)    CO_YIELD_##N
 #define CASE_GOTO(N)    case N: goto CO_LABEL(N)
 
 
@@ -128,7 +128,7 @@ do {                                                    \
  /* case -1:              *//* coroutine end   */       \
  /*     goto CO_END;      */                            \
  /* case  N:              */                            \
- /*     goto CO_RETURN_N; */                            \
+ /*     goto CO_YIELD_N; */                             \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                /* invalid _pc     */       \
  /*     gen_t::_pc = -2; */                             \
@@ -139,8 +139,8 @@ do {                                                    \
 
 
 // Yield from the coroutine.
-// gen_t::co_return();
-#define co_return(...)                                                                          \
+// gen_t::co_yield();
+#define co_yield(...)                                                                           \
 do {                                                                                            \
     __VA_ARGS__;                /* run before return, intent for handle return value */         \
     gen_t::_pc = __LINE__;      /* 1. save the restore point, at label CO_LABEL(__LINE__) */    \
