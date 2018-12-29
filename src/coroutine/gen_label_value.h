@@ -55,18 +55,21 @@ do {                                                \
 // Yield from the coroutine. (yield)
 // co_return(co_t *);
 #define co_return(CO, ...)                                                                      \
+do {                                                                                            \
     __VA_ARGS__;                        /* run before return, intent for handle return value */ \
     GEN_PC(CO) = &&CO_LABEL(__LINE__);  /* 1. save the restore point, at label CO_RETURN_N */   \
     goto CO_END;                        /* 2. return */                                         \
-CO_LABEL(__LINE__):                     /* 3. put label after each *return* as restore point */ \
+CO_LABEL(__LINE__):;                    /* 3. put label after each *return* as restore point */ \
+} while (0)
 
 
 // co_end(co_t *)
 #define co_end(CO)                          \
+do {                                        \
     GEN_PC(CO) = &&CO_END;                  \
     GEN_STATE(CO) = -1;    /* finish */     \
-CO_END:                                     \
-
+CO_END:;                                    \
+} while (0)
 
 
 // Count the number of arguments.

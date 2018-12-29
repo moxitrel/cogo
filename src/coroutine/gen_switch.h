@@ -167,6 +167,7 @@ inline static int co_state(const gen_t *const co)
 
 // co_begin(co_t *, ...);
 #define co_begin(CO, ...)                               \
+do {                                                    \
     switch (GEN_PC(CO)) {                               \
     case  0:                /* coroutine begin */       \
         break;                                          \
@@ -179,23 +180,27 @@ inline static int co_state(const gen_t *const co)
         assert(((void)"pc isn't valid.", false));       \
         GEN_PC(CO) = -2;   /* invalid _pc, kill */      \
         goto CO_END;                                    \
-    }
+    }                                                   \
+} while (0)
 
 
 // Yield from the coroutine. (yield)
 // co_return(co_t *);
 #define co_return(CO, ...)                                                              \
+do {                                                                                    \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
     GEN_PC(CO) = __LINE__;      /* 1. save the restore point, at label YIELD_N */       \
     goto CO_END;                /* 2. return */                                         \
-CO_LABEL(__LINE__):             /* 3. put label after each *return* as restore point */ \
+CO_LABEL(__LINE__):;            /* 3. put label after each *return* as restore point */ \
+} while (0)
 
 
 // co_end(co_t *)
 #define co_end(CO)                          \
+do {                                        \
     GEN_PC(CO) = -1;   /* finish */         \
-CO_END:                                     \
-
+CO_END:;                                    \
+} while (0)
 
 
 // Count the number of arguments.

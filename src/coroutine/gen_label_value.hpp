@@ -35,6 +35,7 @@ public:
 
 // co_t::co_begin(...);
 #define co_begin(...)                               \
+do {                                                \
     switch (gen_t::_state) {                        \
     case  0:                /* coroutine begin */   \
         gen_t::_state = 1;                          \
@@ -44,23 +45,27 @@ public:
     default:                                        \
         goto *gen_t::_pc;                           \
     }                                               \
+} while (0)
 
 
 // Yield from the coroutine. (yield)
 // co_t::co_return();
 #define co_return(...)                                                                          \
+do {                                                                                            \
     __VA_ARGS__;                        /* run before return, intent for handle return value */ \
     gen_t::_pc = &&CO_LABEL(__LINE__);  /* 1. save the restore point, at label CO_RETURN_N */   \
     goto CO_END;                        /* 2. return */                                         \
-CO_LABEL(__LINE__):                     /* 3. put label after each *return* as restore point */ \
+CO_LABEL(__LINE__):;                    /* 3. put label after each *return* as restore point */ \
+} while (0)
 
 
 // co_t::co_end()
 #define co_end()                            \
+do {                                        \
     gen_t::_pc = &&CO_END;                  \
     gen_t::_state = -1;    /* finish */     \
-CO_END:                                     \
-
+CO_END:;                                    \
+} while (0)
 
 
 // Count the number of arguments.
