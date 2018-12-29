@@ -1,123 +1,57 @@
-/*
-
-CO(FUN)     : 新建协程
-co_begin()  : 协程开始
-co_end()    : 协程结束
-co_yield() : 返回
-co_await()   : 调用其他协程
-co_state()  : 获取协程运行状态
-              >=0: 正在运行
-               -1: 运行结束
-
-*** 用法
-
-// 1. 包含头文件
+/* Usage
+// 1. include header
 #include "co_switch_goto.h"
 
-// 2. 自定义协程结构 (局部变量, 返回值), 必须继承 gen_t
+// 2. inherit gen_t
 typedef struct {
-    // must inherit gen_t (put gen_t first).
-    gen_t co;
+    gen_t co;   // put in first
 
-    // user definitions
+    //
+    // declare local variables, parameters, return values of coroutine function
+    //
+    int i;
     ...
-} fun_t;
+} co_fun_t;
 
-// 3. 定义协程函数, 类型必须为 void(gen_t *)
-void fun(fun_t *co)
+// 3. define a function with type "void (T *)"
+void co_fun(co_fun_t *co)
 {
     //
-    // co_begin()之前的代码，每次调用都会被执行
+    // before co_begin(), codes run every time when invoked
     //
-    assert(co);
     
-    // 别名关联
-    T *x = &co->x;
-    T *v = &co->v;
+    // e.g. alias
+    int *i = &co->i;
 
-    //
-    // 协程开始
-    //
-    co_begin(co,35,39,...); // 35,39, ...: 列出所有 co_yield(), co_await() 所在的行号, 即 __LINE__ 的值
+    // 4. set coroutine begin
+    co_begin(co, 30); // 30: list line numbers of co_yield(), co_return(), i.e. __LINE__
 
-
-    //
-    // 用户代码:  !!! 禁用局部变量 !!!
-    //
-    co_yield(co);          // 返回，下次被调用，从此处开始执行，***局部变量无法被恢复***
-
-    for (; co->i < 9; co->i ++) {
-        v = x;
-        co_yield(co);
+    // 5. user codes: (don't use local variables)
+    for (*i = 0 ; *i < 9; (*i) ++) {
+        co_yield(co);   // yield
     }
 
-    v += 1;
-    co_yield(co);
-
-    //
-    // 协程结束
-    //
+    // 4. set coroutine end
     co_end(co);
 
-
     //
-    // co_end()之后的代码，每次co_yield()返回前 都会被执行
+    // after co_end(), codes run every time before return
     //
 }
 
-// 4. define initializer
-void fun_init(fun_t *o, co_fun_t fun,...)
+// 6. define constructor
+#define CO_FUN(...)  ((co_fun_t){...})
+
+//
+// example
+//
+int main(void)
 {
-    assert(o);
-    assert(fun);
-
-    *o = (fun_t){
-        // init gen_t
-        .co = CO(fun),
-
-        // init user definitions
-        ...
-    };
-}
-
- *** 原理: 将 *栈变量* 保存到堆上,
-
-// 展开后
-void coroutine(coroutine_t *co) // coroutine_t 由自己定义, 可添加任意字段
-{
-  // co_begin();
-  switch (co->pc) {             // co->pc 存储 从哪里开始继续运行
-  case 0:    break;             // 协程开始
-  case 19:   goto YIELD_19;     // 还原点
-  case 23:   goto YIELD_23;     // 还原点
-  case 26:   goto YIELD_26;     // 还原点
-  case -1:   return;            // 协程结束
-  }
-
-
-  // co_yield()
-  co->pc = 19;      // 1. save restore point, next call will be case 19: goto YIELD_19
-  return;           // 2. return
-YIELD_19:;          // 3. put a label after each *return* as the restore point
-
-  for (; co->i < 9; co->i ++) {
-    co->v = co->x;
-
-    // co_yield()
-    co->pc = 23;    // 1. save restore point, next call will be case 23: goto YIELD_23
-    return;         // 2. return
-YIELD_23:;          // 3. label the restore point
-  }
-
-  co->v += 1;
-
-  // co_yield()
-  co->pc = 26;      // 1. save restore point, next call will be case 26: goto YIELD_26
-  return;           // 2. return
-YIELD_26:;          // 3. label the restore point
-
-  // co_end()
-  co->pc = -1;      //协程运行结束
+    co_fun_t co = CO_FUN(...);
+    
+    co_fun(&co);    // co->i = 0
+    co_fun(&co);    // co->i = 1
+    co_fun(&co);    // co->i = 2
 }
 
 */
@@ -128,21 +62,21 @@ YIELD_26:;          // 3. label the restore point
 #   define assert(...)  /* nop */
 #endif
 
-// gen_t: coroutine context, must be inherited (as first field) by user-defined type.
-// e.g.
-//   typedef struct {
-//     gen_t co;
-//     ...
-//   } user_defined_t;
+// gen_t: generator context, must be inherited (as first field) by user-defined struct.
+//        init by filling zero.
+// e.g. typedef struct {
+//          gen_t co;
+//          ...
+//      } user_defined_t;
 typedef struct {
     // Start point where coroutine continue to run after yield.
     //   0: inited
     //  >0: running
-    //  <0: finished (-1: ok, -2: invalid pc)
+    //  <0: stopped (-1: ok, -2: invalid pc)
     int pc;
 } gen_t;
 
-// return gen_t.pc
+// gen_t.pc
 #define GEN_PC(CO)      (((gen_t *)(CO))->pc)
 
 inline static int co_state(const gen_t *const co)
@@ -151,41 +85,30 @@ inline static int co_state(const gen_t *const co)
     return co->pc;
 }
 
-
+//
 // API is *** not type safe ***
 //
-// co_begin(), co_end(), co_yield() 不是函数表达式, 必须作为独立的语句使用
-//
 
-// Make goto label.
-// e.g. CO_LABEL(13)       -> CO_YIELD_13
-//      CO_LABEL(__LINE__) -> CO_YIELD_118
-#define CO_LABEL(N)     CO_LABEL_(N)
-#define CO_LABEL_(N)    CO_YIELD_##N
-
-#define CASE_GOTO(N)    case N: goto CO_LABEL(N)
-
-// co_begin(co_t *, ...);
+// co_begin(gen_t *, ...);
 #define co_begin(CO, ...)                               \
 do {                                                    \
     switch (GEN_PC(CO)) {                               \
-    case  0:                /* coroutine begin */       \
+    case  0:                /* coroutine begin  */      \
         break;                                          \
- /* case -1:              *//* coroutine end   */       \
+ /* case -1:              *//* coroutine end    */      \
  /*     goto CO_END;      */                            \
  /* case  N:              */                            \
  /*     goto CO_YIELD_N;  */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                                            \
-        GEN_PC(CO) = -2;   /* invalid _pc, kill */      \
-        assert(((void)"pc isn't valid.", false));       \
+ /*     GEN_PC(CO) = -2;  *//* invalid _pc,         */  \
+ /*     assert(((void)"pc isn't valid.", 0));       */  \
         goto CO_END;                                    \
     }                                                   \
 } while (0)
 
 
-// Yield from the coroutine. (yield)
-// co_yield(co_t *);
+// co_yield(gen_t *);
 #define co_yield(CO, ...)                                                               \
 do {                                                                                    \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
@@ -195,7 +118,16 @@ CO_LABEL(__LINE__):;            /* 3. put label after each *return* as restore p
 } while (0)
 
 
-// co_end(co_t *)
+// co_return(gen_t *,);
+#define co_return(CO, ...)                                                                      \
+do {                                                                                            \
+    __VA_ARGS__;                /* run before return, intent for handle return value */         \
+    GEN_PC(CO) = -1;            /* 1. set coroutine end */                                      \
+    goto CO_END;                /* 2. return */                                                 \
+} while (0)
+    
+
+// co_end(gen_t *)
 #define co_end(CO)                          \
 do {                                        \
     GEN_PC(CO) = -1;   /* finish */         \
@@ -203,7 +135,18 @@ CO_END:;                                    \
 } while (0)
 
 
-// Count the number of arguments.
+//
+// Helper Macros
+//
+
+// Generate switch case clause. (case N: goto CO_YIELD_N)
+// e.g. CO_LABEL(13)        -> CO_YIELD_13
+//      CASE_GOTO(__LINE__) -> case 118: goto CO_YIELD_118
+#define CO_LABEL(N)     CO_LABEL_(N)
+#define CO_LABEL_(N)    CO_YIELD_##N
+#define CASE_GOTO(N)    case N: goto CO_LABEL(N)
+
+// Count the number of arguments. (BUG)
 // e.g. LEN(1)      -> 1
 //      LEN(1,2)    -> 2
 //      LEN(1,2,3)  -> 3
@@ -218,7 +161,7 @@ CO_END:;                                    \
      19,  18,  17,  16,  15,  14,  13,  12,  11,  10,       \
       9,   8,   7,   6,   5,   4,   3,   2,   1,   0
 
-// Count the number of arguments. (Solve the LEN1(...)'s BUG)
+// Count the number of arguments. (Solved the LEN1(...)'s BUG)
 //
 // e.g. LEN()       -> LEN_(0,1,1) -> LEN_01(1) -> 0
 //      LEN(1)      -> LEN_(0,0,1) -> LEN_00(1) -> 1
@@ -226,7 +169,8 @@ CO_END:;                                    \
 //      LEN(1,2,3)  -> LEN_(1,1,3) -> LEN_11(3) -> 3
 //      LEN(1,2,...)-> LEN_(1,1,N) -> LEN_11(N) -> N
 //
-// SEE: http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
+// SEE: https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments
+//      http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
 //      P99, advanced macro tricks (http://p99.gforge.inria.fr/p99-html/index.html)
 //
 #define LEN(...)                            \
@@ -247,7 +191,14 @@ LEN_(                                       \
 #define HAS_COMMA(...)      ARG_PAT(__VA_ARGS__, HAS_COMMA_PADDING)
 #define GET_COMMA(...)      ,
 
-
+//e.g. MAP(CASE_GOTO, 10, 20, 30)
+//     -> MAP_3(CASE_GOTO, 10, 20, 30)
+//     -> CASE_GOTO(10);
+//        CASE_GOTO(20);
+//        CASE_GOTO(30)
+//     -> case 10: goto CO_LABEL(10);
+//        case 20: goto CO_LABEL(20);
+//        case 30: goto CO_LABEL(30)
 #define MAP(F, ...)       MAP_N_(LEN(__VA_ARGS__), F, __VA_ARGS__)
 #define MAP_N_(...)       MAP_N(__VA_ARGS__)
 #define MAP_N(N, F, ...)  MAP_##N(F, __VA_ARGS__)

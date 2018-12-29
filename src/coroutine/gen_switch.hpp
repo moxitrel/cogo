@@ -84,7 +84,7 @@ struct T : public gen_t {
 //#   define assert(...)  /* nop */
 //#endif
 
-// gen_t: generator context.
+// gen_t: generator context, must be inherited by user-defined class.
 //  .state() -> int: return the current running state.
 class gen_t {
 protected:
