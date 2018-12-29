@@ -24,11 +24,11 @@ void co_fun(co_fun_t *co)
     int *i = &co->i;
 
     // 4. set coroutine begin
-    co_begin(co, 30); // 30: list line numbers of co_yield(), co_return(), i.e. __LINE__
+    co_begin(co, 30);       // 30: list line numbers of co_yield(), co_return(), i.e. __LINE__
 
     // 5. user codes: (don't use local variables)
     for (*i = 0 ; *i < 9; (*i) ++) {
-        co_yield(co);   // yield
+        co_yield(co);       // yield
     }
 
     // 4. set coroutine end
