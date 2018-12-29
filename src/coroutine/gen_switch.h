@@ -125,7 +125,7 @@ do {                                                                            
     GEN_PC(CO) = -1;            /* 1. set coroutine end */                                      \
     goto CO_END;                /* 2. return */                                                 \
 } while (0)
-    
+
 
 // co_end(gen_t *)
 #define co_end(CO)                          \
