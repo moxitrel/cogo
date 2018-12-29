@@ -155,6 +155,10 @@ CO_END:;                                                    \
 } while (0)
 
 
+//
+// Helper Macros
+//
+
 // Generate switch case clause. (case N: goto CO_YIELD_N)
 // e.g. CO_LABEL(13)        -> CO_YIELD_13
 //      CASE_GOTO(__LINE__) -> case 118: goto CO_YIELD_118
