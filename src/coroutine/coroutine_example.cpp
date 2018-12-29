@@ -22,7 +22,7 @@ class PrintN : public co_t {
         //
         // 4. Set coroutine begin
         //
-        co_begin(33);       // 33: list the line numbers of co_return(), co_call(), co_sched(), i.e. the value of __LINE__
+        co_begin(33);       // 33: list the line numbers of co_yield(), co_await(), co_sched(), i.e. the value of __LINE__
         // co_begin();         // you can omit line numbers if enable GNUC extension
 
         //
@@ -30,7 +30,7 @@ class PrintN : public co_t {
         //
         for (i = 0; i < 7; i++) {
             printf("%p:%d\n", this, i);
-            co_return();    // yield
+            co_yield();    // yield
         }
 
         //

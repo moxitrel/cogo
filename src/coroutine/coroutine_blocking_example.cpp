@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
-#include <iostream>
 
 class Waiter: public co_t {
     co_blocking_t  &blk;
@@ -31,7 +30,7 @@ public:
 
 class Counter: public co_t {
     co_blocking_t   &blk;
-    Waiter          waiter;
+    Waiter          waiter = Waiter(blk);
     time_t          now;
     intmax_t        i;
 
@@ -57,13 +56,16 @@ class Counter: public co_t {
 public:
     Counter(co_blocking_t &&blk)
         : blk(blk)
-        , waiter(blk)
     {}
 };
 
 
 int main()
 {
+    // Output:
+    //   0x7ffee62088e8 begin : Fri Dec 28 16:52:47 2018
+    //   0x7ffee6208918 wakeup: Fri Dec 28 16:52:51 2018
+    //   0x7ffee62088e8 end   : Fri Dec 28 16:52:54 2018
     Counter(co_blocking_t())
         .run();
 }

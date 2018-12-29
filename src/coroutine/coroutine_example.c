@@ -24,7 +24,7 @@ typedef struct {
 void co_print(co_print_t *co)
 {
     //
-    // 4. Set coroutine begin. 37: line number of co_return(), co_call(), co_sched()
+    // 4. Set coroutine begin. 37: line number of co_yield(), co_await(), co_sched()
     //
     co_begin(co, 37);
  // co_begin(co);       // you can omit line numbers if enable GNUC extension
@@ -34,7 +34,7 @@ void co_print(co_print_t *co)
     //
     for (co->i = 0; co->i < 7; co->i++) {
         printf("%p:%d\n", co, co->i);
-        co_return(co);  // yield
+        co_yield(co);  // yield
     }
 
     //
@@ -67,7 +67,7 @@ typedef struct {
 void coroutine_example(coroutine_example_t *co) // define coroutine function
 {
     //
-    // 4. Set coroutine begin. 37,38: line number of co_return(), co_call(), co_sched()
+    // 4. Set coroutine begin. 37,38: line number of co_yield(), co_await(), co_sched()
     //
     co_begin(co,78,79);
  // co_begin(co);                   // you can omit line numbers if enable GNUC extension
