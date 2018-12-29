@@ -13,7 +13,7 @@ A stackless coroutine library written in pure C and C++.
 
 class <T> : public co_t {
     //
-    // Declare local variables, return values as member variables
+    // Declare local variables, return values as member variables.
     //
 
     void operator()()
@@ -33,17 +33,20 @@ class <T> : public co_t {
 #+BEGIN_SRC C++
 #include "coroutine.h"
 
+//
 // Natural number generator
+//
 struct Nat : public co_t {
-    unsigned int value;
-
+                        //
+    int value;          // Declare local variable and return values.
+                        //
     void operator()()
     {
-        co_begin(12);
+        co_begin(15);
 
-        for (value = 0; ; value++) {
-            co_yield();
-        }
+        for (value = 0; ; value++) {    //
+            co_yield();                 // User codes
+        }                               //
 
         co_end();
     }
@@ -52,9 +55,9 @@ struct Nat : public co_t {
 int main()
 {
     Nat nat;
-    nat(); // nat.value: 0
-    nat(); // nat.value: 1
-    nat(); // nat.value: 2
+    nat();  // nat.value: 0
+    nat();  // nat.value: 1
+    nat();  // nat.value: 2
 }
 #+END_SRC
 
@@ -70,7 +73,7 @@ int main()
 //
 // 2. Define a class that inherit co_t
 //
-class PrintN : public co_t {    // Print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
+class PrintN : public co_t {
     //
     // Declare local variables, parameters, return values for coroutine function
     //
@@ -85,7 +88,7 @@ class PrintN : public co_t {    // Print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80
         // 4. Set coroutine begin
         //
         co_begin(32);       // 32: list line numbers of co_yield(), co_await(), co_sched(), i.e. the value of __LINE__
-     // co_begin();         // you can omit line numbers if enable GNUC extension
+     // co_begin();         // you can omit line numbers if enabled GNUC extension
 
         //
         // 5. User code (no local variable allowed, use member variable instead)
@@ -111,9 +114,9 @@ class PrintN : public co_t {    // Print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80
     // }
 };
 
-// 2. Define a class inherit co_t
+                                // 2. Define a class inherit co_t
 class CoroutineExample : public co_t {
-    PrintN coroutine1;          // Declare local variables of coroutine function
+    PrintN coroutine1;          // Declare local variables
     PrintN coroutine2;          //
 
     void operator()()           // 3. Override operator()
@@ -135,7 +138,9 @@ class CoroutineExample : public co_t {
     // }
 };
 
+//
 // 7. Use it
+//
 int main()
 {
     // Run until finish all coroutines.
@@ -153,14 +158,14 @@ int main()
 
 *** C
 #+BEGIN_SRC C
-#include "coroutine.h"      // 1. Include header "coroutine.h"
+#include "coroutine.h"      // 1. include header
 
-// 2. Define a struct inherit co_t
-typedef struct {
-    co_t co;    // inherit co_t (as first field)
+typedef struct {            // 2. define a struct inherit co_t
+    co_t co;                // put in first to inherit
 
-    // Declare local variables, return values of coroutine function
-    int value;
+                            //
+    int value;              // declare local variables, return values of coroutine function
+                            //
 } nat_gen_t;
 
 void nat_gen(nat_gen_t *co) // 3. Define coroutine function with the type "void (co_t *)"
@@ -168,17 +173,17 @@ void nat_gen(nat_gen_t *co) // 3. Define coroutine function with the type "void 
     co_begin(co, 18);       // 4. Set Coroutine begin
  // co_begin(co);           // you can omit line numbers if enable GNUC extension
 
-    // 5. User code
+                            // 5. User code
     for (co->value = 0; ; co->value++) {
-        co_yield(co);      // yield
+        co_yield(co);       // yield
     }
 
     co_end(co);             // 4. Set coroutine end
 }
-// 6. Define constructor, init co_t member with CO()
+                            // 6. define constructor, init co_t member with CO()
 #define NAT_GEN()   ((nat_gen_t){.co = CO(nat_gen),})
 
-// 7. Use it
+                            // 7. use it
 int main(void)
 {
     nat_gen_t ng = NAT_GEN();
