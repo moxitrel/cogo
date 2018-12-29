@@ -32,8 +32,8 @@ void fun(fun_t *co)
     assert(co);
     
     // 别名关联
-    T &x = co->x;
-    T &v = co->v;
+    T *x = &co->x;
+    T *v = &co->v;
 
     //
     // 协程开始
@@ -174,11 +174,11 @@ do {                                                    \
  /* case -1:              *//* coroutine end   */       \
  /*     goto CO_END;      */                            \
  /* case  N:              */                            \
- /*     goto CO_YIELD_N; */                             \
+ /*     goto CO_YIELD_N;  */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                                            \
-        assert(((void)"pc isn't valid.", false));       \
         GEN_PC(CO) = -2;   /* invalid _pc, kill */      \
+        assert(((void)"pc isn't valid.", false));       \
         goto CO_END;                                    \
     }                                                   \
 } while (0)
