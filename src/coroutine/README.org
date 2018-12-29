@@ -173,16 +173,16 @@ int main(void)
 *** C++
 - co_begin (...)    :: Set coroutine begin.
                        List with the line numbers of *co_return*, *co_call*, *co_sched*, *co_wait*, *co_broadcast*,
-                       or omit if enable GNUC extension.
+                       or omit if GNUC extension enabled.
 - co_end   ()       :: Set coroutine end.
-- co_return()       :: Yield
+- co_return()       :: Yield.
 - co_call  (co_t &) :: Await a coroutine to finish.
-- co_sched (co_t &) :: Add   a coroutine to current scheduler.
+- co_sched (co_t &) :: Add   a coroutine to current scheduler to run.
 - co_wait     (co_blocking_t &) :: block current coroutine until notified.
 - co_broadcast(co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
 
-- o.run()   :: Run until all coroutines finished.
-+ o.state() :: Return current running state.
+- o.run()   :: Run until all coroutines finished, with o as entry.
+- o.state() :: Return the running state of coroutine o.
   -  0: ready.
   - >0: running.
   - <0: stop, coroutine is finished.

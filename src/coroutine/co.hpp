@@ -9,15 +9,15 @@ typedef co_queue_t co_blocking_t;
 
 // co_t queue
 class co_queue_t {
-    co_t *head = nullptr;
+    co_t *head = nullptr;   // empty queue
     co_t *tail;
 public:
     // dequeue, delete first node and return. If empty, return NULL.
     co_t *pop();
-    // enqueue, append ^co to the end of queue.
-    void push(co_t &co);
-    // join q to the end of queue.
-    void join(co_queue_t &q);
+    // enqueue, append a coroutine to the end of queue.
+    void push(co_t &);
+    // join another co_queue_t to the end of queue.
+    void append(co_queue_t &);
 };
 
 // co_t: support concurrency
@@ -25,103 +25,128 @@ public:
 //  .run  ()          : keep running until all coroutines finished.
 class co_t : protected fun_t {
     friend co_queue_t;
-
-    // Scheduler related: _q, q_next, tmp_blocking
-    co_t *q_next = nullptr;
-protected:
+    
+    // Scheduler related: q, next, tmp_wait
     // Concurrent coroutine queue (coroutines run concurrently).
-    inline thread_local static co_queue_t _q;
-
-    // Temporarily store the coroutine blocked by blocking. Used by co_blocking_wait(), step()
-    inline thread_local static co_t *tmp_blocking;
-
-    // Only allow co_t, forbid fun_t. Used by co_call(), don't invoke it elsewhere.
+    inline thread_local static co_queue_t q;
+    co_t *next;
+    // Temporarily store the coroutine blocked by blocking. Used by co_wait(), step()
+    inline thread_local static co_t *tmp_wait = nullptr;
+protected:
+    // Only allow co_t. (forbid fun_t)
     void _call(co_t &callee) /* hide fun_t::_call() */
     {
         fun_t::_call(callee);
     }
+    void _sched(co_t &co)
+    {
+        q.push(co);
+    }
+    void _wait(co_queue_t &wq)
+    {
+        wq.push(*this);
+        co_t::tmp_wait = this;
+    }
+    void _broadcast(co_queue_t &wq)
+    {
+        q.append(wq);
+    }
 public:
-    co_t *step() /* hide fun_t::step() */
-    {
-        tmp_blocking = nullptr;
-        co_t *next = (co_t *)fun_t::step(); // cast ensured by _call(co_t &)
-        if (tmp_blocking != nullptr) {
-            // delete from coroutine queue if blocked
-            next = nullptr;
-        }
-        return next;
-    }
-
+    // Run until yield. Return call stack top, or NULL if finished or blocked.
+    co_t *step(); /* hide fun_t::step() */
     // Keep running until all coroutines finished.
-    void run() /* hide fun_t::step() */
-    {
-        _q.push(*this);
-        for (co_t *node; (node = _q.pop()) != nullptr;) {
-            node = node->step();
-            if (node != nullptr) {
-                _q.push(*node);
-            }
-        }
-    }
+    void run(); /* hide fun_t::step() */
 };
 
 // await
 #undef co_call
-#define co_call(CALLEE)         \
-    co_t::_call(CALLEE);        \
-    co_return()
+#define co_call(CO)             \
+do {                            \
+    co_t::_call(CO);            \
+    co_return();                \
+} while (0)
 
 // Add a new coroutine CO to the scheduler. (create)
+// co_sched(co_t &)
 #define co_sched(CO)            \
-    co_t::_q.push(CO);          \
-    co_return()
+do {                            \
+    co_t::_sched(CO);           \
+    co_return();                \
+} while (0)
 
-// co_blocking_wait(co_blocking_t &)
+// Wait until notified.
+// co_wait(co_queue_t &)
 #define co_wait(Q)              \
-    (Q).push(*this);            \
-    co_t::tmp_blocking = this;  \
-    co_return()                 \
+do {                            \
+    co_t::_wait(Q);             \
+    co_return();                \
+} while (0)
 
+// Notify all coroutines blocked by Q.
+// co_broadcast(co_queue_t &)
 #define co_broadcast(Q)         \
-    co_t::_q.join(Q);           \
-    co_return()
-
+do {                            \
+    co_t::_broadcast(Q);        \
+    co_return();                \
+} while (0)
 
 //
 // co_queue_t
 //
 
-// dequeue, delete first node and return. If empty, return NULL.
 inline co_t *co_queue_t::pop()
 {
     co_t *node = head;
     if (head != nullptr) {
-        head = head->q_next;
+        head = head->next;
     }
     return node;
 }
 
-// enqueue, append ^co to the end of queue.
 inline void co_queue_t::push(co_t &co)
 {
     if (head == nullptr) {
         head = tail = &co;
     } else {
-        tail->q_next = &co;
+        tail->next = &co;
         tail = &co;
     }
-    tail->q_next = nullptr;
+    tail->next = nullptr;
 }
 
-// join q to the end of queue.
-inline void co_queue_t::join(co_queue_t &q)
+inline void co_queue_t::append(co_queue_t &wq)
 {
-    if (head == nullptr) {
-        *this = q;
-    } else {
-        if (q.head != nullptr) {
-            tail->q_next = q.head;
-            tail = q.tail;
+    if (wq.head != nullptr) {
+        if (head == nullptr) {
+            *this = wq;
+        } else {
+            tail->next = wq.head;
+            tail = wq.tail;
+        }
+    }
+}
+
+//
+// co_t
+//
+co_t *co_t::step()
+{
+    co_t *next = (co_t *)fun_t::step(); // cast ensured by _call(co_t &)
+    if (tmp_wait != nullptr) {
+        // delete from coroutine queue if blocked
+        next = nullptr;
+        tmp_wait = nullptr;
+    }
+    return next;
+}
+
+void co_t::run()
+{
+    q.push(*this);
+    for (co_t *node; (node = q.pop()) != nullptr;) {
+        node = node->step();
+        if (node != nullptr) {
+            q.push(*node);
         }
     }
 }
