@@ -90,7 +90,7 @@ CO_RETURN_20:;              // 3. label the restore point
 #endif
 
 // gen_t: generator context.
-//  .state() -> int: return the current running state.
+//  .state() -> int: return the running state.
 class gen_t {
 protected:
     // Start point where coroutine continue to run after yield.
@@ -121,36 +121,40 @@ public:
 // Mark coroutine begin.
 // gen_t::co_begin(...);
 #define co_begin(...)                                   \
+do {                                                    \
     switch (gen_t::_pc) {                               \
     case  0:                /* coroutine begin */       \
         break;                                          \
-    case -1:                /* coroutine end   */       \
-        goto CO_END;                                    \
+ /* case -1:              *//* coroutine end   */       \
+ /*     goto CO_END;      */                            \
  /* case  N:              */                            \
  /*     goto CO_RETURN_N; */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                /* invalid _pc     */       \
-        gen_t::_pc = -2;                                \
-        assert(((void)"_pc isn't valid.", false));      \
+ /*     gen_t::_pc = -2; */                             \
+ /*     assert(((void)"_pc isn't valid.", false)); */   \
         goto CO_END;                                    \
-    }
+    }                                                   \
+} while (0)
 
 
 // Yield from the coroutine.
 // gen_t::co_return();
 #define co_return(...)                                                                          \
+do {                                                                                            \
     __VA_ARGS__;                /* run before return, intent for handle return value */         \
     gen_t::_pc = __LINE__;      /* 1. save the restore point, at label CO_LABEL(__LINE__) */    \
     goto CO_END;                /* 2. return */                                                 \
-CO_LABEL(__LINE__):             /* 3. put a label after each return as restore point */         \
-
+CO_LABEL(__LINE__):;            /* 3. put a label after each return as restore point */         \
+} while (0)
 
 // Mark coroutine end.
 // gen_t::co_end()
 #define co_end()                                            \
+do {                                                        \
     gen_t::_pc = -1;   /* finish coroutine successfully */  \
-CO_END:                                                     \
-
+CO_END:;                                                    \
+} while (0)
 
 
 // Count the number of arguments. (BUG)
