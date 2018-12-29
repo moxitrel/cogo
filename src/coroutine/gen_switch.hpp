@@ -110,15 +110,15 @@ public:
 #define co_begin(...)                                   \
 do {                                                    \
     switch (gen_t::_pc) {                               \
-    case  0:                /* coroutine begin */       \
+    case  0:                    /* coroutine begin  */  \
         break;                                          \
- /* case -1:              *//* coroutine end   */       \
- /*     goto CO_END;      */                            \
- /* case  N:              */                            \
- /*     goto CO_YIELD_N;  */                            \
+ /* case -1:                */  /* coroutine end    */  \
+ /*     goto CO_END;        */                          \
+ /* case  N:                */  /* restore          */  \
+ /*     goto CO_YIELD_N;    */                          \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
-    default:                /* invalid _pc     */       \
- /*     gen_t::_pc = -2; */                             \
+    default:                    /* invalid _pc      */  \
+ /*     gen_t::_pc = -2;    */                          \
  /*     assert(((void)"_pc isn't valid.", false)); */   \
         goto CO_END;                                    \
     }                                                   \
