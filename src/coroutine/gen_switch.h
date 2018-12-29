@@ -100,9 +100,9 @@ do {                                                    \
  /* case  N:              */                            \
  /*     goto CO_YIELD_N;  */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
-    default:                                            \
- /*     GEN_PC(CO) = -2;  *//* invalid _pc,         */  \
- /*     assert(((void)"pc isn't valid.", 0));       */  \
+    default:                /* invalid _pc,     */      \
+ /*     GEN_PC(CO) = -2;  */                            \
+ /*     assert(((void)"pc isn't valid.", 0));   */      \
         goto CO_END;                                    \
     }                                                   \
 } while (0)
