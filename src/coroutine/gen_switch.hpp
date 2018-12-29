@@ -47,9 +47,9 @@ struct T : public gen_t {
 
     void f()
     {
-        //
-        // co_begin(11)
-        //
+     //
+     // co_begin(11);
+     //
         switch (pc) {
         case  0: break;             // coroutine begin
         case 11: goto CO_YIELD_11;  // restore
@@ -57,17 +57,17 @@ struct T : public gen_t {
         }
 
         for (i = 0; i < 9; i++) {
-            //
-            // co_yield()
-            //
+         //
+         // co_yield();
+         //
             pc = 17;    // 1. save restore point, next call will be "case 17: goto CO_YIELD_17"
             return;     // 2. yield
     CO_YIELD_17:;       // 3. put a label after each return as restore point
         }
 
-        //
-        // co_end()
-        //
+     //
+     // co_end();
+     //
         pc = -1;
     }
 };
