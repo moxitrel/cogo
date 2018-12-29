@@ -20,7 +20,7 @@ public:
     void append(co_queue_t &);
 };
 
-// co_t: support concurrency
+// co_t: support concurrency (slow about 8 stores when -O)
 //  .step () -> co_t *: run current coroutine until yield, return the next coroutine in the call stack.
 //  .run  ()          : keep running until all coroutines finished.
 class co_t : protected fun_t {
