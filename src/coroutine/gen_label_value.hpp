@@ -9,31 +9,23 @@
 class gen_t {
 protected:
     // save the start point where coroutine continue to run when yield
-    void *_pc;
-    //  >0: running
+    const void *_pc;
+    
+    // coroutine state
     //   0: inited
-    //  <0: finished
+    //  >0: running
+    //  <0: stopped
     int _state = 0;
 public:
-    // Get the running state.
+    // get the running state.
     int state() const 
     {
         return _state;
     }
 };
 
-//
-// co_begin(), co_end(), co_yield() 不是函数表达式, 必须作为独立的语句使用
-//
 
-// Make goto label.
-// e.g. CO_LABEL(13)       -> CO_YIELD_13
-//      CO_LABEL(__LINE__) -> CO_YIELD_118
-#define CO_LABEL(N)     CO_LABEL_(N)
-#define CO_LABEL_(N)    CO_YIELD_##N
-
-
-// co_t::co_begin(...);
+// gen_t::co_begin(...);
 #define co_begin(...)                               \
 do {                                                \
     switch (gen_t::_state) {                        \
@@ -48,8 +40,7 @@ do {                                                \
 } while (0)
 
 
-// Yield from the coroutine. (yield)
-// co_t::co_yield();
+// gen_t::co_yield();
 #define co_yield(...)                                                                           \
 do {                                                                                            \
     __VA_ARGS__;                        /* run before return, intent for handle return value */ \
@@ -59,12 +50,33 @@ CO_LABEL(__LINE__):;                    /* 3. put label after each *return* as r
 } while (0)
 
 
-// co_t::co_end()
+// gen_t::co_return();
+#define co_return(...)                                                                          \
+do {                                                                                            \
+    __VA_ARGS__;                /* run before return, intent for handle return value */         \
+    gen_t::_pc = &&CO_END;      /* 1. set coroutine finished */                                 \
+    gen_t::_state = -1;         /*    set coroutine finished */                                 \
+    goto CO_END;                /* 2. return */                                                 \
+} while (0)
+
+
+// gen_t::co_end()
 #define co_end()                            \
 do {                                        \
     gen_t::_pc = &&CO_END;                  \
     gen_t::_state = -1;    /* finish */     \
 CO_END:;                                    \
 } while (0)
+
+
+//
+// Helper Macros
+//
+
+// Make goto label.
+// e.g. CO_LABEL(13)       -> CO_YIELD_13
+//      CO_LABEL(__LINE__) -> CO_YIELD_118
+#define CO_LABEL(N)     CO_LABEL_(N)
+#define CO_LABEL_(N)    CO_YIELD_##N
 
 #endif // COROUTINE_GEN_H

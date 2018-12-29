@@ -80,9 +80,9 @@ struct T : public gen_t {
 #ifndef COROUTINE_GEN_H
 #define COROUTINE_GEN_H
 
-//#ifndef assert
-//#   define assert(...)  /* nop */
-//#endif
+#ifndef assert
+#   define assert(...)  /* nop */
+#endif
 
 // gen_t: generator context, must be inherited by user-defined class.
 //  .state() -> int: return the current running state.
