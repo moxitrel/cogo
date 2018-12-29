@@ -11,10 +11,10 @@ class fun_t : protected gen_t {
     virtual void operator()() = 0;
     // The parent who call me. (build call stack)
     fun_t *caller = nullptr;
-    // Store the coroutine who called by me temporarily (the new call stack top), used by co_call() and step().
+    // Store the coroutine who called by me temporarily (the new call stack top), used by co_await() and step().
     inline thread_local static fun_t *tmp_callee = nullptr;
 protected:
-    void _call(fun_t &callee)
+    void _await(fun_t &callee)
     {
         callee.caller = this;
         tmp_callee = &callee;
@@ -50,11 +50,11 @@ public:
 };
 
 // Call another coroutine. (await)
-// fun_t::co_call(fun_t &callee);
-#define co_call(CALLEE)                     \
+// fun_t::co_await(fun_t &callee);
+#define co_await(CALLEE)                    \
 do {                                        \
-    fun_t::_call(CALLEE);                   \
-    co_return();                            \
+    fun_t::_await(CALLEE);                  \
+    co_yield();                             \
 } while (0)
 
 #endif // COROUTINE_FUN_H

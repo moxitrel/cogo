@@ -17,7 +17,7 @@ typedef struct fun_t {
 
 #define FUN(F)   ((fun_t){.fun = (void (*)(fun_t *))(F),})
 
-// Temporarily store the coroutine who called by me. Used by co_call()
+// Temporarily store the coroutine who called by me. Used by co_await()
 _Thread_local static const fun_t *fun_tmp_callee;
 
 // Run the coroutine until yield.
@@ -47,14 +47,14 @@ void fun_run(fun_t *co)
 }
 
 // Call another coroutine. (await)
-// co_call(co_t *, co_t *);
-#define co_call(CO, CALLEE)                     \
+// co_await(co_t *, co_t *);
+#define co_await(CO, CALLEE)                    \
 do {                                            \
     fun_t *const _co = (fun_t *)(CO);           \
     fun_t *const _callee = (fun_t *)(CALLEE);   \
     _callee->caller = _co;                      \
     fun_tmp_callee = _callee;                   \
-    co_return(_co);                             \
+    co_yield(_co);                              \
 } while (0)
 
 #endif // COROUTINE_FUN_H

@@ -2,6 +2,7 @@
 A stackless coroutine library written in pure C and C++.
 
 * FEATURES
+- Easy to use
 - Portable
 - Reenterable
 - Small
@@ -17,13 +18,13 @@ class <T> : public co_t {
 
     void operator()()
     {
-        co_begin(...);  // 4. Set coroutine begin
+        co_begin(...);
 
         //
         // User codes
         //
 
-        co_end();       // 4. Set coroutine end
+        co_end();
     }
 };
 #+END_SRC
@@ -38,11 +39,10 @@ struct Nat : public co_t {
 
     void operator()()
     {
-        co_begin(13);
-     // co_begin();         // if enable GNUC extension
+        co_begin(12);
 
         for (value = 0; ; value++) {
-            co_return();
+            co_yield();
         }
 
         co_end();
@@ -84,7 +84,7 @@ class PrintN : public co_t {    // Print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80
         //
         // 4. Set coroutine begin
         //
-        co_begin(32);       // 32: list line numbers of co_return(), co_call(), co_sched(), i.e. the value of __LINE__
+        co_begin(32);       // 32: list line numbers of co_yield(), co_await(), co_sched(), i.e. the value of __LINE__
      // co_begin();         // you can omit line numbers if enable GNUC extension
 
         //
@@ -92,7 +92,7 @@ class PrintN : public co_t {    // Print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80
         //
         for (i = 0; i < 7; i++) {
             printf("%p:%d\n", this, i);
-            co_return();    // yield
+            co_yield();    // yield
         }
 
         //
@@ -170,7 +170,7 @@ void nat_gen(nat_gen_t *co) // 3. Define coroutine function with the type "void 
 
     // 5. User code
     for (co->value = 0; ; co->value++) {
-        co_return(co);      // yield
+        co_yield(co);      // yield
     }
 
     co_end(co);             // 4. Set coroutine end
@@ -194,11 +194,11 @@ int main(void)
 * API
 *** C++
 - co_begin (...)    :: Set coroutine begin.
-                       List with the line numbers of *co_return*, *co_call*, *co_sched*, *co_wait*, *co_broadcast*,
+                       List with the line numbers of *co_yield*, *co_await*, *co_sched*, *co_wait*, *co_broadcast*,
                        or omit if GNUC extension enabled.
 - co_end   ()       :: Set coroutine end.
-- co_return()       :: Yield.
-- co_call  (co_t &) :: Await a coroutine to finish.
+- co_yield()       :: Yield.
+- co_await  (co_t &) :: Await a coroutine to finish.
 - co_sched (co_t &) :: Add   a coroutine to current scheduler to run.
 - co_wait     (co_blocking_t &) :: block current coroutine until notified.
 - co_broadcast(co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
@@ -211,8 +211,8 @@ int main(void)
 *** C
 - co_begin (co_t *, ...)    :: set coroutine begin
 - co_end   (co_t *)         :: set coroutine end
-- co_return(co_t *)         :: yield
-- co_call  (co_t *, co_t *) :: call another coroutine (block current coroutine)
+- co_yield(co_t *)         :: yield
+- co_await  (co_t *, co_t *) :: call another coroutine (block current coroutine)
 - co_sched (co_t *, co_t *) :: add a coroutine to the scheduler to run
 
 - co_run  (co_t *) :: loop running until finish all coroutines

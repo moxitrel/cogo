@@ -16,7 +16,7 @@ void nat_gen(nat_gen_t *co) // 3. Define coroutine function with the type "void 
 
     // 5. User code
     for (co->value = 0; ; co->value++) {
-        co_return(co);      // yield
+        co_yield(co);      // yield
     }
 
     co_end(co);             // 4. Set coroutine end

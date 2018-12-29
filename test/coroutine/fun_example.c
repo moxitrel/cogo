@@ -15,7 +15,7 @@ void print(print_t *co)
 
     for (co->c = 'a'; co->c < 'f'; co->c ++) {
         printf("%c\n", co->c);
-        co_return(co);
+        co_yield(co);
     }
 
     co_end(co);
@@ -35,7 +35,7 @@ void loop3(loop3_t *co)
     
     for (co->i = 0; co->i < 3; co->i ++) {
         co->print = PRINT();
-        co_call(co, &co->print);
+        co_await(co, &co->print);
         printf("\n");
     }
     

@@ -29,7 +29,7 @@ struct Nat : public co_t {
         // 5. User codes
         //
         for (value = 0; ; value++) {
-            co_return();
+            co_yield();
         }
 
         //

@@ -37,7 +37,7 @@ do {                                        \
     co_t *const _newco = (co_t *)(NEWCO);   \
     co_q_tail->q_next = _newco;             \
     co_q_tail = _newco;                     \
-    co_return(_co);                         \
+    co_yield(_co);                          \
 } while (0)
 
 #endif //COROUTINE_CO_H

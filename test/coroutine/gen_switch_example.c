@@ -12,7 +12,7 @@ void gen_example(gen_example_t *co)
 
     for (; co->i < 5; co->i++) {
         printf("%d\n", co->i);
-        co_return(co);
+        co_yield(co);
     }
 
     co_end(co);

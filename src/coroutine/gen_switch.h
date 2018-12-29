@@ -3,8 +3,8 @@
 CO(FUN)     : 新建协程
 co_begin()  : 协程开始
 co_end()    : 协程结束
-co_return() : 返回
-co_call()   : 调用其他协程
+co_yield() : 返回
+co_await()   : 调用其他协程
 co_state()  : 获取协程运行状态
               >=0: 正在运行
                -1: 运行结束
@@ -38,21 +38,21 @@ void fun(fun_t *co)
     //
     // 协程开始
     //
-    co_begin(co,35,39,...); // 35,39, ...: 列出所有 co_return(), co_call() 所在的行号, 即 __LINE__ 的值
+    co_begin(co,35,39,...); // 35,39, ...: 列出所有 co_yield(), co_await() 所在的行号, 即 __LINE__ 的值
 
 
     //
     // 用户代码:  !!! 禁用局部变量 !!!
     //
-    co_return(co);          // 返回，下次被调用，从此处开始执行，***局部变量无法被恢复***
+    co_yield(co);          // 返回，下次被调用，从此处开始执行，***局部变量无法被恢复***
 
     for (; co->i < 9; co->i ++) {
         v = x;
-        co_return(co);
+        co_yield(co);
     }
 
     v += 1;
-    co_return(co);
+    co_yield(co);
 
     //
     // 协程结束
@@ -61,7 +61,7 @@ void fun(fun_t *co)
 
 
     //
-    // co_end()之后的代码，每次co_return()返回前 都会被执行
+    // co_end()之后的代码，每次co_yield()返回前 都会被执行
     //
 }
 
@@ -95,7 +95,7 @@ void coroutine(coroutine_t *co) // coroutine_t 由自己定义, 可添加任意�
   }
 
 
-  // co_return()
+  // co_yield()
   co->pc = 19;      // 1. save restore point, next call will be case 19: goto YIELD_19
   return;           // 2. return
 YIELD_19:;          // 3. put a label after each *return* as the restore point
@@ -103,7 +103,7 @@ YIELD_19:;          // 3. put a label after each *return* as the restore point
   for (; co->i < 9; co->i ++) {
     co->v = co->x;
 
-    // co_return()
+    // co_yield()
     co->pc = 23;    // 1. save restore point, next call will be case 23: goto YIELD_23
     return;         // 2. return
 YIELD_23:;          // 3. label the restore point
@@ -111,7 +111,7 @@ YIELD_23:;          // 3. label the restore point
 
   co->v += 1;
 
-  // co_return()
+  // co_yield()
   co->pc = 26;      // 1. save restore point, next call will be case 26: goto YIELD_26
   return;           // 2. return
 YIELD_26:;          // 3. label the restore point
@@ -154,14 +154,14 @@ inline static int co_state(const gen_t *const co)
 
 // API is *** not type safe ***
 //
-// co_begin(), co_end(), co_return() 不是函数表达式, 必须作为独立的语句使用
+// co_begin(), co_end(), co_yield() 不是函数表达式, 必须作为独立的语句使用
 //
 
 // Make goto label.
-// e.g. CO_LABEL(13)       -> CO_RETURN_13
-//      CO_LABEL(__LINE__) -> CO_RETURN_118
+// e.g. CO_LABEL(13)       -> CO_YIELD_13
+//      CO_LABEL(__LINE__) -> CO_YIELD_118
 #define CO_LABEL(N)     CO_LABEL_(N)
-#define CO_LABEL_(N)    CO_RETURN_##N
+#define CO_LABEL_(N)    CO_YIELD_##N
 
 #define CASE_GOTO(N)    case N: goto CO_LABEL(N)
 
@@ -174,7 +174,7 @@ do {                                                    \
  /* case -1:              *//* coroutine end   */       \
  /*     goto CO_END;      */                            \
  /* case  N:              */                            \
- /*     goto CO_RETURN_N; */                            \
+ /*     goto CO_YIELD_N; */                             \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                                            \
         assert(((void)"pc isn't valid.", false));       \
@@ -185,8 +185,8 @@ do {                                                    \
 
 
 // Yield from the coroutine. (yield)
-// co_return(co_t *);
-#define co_return(CO, ...)                                                              \
+// co_yield(co_t *);
+#define co_yield(CO, ...)                                                               \
 do {                                                                                    \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
     GEN_PC(CO) = __LINE__;      /* 1. save the restore point, at label YIELD_N */       \
