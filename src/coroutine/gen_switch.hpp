@@ -148,6 +148,7 @@ do {                                                                            
 CO_LABEL(__LINE__):;            /* 3. put a label after each return as restore point */         \
 } while (0)
 
+
 // Mark coroutine end.
 // gen_t::co_end()
 #define co_end()                                            \
