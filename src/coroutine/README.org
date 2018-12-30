@@ -89,6 +89,7 @@ int main()
 #+END_SRC
 
 *** C
+#+BEGIN_SRC C
 #include "coroutine.h"
 
 // natural number generator
