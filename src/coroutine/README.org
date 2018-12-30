@@ -55,23 +55,23 @@ void fun(<T> *co)
 #+END_SRC
 
 * EXAMPLE
+*** C++
 #+BEGIN_SRC C++
 #include "coroutine.h"
 
-//
 // natural number generator
-//
 struct Nat : public co_t {
-                        //
-    int value;          // declare local variable and return values.
-                        //
+                    //
+    int value;      // declare local variable and return values
+                    //
+
     void operator()()
     {
         co_begin(16);
 
                                         //
         for (value = 0; ; value++) {    //
-            co_yield();                 // user codes
+            co_yield();                 // user code
         }                               //
                                         //
 
@@ -85,6 +85,43 @@ int main()
     nat();  // nat.value: 0
     nat();  // nat.value: 1
     nat();  // nat.value: 2
+}
+#+END_SRC
+
+*** C
+#include "coroutine.h"
+
+// natural number generator
+typedef struct {
+    co_t co;
+
+                //
+    int value;  // declare local variables, return values as struct filed
+                //
+} nat_t;
+
+void nat(nat_t *co)
+{
+    co_begin(co, 18);
+
+                                            //
+    for (co->value = 0; ; co->value ++) {   //
+        co_yield(co);                       // user code
+    }                                       //
+                                            //
+
+    co_end(co);
+}
+
+int main()
+{
+    nat_t x = {         //
+        .co = CO(nat),  // init co_t member with macro CO(void(<T> *))
+    };                  //
+
+    nat(&x);            // x.value: 0
+    nat(&x);            // x.value: 1
+    nat(&x);            // x.value: 2
 }
 #+END_SRC
 
