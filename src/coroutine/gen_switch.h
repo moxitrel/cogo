@@ -40,14 +40,14 @@ void co_fun(co_fun_t *co)
 }
 
 // 6. define constructor
-#define CO_FUN(...)  ((co_fun_t){...})
+#define CO_AWAIT(...)  ((co_fun_t){...})
 
 //
 // example
 //
 int main(void)
 {
-    co_fun_t co = CO_FUN(...);
+    co_fun_t co = CO_AWAIT(...);
     
     co_fun(&co);    // co->i = 0
     co_fun(&co);    // co->i = 1
@@ -72,7 +72,7 @@ typedef struct {
     // Start point where coroutine continue to run after yield.
     //   0: inited
     //  >0: running
-    //  <0: stopped (-1: ok, -2: invalid pc)
+    //  <0: stopped (-1: ok)
     int pc;
 } gen_t;
 
@@ -95,14 +95,13 @@ do {                                                    \
     switch (GEN_PC(CO)) {                               \
     case  0:                /* coroutine begin  */      \
         break;                                          \
- /* case -1:              *//* coroutine end    */      \
- /*     goto CO_END;      */                            \
+    case -1:                /* coroutine end    */      \
+        goto CO_END;                                    \
  /* case  N:              */                            \
  /*     goto CO_YIELD_N;  */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                /* invalid _pc,     */      \
- /*     GEN_PC(CO) = -2;  */                            \
- /*     assert(((void)"pc isn't valid.", 0));   */      \
+        assert(((void)"pc isn't valid.", 0));           \
         goto CO_END;                                    \
     }                                                   \
 } while (0)

@@ -2,7 +2,7 @@
 // Created by M2 on 2018-12-24.
 //#undef __GNUC__
 #include <stdio.h>
-#include "../../src/coroutine/fun.h"
+#include "../../src/coroutine/await.h"
 
 typedef struct {
     fun_t fun;

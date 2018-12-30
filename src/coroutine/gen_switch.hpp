@@ -84,17 +84,17 @@ struct T : public gen_t {
 #   define assert(...)  /* nop */
 #endif
 
-// gen_t: generator context, must be inherited by user-defined class.
+// gen_t: generator context (slow about 4 stores when -O)
 //  .state() -> int: return the current running state.
 class gen_t {
 protected:
     // start point where coroutine continue to run.
     //   0: inited
     //  >0: running
-    //  <0: stopped (-1: success, -2: invalid _pc)
+    //  <0: stopped (-1: success)
     int _pc = 0;
 public:
-    // get the current running state.
+    // get the current running state
     int state() const
     {
         return _pc;
@@ -112,14 +112,13 @@ do {                                                    \
     switch (gen_t::_pc) {                               \
     case  0:                    /* coroutine begin  */  \
         break;                                          \
- /* case -1:                */  /* coroutine end    */  \
- /*     goto CO_END;        */                          \
+    case -1:                    /* coroutine end    */  \
+        goto CO_END;                                    \
  /* case  N:                */  /* restore          */  \
  /*     goto CO_YIELD_N;    */                          \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
     default:                    /* invalid _pc      */  \
- /*     gen_t::_pc = -2;    */                          \
- /*     assert(((void)"_pc isn't valid.", false)); */   \
+        assert(((void)"_pc isn't valid.", false));      \
         goto CO_END;                                    \
     }                                                   \
 } while (0)
@@ -127,6 +126,8 @@ do {                                                    \
 
 // Yield from the coroutine.
 // gen_t::co_yield();
+//
+// "if (gen_t::_pc != __LINE__) gen_t::_pc = __LINE__;" may speed up in some cases
 #define co_yield(...)                                                                           \
 do {                                                                                            \
     __VA_ARGS__;                /* run before return, intent for handle return value */         \
