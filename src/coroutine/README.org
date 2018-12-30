@@ -1,19 +1,20 @@
-* INTRODUCTION
-A stackless coroutine library written in pure C and C++.
+* Introduction
+A stackless coroutine library written in pure C and C++, implemented yield, await, concurrency and blocking.
 
-* FEATURES
+* Features
 - Easy to use
 - Portable
+- Fast
 - Reenterable
-- Small
 
-* OVERVIEW
+* Overview
+*** C++
 #+BEGIN_SRC C++
 #include "coroutine.h"
 
 class <T> : public co_t {
     //
-    // Declare local variables, return values as member variables
+    // declare local variables, return values as member variables.
     //
 
     void operator()()
@@ -21,7 +22,7 @@ class <T> : public co_t {
         co_begin(...);
 
         //
-        // User codes
+        // user codes
         //
 
         co_end();
@@ -29,21 +30,53 @@ class <T> : public co_t {
 };
 #+END_SRC
 
-* EXAMPLE
+*** C
+#+BEGIN_SRC C
+#include "coroutine.h"
+
+typedef struct {
+    co_t co;
+
+    //
+    // declare local variables, return values as struct filed
+    //
+} <T>;
+
+void fun(<T> *co)
+{
+    co_begin(co, ...);
+
+    //
+    // user code
+    //
+
+    co_end(co);
+}
+#+END_SRC
+
+* Example
+- [[./coroutine_example.c][coroutine_example.c]]
+- [[./coroutine_blocking_example.cpp][coroutine_blocking_example.cpp]]
+
+*** C++
 #+BEGIN_SRC C++
 #include "coroutine.h"
 
-// Natural number generator
+// natural number generator
 struct Nat : public co_t {
-    unsigned int value;
+                    //
+    int value;      // declare local variable and return values
+                    //
 
     void operator()()
     {
-        co_begin(12);
+        co_begin(16);
 
-        for (value = 0; ; value++) {
-            co_yield();
-        }
+                                        //
+        for (value = 0; ; value++) {    //
+            co_yield();                 // user code
+        }                               //
+                                        //
 
         co_end();
     }
@@ -52,43 +85,85 @@ struct Nat : public co_t {
 int main()
 {
     Nat nat;
-    nat(); // nat.value: 0
-    nat(); // nat.value: 1
-    nat(); // nat.value: 2
+    nat();  // nat.value: 0
+    nat();  // nat.value: 1
+    nat();  // nat.value: 2
+}
+#+END_SRC
+
+*** C
+#+BEGIN_SRC C
+#include "coroutine.h"
+
+// natural number generator
+typedef struct {
+    co_t co;
+
+                //
+    int value;  // declare local variables, return values as struct filed
+                //
+} nat_t;
+
+void nat(nat_t *co)
+{
+    co_begin(co, 18);
+
+                                            //
+    for (co->value = 0; ; co->value ++) {   //
+        co_yield(co);                       // user code
+    }                                       //
+                                            //
+
+    co_end(co);
+}
+
+int main()
+{
+    nat_t x = {
+        .co = CO(nat),
+    };
+
+    nat(&x);            // x.value: 0
+    nat(&x);            // x.value: 1
+    nat(&x);            // x.value: 2
 }
 #+END_SRC
 
 * Getting Started
+** Requirement
+- C++11
+- C11
+
 *** C++
 #+BEGIN_SRC C++
 //
-// 1. Include header "coroutine.h"
+// 1. include header "coroutine.h"
 //
 #include "coroutine.h"
 #include <stdio.h>
 
 //
-// 2. Define a class that inherit co_t
+// 2. define a class that inherit co_t
 //
-class PrintN : public co_t {    // Print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
+class PrintN : public co_t {
     //
-    // Declare local variables, parameters, return values for coroutine function
+    // declare local variables, parameters, return values for coroutine function as member variables
     //
     int i;
 
     //
-    // 3. Override operator(), which has the type "void ()"
+    // 3. override operator(), which has the type "void ()"
     //
     void operator()()
     {
         //
-        // 4. Set coroutine begin
-        //
-        co_begin(32);       // 32: list line numbers of co_yield(), co_await(), co_sched(), i.e. the value of __LINE__
-     // co_begin();         // you can omit line numbers if enable GNUC extension
+        // 4. set coroutine begin
+        //    list line numbers of co_yield(), co_return(), ...
+        co_begin(32);
+     // co_begin();         // you can omit line numbers if enabled GNUC extension
 
         //
-        // 5. User code (no local variable allowed, use member variable instead)
+        // 5. user code (no local variable allowed, declare as member variable instead)
         //
         for (i = 0; i < 7; i++) {
             printf("%p:%d\n", this, i);
@@ -96,13 +171,13 @@ class PrintN : public co_t {    // Print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80
         }
 
         //
-        // 4. Set coroutine end
+        // 4. set coroutine end
         //
         co_end();
     }
 
     //
-    // 6. Define constructor if needed
+    // 6. define constructor if needed
     //
 // public:
     // PrintN(...)
@@ -111,31 +186,33 @@ class PrintN : public co_t {    // Print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80
     // }
 };
 
-// 2. Define a class inherit co_t
+                                // 2. inherit co_t
 class CoroutineExample : public co_t {
-    PrintN coroutine1;          // Declare local variables of coroutine function
+                                //
+    PrintN coroutine1;          // declare local variables
     PrintN coroutine2;          //
 
-    void operator()()           // 3. Override operator()
+    void operator()()           // 3. override operator()
     {
-        co_begin(62,63);        // 4. Coroutine begin
+        co_begin(62,63);        // 4. coroutine begin
      // co_begin();
 
-                                // 5. User code
+                                // 5. user code
         co_sched(coroutine1);   // add coroutine1 to scheduler
         co_sched(coroutine2);   // add coroutine2 to scheduler
+                                //
 
-        co_end();               // 4. Coroutine end
+        co_end();               // 4. coroutine end
     }
 
-// public:                      // 6. Define constructor if needed
-    // CoroutineExample(...)
+// public:
+    // CoroutineExample(...)    // 6. define constructor if needed
     // {
     //    ...
     // }
 };
 
-// 7. Use it
+
 int main()
 {
     // Run until finish all coroutines.
@@ -153,39 +230,39 @@ int main()
 
 *** C
 #+BEGIN_SRC C
-#include "coroutine.h"      // 1. Include header "coroutine.h"
+#include "coroutine.h"      // 1. include header
 
-// 2. Define a struct inherit co_t
-typedef struct {
-    co_t co;    // inherit co_t (as first field)
+typedef struct {            // 2. inherit co_t
+    co_t co;                // put co_t in first
 
-    // Declare local variables, return values of coroutine function
-    int value;
+                            //
+    int value;              // declare local variables, return values of coroutine function
+                            //
 } nat_gen_t;
 
-void nat_gen(nat_gen_t *co) // 3. Define coroutine function with the type "void (co_t *)"
+void nat_gen(nat_gen_t *co) // 3. define coroutine function with the type "void (co_t *)"
 {
-    co_begin(co, 18);       // 4. Set Coroutine begin
+    co_begin(co, 18);       // 4. set Coroutine begin
  // co_begin(co);           // you can omit line numbers if enable GNUC extension
 
-    // 5. User code
+                            // 5. user code
     for (co->value = 0; ; co->value++) {
-        co_yield(co);      // yield
+        co_yield(co);       // yield
     }
 
-    co_end(co);             // 4. Set coroutine end
+    co_end(co);             // 4. set coroutine end
 }
-// 6. Define constructor, init co_t member with CO()
+                            // 6. define constructor, init co_t member with CO()
 #define NAT_GEN()   ((nat_gen_t){.co = CO(nat_gen),})
 
-// 7. Use it
+
 int main(void)
 {
     nat_gen_t ng = NAT_GEN();
 
-    nat_gen(&ng);   // ng.value = 0
-    nat_gen(&ng);   // ng.value = 1
-    nat_gen(&ng);   // ng.value = 2
+    nat_gen(&ng);           // ng.value = 0
+    nat_gen(&ng);           // ng.value = 1
+    nat_gen(&ng);           // ng.value = 2
 
     return 0;
 }
@@ -194,33 +271,50 @@ int main(void)
 * API
 *** C++
 - co_begin (...)   :: Set coroutine begin.
-                      List with the line numbers of *co_yield*, *co_await*, *co_sched*, *co_wait*, *co_broadcast*,
+                      List with the line numbers (__LINE__) of macros
+                        *co_yield()*,
+                        *co_return()*,
+                        *co_await()*,
+                        *co_sched()*,
+                        *co_wait()*,
+                        *co_broadcast()*,
                       or omit if GNUC extension enabled.
-- co_end  ()       :: Set coroutine end.
-- co_yield()       :: Yield.
-- co_return()      :: Return with coroutine finish.
-- co_await(co_t &) :: Await a coroutine to finish.
-- co_sched(co_t &) :: Add   a coroutine to current scheduler to run.
+- co_end   ()      :: Set coroutine end.
+- co_yield ()      :: Yield.
+- co_return()      :: Return with ending coroutine.
+- co_await(co_t &) :: Await another coroutine to finish.
+- co_sched(co_t &) :: Add a coroutine to scheduler to run.
 - co_wait     (co_blocking_t &) :: block current coroutine until notified.
 - co_broadcast(co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
 
-- o.run()   :: Run until all coroutines finished, with o as entry.
-- o.state() :: Return the running state of coroutine o.
-  -  0: ready.
-  - >0: running.
-  - <0: stop, coroutine is finished.
+- obj.run()   :: Run until all coroutines finished, with /obj/ as entry (like main()).
+- obj.state() :: Return the current running state of coroutine /obj/.
+  -  0: ready
+  - >0: running
+  - <0: stopped, coroutine is finished
+
 *** C
-- co_begin (co_t *, ...)    :: set coroutine begin
-- co_end   (co_t *)         :: set coroutine end
-- co_yield(co_t *)         :: yield
-- co_await  (co_t *, co_t *) :: call another coroutine (block current coroutine)
-- co_sched (co_t *, co_t *) :: add a coroutine to the scheduler to run
+- co_begin (co_t *, ...)    :: Set coroutine begin.
+                               List with the line numbers (__LINE__) of macros
+                                 *co_yield()*,
+                                 *co_return()*,
+                                 *co_await()*,
+                                 *co_sched()*,
+                                 *co_wait()*,
+                                 *co_broadcast()*,
+                               or omit if GNUC extension enabled.
+- co_end   (co_t *)         :: Set coroutine end.
+- co_yield (co_t *)         :: Yield.
+- co_return(co_t *)         :: Return with ending coroutine.
+- co_await (co_t *, co_t *) :: Await another coroutine to finish.
+- co_sched (co_t *, co_t *) :: Add a coroutine to scheduler to run.
 
 - co_run  (co_t *) :: loop running until finish all coroutines
-- co_state(co_t *) :: return running state
-                        0, ready
-                       >0, running
-                       <0, stop, coroutine is finished
-* SEE ALSO
+- co_state(co_t *) :: Return the current running state of coroutine /obj/.
+  -  0: ready
+  - >0: running
+  - <0: stopped, coroutine is finished
+
+* See Also
 - Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
 - Protothreads    (http://dunkels.com/adam/pt/)

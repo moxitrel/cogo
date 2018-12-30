@@ -23,7 +23,7 @@ class PrintN : public co_t {
         // 4. Set coroutine begin
         //
         co_begin(33);       // 33: list the line numbers of co_yield(), co_await(), co_sched(), i.e. the value of __LINE__
-        // co_begin();         // you can omit line numbers if enable GNUC extension
+     // co_begin();         // you can omit line numbers if enable GNUC extension
 
         //
         // 5. User code (*** No stack variable allowed, use member variable instead ***)

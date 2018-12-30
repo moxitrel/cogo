@@ -1,14 +1,14 @@
 #ifndef COROUTINE_CO_H
 #define COROUTINE_CO_H
 
-#include "fun.h"
+#include "await.h"
 
 typedef struct co_t {
-    fun_t fun;
+    await_t fun;
     struct co_t *q_next;
 } co_t;
 
-#define CO(F)   ((co_t){.fun = FUN(F),})
+#define CO(F)   ((co_t){.fun = AWAIT(F),})
 
 // Coroutine queue, who run concurrently with me.
 _Thread_local static co_t *co_q_head;
@@ -21,7 +21,7 @@ void co_run(co_t *co)
         for (co_t **node = &co_q_head; *node != NULL; node = node_next) {
             node_next = &(*node)->q_next;
 
-            *node = (co_t *)fun_step(&(*node)->fun);
+            *node = (co_t *)await_step(&(*node)->fun);
             // delete node if finished.
             if (*node == NULL) {
                 *node = *node_next;
