@@ -40,14 +40,14 @@ void co_fun(co_fun_t *co)
 }
 
 // 6. define constructor
-#define CO_AWAIT(...)  ((co_fun_t){...})
+#define CO_FUN(...)  ((co_fun_t){...})
 
 //
 // example
 //
 int main(void)
 {
-    co_fun_t co = CO_AWAIT(...);
+    co_fun_t co = CO_FUN(...);
     
     co_fun(&co);    // co->i = 0
     co_fun(&co);    // co->i = 1

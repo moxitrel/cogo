@@ -283,7 +283,7 @@ int main(void)
 - co_yield ()      :: Yield.
 - co_return()      :: Return with ending coroutine.
 - co_await(co_t &) :: Await another coroutine to finish.
-- co_sched(co_t &) :: Add a coroutine to the current scheduler to run.
+- co_sched(co_t &) :: Add a coroutine to scheduler to run.
 - co_wait     (co_blocking_t &) :: block current coroutine until notified.
 - co_broadcast(co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
 
@@ -307,7 +307,7 @@ int main(void)
 - co_yield (co_t *)         :: Yield.
 - co_return(co_t *)         :: Return with ending coroutine.
 - co_await (co_t *, co_t *) :: Await another coroutine to finish.
-- co_sched (co_t *, co_t *) :: Add a coroutine to the current scheduler to run.
+- co_sched (co_t *, co_t *) :: Add a coroutine to scheduler to run.
 
 - co_run  (co_t *) :: loop running until finish all coroutines
 - co_state(co_t *) :: Return the current running state of coroutine /obj/.
