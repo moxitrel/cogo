@@ -1,13 +1,13 @@
-* INTRODUCTION
-A stackless coroutine library written in pure C and C++.
+* Introduction
+A stackless coroutine library written in pure C and C++, implemented yield, await, concurrency and blocking.
 
-* FEATURES
+* Features
 - Easy to use
 - Portable
+- Fast
 - Reenterable
-- Small
 
-* OVERVIEW
+* Overview
 *** C++
 #+BEGIN_SRC C++
 #include "coroutine.h"
@@ -54,7 +54,10 @@ void fun(<T> *co)
 }
 #+END_SRC
 
-* EXAMPLE
+* Example
+- [[./coroutine_example.c][coroutine_example.c]]
+- [[./coroutine_blocking_example.cpp][coroutine_blocking_example.cpp]]
+
 *** C++
 #+BEGIN_SRC C++
 #include "coroutine.h"
@@ -116,9 +119,9 @@ void nat(nat_t *co)
 
 int main()
 {
-    nat_t x = {         //
-        .co = CO(nat),  // init co_t member with macro CO(void(<T> *))
-    };                  //
+    nat_t x = {
+        .co = CO(nat),
+    };
 
     nat(&x);            // x.value: 0
     nat(&x);            // x.value: 1
@@ -127,6 +130,10 @@ int main()
 #+END_SRC
 
 * Getting Started
+** Requirement
+- C++11
+- C11
+
 *** C++
 #+BEGIN_SRC C++
 //
@@ -140,7 +147,7 @@ int main()
 //
 class PrintN : public co_t {
     //
-    // declare local variables, parameters, return values for coroutine function
+    // declare local variables, parameters, return values for coroutine function as member variables
     //
     int i;
 
@@ -151,12 +158,12 @@ class PrintN : public co_t {
     {
         //
         // 4. set coroutine begin
-        //
-        co_begin(32);       // 32: list line numbers of co_yield(), co_await(), co_sched(), i.e. the value of __LINE__
+        //    list line numbers of co_yield(), co_return(), ...
+        co_begin(32);
      // co_begin();         // you can omit line numbers if enabled GNUC extension
 
         //
-        // 5. user code (no local variable allowed, use member variable instead)
+        // 5. user code (no local variable allowed, declare as member variable instead)
         //
         for (i = 0; i < 7; i++) {
             printf("%p:%d\n", this, i);
@@ -205,9 +212,7 @@ class CoroutineExample : public co_t {
     // }
 };
 
-//
-// example
-//
+
 int main()
 {
     // Run until finish all coroutines.
@@ -227,15 +232,15 @@ int main()
 #+BEGIN_SRC C
 #include "coroutine.h"      // 1. include header
 
-typedef struct {            // 2. define a struct inherit co_t
-    co_t co;                // put in first to inherit
+typedef struct {            // 2. inherit co_t
+    co_t co;                // put co_t in first
 
                             //
     int value;              // declare local variables, return values of coroutine function
                             //
 } nat_gen_t;
 
-void nat_gen(nat_gen_t *co) // 3. Define coroutine function with the type "void (co_t *)"
+void nat_gen(nat_gen_t *co) // 3. define coroutine function with the type "void (co_t *)"
 {
     co_begin(co, 18);       // 4. set Coroutine begin
  // co_begin(co);           // you can omit line numbers if enable GNUC extension
@@ -250,7 +255,7 @@ void nat_gen(nat_gen_t *co) // 3. Define coroutine function with the type "void 
                             // 6. define constructor, init co_t member with CO()
 #define NAT_GEN()   ((nat_gen_t){.co = CO(nat_gen),})
 
-                            // 7. use it
+
 int main(void)
 {
     nat_gen_t ng = NAT_GEN();
@@ -266,33 +271,50 @@ int main(void)
 * API
 *** C++
 - co_begin (...)   :: Set coroutine begin.
-                      List with the line numbers of *co_yield*, *co_await*, *co_sched*, *co_wait*, *co_broadcast*,
+                      List with the line numbers (__LINE__) of macros
+                        *co_yield()*,
+                        *co_return()*,
+                        *co_await()*,
+                        *co_sched()*,
+                        *co_wait()*,
+                        *co_broadcast()*,
                       or omit if GNUC extension enabled.
-- co_end  ()       :: Set coroutine end.
-- co_yield()       :: Yield.
-- co_return()      :: Return with coroutine finish.
-- co_await(co_t &) :: Await a coroutine to finish.
-- co_sched(co_t &) :: Add   a coroutine to current scheduler to run.
+- co_end   ()      :: Set coroutine end.
+- co_yield ()      :: Yield.
+- co_return()      :: Return with ending coroutine.
+- co_await(co_t &) :: Await another coroutine to finish.
+- co_sched(co_t &) :: Add a coroutine to the current scheduler to run.
 - co_wait     (co_blocking_t &) :: block current coroutine until notified.
 - co_broadcast(co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
 
-- o.run()   :: Run until all coroutines finished, with o as entry.
-- o.state() :: Return the running state of coroutine o.
-  -  0: ready.
-  - >0: running.
-  - <0: stop, coroutine is finished.
+- obj.run()   :: Run until all coroutines finished, with /obj/ as entry (like main()).
+- obj.state() :: Return the current running state of coroutine /obj/.
+  -  0: ready
+  - >0: running
+  - <0: stopped, coroutine is finished
+
 *** C
-- co_begin (co_t *, ...)    :: set coroutine begin
-- co_end   (co_t *)         :: set coroutine end
-- co_yield(co_t *)         :: yield
-- co_await  (co_t *, co_t *) :: call another coroutine (block current coroutine)
-- co_sched (co_t *, co_t *) :: add a coroutine to the scheduler to run
+- co_begin (co_t *, ...)    :: Set coroutine begin.
+                               List with the line numbers (__LINE__) of macros
+                                 *co_yield()*,
+                                 *co_return()*,
+                                 *co_await()*,
+                                 *co_sched()*,
+                                 *co_wait()*,
+                                 *co_broadcast()*,
+                               or omit if GNUC extension enabled.
+- co_end   (co_t *)         :: Set coroutine end.
+- co_yield (co_t *)         :: Yield.
+- co_return(co_t *)         :: Return with ending coroutine.
+- co_await (co_t *, co_t *) :: Await another coroutine to finish.
+- co_sched (co_t *, co_t *) :: Add a coroutine to the current scheduler to run.
 
 - co_run  (co_t *) :: loop running until finish all coroutines
-- co_state(co_t *) :: return running state
-                        0, ready
-                       >0, running
-                       <0, stop, coroutine is finished
-* SEE ALSO
+- co_state(co_t *) :: Return the current running state of coroutine /obj/.
+  -  0: ready
+  - >0: running
+  - <0: stopped, coroutine is finished
+
+* See Also
 - Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
 - Protothreads    (http://dunkels.com/adam/pt/)

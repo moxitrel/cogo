@@ -2,7 +2,7 @@
 // Created by M2 on 2018-12-28.
 #undef __GNUC__
 #include <stdio.h>
-#include "../../src/coroutine/fun.hpp"
+#include "../../src/coroutine/await.hpp"
 
 class print_t : public fun_t {
     char c;

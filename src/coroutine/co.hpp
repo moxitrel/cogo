@@ -1,7 +1,7 @@
 #ifndef COROUTINE_CO_H
 #define COROUTINE_CO_H
 
-#include "fun.hpp"
+#include "await.hpp"
 
 class co_t;
 class co_queue_t;
@@ -12,6 +12,7 @@ class co_queue_t {
     co_t *head = nullptr;   // empty queue
     co_t *tail;
 public:
+    bool empty() const;
     // dequeue, delete first node and return. If empty, return NULL.
     co_t *pop();
     // enqueue, append a coroutine to the end of queue.
@@ -20,43 +21,33 @@ public:
     void append(co_queue_t &);
 };
 
-// co_t: support concurrency (slow about 8 stores when -O)
+// co_t: support concurrency (slow about 24 stores when -O)
 //  .step () -> co_t *: run current coroutine until yield, return the next coroutine in the call stack.
 //  .run  ()          : keep running until all coroutines finished.
-class co_t : protected fun_t {
+class co_t : protected await_t {
     friend co_queue_t;
     
     // Scheduler related: q, next, tmp_wait
     // Concurrent coroutine queue (coroutines run concurrently).
-    inline thread_local static co_queue_t q;
-    co_t *next;
+    thread_local static co_queue_t q;
     // Temporarily store the coroutine blocked by blocking. Used by co_wait(), step()
-    inline thread_local static co_t *tmp_wait = nullptr;
+    thread_local static co_t *tmp_wait;
+
+    co_t *next;
 protected:
-    // Only allow co_t. (forbid fun_t)
-    void _await(co_t &callee) /* hide fun_t::_await() */
-    {
-        fun_t::_await(callee);
-    }
-    void _sched(co_t &co)
-    {
-        q.push(co);
-    }
-    void _wait(co_queue_t &wq)
-    {
-        wq.push(*this);
-        co_t::tmp_wait = this;
-    }
-    void _broadcast(co_queue_t &wq)
-    {
-        q.append(wq);
-    }
+    // only allow co_t (forbid await_t)
+    void _await(co_t &co); /* hide await_t::_await() */
+
+    void _sched(co_t &co);
+    void _wait(co_queue_t &wq);
+    void _broadcast(co_queue_t &wq);
 public:
-    // Run until yield. Return call stack top, or NULL if finished or blocked.
-    co_t *step(); /* hide fun_t::step() */
     // Keep running until all coroutines finished.
-    void run(); /* hide fun_t::step() */
+    void run(); /* hide await_t::step() */
 };
+
+thread_local co_queue_t co_t::q;
+thread_local co_t *co_t::tmp_wait = nullptr;
 
 // await
 #undef co_await
@@ -90,9 +81,14 @@ do {                            \
     co_yield();                 \
 } while (0)
 
+
 //
 // co_queue_t
 //
+inline bool co_queue_t::empty() const
+{
+    return head == nullptr;
+}
 
 inline co_t *co_queue_t::pop()
 {
@@ -105,7 +101,7 @@ inline co_t *co_queue_t::pop()
 
 inline void co_queue_t::push(co_t &co)
 {
-    if (head == nullptr) {
+    if (empty()) {
         head = tail = &co;
     } else {
         tail->next = &co;
@@ -116,8 +112,8 @@ inline void co_queue_t::push(co_t &co)
 
 inline void co_queue_t::append(co_queue_t &wq)
 {
-    if (wq.head != nullptr) {
-        if (head == nullptr) {
+    if (!wq.empty()) {
+        if (empty()) {
             *this = wq;
         } else {
             tail->next = wq.head;
@@ -126,27 +122,44 @@ inline void co_queue_t::append(co_queue_t &wq)
     }
 }
 
+
 //
 // co_t
 //
-co_t *co_t::step()
+inline void co_t::_await(co_t &callee)
 {
-    co_t *next = (co_t *)fun_t::step(); // cast ensured by _await(co_t &)
-    if (tmp_wait != nullptr) {
-        // delete from coroutine queue if blocked
-        next = nullptr;
-        tmp_wait = nullptr;
-    }
-    return next;
+    await_t::_await(callee);
+}
+
+inline void co_t::_sched(co_t &co)
+{
+    q.push(co);
+}
+
+inline void co_t::_wait(co_queue_t &wq)
+{
+    wq.push(*this);
+    co_t::tmp_wait = this;
+}
+
+inline void co_t::_broadcast(co_queue_t &wq)
+{
+    q.append(wq);
 }
 
 void co_t::run()
 {
     q.push(*this);
-    for (co_t *node; (node = q.pop()) != nullptr;) {
-        node = node->step();
-        if (node != nullptr) {
-            q.push(*node);
+    while ((await_t::stack_top = q.pop()) != nullptr) {
+        await_t::stack_step();
+        if (tmp_wait != nullptr) {
+            tmp_wait = nullptr;
+            // remove call stack
+        } else if (await_t::stack_top == nullptr) {
+            // remove call stack
+        } else {
+            // cast ensured by _await(), _sched()
+            q.push(*(co_t *)await_t::stack_top);
         }
     }
 }
