@@ -22,13 +22,14 @@ public:
 };
 
 // co_t: support concurrency (slow about 24 stores when -O)
+//  .state() -> int   : return the current running state.
 //  .step () -> co_t *: run current coroutine until yield, return the next coroutine in the call stack.
 //  .run  ()          : keep running until all coroutines finished.
-class co_t : protected await_t {
+class co_t : public await_t {
     friend co_queue_t;
     
-    // Scheduler related: q, next, tmp_wait
-    // Concurrent coroutine queue (coroutines run concurrently).
+    // scheduler related: q, next, await_t::stack_top, tmp_wait
+    // concurrent coroutine queue (coroutines run concurrently).
     thread_local static co_queue_t q;
     // Temporarily store the coroutine blocked by blocking. Used by co_wait(), step()
     thread_local static co_t *tmp_wait;
@@ -42,8 +43,10 @@ protected:
     void _wait(co_queue_t &wq);
     void _broadcast(co_queue_t &wq);
 public:
-    // Keep running until all coroutines finished.
-    void run(); /* hide await_t::step() */
+    // cast the return type only
+    co_t *step();   /* hide await_t::step() */
+    // keep running until all coroutines finished
+    void run();     /* hide await_t::run() */
 };
 
 thread_local co_queue_t co_t::q;
@@ -126,9 +129,9 @@ inline void co_queue_t::append(co_queue_t &wq)
 //
 // co_t
 //
-inline void co_t::_await(co_t &callee)
+inline void co_t::_await(co_t &co)
 {
-    await_t::_await(callee);
+    await_t::_await(co);
 }
 
 inline void co_t::_sched(co_t &co)
@@ -147,9 +150,28 @@ inline void co_t::_broadcast(co_queue_t &wq)
     q.append(wq);
 }
 
+co_t *co_t::step()
+{
+    // cast ensured by _await()
+    return (co_t *)await_t::step();
+}
+
 void co_t::run()
 {
     q.push(*this);
+
+//    for (co_t *co; (co = q.pop()) != nullptr; ) {
+//        co = co->step();
+//        if (tmp_wait != nullptr) {
+//            tmp_wait = nullptr;
+//            // remove call stack
+//        } else if (co == nullptr) {
+//            // remove call stack
+//        } else {
+//            q.push(*co);
+//        }
+//    }
+
     while ((await_t::stack_top = q.pop()) != nullptr) {
         await_t::stack_step();
         if (tmp_wait != nullptr) {
