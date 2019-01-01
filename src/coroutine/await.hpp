@@ -3,32 +3,22 @@
 
 #include "gen.hpp"
 
-// await_t: support call stack. (behave like function, slow about 10 stores when -O)
+// await_t: behave like function, add call stack support.
 //  .state() -> int      : return the current running state.
 //  .step () -> await_t *: keep running until yield, return the next coroutine (call stack top) to be run.
 //  .run  ()             : keep running until finish.
 class await_t : public gen_t {
     // the coroutine function
     virtual void operator()() = 0;
-    // the next lower stack frame
+
+    // the lower call stack frame
     await_t *caller = nullptr;
-protected:
+
     // the stack top of current call stack
-    thread_local static await_t *stack_top;
-
-    // run the coroutine pointed by stack_top until yield, and refresh the call stack top
-    static void stack_step()
-    {
-        assert(stack_top);
-
-        if (stack_top->state() < 0) {
-            // stack pop
-            stack_top = stack_top->caller;
-        } else {
-            stack_top->operator()();
-        }
-    }
-
+    // OPTIMIZE: the implementation of TLS is too slow!!!
+    /* thread_local static */ await_t *stack_top;
+protected:
+    // call another coroutine
     void _await(await_t &callee)
     {
         // stack push
@@ -36,46 +26,36 @@ protected:
         stack_top = &callee;
     }
 public:
-    // behave the same as stack_step(), provide for generator
-    // return NULL if finished
+    // run until yield, return the new call stack top or NULL if finished
     await_t *step()
     {
-        await_t *next = this;
+        stack_top = this;
 
         if (state() < 0) {
-            // set caller as the new stack top, (pop)
-            next = caller;
+            // stack pop
+            stack_top = caller;
         } else {
-            // use stack_top as a temporary storage for callee if exist
-            // require stack_top inited to NULL, and clear when exit. (to improve performance)
+            // stack top may be changed by await()
             operator()();
-            if (stack_top != nullptr) {
-                // set callee as the new stack top, (push)
-                next = stack_top;
-                stack_top = nullptr;
-            }
         }
 
-        return next;
+        return stack_top;
     }
-    
+
     // keep running until finish
     void run()
     {
-        for (stack_top = this; stack_top != nullptr;) {
-            stack_step();
+        for (await_t *co = this; co != nullptr; ) {
+            co = co->step();
         }
     }
 };
-
-// step() require stack_top inited with NULL
-thread_local await_t *await_t::stack_top = nullptr;
 
 // Call another coroutine. (await)
 // await_t::co_await(await_t &co);
 #define co_await(CO)                        \
 do {                                        \
-    await_t::_await(CO);                    \
+    this->_await(CO);                       \
     co_yield();                             \
 } while (0)
 
