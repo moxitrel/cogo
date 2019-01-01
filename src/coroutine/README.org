@@ -132,7 +132,7 @@ int main()
 * Getting Started
 ** Requirement
 - C++11
-- C11
+- C99
 
 *** C++
 #+BEGIN_SRC C++

@@ -160,28 +160,15 @@ void co_t::run()
 {
     q.push(*this);
 
-//    for (co_t *co; (co = q.pop()) != nullptr; ) {
-//        co = co->step();
-//        if (tmp_wait != nullptr) {
-//            tmp_wait = nullptr;
-//            // remove call stack
-//        } else if (co == nullptr) {
-//            // remove call stack
-//        } else {
-//            q.push(*co);
-//        }
-//    }
-
-    while ((await_t::stack_top = q.pop()) != nullptr) {
-        await_t::stack_step();
+    for (co_t *co; (co = q.pop()) != nullptr; ) {
+        co = co->step();
         if (tmp_wait != nullptr) {
             tmp_wait = nullptr;
             // remove call stack
-        } else if (await_t::stack_top == nullptr) {
+        } else if (co == nullptr) {
             // remove call stack
         } else {
-            // cast ensured by _await(), _sched()
-            q.push(*(co_t *)await_t::stack_top);
+            q.push(*co);
         }
     }
 }
