@@ -15,7 +15,7 @@ class await_t : public gen_t {
     await_t *caller = nullptr;
 
     // the stack top of current call stack
-    // OPTIMIZE: the implementation of TLS is too slow!!!
+    // NOTE: the implementation of TLS is too slow!!!
     /* thread_local static */ await_t *stack_top;
 protected:
     // call another coroutine
