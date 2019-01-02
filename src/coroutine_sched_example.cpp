@@ -72,5 +72,5 @@ int main()
     //  0x918:1
     //  0x8f0:3
     //  ...
-    CoroutineExample().run();
+    sch_t().run(CoroutineExample());
 }
