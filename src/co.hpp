@@ -7,12 +7,13 @@ class co_t;
 class co_queue_t;
 class sch_t;
 
-typedef co_queue_t co_blocking_t;
+typedef co_queue_t co_block_t;
+
 
 // co_t: support concurrency
 //  .state() -> int   : return the current running state.
 //  .step () -> co_t *: run *current coroutine* until yield, return the next coroutine in the call stack.
-//  .run  ()          : run *current coroutine* until finish (the sched() coroutines won't run)
+//  .run  ()          : keep running until all coroutines finished
 class co_t : public await_t {
     friend co_queue_t;
     friend sch_t;
@@ -33,7 +34,7 @@ public:
         return (co_t *)await_t::step();
     }
 
-    // run *current coroutine* until finish (the sched() coroutines won't run)
+    // run until finish all
     void run();
 };
 
@@ -87,7 +88,7 @@ class sch_t {
     // coroutines in this queue run concurrently
     co_queue_t q = {};
 
-    // temporarily store the coroutine blocked by blocking. Used by co_wait(), step()
+    // temporarily store the coroutine blocked by co_block_t. Used by co_wait(), step()
     co_t *blocked_coroutine = nullptr;
 public:
     // run until finish all
@@ -108,13 +109,11 @@ public:
 // only allow co_t (forbid await_t)
 inline void co_t::_await(co_t &co)
 {
-    co.sch = sch;
     await_t::_await(co);
 }
 
 inline void co_t::_sched(co_t &co)
 {
-    co.sch = sch;
     sch->q.push(co);
 }
 
@@ -127,15 +126,12 @@ inline void co_t::_wait(co_block_t &wq)
 
 inline void co_t::_broadcast(co_block_t &wq)
 {
-    // TODO: handle scheduler
     sch->q.append(wq);
 }
 
 inline void co_t::run()
 {
-    sch_t sch = sch_t();
-    this->sch = &sch;
-    await_t::run();
+    sch_t().run(*this);
 }
 
 
@@ -187,13 +183,13 @@ inline void co_queue_t::append(co_queue_t &q)
 
 inline void sch_t::run(co_t &entry)
 {
-    entry.sch = this;
     for (co_t *co = &entry; co != nullptr; co = q.pop()) {
+        co->sch = this;
         blocked_coroutine = nullptr;
         co = co->step();
-        if (blocked_coroutine != nullptr) {
+        if (co == nullptr) {
             // nop, remove co from concurrent queue
-        } else if (co == nullptr) {
+        } else if (blocked_coroutine != nullptr) {
             // nop, remove co from concurrent queue
         } else {
             q.push(*co);
