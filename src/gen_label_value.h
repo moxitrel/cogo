@@ -1,5 +1,5 @@
-#ifndef COROUTINE_GEN_H
-#define COROUTINE_GEN_H
+#ifndef COGOTO_GEN_H
+#define COGOTO_GEN_H
 
 #ifndef assert
 #   define assert(...)  /* nop */
@@ -84,4 +84,4 @@ CO_END:;                                    \
 #define CO_LABEL(N)     CO_LABEL_(N)
 #define CO_LABEL_(N)    CO_YIELD_##N
 
-#endif //COROUTINE_GEN_H
+#endif //COGOTO_GEN_H

@@ -1,5 +1,5 @@
-#ifndef COROUTINE_CO_H
-#define COROUTINE_CO_H
+#ifndef COGOTO_SCHED_H
+#define COGOTO_SCHED_H
 
 #include "await.hpp"
 
@@ -9,74 +9,44 @@ class sch_t;
 
 typedef co_queue_t co_blocking_t;
 
-// co_t queue
-class co_queue_t {
-    friend sch_t;
-
-    co_t *head = nullptr;   // empty queue
-    co_t *tail;
-public:
-    bool empty() const;
-    // dequeue, delete first node and return. If empty, return NULL.
-    co_t *pop();
-    // enqueue, append a coroutine to the end of queue.
-    void push(co_t &);
-    // join another co_queue_t to the end of queue.
-    void append(co_queue_t &);
-};
-
-class sch_t {
-    friend co_t;
-
-    co_t *top;
-
-    // coroutines in this queue run concurrently
-    co_queue_t q;
-
-    // temporarily store the coroutine blocked by blocking. Used by co_wait(), step()
-    co_t *tmp_wait = nullptr;
-public:
-//    sch_t(co_t &entry);
-    // run until yield, provide for generator
-//    void step();
-    // run until finish all
-    void run(co_t &entry);
-};
-
-// co_t: support concurrency (slow about 24 stores when -O)
+// co_t: support concurrency
 //  .state() -> int   : return the current running state.
-//  .step () -> co_t *: run current coroutine until yield, return the next coroutine in the call stack.
-//  .run  ()          : keep running until all coroutines finished.
+//  .step () -> co_t *: run *current coroutine* until yield, return the next coroutine in the call stack.
+//  .run  ()          : run *current coroutine* until finish (the sched() coroutines won't run)
 class co_t : public await_t {
-    friend sch_t;
     friend co_queue_t;
+    friend sch_t;
 
+    // associated scheduler
     sch_t *sch;
+    // another concurrent coroutine in the co_queue_t
     co_t *next;
 protected:
-    // only allow co_t (forbid await_t)
     void _await(co_t &co); /* hide await_t::_await() */
-
     void _sched(co_t &co);
-    void _wait(co_queue_t &wq);
-    void _broadcast(co_queue_t &wq);
+    void _wait(co_block_t &);
+    void _broadcast(co_block_t &);
 public:
-    // cast the return type only
-    co_t *step();   /* hide await_t::step() */
-    // keep running until all coroutines finished
-    void run();     /* hide await_t::run() */
+    co_t *step() /* hide await_t::step() */
+    {
+        // cast return type only, ensured by _await()
+        return (co_t *)await_t::step();
+    }
+
+    // run *current coroutine* until finish (the sched() coroutines won't run)
+    void run();
 };
 
 // Add a new coroutine CO to the scheduler. (create)
 // co_sched(co_t &)
 #define co_sched(CO)            \
 do {                            \
-    co_t::_sched(CO);           \
+    _sched(CO);                 \
     co_yield();                 \
 } while (0)
 
 // Wait until notified.
-// co_wait(co_queue_t &)
+// co_wait(co_block_t &)
 #define co_wait(Q)              \
 do {                            \
     co_t::_wait(Q);             \
@@ -84,7 +54,7 @@ do {                            \
 } while (0)
 
 // Notify all coroutines blocked by Q.
-// co_broadcast(co_queue_t &)
+// co_broadcast(co_block_t &)
 #define co_broadcast(Q)         \
 do {                            \
     co_t::_broadcast(Q);        \
@@ -92,19 +62,97 @@ do {                            \
 } while (0)
 
 
+// coroutine queue
+class co_queue_t {
+    co_t *first = nullptr;   // empty queue
+    co_t *last;
+public:
+    bool empty() const;
+
+    // dequeue, delete first node and return. If empty, return NULL.
+    co_t *pop();
+
+    // enqueue, append a coroutine to the end of queue.
+    void push(co_t &);
+
+    // join another co_queue_t to the end of queue.
+    void append(co_queue_t &);
+};
+
+
+// coroutine scheduler
+class sch_t {
+    friend co_t;
+
+    // coroutines in this queue run concurrently
+    co_queue_t q = {};
+
+    // temporarily store the coroutine blocked by blocking. Used by co_wait(), step()
+    co_t *blocked_coroutine = nullptr;
+public:
+    // run until finish all
+    void run(co_t &);
+
+    // run until finish all
+    void run(co_t &&entry)
+    {
+        run(entry);
+    }
+};
+
+
+//
+// co_t
+//
+
+// only allow co_t (forbid await_t)
+inline void co_t::_await(co_t &co)
+{
+    co.sch = sch;
+    await_t::_await(co);
+}
+
+inline void co_t::_sched(co_t &co)
+{
+    co.sch = sch;
+    sch->q.push(co);
+}
+
+
+inline void co_t::_wait(co_block_t &wq)
+{
+    wq.push(*this);
+    sch->blocked_coroutine = this;
+}
+
+inline void co_t::_broadcast(co_block_t &wq)
+{
+    // TODO: handle scheduler
+    sch->q.append(wq);
+}
+
+inline void co_t::run()
+{
+    sch_t sch = sch_t();
+    this->sch = &sch;
+    await_t::run();
+}
+
+
 //
 // co_queue_t
 //
+
 inline bool co_queue_t::empty() const
 {
-    return head == nullptr;
+    return first == nullptr;
 }
 
 inline co_t *co_queue_t::pop()
 {
-    co_t *node = head;
-    if (head != nullptr) {
-        head = head->next;
+    co_t *node = first;
+    if (first != nullptr) {
+        first = first->next;
     }
     return node;
 }
@@ -112,92 +160,45 @@ inline co_t *co_queue_t::pop()
 inline void co_queue_t::push(co_t &co)
 {
     if (empty()) {
-        head = tail = &co;
+        first = last = &co;
     } else {
-        tail->next = &co;
-        tail = &co;
+        last->next = &co;
+        last = &co;
     }
-    tail->next = nullptr;
+    last->next = nullptr;
 }
 
-inline void co_queue_t::append(co_queue_t &wq)
+inline void co_queue_t::append(co_queue_t &q)
 {
-    if (!wq.empty()) {
+    if (!q.empty()) {
         if (empty()) {
-            *this = wq;
+            *this = q;
         } else {
-            tail->next = wq.head;
-            tail = wq.tail;
+            last->next = q.first;
+            last = q.last;
         }
     }
 }
 
-
-//
-// co_t
-//
-inline void co_t::_await(co_t &co)
-{
-    await_t::_await(co);
-}
-
-inline void co_t::_sched(co_t &co)
-{
-    sch->q.push(co);
-}
-
-inline void co_t::_wait(co_queue_t &wq)
-{
-    wq.push(*this);
-    sch->tmp_wait = this;
-}
-
-inline void co_t::_broadcast(co_queue_t &wq)
-{
-    sch->q.append(wq);
-}
-
-co_t *co_t::step()
-{
-    // cast ensured by _await()
-    return (co_t *)await_t::step();
-}
-
-void co_t::run()
-{
-    sch->q.push(*this);
-
-    for (co_t *co; (co = sch->q.pop()) != nullptr; ) {
-        co = co->step();
-        if (sch->tmp_wait != nullptr) {
-            sch->tmp_wait = nullptr;
-            // remove call stack
-        } else if (co == nullptr) {
-            // remove call stack
-        } else {
-            sch->q.push(*co);
-        }
-    }
-}
 
 //
 // sch_t
 //
+
 inline void sch_t::run(co_t &entry)
 {
-    q.push(entry);
-
-    for (co_t *co; (co = q.pop()) != nullptr; ) {
-        tmp_wait = nullptr;
+    entry.sch = this;
+    for (co_t *co = &entry; co != nullptr; co = q.pop()) {
+        blocked_coroutine = nullptr;
         co = co->step();
-        if (tmp_wait != nullptr) {
-            // remove call stack
+        if (blocked_coroutine != nullptr) {
+            // nop, remove co from concurrent queue
         } else if (co == nullptr) {
-            // remove call stack
+            // nop, remove co from concurrent queue
         } else {
             q.push(*co);
         }
     }
 }
 
-#endif //COROUTINE_CO_H
+#endif //COGOTO_SCHED_H

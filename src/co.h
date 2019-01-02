@@ -1,5 +1,5 @@
-#ifndef COROUTINE_CO_H
-#define COROUTINE_CO_H
+#ifndef COGOTO_CO_H
+#define COGOTO_CO_H
 
 #include "await.h"
 
@@ -40,4 +40,4 @@ do {                                        \
     co_yield(_co);                          \
 } while (0)
 
-#endif //COROUTINE_CO_H
+#endif //COGOTO_CO_H

@@ -1,9 +1,9 @@
-#ifndef COROUTINE_AWAIT_H
-#define COROUTINE_AWAIT_H
+#ifndef COGOTO_AWAIT_H
+#define COGOTO_AWAIT_H
 
 #include "gen.hpp"
 
-// await_t: behave like function, add call stack support.
+// await_t: add call stack support, behave like function
 //  .state() -> int      : return the current running state.
 //  .step () -> await_t *: keep running until yield, return the next coroutine (call stack top) to be run.
 //  .run  ()             : keep running until finish.
@@ -55,8 +55,8 @@ public:
 // await_t::co_await(await_t &co);
 #define co_await(CO)                        \
 do {                                        \
-    this->_await(CO);                       \
+    _await(CO);                             \
     co_yield();                             \
 } while (0)
 
-#endif // COROUTINE_AWAIT_H
+#endif // COGOTO_AWAIT_H

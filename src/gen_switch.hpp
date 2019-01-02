@@ -77,14 +77,14 @@ struct T : public gen_t {
 - Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
 
 */
-#ifndef COROUTINE_GEN_H
-#define COROUTINE_GEN_H
+#ifndef COGOTO_GEN_H
+#define COGOTO_GEN_H
 
 #ifndef assert
 #   define assert(...)  /* nop */
 #endif
 
-// gen_t: generator context (slow about 4 stores when -O)
+// gen_t: generator context with yield support
 //  .state() -> int: return the current running state.
 class gen_t {
 protected:
@@ -242,4 +242,4 @@ LEN_(                                       \
 #define MAP_18(F, X, ...) F(X); MAP_17(F, __VA_ARGS__)
 #define MAP_19(F, X, ...) F(X); MAP_18(F, __VA_ARGS__)
 
-#endif // COROUTINE_GEN_H
+#endif // COGOTO_GEN_H
