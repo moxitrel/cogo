@@ -55,8 +55,8 @@ void fun(<T> *co)
 #+END_SRC
 
 * Example
-- [[./coroutine_example.c][coroutine_example.c]]
-- [[./coroutine_blocking_example.cpp][coroutine_blocking_example.cpp]]
+- [[./src/coroutine_example.c][coroutine_example.c]]
+- [[./src/coroutine_blocking_example.cpp][coroutine_blocking_example.cpp]]
 
 *** C++
 #+BEGIN_SRC C++
