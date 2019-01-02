@@ -55,8 +55,8 @@ int main(void)
 }
 
 */
-#ifndef COROUTINE_GEN_H
-#define COROUTINE_GEN_H
+#ifndef COGOTO_GEN_H
+#define COGOTO_GEN_H
 
 #ifndef assert
 #   define assert(...)  /* nop */
@@ -222,4 +222,4 @@ LEN_(                                       \
 #define MAP_18(F, X, ...) F(X); MAP_17(F, __VA_ARGS__)
 #define MAP_19(F, X, ...) F(X); MAP_18(F, __VA_ARGS__)
 
-#endif // COROUTINE_GEN_H
+#endif // COGOTO_GEN_H

@@ -2,13 +2,13 @@
 // Created by M2 on 2018-12-28.
 //
 
-#include "co.hpp"
+#include "coroutine.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 
 class Waiter: public co_t {
-    co_blocking_t  &blk;
+    co_block_t  &blk;
     time_t          now;
 
     void operator()()
@@ -23,13 +23,13 @@ class Waiter: public co_t {
     }
 
 public:
-    Waiter(co_blocking_t &blk)
+    Waiter(co_block_t &blk)
         : blk(blk)
     {}
 };
 
 class Counter: public co_t {
-    co_blocking_t   &blk;
+    co_block_t   &blk;
     Waiter          waiter = Waiter(blk);
     time_t          now;
     intmax_t        i;
@@ -54,7 +54,7 @@ class Counter: public co_t {
     }
 
 public:
-    Counter(co_blocking_t &&blk)
+    Counter(co_block_t &&blk)
         : blk(blk)
     {}
 };
@@ -66,6 +66,5 @@ int main()
     //   0x7ffee62088e8 begin : Fri Dec 28 16:52:47 2018
     //   0x7ffee6208918 wakeup: Fri Dec 28 16:52:51 2018
     //   0x7ffee62088e8 end   : Fri Dec 28 16:52:54 2018
-    Counter(co_blocking_t())
-        .run();
+    Counter(co_block_t()).run();
 }

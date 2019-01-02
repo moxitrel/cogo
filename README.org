@@ -55,8 +55,8 @@ void fun(<T> *co)
 #+END_SRC
 
 * Example
-- [[./coroutine_example.c][coroutine_example.c]]
-- [[./coroutine_blocking_example.cpp][coroutine_blocking_example.cpp]]
+- [[./src/coroutine_sched_example.c][coroutine_sched_example.c]]
+- [[./src/coroutine_blocking_example.cpp][coroutine_blocking_example.cpp]]
 
 *** C++
 #+BEGIN_SRC C++
@@ -132,7 +132,7 @@ int main()
 * Getting Started
 ** Requirement
 - C++11
-- C11
+- C99
 
 *** C++
 #+BEGIN_SRC C++

@@ -77,14 +77,14 @@ struct T : public gen_t {
 - Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
 
 */
-#ifndef COROUTINE_GEN_H
-#define COROUTINE_GEN_H
+#ifndef COGOTO_GEN_H
+#define COGOTO_GEN_H
 
 #ifndef assert
 #   define assert(...)  /* nop */
 #endif
 
-// gen_t: generator context (slow about 4 stores when -O)
+// gen_t: generator context with yield support
 //  .state() -> int: return the current running state.
 class gen_t {
 protected:
@@ -124,10 +124,8 @@ do {                                                    \
 } while (0)
 
 
-// Yield from the coroutine.
+// yield from the coroutine
 // gen_t::co_yield();
-//
-// "if (gen_t::_pc != __LINE__) gen_t::_pc = __LINE__;" may speed up in some cases
 #define co_yield(...)                                                                           \
 do {                                                                                            \
     __VA_ARGS__;                /* run before return, intent for handle return value */         \
@@ -137,12 +135,12 @@ CO_LABEL(__LINE__):;            /* 3. put a label after each return as restore p
 } while (0)
 
 
-// End coroutine and return.
+// end coroutine and return.
 // gen_t::co_return();
 #define co_return(...)                                                                          \
 do {                                                                                            \
     __VA_ARGS__;                /* run before return, intent for handle return value */         \
-    gen_t::_pc = -1;            /* 1. set coroutine end */                                      \
+    gen_t::_pc = -1;            /* 1. set coroutine finished */                                 \
     goto CO_END;                /* 2. return */                                                 \
 } while (0)
 
@@ -244,4 +242,4 @@ LEN_(                                       \
 #define MAP_18(F, X, ...) F(X); MAP_17(F, __VA_ARGS__)
 #define MAP_19(F, X, ...) F(X); MAP_18(F, __VA_ARGS__)
 
-#endif // COROUTINE_GEN_H
+#endif // COGOTO_GEN_H

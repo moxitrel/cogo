@@ -2,9 +2,9 @@
 // Created by M2 on 2018-12-28.
 #undef __GNUC__
 #include <stdio.h>
-#include "../../src/coroutine/await.hpp"
+#include "await.hpp"
 
-class print_t : public fun_t {
+class print_t : public await_t {
     char c;
 
     void operator()()
@@ -21,15 +21,16 @@ class print_t : public fun_t {
 };
 
 
-class loop3_t : public fun_t {
+class loop3_t : public await_t {
     print_t print;
     int i;
 
     void operator()()
     {
-        co_begin(33);
+        co_begin(34);
 
         for (i = 0; i < 3; i ++) {
+            print = print_t();
             co_await(print);
             printf("%d\n",i);
         }
