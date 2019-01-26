@@ -2,15 +2,15 @@
 
     switch (pc) {
     case  0: break;         // begin
-    case 17: goto yield_17; // restore
+    case 11: goto yield_11; // restore
     ...                     // restore
     case  N: goto yield_N;  // restore
     default: return;        // end
     }
 
-    pc = 17;
+    pc = 11;
     return;
-yield_17:
+yield_11:
     ...
 
     pc = __LINE__;
@@ -60,9 +60,9 @@ struct T : public gen_t {
          //
          // co_yield();
          //
-            pc = 17;    // 1. save restore point, next call will be "case 17: goto CO_YIELD_17"
+            pc = 11;    // 1. save restore point, next call will be "case 17: goto CO_YIELD_17"
             return;     // 2. yield
-    CO_YIELD_17:;       // 3. put a label after each return as restore point
+    CO_YIELD_11:;       // 3. put a label after each return as restore point
         }
 
      //
@@ -105,7 +105,7 @@ public:
 // NOTE: co_begin(), co_end(), co_yield(), co_return() are not expressions. They are statements.
 //
 
-// mark coroutine begin. (error handling is commented, don't remove)
+// mark coroutine begin.
 // gen_t::co_begin(...);
 #define co_begin(...)                                   \
 do {                                                    \
@@ -140,8 +140,7 @@ CO_LABEL(__LINE__):;            /* 3. put a label after each return as restore p
 #define co_return(...)                                                                          \
 do {                                                                                            \
     __VA_ARGS__;                /* run before return, intent for handle return value */         \
-    gen_t::_pc = -1;            /* 1. set coroutine finished */                                 \
-    goto CO_END;                /* 2. return */                                                 \
+    goto CO_RETURN;             /* return */                                                    \
 } while (0)
 
 
@@ -149,6 +148,7 @@ do {                                                                            
 // gen_t::co_end()
 #define co_end()                                            \
 do {                                                        \
+CO_RETURN:                                                  \
     gen_t::_pc = -1;   /* finish coroutine successfully */  \
 CO_END:;                                                    \
 } while (0)

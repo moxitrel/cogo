@@ -9,9 +9,8 @@
 class gen_t {
 protected:
     // save the start point where coroutine continue to run when yield
-    const void *_pc;
+    const void *_pc = nullptr;
     
-    // coroutine state
     //   0: inited
     //  >0: running
     //  <0: stopped
@@ -25,18 +24,13 @@ public:
 };
 
 
-// gen_t::co_begin(...);
+// gen_t::co_begin();
 #define co_begin(...)                               \
 do {                                                \
-    switch (gen_t::_state) {                        \
-    case  0:                /* coroutine begin */   \
-        gen_t::_state = 1;                          \
-        break;                                      \
- /* case -1:              *//* coroutine end   */   \
- /*     goto CO_END;      */                        \
-    default:                                        \
+    if (gen_t::_pc) {                               \
         goto *gen_t::_pc;                           \
     }                                               \
+    gen_t::_state = 1;                              \
 } while (0)
 
 
@@ -54,15 +48,14 @@ CO_LABEL(__LINE__):;                    /* 3. put label after each *return* as r
 #define co_return(...)                                                                          \
 do {                                                                                            \
     __VA_ARGS__;                /* run before return, intent for handle return value */         \
-    gen_t::_pc = &&CO_END;      /* 1. set coroutine finished */                                 \
-    gen_t::_state = -1;         /*    set coroutine finished */                                 \
-    goto CO_END;                /* 2. return */                                                 \
+    goto CO_RETURN;             /* return */                                                    \
 } while (0)
 
 
 // gen_t::co_end()
 #define co_end()                            \
 do {                                        \
+CO_RETURN:                                  \
     gen_t::_pc = &&CO_END;                  \
     gen_t::_state = -1;    /* finish */     \
 CO_END:;                                    \

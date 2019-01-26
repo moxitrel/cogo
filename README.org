@@ -294,27 +294,19 @@ int main(void)
   - <0: stopped, coroutine is finished
 
 *** C
-- co_begin (co_t *, ...)    :: Set coroutine begin.
-                               List with the line numbers (__LINE__) of macros
-                                 *co_yield()*,
-                                 *co_return()*,
-                                 *co_await()*,
-                                 *co_sched()*,
-                                 *co_wait()*,
-                                 *co_broadcast()*,
-                               or omit if GNUC extension enabled.
-- co_end   (co_t *)         :: Set coroutine end.
-- co_yield (co_t *)         :: Yield.
+- co_begin (co_t *)         :: Mark coroutine begin.
+- co_end   (co_t *)         :: Mark coroutine end.
+- co_yield (co_t *)         :: Yield from coroutine.
 - co_return(co_t *)         :: Return with ending coroutine.
 - co_await (co_t *, co_t *) :: Await another coroutine to finish.
 - co_sched (co_t *, co_t *) :: Add a coroutine to scheduler to run.
 
 - co_run  (co_t *) :: loop running until finish all coroutines
-- co_state(co_t *) :: Return the current running state of coroutine /obj/.
++ co_state(co_t *) :: Return the current running state of coroutine /obj/.
   -  0: ready
   - >0: running
   - <0: stopped, coroutine is finished
 
 * See Also
-- Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
-- Protothreads    (http://dunkels.com/adam/pt/)
+- [[https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html][Coroutines in C]]
+- [[http://dunkels.com/adam/pt/][Protothreads]]    
