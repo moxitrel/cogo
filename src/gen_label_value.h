@@ -1,3 +1,59 @@
+/*
+
+* Internal
+
+    if (pc) {
+        goto *pc;
+    }
+
+    ...
+    pc = &&yield_11;    //
+    return;             // yield and restore
+yield_11:               //
+
+    ...
+    pc = &&yield_N;     //
+    return;             // yield and restore
+yield_N:                //
+
+** Source
+void f(gen_t *co)
+{
+    co_begin(co);       // coroutine begin
+
+    for (co->i = 0; ; co->i++) {
+        co_yield(co);   // yield
+    }
+
+    co_end(co);         // coroutine end
+}
+
+** Expand Macro
+void f(gen_t *co)
+{
+ //
+ // co_begin(co);
+ //
+    if (co->pc) {
+        goto *co->pc;
+    }
+    for (co->i = 0; ; co->i++) {
+     //
+     // co_yield(co);
+     //
+        pc = &&yield_11;    // 1. save restore point, next call will be "yield_11:"
+        return;             // 2. yield
+    yield_11:;              // 3. put a label after each return as restore point
+    }
+
+ //
+ // co_end(co);
+ //
+    pc = &&yield_end;
+yield_end:;
+}
+
+*/
 #ifndef COGOTO_GEN_H
 #define COGOTO_GEN_H
 
@@ -5,14 +61,14 @@
 #   define assert(...)  /* nop */
 #endif
 
-// gen_t: coroutine context.
+// gen_t: generator context.
 typedef struct {
-    // save the start point where coroutine continue to run when yield
+    // start point where coroutine function continue to run after yield.
     const void *pc;
 
-    //  >0: running
     //   0: inited
-    //  <0: finished
+    //  >0: running
+    //  <0: stopped (-1: success)
     int state;
 } gen_t;
 
@@ -23,28 +79,22 @@ typedef struct {
 
 inline static int co_state(const gen_t *const co)
 {
-    assert(co)
+    assert(co);
     return co->state;
 }
 
 
-// co_begin(gen_t *, ...);
+// co_begin(gen_t *);
 #define co_begin(CO, ...)                           \
 do {                                                \
-    gen_t *const _co = (gen_t *)(CO);               \
-    switch (_co->state) {                           \
-    case  0:                /* coroutine begin */   \
-        _co->state = 1;                             \
-        break;                                      \
- /* case -1:              *//* coroutine end   */   \
- /*     goto CO_END;      */                        \
-    default:                                        \
-        goto *_co->pc;                              \
+    const void *_pc = GEN_PC(CO);                   \
+    if (_pc) {                                      \
+        goto *_pc;                                  \
     }                                               \
+    GEN_STATE(CO) = 1;                              \
 } while (0)
 
 
-// Yield from the coroutine. (yield)
 // co_yield(gen_t *);
 #define co_yield(CO, ...)                                                                       \
 do {                                                                                            \
@@ -55,19 +105,18 @@ CO_LABEL(__LINE__):;                    /* 3. put label after each *return* as r
 } while (0)
 
 
-// co_return(gen_t *,);
+// co_return(gen_t *);
 #define co_return(CO, ...)                                                                      \
 do {                                                                                            \
     __VA_ARGS__;                /* run before return, intent for handle return value */         \
-    GEN_PC(CO) = &&CO_END;      /* 1. set coroutine end */                                      \
-    GEN_STATE(CO) = -1;         /*    set coroutine end */                                      \
-    goto CO_END;                /* 2. return */                                                 \
+    goto CO_RETURN;             /* return */                                                    \
 } while (0)
 
 
 // co_end(gen_t *)
 #define co_end(CO)                          \
 do {                                        \
+CO_RETURN:                                  \
     GEN_PC(CO) = &&CO_END;                  \
     GEN_STATE(CO) = -1;    /* finish */     \
 CO_END:;                                    \

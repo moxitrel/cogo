@@ -1,7 +1,7 @@
 //
 // 1. Include header "coroutine.h"
 //
-#include "coroutine.h"
+#include "../src/coroutine.h"
 #include <stdio.h>
 
 //

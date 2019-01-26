@@ -2,7 +2,7 @@
 // Created by M2 on 2018-12-28.
 #undef __GNUC__
 #include <stdio.h>
-#include "await.hpp"
+#include "../src/await.hpp"
 
 class print_t : public await_t {
     char c;

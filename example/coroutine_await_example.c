@@ -2,7 +2,7 @@
 // Created by M2 on 2018-12-24.
 //
 #include <stdio.h>
-#include "await.h"
+#include "../src/await.h"
 
 typedef struct {
     await_t fun;

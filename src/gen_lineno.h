@@ -1,37 +1,52 @@
-/* Usage
-// 1. include header
-#include "co_switch_goto.h"
+/*
 
-// 2. inherit gen_t
+* API  (!!! not type safe !!!)
+- co_begin (gen_t *, ...) :: mark coroutine begin. List with line numbers of co_yield() and co_return().
+- co_end   (gen_t *)      :: mark coroutine end.
+- co_yield (gen_t *)      :: yield from coroutine.
+- co_return(gen_t *)      :: return with ending coroutine.
+
+- int co_state(gen_t *)   :: get the current running state.
+
+
+* Usage
+
+// 1. include header
+#include "gen_lineno.h"
+
+// 2. inherit gen_t (put in first)
 typedef struct {
-    gen_t co;   // put in first
+    gen_t co;
 
     //
-    // declare local variables, parameters, return values of coroutine function
+    // declare vars for coroutine function
     //
     int i;
     ...
 } co_fun_t;
 
-// 3. define a function with type "void (T *)"
+// 3. define a function with type "void (gen_t *)"
 void co_fun(co_fun_t *co)
 {
     //
-    // before co_begin(), codes run every time when invoked
+    // before co_begin(), codes run every time when function called
     //
     
     // e.g. alias
     int *i = &co->i;
 
-    // 4. set coroutine begin
-    co_begin(co, 30);       // 30: list line numbers of co_yield(), co_return(), i.e. __LINE__
+    // 4. mark coroutine begin
+    co_begin(co,44,46);     // list line numbers (__LINE__) of co_yield() and co_return()
 
-    // 5. user codes: (don't use local variables)
-    for (*i = 0 ; *i < 9; (*i) ++) {
+
+    // 5. user codes (don't use local variables)
+    for (*i = 0; ; (*i) ++) {
         co_yield(co);       // yield
     }
+    co_yield(co);           // yield
 
-    // 4. set coroutine end
+
+    // 4. mark coroutine end
     co_end(co);
 
     //
@@ -39,20 +54,82 @@ void co_fun(co_fun_t *co)
     //
 }
 
-// 6. define constructor
+
+// 6. define constructor if needed
 #define CO_FUN(...)  ((co_fun_t){...})
 
-//
-// example
-//
-int main(void)
+void example(void)
 {
     co_fun_t co = CO_FUN(...);
     
-    co_fun(&co);    // co->i = 0
-    co_fun(&co);    // co->i = 1
-    co_fun(&co);    // co->i = 2
+    co_fun(&co);    // co.i = 0
+    co_fun(&co);    // co.i = 1
+    co_fun(&co);    // co.i = 2
 }
+
+
+* Internal
+
+    switch (pc) {
+    case  0: break;         // begin
+    case 11: goto yield_11; // restore
+    ...                     // restore
+    case  N: goto yield_N;  // restore
+    default: return;        // end
+    }
+
+    ...
+    pc = 11;    //
+    return;     // yield
+yield_11:       //
+
+    ...
+    pc = N;     //
+    return;     // yield
+yield_N:        //
+
+** Source
+void f(gen_t *co)
+{
+    co_begin(co, 11);   // coroutine begin
+
+    for (co->i = 0; ; co->i++) {
+        co_yield(co);   // yield
+    }
+
+    co_end(co);         // coroutine end
+}
+
+** Expand Macro
+void f(gen_t *co)
+{
+ //
+ // co_begin(co, 11);
+ //
+    switch (co->pc) {
+    case  0: break;             // coroutine begin
+    case 11: goto CO_YIELD_11;  // restore
+    default: return;            // coroutine end
+    }
+
+    for (co->i = 0; ; co->i++) {
+     //
+     // co_yield(co);
+     //
+        co->pc = 11;    // 1. save restore point, next call will be "case 11: goto CO_YIELD_11"
+        return;         // 2. yield
+CO_YIELD_11:;           // 3. put a label after each return as restore point
+    }
+
+ //
+ // co_end(co);
+ //
+    pc = -1;
+}
+
+
+* See Also
+- Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
 
 */
 #ifndef COGOTO_GEN_H
@@ -63,33 +140,31 @@ int main(void)
 #endif
 
 // gen_t: generator context, must be inherited (as first field) by user-defined struct.
-//        init by filling zero.
+//
 // e.g. typedef struct {
 //          gen_t co;
 //          ...
 //      } user_defined_t;
 typedef struct {
-    // Start point where coroutine continue to run after yield.
+    // start point where coroutine function continue to run after yield.
     //   0: inited
     //  >0: running
-    //  <0: stopped (-1: ok)
+    //  <0: stopped (-1: success)
     int pc;
 } gen_t;
 
 // gen_t.pc
 #define GEN_PC(CO)      (((gen_t *)(CO))->pc)
 
+// get the current running state
 inline static int co_state(const gen_t *const co)
 {
     assert(co);
     return co->pc;
 }
 
-//
-// API is *** not type safe ***
-//
-
 // co_begin(gen_t *, ...);
+// Mark coroutine begin.
 #define co_begin(CO, ...)                               \
 do {                                                    \
     switch (GEN_PC(CO)) {                               \
@@ -97,17 +172,17 @@ do {                                                    \
         break;                                          \
     case -1:                /* coroutine end    */      \
         goto CO_END;                                    \
- /* case  N:              */                            \
+ /* case  N:              *//* restore          */      \
  /*     goto CO_YIELD_N;  */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
-    default:                /* invalid _pc,     */      \
+    default:                /* invalid _pc      */      \
         assert(((void)"pc isn't valid.", 0));           \
         goto CO_END;                                    \
     }                                                   \
 } while (0)
 
-
 // co_yield(gen_t *);
+// Yield from the coroutine.
 #define co_yield(CO, ...)                                                               \
 do {                                                                                    \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
@@ -116,19 +191,19 @@ do {                                                                            
 CO_LABEL(__LINE__):;            /* 3. put label after each *return* as restore point */ \
 } while (0)
 
-
-// co_return(gen_t *,);
-#define co_return(CO, ...)                                                                      \
-do {                                                                                            \
-    __VA_ARGS__;                /* run before return, intent for handle return value */         \
-    GEN_PC(CO) = -1;            /* 1. set coroutine end */                                      \
-    goto CO_END;                /* 2. return */                                                 \
+// co_return(gen_t *);
+// Return from the coroutine. (coroutine is finished)
+#define co_return(CO, ...)                                                              \
+do {                                                                                    \
+    __VA_ARGS__;                /* run before return, intent for handle return value */ \
+    goto CO_RETURN;             /* return */                                            \
 } while (0)
 
-
 // co_end(gen_t *)
+// Mark coroutine end.
 #define co_end(CO)                          \
 do {                                        \
+CO_RETURN:                                  \
     GEN_PC(CO) = -1;   /* finish */         \
 CO_END:;                                    \
 } while (0)
@@ -168,7 +243,7 @@ CO_END:;                                    \
 //      LEN(1,2,3)  -> LEN_(1,1,3) -> LEN_11(3) -> 3
 //      LEN(1,2,...)-> LEN_(1,1,N) -> LEN_11(N) -> N
 //
-// SEE: https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments
+// See: https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments
 //      http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
 //      P99, advanced macro tricks (http://p99.gforge.inria.fr/p99-html/index.html)
 //
