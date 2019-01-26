@@ -1,5 +1,7 @@
-#ifdef __GNUC__
-    #include "gen_label_value.h"
+#if defined __GNUC__
+#   include "gen_label_value.h"
+#elif defined COGOTO_GEN_LINENO
+#   include "gen_lineno.h"
 #else
-    #include "gen_switch.h"
+#   include "gen_case.h"
 #endif
