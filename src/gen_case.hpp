@@ -1,5 +1,5 @@
-#ifndef COGOTO_GEN_H
-#define COGOTO_GEN_H
+#ifndef COGO_GEN_H
+#define COGO_GEN_H
 
 #ifndef assert
 #   define assert(...)  /* nop */
@@ -66,4 +66,4 @@ do {                                                                            
     CO_END:;                                                    \
     }
 
-#endif // COGOTO_GEN_H
+#endif // COGO_GEN_H

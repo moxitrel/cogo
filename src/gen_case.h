@@ -1,21 +1,25 @@
-/* See gen_label.h
+/*
+
+* Bugs
+- Don't use *switch* statement in the coroutine function.
 
 * Internal
 ** Overview
-    switch (pc) {
-    case  0:        // begin
+    switch (pc) {   //
+    case  0:        // coroutine begin
         ...
 
         pc = 11;    //
-        return;     // yield and restore
+        return;     // yield
     case 11:        //
         ...
 
         pc = N;     //
-        return;     // yield and restore
+        return;     // yield
     case  N:        //
         ...
-    }
+
+    }               // coroutine end
 
 ** Source
 void f(gen_t *co)
@@ -32,29 +36,22 @@ void f(gen_t *co)
 ** Expand Macro
 void f(gen_t *co)
 {
- //
- // co_begin(co);
- //
-    switch (co->pc) {
-    case  0:                // coroutine begin
-        for (co->i = 0; co->i < 9; co->i++) {
-         //
-         // co_yield(co);
-         //
-            co->pc = 11;    // 1. save restore point, next call will be "case 11:"
-            return;         // 2. yield
-    case 11:;               // 3. put a case after each return as restore point
-        }
+    switch (co->pc) {       //
+    case  0:                // co_begin(co);
 
- //
- // co_end(co);
- //
-    }
+        for (co->i = 0; co->i < 9; co->i++) {
+
+            co->pc = 11;    //
+            return;         // co_yield(co);
+    case 11:;               //
+
+        }
+    }                       // co_end(co);
 }
 
 */
-#ifndef COGOTO_GEN_H
-#define COGOTO_GEN_H
+#ifndef COGO_GEN_H
+#define COGO_GEN_H
 
 #ifndef assert
 #   define assert(...)  /* nop */
@@ -62,21 +59,23 @@ void f(gen_t *co)
 
 // generator context
 typedef struct {
+    // start point where coroutine function continue to run after yield.
+    //   0: inited
+    //  >0: running
+    //  <0: stopped (-1: success)
     int pc;
 } gen_t;
 
-#define GEN_PC(CO)      (((gen_t *)(CO))->pc)
+// gen_t.pc
+#define GEN_PC(GEN)     (((gen_t *)(GEN))->pc)
 
-inline static int co_state(const gen_t *const co)
-{
-    assert(co);
-    return co->pc;
-}
+// get the current running state
+#define co_state(GEN)   GEN_PC(GEN)
 
 // co_begin(gen_t *);
-#define co_begin(CO, ...)                               \
-    switch (GEN_PC(CO)) {                               \
-    default:                /* invalid _pc      */      \
+#define co_begin(GEN, ...)                              \
+    switch (GEN_PC(GEN)) {                              \
+    default:                /* invalid  pc      */      \
         assert(((void)"pc isn't valid.", 0));           \
         goto CO_END;                                    \
     case -1:                /* coroutine end    */      \
@@ -84,26 +83,26 @@ inline static int co_state(const gen_t *const co)
     case  0:                /* coroutine begin  */      \
 
 // co_yield(gen_t *);
-#define co_yield(CO, ...)                                                               \
-do {                                                                                    \
-        __VA_ARGS__;            /* run before return, intent for handle return value */ \
-        GEN_PC(CO) = __LINE__;  /* 1. save the restore point, at case __LINE__: */      \
-        goto CO_END;            /* 2. return */                                         \
-    case __LINE__:;             /* 3. put case after each *return* as restore point */  \
+#define co_yield(GEN, ...)                                                                  \
+do {                                                                                        \
+        __VA_ARGS__;                /* run before return, intent for handle return value */ \
+        GEN_PC(GEN) = __LINE__;     /* 1. save the restore point, at case __LINE__: */      \
+        goto CO_END;                /* 2. return */                                         \
+    case __LINE__:;                 /* 3. put case after each *return* as restore point */  \
 } while (0)
 
-// co_return(gen_t *);
-#define co_return(CO, ...)                                                              \
+// co_return();
+#define co_return(...)                                                                  \
 do {                                                                                    \
         __VA_ARGS__;            /* run before return, intent for handle return value */ \
-        goto CO_RETURN;         /* return */                                            \
+        goto CO_RETURN;         /* end coroutine */                                     \
 } while (0)
 
-// co_end(gen_t *)
-#define co_end(CO)                          \
+// co_end(gen_t *);
+#define co_end(GEN)                         \
     CO_RETURN:                              \
-        GEN_PC(CO) = -1;   /* finish */     \
+        GEN_PC(GEN) = -1;    /* finish */   \
     CO_END:;                                \
     }
 
-#endif // COGOTO_GEN_H
+#endif // COGO_GEN_H

@@ -46,7 +46,8 @@ void loop3(loop3_t *co)
 
 int main(void)
 {
-    await_run(&LOOP3());
+    loop3_t x = LOOP3();
+    await_run(&x);
 
     return 0;
 }

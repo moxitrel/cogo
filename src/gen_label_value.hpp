@@ -1,5 +1,5 @@
-#ifndef COGOTO_GEN_H
-#define COGOTO_GEN_H
+#ifndef COGO_GEN_H
+#define COGO_GEN_H
 
 #ifndef assert
 #   define assert(...)  /* nop */
@@ -53,7 +53,7 @@ do {                                                                            
 
 
 // gen_t::co_end()
-#define co_end()                            \
+#define co_end(...)                         \
 do {                                        \
 CO_RETURN:                                  \
     gen_t::_pc = &&CO_END;                  \
@@ -72,4 +72,4 @@ CO_END:;                                    \
 #define CO_LABEL(N)     CO_LABEL_(N)
 #define CO_LABEL_(N)    CO_YIELD_##N
 
-#endif // COGOTO_GEN_H
+#endif // COGO_GEN_H

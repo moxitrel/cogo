@@ -77,8 +77,8 @@ struct T : public gen_t {
 - Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
 
 */
-#ifndef COGOTO_GEN_H
-#define COGOTO_GEN_H
+#ifndef COGO_GEN_H
+#define COGO_GEN_H
 
 #ifndef assert
 #   define assert(...)  /* nop */
@@ -146,7 +146,7 @@ do {                                                                            
 
 // mark coroutine end.
 // gen_t::co_end()
-#define co_end()                                            \
+#define co_end(...)                                         \
 do {                                                        \
 CO_RETURN:                                                  \
     gen_t::_pc = -1;   /* finish coroutine successfully */  \
@@ -242,4 +242,4 @@ LEN_(                                       \
 #define MAP_18(F, X, ...) F(X); MAP_17(F, __VA_ARGS__)
 #define MAP_19(F, X, ...) F(X); MAP_18(F, __VA_ARGS__)
 
-#endif // COGOTO_GEN_H
+#endif // COGO_GEN_H

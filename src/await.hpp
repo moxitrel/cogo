@@ -1,62 +1,108 @@
-#ifndef COGOTO_AWAIT_H
-#define COGOTO_AWAIT_H
+#ifndef COGO_AWAIT_H
+#define COGO_AWAIT_H
 
 #include "gen.hpp"
 
+class await_t;
+class sch_await_t;
+
 // await_t: add call stack support, behave like function
 //  .state() -> int      : return the current running state.
-//  .step () -> await_t *: keep running until yield, return the next coroutine (call stack top) to be run.
 //  .run  ()             : keep running until finish.
 class await_t : public gen_t {
+    friend sch_await_t;
+
     // the coroutine function
     virtual void operator()() = 0;
 
     // the lower call stack frame
     await_t *caller = nullptr;
 
-    // the stack top of current call stack
-    // NOTE: the implementation of TLS is too slow!!!
-    /* thread_local static */ await_t *stack_top;
+    // scheduler
+    sch_await_t *sch;   // inited by co_await() or .run()
+
 protected:
-    // call another coroutine
-    void _await(await_t &callee)
-    {
-        // stack push
-        callee.caller = this;
-        stack_top = &callee;
-    }
+    // co_await()
+    void _await(await_t &callee);
+
 public:
-    // run until yield, return the new call stack top or NULL if finished
-    await_t *step()
-    {
-        stack_top = this;
+    virtual ~await_t() = 0;
 
-        if (state() < 0) {
-            // stack pop
-            stack_top = caller;
-        } else {
-            // stack top may be changed by await()
-            operator()();
-        }
-
-        return stack_top;
-    }
-
-    // keep running until finish
-    void run()
-    {
-        for (await_t *co = this; co != nullptr; ) {
-            co = co->step();
-        }
-    }
+    // run until finish
+    void run();
 };
 
-// Call another coroutine. (await)
+// scheduler for await_t
+class sch_await_t {
+    friend await_t;
+
+    // the coroutine run by scheduler
+    await_t *stack_top; // inited by .run()
+
+protected:
+    // run until yield
+    void step();
+
+public:
+    // run a coroutine until finish
+    static void run(await_t &co);
+    static void run(await_t &&co);
+};
+
+
+//
+// await_t
+//
+inline void await_t::_await(await_t &callee)
+{
+    assert(sch);
+
+    // stack push
+    callee.caller = this;
+    callee.sch = sch;
+    callee.sch->stack_top = &callee;
+}
 // await_t::co_await(await_t &co);
+// Call another coroutine.
 #define co_await(CO)                        \
 do {                                        \
     _await(CO);                             \
     co_yield();                             \
 } while (0)
 
-#endif // COGOTO_AWAIT_H
+inline void await_t::run()
+{
+    sch_await_t::run(*this);
+}
+
+
+
+//
+// sch_await_t
+//
+inline void sch_await_t::step()
+{
+    if (stack_top->state() < 0) {
+        // stack pop
+        stack_top = stack_top->caller;
+    } else {
+        stack_top->operator()();
+    }
+}
+
+inline void sch_await_t::run(await_t &co)
+{
+    sch_await_t sch = {&co,};
+    co.sch = &sch;
+
+    for (;sch.stack_top;) {
+        sch.step();
+    }
+}
+
+inline void sch_await_t::run(await_t &&co)
+{
+    sch_await_t::run(co);
+}
+
+#endif // COGO_AWAIT_H

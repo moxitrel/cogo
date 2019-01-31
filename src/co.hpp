@@ -1,5 +1,5 @@
-#ifndef COGOTO_SCHED_H
-#define COGOTO_SCHED_H
+#ifndef COGO_CO_H
+#define COGO_CO_H
 
 #include "await.hpp"
 
@@ -138,7 +138,6 @@ inline void co_t::run()
 //
 // co_queue_t
 //
-
 inline bool co_queue_t::empty() const
 {
     return first == nullptr;
@@ -197,4 +196,4 @@ inline void sch_t::run(co_t &entry)
     }
 }
 
-#endif //COGOTO_SCHED_H
+#endif //COGO_CO_H

@@ -1,6 +1,5 @@
 //
 // Created by M2 on 2018-12-28.
-#undef __GNUC__
 #include <stdio.h>
 #include "../src/await.hpp"
 
