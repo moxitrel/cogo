@@ -12,90 +12,86 @@ typedef struct {
     co_t co;
 
     //
-    // Define local variables, parameters, return values of coroutine function
+    // Define variables for coroutine function
     //
     int i;
-} co_print_t;
+} print06_t;
 
 //
-// 3. define coroutine function which has the type "void (co_t *)"
+// 3. define coroutine function with the type "void (co_t *)"
 //
-// A coroutine print 0x7ffee80:0, 0x7ffee80:1, ... 0x7ffee80:6
-void co_print(co_print_t *co)
+void print06(print06_t *co)
 {
     //
-    // 4. Set coroutine begin. 37: line number of co_yield(), co_await(), co_sched()
+    // 4. Set coroutine begin.
     //
-    co_begin(co, 37);
- // co_begin(co);       // you can omit line numbers if enable GNUC extension
+    co_begin(co);
 
     //
-    // 5. User codes
+    // 5. User code
     //
     for (co->i = 0; co->i < 7; co->i++) {
         printf("%p:%d\n", co, co->i);
-        co_yield(co);  // yield
+        co_yield(co);   // yield
     }
 
     //
-    // 4. Set coroutine end
+    // 4. Set coroutine end.
     //
     co_end(co);
 }
-// 6. Define coroutine constructor
-#define CO_PRINT() ((co_print_t){.co = CO(co_print),})
+
+// 6. Define constructor
+#define PRINT06() ((print06_t){.co = CO(print06),})
 
 
 //
-// 2. Define a struct which inherit co_t
+// 2. Define a struct inherit co_t
 //
 typedef struct {
-    // inherit co_t (as first field)
+    // inherit co_t
     co_t co;
 
     //
-    // Define local variables, parameters, return values of coroutine function
+    // Define variables for coroutine function
     //
-    co_print_t coroutine1;
-    co_print_t coroutine2;
-} coroutine_example_t;
+    print06_t print_co1;
+    print06_t print_co2;
+} coprint_t;
 
 //
-// 3. define coroutine function which has the type "void (co_t *)"
+// 3. define coroutine function with the type "void (co_t *)"
 //
-// A coroutine create two co_print coroutine which run concurrently.
-void coroutine_example(coroutine_example_t *co) // define coroutine function
+void coroutine_example(coprint_t *co)
 {
     //
-    // 4. Set coroutine begin. 37,38: line number of co_yield(), co_await(), co_sched()
+    // 4. Set coroutine begin.
     //
-    co_begin(co,78,79);
- // co_begin(co);                   // you can omit line numbers if enable GNUC extension
+    co_begin(co);
 
     //
-    // 5. User codes
+    // 5. User code
     //
-    co_sched(co, &co->coroutine1);  // run coroutine1 concurrently
-    co_sched(co, &co->coroutine2);  // run coroutine2 concurrently
+    co_sched(co, &co->print_co1);  // run print_co1 concurrently
+    co_sched(co, &co->print_co2);  // run print_co2 concurrently
 
     //
     // 4. Set coroutine end
     //
     co_end(co);
 }
-// 6. Define coroutine constructor
-#define COROUTINE_EXAMPLE() ((coroutine_example_t){ \
-    .co = CO(coroutine_example),                    \
-    .coroutine1 = CO_PRINT(),                       \
-    .coroutine2 = CO_PRINT(),                       \
+
+// 6. Define constructor
+#define COPRINT() ((coprint_t){     \
+    .co = CO(coroutine_example),    \
+    .print_co1 = PRINT06(),         \
+    .print_co2 = PRINT06(),         \
 })
 
-//
-// 7. Use it
-//
+
+
 int main()
 {
-    // Run until finish all coroutines.
     // Print:
     //  0x8f0:0
     //  0x8f0:1
@@ -104,8 +100,5 @@ int main()
     //  0x918:1
     //  0x8f0:3
     //  ...
-    coroutine_example_t co = COROUTINE_EXAMPLE();
-    co_run((co_t *)&co);
+    co_run(&COPRINT());
 }
-
-// clang -std=c17 coroutine_example.c -o /tmp/coroutine_example && /tmp/coroutine_example

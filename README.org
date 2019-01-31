@@ -19,7 +19,7 @@ class <T> : public co_t {
 
     void operator()()
     {
-        co_begin(...);
+        co_begin();
 
         //
         // user codes
@@ -44,7 +44,7 @@ typedef struct {
 
 void fun(<T> *co)
 {
-    co_begin(co, ...);
+    co_begin(co);
 
     //
     // user code
@@ -70,7 +70,7 @@ struct Nat : public co_t {
 
     void operator()()
     {
-        co_begin(16);
+        co_begin();
 
                                         //
         for (value = 0; ; value++) {    //
@@ -106,7 +106,7 @@ typedef struct {
 
 void nat(nat_t *co)
 {
-    co_begin(co, 18);
+    co_begin(co);
 
                                             //
     for (co->value = 0; ; co->value ++) {   //
@@ -158,9 +158,8 @@ class PrintN : public co_t {
     {
         //
         // 4. set coroutine begin
-        //    list line numbers of co_yield(), co_return(), ...
-        co_begin(32);
-     // co_begin();         // you can omit line numbers if enabled GNUC extension
+        //
+        co_begin();
 
         //
         // 5. user code (no local variable allowed, declare as member variable instead)
@@ -194,8 +193,7 @@ class CoroutineExample : public co_t {
 
     void operator()()           // 3. override operator()
     {
-        co_begin(62,63);        // 4. coroutine begin
-     // co_begin();
+        co_begin();             // 4. coroutine begin
 
                                 // 5. user code
         co_sched(coroutine1);   // add coroutine1 to scheduler
@@ -242,8 +240,7 @@ typedef struct {            // 2. inherit co_t
 
 void nat_gen(nat_gen_t *co) // 3. define coroutine function with the type "void (co_t *)"
 {
-    co_begin(co, 18);       // 4. set Coroutine begin
- // co_begin(co);           // you can omit line numbers if enable GNUC extension
+    co_begin(co);           // 4. set Coroutine begin
 
                             // 5. user code
     for (co->value = 0; ; co->value++) {
@@ -270,7 +267,7 @@ int main(void)
 
 * API
 *** C++
-- co_begin (...)   :: Set coroutine begin.
+- co_begin ()      :: Set coroutine begin.
                       List with the line numbers (__LINE__) of macros
                         *co_yield()*,
                         *co_return()*,
