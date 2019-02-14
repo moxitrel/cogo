@@ -2,7 +2,7 @@
 // 1. Include header "coroutine.h"
 //
 #include <stdio.h>
-#include "../src/coroutine.h"
+#include "../src/cogo.h"
 
 //
 // 2. Define a class that inherit co_t

@@ -13,7 +13,7 @@
 #include "gen.h"
 
 typedef struct await_t     await_t;
-typedef struct sch_await_t sch_await_t;
+typedef struct await_sch_t await_sch_t;
 
 // await_t: gen_t with call stack support.
 struct await_t {
@@ -27,12 +27,12 @@ struct await_t {
     await_t *caller;
 
     // scheduler, inited by co_await() or await_run()
-    sch_await_t *sch;
+    await_sch_t *sch;
 };
 
 // await_t scheduler
-struct sch_await_t {
-    // the coroutine run by scheduler
+struct await_sch_t {
+    // call stack top, the coroutine run by scheduler
     await_t *stack_top;
 };
 
@@ -41,8 +41,8 @@ struct sch_await_t {
     .fun = (void(*)(await_t *))(FUN),   \
 })
 
-// sch_await_t SCH_AWAIT(await_t *): sch_await_t constructor
-#define SCH_AWAIT(AWAIT)    ((sch_await_t){.stack_top = (await_t *)(AWAIT),})
+// await_sch_t AWAIT_SCH(await_t *): await_sch_t constructor
+#define AWAIT_SCH(AWAIT)    ((await_sch_t){.stack_top = (await_t *)(AWAIT),})
 
 
 // push callee to call stack
@@ -63,37 +63,41 @@ inline static await_t *await_call(await_t *self, await_t *callee)
 #define co_await(AWAIT, CALLEE)     co_yield(await_call((await_t *)(AWAIT), (await_t *)(CALLEE)))
 
 // run the coroutine at stack top until yield
-inline static void sch_await_step(sch_await_t *self)
+inline static void await_sch_step(await_sch_t *sch)
 {
-    assert(self);
-    assert(self->stack_top);
+    assert(sch);
+    assert(sch->stack_top);
 
-    if (co_state(self->stack_top) < 0) {
+    if (co_state(sch->stack_top) < 0) {
         // call stack pop
-        self->stack_top = self->stack_top->caller;
+        sch->stack_top = sch->stack_top->caller;
     } else {
         // run
-        self->stack_top->fun(self->stack_top);
+        sch->stack_top->fun(sch->stack_top);
     }
 }
+
 
 
 // run the coroutine until finish.
-inline static void sch_await_run(sch_await_t *self)
+inline static void await_run(void *await)
 {
-    assert(self);
+    assert(await);
+    await_sch_t sch = {
+        .stack_top = (await_t *)await,
+    };
+    sch.stack_top->sch = &sch;
 
-    for (;self->stack_top;) {
-        sch_await_step(self);
+    for (;sch.stack_top;) {
+        await_sch_step(&sch);
     }
 }
-#define await_run(AWAIT)    sch_await_run(&SCH_AWAIT(AWAIT))
 
 //inline static await_t *await_step(await_t *self)
 //{
 //    assert(self);
 //
-//    sch_await_t sch;
+//    await_sch_t sch;
 //    if (!self->sch) {
 //        self->sch = &sch;
 //    }

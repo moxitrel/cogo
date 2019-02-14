@@ -2,7 +2,7 @@
 // Created by M2 on 2018-12-28.
 //
 
-#include "../src/coroutine.h"
+#include "../src/cogo.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>

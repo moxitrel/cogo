@@ -1,7 +1,7 @@
 //
 // 1. Include header "coroutine.h"
 //
-#include "../src/coroutine.h"
+#include "../src/cogo.h"
 #include <stdio.h>
 
 //

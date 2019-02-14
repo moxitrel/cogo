@@ -170,10 +170,10 @@ do {                                                    \
 } while (0)
 
 // co_yield(gen_t *): yield from the coroutine.
-#define co_yield(SELF, ...)                                                             \
+#define co_yield(GEN, ...)                                                              \
 do {                                                                                    \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
-    GEN_PC(SELF) = __LINE__;    /* 1. save the restore point, at label YIELD_N */       \
+    GEN_PC(GEN) = __LINE__;     /* 1. save the restore point, at label YIELD_N */       \
     goto CO_END;                /* 2. return */                                         \
 CO_LABEL(__LINE__):;            /* 3. put label after each *return* as restore point */ \
 } while (0)
@@ -186,10 +186,10 @@ do {                                                                            
 } while (0)
 
 // co_end(gen_t *): mark coroutine end.
-#define co_end(SELF)                        \
+#define co_end(GEN)                         \
 do {                                        \
 CO_RETURN:                                  \
-    GEN_PC(SELF) = -1;   /* finish */       \
+    GEN_PC(GEN) = -1;       /* finish */    \
 CO_END:;                                    \
 } while (0)
 
