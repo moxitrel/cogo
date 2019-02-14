@@ -1,10 +1,10 @@
 /*
 
 * API
-- co_sched(co_t *, co_t *)    :: run a new coroutine concurrently.
-- co_run(co_t *)              :: run until all coroutine finished.
+- co_sched(co_t *, co_t *)  :: run a new coroutine concurrently.
 
-- co_t CO(void(*)(co_t *)) :: co_t constructor.
+- co_t CO(void(*)(co_t *))  :: co_t constructor.
+- co_run(co_t *)            :: run until all coroutine finished.
 
 */
 #ifndef COGO_CO_H
@@ -64,13 +64,13 @@ inline static unsigned int chan_cap(chan_t *);
 
 // co_t scheduler
 struct sch_co_t {
-    // inherent sch_await_t
-    sch_await_t sch_await;
+    // inherent await_sch_t
+    await_sch_t sch_await;
 
     // all coroutines that run concurrently
     co_queue_t q;
 };
-#define SCH_CO(CO)  ((sch_co_t){.sch_await = SCH_AWAIT(CO),})
+#define SCH_CO(CO)  ((sch_co_t){.sch_await = AWAIT_SCH(CO),})
 
 //
 // co_t
@@ -236,7 +236,7 @@ static void sch_co_run(co_t *co)
     sch_co_t sch = SCH_CO(co);
     for (co->await.sch = &sch.sch_await; co; co = co_queue_pop(&sch.q)) {
         sch.sch_await.stack_top = &co->await;
-        sch_await_step(&sch.sch_await);
+        await_sch_step(&sch.sch_await);
         if (sch.sch_await.stack_top) {
             co_queue_push(&sch.q, (co_t *)sch.sch_await.stack_top);
         }
