@@ -1,7 +1,12 @@
-/*
+/* Labels as Values (GCC Extension)
+
+* Drawbacks
+- Use GCC extension.
+- Slow.
+- Avoid using local variables. (Local variables become invalid after co_yield())
 
 * Internal
-
+** Overview
     if (pc) {           //
         goto *pc;       // coroutine begin
     }                   //

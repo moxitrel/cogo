@@ -41,7 +41,7 @@ class Counter: public co_t {
         now = time(nullptr);
         printf("%p begin : %s", this, ctime(&now));
 
-        co_sched(waiter);
+        co_start(waiter);
 
         for (i = 0; i < ((intmax_t)1 << 31); i++) {
             if (i == ((intmax_t)1 << 30)) {

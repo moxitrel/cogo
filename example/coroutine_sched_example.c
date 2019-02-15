@@ -72,8 +72,8 @@ void coroutine_example(coprint_t *co)
     //
     // 5. User code
     //
-    co_sched(co, &co->print_co1);  // run print_co1 concurrently
-    co_sched(co, &co->print_co2);  // run print_co2 concurrently
+    co_start(co, &co->print_co1);  // run print_co1 concurrently
+    co_start(co, &co->print_co2);  // run print_co2 concurrently
 
     //
     // 4. Set coroutine end

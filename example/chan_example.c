@@ -1,6 +1,7 @@
 //
 // Created by M2 on 2019-01-30.
 //
+#include <assert.h>
 #include "../src/co.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -47,7 +48,7 @@ void counter(counter_t *co)
     co->now = time(NULL);
     printf("%p begin : %s", co, ctime(&co->now));
 
-    co_sched(co, &co->waiter);
+    co_start(co, &co->waiter);
 
     for (co->i = 0; co->i < ((intmax_t)1 << 31); co->i++) {
         if (co->i == ((intmax_t)1 << 30)) {
@@ -69,6 +70,6 @@ void counter(counter_t *co)
 
 int main(void)
 {
-    chan_t c = CHAN(0);
+    chan_t c = CHAN();
     co_run(&COUNTER(&c));
 }

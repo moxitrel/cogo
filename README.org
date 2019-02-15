@@ -196,8 +196,8 @@ class CoroutineExample : public co_t {
         co_begin();             // 4. coroutine begin
 
                                 // 5. user code
-        co_sched(coroutine1);   // add coroutine1 to scheduler
-        co_sched(coroutine2);   // add coroutine2 to scheduler
+        co_start(coroutine1);   // add coroutine1 to scheduler
+        co_start(coroutine2);   // add coroutine2 to scheduler
                                 //
 
         co_end();               // 4. coroutine end
@@ -272,7 +272,7 @@ int main(void)
                         *co_yield()*,
                         *co_return()*,
                         *co_await()*,
-                        *co_sched()*,
+                        *co_start()*,
                         *co_wait()*,
                         *co_broadcast()*,
                       or omit if GNUC extension enabled.
@@ -280,7 +280,7 @@ int main(void)
 - co_yield ()      :: Yield.
 - co_return()      :: Return with ending coroutine.
 - co_await(co_t &) :: Await another coroutine to finish.
-- co_sched(co_t &) :: Add a coroutine to scheduler to run.
+- co_start(co_t &) :: Add a coroutine to scheduler to run.
 - co_wait     (co_blocking_t &) :: block current coroutine until notified.
 - co_broadcast(co_blocking_t &) :: wake up all coroutines blocked by specified co_blocking_t.
 
@@ -296,7 +296,7 @@ int main(void)
 - co_yield (co_t *)         :: Yield from coroutine.
 - co_return(co_t *)         :: Return with ending coroutine.
 - co_await (co_t *, co_t *) :: Await another coroutine to finish.
-- co_sched (co_t *, co_t *) :: Add a coroutine to scheduler to run.
+- co_start (co_t *, co_t *) :: Add a coroutine to scheduler to run.
 
 - co_run  (co_t *) :: loop running until finish all coroutines
 + co_state(co_t *) :: Return the current running state of coroutine /obj/.
