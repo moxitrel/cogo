@@ -22,7 +22,7 @@ class PrintN : public co_t {
         //
         // 4. Set coroutine begin
         //
-        co_begin(33);       // 33: list the line numbers of co_yield(), co_await(), co_sched(), i.e. the value of __LINE__
+        co_begin(33);       // 33: list the line numbers of co_yield(), co_await(), co_start(), i.e. the value of __LINE__
      // co_begin();         // you can omit line numbers if enable GNUC extension
 
         //
@@ -53,8 +53,8 @@ class CoroutineExample : public co_t {  // 2. Define a class that inherit co_t
         //
         // 5. User code
         //
-        co_sched(coroutine1);   // add coroutine1 to scheduler
-        co_sched(coroutine2);   // add coroutine2 to scheduler
+        co_start(coroutine1);   // add coroutine1 to scheduler
+        co_start(coroutine2);   // add coroutine2 to scheduler
 
         co_end();               // 4. Coroutine end
     }

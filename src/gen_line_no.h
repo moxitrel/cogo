@@ -1,5 +1,9 @@
 /*
 
+* Drawbacks
+- Must specify the correct line numbers (__LINE__) of co_yield().
+- Avoid using local variables. (Local variables become invalid after co_yield())
+
 * API  (!!! not type safe !!!)
 - co_begin (gen_t *, ...) :: mark coroutine begin. List with line numbers of co_yield() and co_return().
 - co_end   (gen_t *)      :: mark coroutine end.
@@ -8,15 +12,14 @@
 
 - int co_state(gen_t *)   :: get the current running state.
 
-
 * Usage
 
 // 1. include header
-#include "gen_lineno.h"
+#include "gen_line_no.h"
 
 // 2. inherit gen_t (put in first)
 typedef struct {
-    gen_t co;
+    gen_t gen_t;
 
     //
     // declare vars for coroutine function
@@ -36,7 +39,7 @@ void co_fun(co_fun_t *co)
     int *i = &co->i;
 
     // 4. mark coroutine begin
-    co_begin(co,44,46);     // list line numbers (__LINE__) of co_yield() and co_return()
+    co_begin(co,44,46);     // list line numbers (__LINE__) of co_yield()
 
 
     // 5. user codes (don't use local variables)
@@ -122,7 +125,8 @@ CO_YIELD_11:;                   //
 
 
 * See Also
-- Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
+- Coroutines in C               (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
+- P99, advanced macro tricks    (http://p99.gforge.inria.fr/p99-html/index.html)
 
 */
 #ifndef COGO_GEN_H
@@ -230,7 +234,6 @@ CO_END:;                                    \
 //
 // See: https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments
 //      http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
-//      P99, advanced macro tricks (http://p99.gforge.inria.fr/p99-html/index.html)
 //
 #define LEN(...)                            \
 LEN_(                                       \

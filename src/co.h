@@ -1,7 +1,7 @@
 /*
 
 * API
-- co_sched(co_t *, co_t *)  :: run a new coroutine concurrently.
+- co_start(co_t *, co_t *)  :: run a new coroutine concurrently.
 
 - co_t CO(void(*)(co_t *))  :: co_t constructor.
 - co_run(co_t *)            :: run until all coroutine finished.
@@ -13,232 +13,241 @@
 #include "await.h"
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef struct co_t       co_t;
 typedef struct co_queue_t co_queue_t;
+typedef struct co_sch_t   co_sch_t;
 typedef struct chan_t     chan_t;
-typedef struct sch_co_t   sch_co_t;
 
 // co_t: support concurrency
 struct co_t {
     // inherit await_t
-    await_t await;
+    await_t await_t;
 
     // build coroutine queue (run concurrently)
     co_t *next;
 };
-// co_t CO(void(*)(co_t *)): co_t constructor, await.sch isn't inited.
-#define CO(FUN)         ((co_t){.await = AWAIT(FUN),})
+// co_t CO(void(*)(co_t *)): co_t constructor, **await_t.sch isn't inited**.
+#define CO(FUN)         ((co_t){.await_t = AWAIT(FUN),})
 
+
+//
 // co_t queue
+//
 struct co_queue_t {
     co_t *head;
     co_t *tail;
 };
-inline static bool  co_queue_empty (const co_queue_t *);
-inline static co_t *co_queue_pop   (co_queue_t *);          // dequeue
-inline static void  co_queue_push  (co_queue_t *, co_t *);  // enqueue
-inline static void  co_queue_append(co_queue_t *, const co_queue_t *);
+
+inline static bool co_queue_empty(const co_queue_t *q)
+{
+    assert(q);
+    return q->head == NULL;
+}
+
+// dequeue
+inline static co_t *co_queue_pop(co_queue_t *q)
+{
+    assert(q);
+
+    co_t *node = q->head;
+    if (q->head != NULL) {
+        q->head = q->head->next;
+    }
+    return node;
+}
+
+// enqueue
+inline static void co_queue_push(co_queue_t *q, co_t *co)
+{
+    assert(q);
+    assert(co);
+
+    if (co_queue_empty(q)) {
+        q->head = co;
+    } else {
+        q->tail->next = co;
+    }
+    q->tail = co;
+    q->tail->next = NULL;
+}
+
+inline static void co_queue_append(co_queue_t *q, const co_queue_t *q2)
+{
+    assert(q);
+    assert(q2);
+
+    if (co_queue_empty(q2)) {
+        return;
+    }
+    if (co_queue_empty(q)) {
+        *q = *q2;
+        return;
+    }
+    q->tail->next = q2->head;
+    q->tail = q2->tail;
+}
+
+// co_t scheduler
+struct co_sch_t {
+    // inherent await_sch_t
+    await_sch_t await_sch_t;
+
+    // all coroutines that run concurrently
+    co_queue_t q;
+};
 
 
-// channel (like golang)
+// channel
 struct chan_t {
     // all the coroutines blocked by this channel
     co_queue_t rq;  // read  blocked
     co_queue_t wq;  // write blocked
 
-    // how many messages sent now
+    bool read_blocked;  // for unbuffered channel, cap = 0
+
+    // how many messages in buffer now
     unsigned int len;
 
     // the max number of messages can be buffered
     unsigned int cap;
 
-    // message queue
-    // TODO: support message buffer
-    void *msg[1];
+    // TODO: implement message queue
+    void *msg[1];   // size = cap + 1
 };
-#define CHAN(N)     ((chan_t){.cap = 0,})
-inline static unsigned int chan_len(chan_t *);
-inline static unsigned int chan_cap(chan_t *);
 
+#define CHAN()     ((chan_t){.cap = 0,})
 
-// co_t scheduler
-struct sch_co_t {
-    // inherent await_sch_t
-    await_sch_t sch_await;
-
-    // all coroutines that run concurrently
-    co_queue_t q;
-};
-#define SCH_CO(CO)  ((sch_co_t){.sch_await = AWAIT_SCH(CO),})
-
-//
-// co_t
-//
-
-// co_sched(co_t *, co_t *): add a new coroutine to the scheduler.
-#define co_sched(SELF, CO)                          \
-do {                                                \
-    co_t *_self = (co_t *)(SELF);                   \
-    co_t *_co   = (co_t *)(CO);                     \
-                                                    \
-    _co->await.sch = _self->await.sch;              \
-    co_queue_push(&((sch_co_t *)_self->await.sch)->q, _co); \
-    co_yield(_self);                                \
-} while (0)
-
-// co_run(co_t *): run CO as the entry, until all coroutines finished.
-#define co_run(CO)  sch_co_run((co_t *)(CO))
-
-
-//
-// co_queue_t
-//
-bool co_queue_empty(const co_queue_t *self)
+inline static unsigned int chan_len(const chan_t *chan)
 {
-    assert(self);
-    return self->head == NULL;
+    return chan->len;
 }
 
-co_t *co_queue_pop(co_queue_t *self)
+inline static unsigned int chan_cap(const chan_t *chan)
 {
-    assert(self);
-    
-    co_t *node = self->head;
-    if (!co_queue_empty(self)) {
-        self->head = self->head->next;
-    }
-    return node;
+    return chan->cap;
 }
 
-void co_queue_push(co_queue_t *self, co_t *co)
-{
-    assert(self);
-    assert(co);
-    
-    if (co_queue_empty(self)) {
-        self->head = self->tail = co;
-    } else {
-        self->tail->next = co;
-        self->tail = co;
-    }
-    self->tail->next = NULL;
-}
-
-void co_queue_append(co_queue_t *self, const co_queue_t *q)
-{
-    assert(self);
-    assert(q);
-
-    if (co_queue_empty(q)) {
-        return;
-    }
-    if (co_queue_empty(self)) {
-        *self = *q;
-        return;
-    }
-    self->tail->next = q->head;
-    self->tail = q->tail;
-}
-
-
-//
-// chan_t
-//
-unsigned int chan_len(chan_t *self)
-{
-    return self->len;
-}
-
-unsigned int chan_cap(chan_t *self)
-{
-    return self->cap;
-}
-
-static co_t *co_chan_try_read(co_t *co, chan_t *chan, void **msg_ptr)
+static bool chan_try_read(co_t *co, chan_t *chan, void **msg_ptr)
 {
     assert(co);
     assert(chan);
     assert(msg_ptr);
 
-    if (chan_len(chan) < 1) {               // channel is empty
-        co_queue_push(&chan->rq, co);       // record in channel
-        co->await.sch->stack_top = NULL;    // remove from scheduler
-        return co;
-    } else {
+    bool ok;
+
+    if (chan_len(chan) > 0) {
+        ok = true;
+
+        // FIXME: pop message
         chan->len--;
         *msg_ptr = chan->msg[chan->len];
+    } else {
+        ok = false;
 
-        co_t *w = co_queue_pop(&chan->wq);
-        if (w) {
-            co_queue_push(&((sch_co_t *)co->await.sch)->q, w);
-        }
+        // sleep in background
+        co_queue_push(&chan->rq, co);       // add to blocking queue
+        co->await_t.sch->stack_top = NULL;  // remove from scheduler
 
-        return NULL;
+        // for unbuffered channel
+        chan->read_blocked = true;
     }
+
+    // wake up a writer if exist
+    co_t *w = co_queue_pop(&chan->wq);
+    if (w) {
+        co_queue_push(&((co_sch_t *)co->await_t.sch)->q, w);
+    }
+
+    return ok;
 }
 
-static co_t *co_chan_try_write(co_t *co, chan_t *chan, void *msg)
+static bool chan_try_write(co_t *co, chan_t *chan, void *msg)
 {
     assert(co);
     assert(chan);
 
-    if (chan_len(chan) > chan_cap(chan)) {  // channel is empty
-        co_queue_push(&chan->wq, co);       // record in channel
-        co->await.sch->stack_top = NULL;    // remove from scheduler
-        return co;
-    } else {
+    bool ok;
+
+    if (chan_cap(chan) + chan->read_blocked > chan_len(chan)) {
+        ok = true;
+
+        // push message in buffer
         chan->msg[chan->len] = msg;
         chan->len++;
 
-        co_t *r = co_queue_pop(&chan->rq);
-        if (r) {
-            co_queue_push(&((sch_co_t *)co->await.sch)->q, r);
-        }
-        return NULL;
+        // for unbuffered channel
+        chan->read_blocked = false;
+    } else {
+        ok = false;
+
+        // sleep in background
+        co_queue_push(&chan->wq, co);
+        co->await_t.sch->stack_top = NULL;
     }
+
+    // wake up a reader
+    co_t *r = co_queue_pop(&chan->rq);
+    if (r) {
+        co_queue_push(&((co_sch_t *) co->await_t.sch)->q, r);
+    }
+
+    return ok;
 }
 
 // co_chan_write(co_t *, chan_t *, void *);
-// TODO: eliminate side effect of args
-#define co_chan_write(SELF,CHAN,MSG)                                            \
+// TODO: try to eliminate the side effect of args
+#define co_chan_write(CO,CHAN,MSG)                                              \
 do {                                                                            \
-    for (;;) {                                                                  \
-        co_t *_self = (co_t *)(SELF);                                           \
-        co_t *ret = co_chan_try_write(_self,(CHAN),(MSG));                      \
-        co_yield(_self);                                                        \
-        if (!ret) {                                                             \
-            break;                                                              \
-        }                                                                       \
+    while (!chan_try_write((co_t *)(CO), (CHAN), (MSG))) {                      \
+        co_yield((co_t *)(CO));                                                 \
     }                                                                           \
 } while (0)
+
 
 // co_chan_read(co_t *, chan_t *, void **);
-// TODO: eliminate side effect of args
-#define co_chan_read(SELF,CHAN,MSG)                                             \
+// TODO: try to eliminate the side effect of args
+#define co_chan_read(CO,CHAN,MSG)                                               \
 do {                                                                            \
-    co_t *_self;                                                                \
-    for (;(_self = co_chan_try_read((co_t *)(SELF),(CHAN),(MSG))) != NULL;) {   \
-        co_yield(_self);                                                        \
+    while (!chan_try_read((co_t *)(CO), (CHAN), (MSG))) {                       \
+        co_yield((co_t *)(CO));                                                 \
     }                                                                           \
 } while (0)
 
 
 //
-// sch_co_t
+// co_t
 //
 
+inline static co_t *co__concur(co_t *co, co_t *co2)
+{
+    assert(co);
+    assert(co2);
+    
+    co2->await_t.sch = co->await_t.sch;
+    co_queue_push(&((co_sch_t *)co->await_t.sch)->q, co2);
+    return co;
+}
+// co_start(co_t *, co_t *): add a new coroutine to the scheduler.
+#define co_start(CO, CO2)  co_yield(co__concur((co_t *)(CO), (co_t *)(CO2)))
+
+
 // run co as the entry coroutine, until all finished.
-static void sch_co_run(co_t *co)
+static void co_run(void *co)
 {
     assert(co);
 
-    sch_co_t sch = SCH_CO(co);
-    for (co->await.sch = &sch.sch_await; co; co = co_queue_pop(&sch.q)) {
-        sch.sch_await.stack_top = &co->await;
-        await_sch_step(&sch.sch_await);
-        if (sch.sch_await.stack_top) {
-            co_queue_push(&sch.q, (co_t *)sch.sch_await.stack_top);
+    // associate coroutine with a scheduler
+    co_sch_t sch = {
+        .await_sch_t = {.stack_top = (await_t *)co},
+    };
+    ((await_t *)co)->sch = &sch.await_sch_t;
+
+    for (; sch.await_sch_t.stack_top; sch.await_sch_t.stack_top = (await_t *)co_queue_pop(&sch.q)) {
+        sch_step(&sch.await_sch_t);
+        if (sch.await_sch_t.stack_top) {
+            co_queue_push(&sch.q, (co_t *)sch.await_sch_t.stack_top);
         }
     }
 }

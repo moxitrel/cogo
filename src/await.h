@@ -41,29 +41,25 @@ struct await_sch_t {
     .fun = (void(*)(await_t *))(FUN),   \
 })
 
-// await_sch_t AWAIT_SCH(await_t *): await_sch_t constructor
-#define AWAIT_SCH(AWAIT)    ((await_sch_t){.stack_top = (await_t *)(AWAIT),})
-
-
 // push callee to call stack
-inline static await_t *await_call(await_t *self, await_t *callee)
+inline static await_t *await__call(await_t *await, await_t *callee)
 {
-    assert(self);
-    assert(self->sch);
+    assert(await);
+    assert(await->sch);
     assert(callee);
 
     // call stack push
-    callee->caller = self;
-    callee->sch    = self->sch;
-    self->sch->stack_top = callee;  // set new stack top
+    callee->caller = await;
+    callee->sch    = await->sch;
+    await->sch->stack_top = callee;  // set new stack top
 
-    return self;
+    return await;
 }
 // co_await(await_t *, await_t *): call another coroutine.
-#define co_await(AWAIT, CALLEE)     co_yield(await_call((await_t *)(AWAIT), (await_t *)(CALLEE)))
+#define co_await(AWAIT, CALLEE)     co_yield(await__call((await_t *)(AWAIT), (await_t *)(CALLEE)))
 
 // run the coroutine at stack top until yield
-inline static void await_sch_step(await_sch_t *sch)
+inline static void sch_step(await_sch_t *sch)
 {
     assert(sch);
     assert(sch->stack_top);
@@ -83,13 +79,15 @@ inline static void await_sch_step(await_sch_t *sch)
 inline static void await_run(void *await)
 {
     assert(await);
+
+    // associate coroutine with a scheduler
     await_sch_t sch = {
         .stack_top = (await_t *)await,
     };
     sch.stack_top->sch = &sch;
 
     for (;sch.stack_top;) {
-        await_sch_step(&sch);
+        sch_step(&sch);
     }
 }
 

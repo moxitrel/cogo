@@ -1,7 +1,8 @@
-/*
+/* Use Duff's Device (Protothreads)
 
-* Bugs
-- Don't use *switch* statement in the coroutine function.
+* Drawbacks
+- Avoid using the *switch statement* in the coroutine function.
+- Avoid using local variables. (Local variables become invalid after co_yield())
 
 * Internal
 ** Overview
@@ -48,6 +49,11 @@ void f(gen_t *co)
         }
     }                       // co_end(co);
 }
+
+
+* See Also
+- Coroutines in C   (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
+- Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
 #ifndef COGO_GEN_H
