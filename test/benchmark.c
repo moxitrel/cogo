@@ -6,6 +6,7 @@ void bench_fcase(void);
 void bench_flabel(void);
 void bench_flineno(void);
 void bench_acase(void);
+void bench_ccase(void);
 
 int main(void)
 {
@@ -15,5 +16,6 @@ int main(void)
         bench_fcase();
         bench_flabel();
         bench_acase();
+        bench_ccase();
     }
 }

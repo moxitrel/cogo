@@ -187,6 +187,7 @@ CO_LABEL(__LINE__):;            /* 3. put label after each *return* as restore p
 do {                                                                                    \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
     goto CO_RETURN;             /* return */                                            \
+CO_LABEL(__LINE__):;            /* redundant label for co_begin() */                    \
 } while (0)
 
 // co_end(gen_t *): mark coroutine end.

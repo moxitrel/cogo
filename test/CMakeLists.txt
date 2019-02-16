@@ -18,6 +18,7 @@ add_test(NAME    c_benchmark_test
 # PUBLIC    : both add to self and dependencies, e.g. headers
 target_sources(c_benchmark_test
   PRIVATE
+        co_case_benchmark.c
         await_case_benchmark.c
         benchmark.c
         gen_case_benchmark.c
