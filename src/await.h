@@ -75,7 +75,7 @@ inline static void sch_step(await_sch_t *sch)
 }
 
 // run the coroutine until finished.
-inline static void await_run(void *await)
+static void await_run(void *await)
 {
     assert(await);
 
