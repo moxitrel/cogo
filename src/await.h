@@ -41,6 +41,9 @@ struct await_sch_t {
     .fun = (void(*)(await_t *))(FUN),   \
 })
 
+// co_await(await_t *, await_t *): call another coroutine.
+#define co_await(AWAIT, CALLEE) co_yield(await__call((await_t *)(AWAIT), (await_t *)(CALLEE)))
+
 // push callee to call stack
 inline static await_t *await__call(await_t *await, await_t *callee)
 {
@@ -55,8 +58,6 @@ inline static await_t *await__call(await_t *await, await_t *callee)
 
     return await;
 }
-// co_await(await_t *, await_t *): call another coroutine.
-#define co_await(AWAIT, CALLEE)     co_yield(await__call((await_t *)(AWAIT), (await_t *)(CALLEE)))
 
 // run the coroutine at stack top until yield
 inline static void sch_step(await_sch_t *sch)
@@ -73,9 +74,7 @@ inline static void sch_step(await_sch_t *sch)
     }
 }
 
-
-
-// run the coroutine until finish.
+// run the coroutine until finished.
 inline static void await_run(void *await)
 {
     assert(await);
@@ -84,38 +83,11 @@ inline static void await_run(void *await)
     await_sch_t sch = {
         .stack_top = (await_t *)await,
     };
-    sch.stack_top->sch = &sch;
+    ((await_t *)await)->sch = &sch;
 
-    for (;sch.stack_top;) {
+    while (sch.stack_top) {
         sch_step(&sch);
     }
 }
-
-//inline static await_t *await_step(await_t *self)
-//{
-//    assert(self);
-//
-//    await_sch_t sch;
-//    if (!self->sch) {
-//        self->sch = &sch;
-//    }
-//
-//    for (;self;) {
-//        self->sch->stack_top = self;
-//        self->fun(self);
-//        if (co_state(self) < 0) {
-//            self = self->caller;
-//        } else if (self->sch->stack_top != self) {
-//            // co_await() called
-//            self = self->sch->stack_top;
-//            continue;
-//        } else {
-//            // co_yield() called
-//            break;
-//        }
-//    }
-//
-//    return self;
-//}
 
 #endif // COGO_AWAIT_H

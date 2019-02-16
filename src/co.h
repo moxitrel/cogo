@@ -13,7 +13,6 @@
 #include "await.h"
 #include <stddef.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 typedef struct co_t       co_t;
 typedef struct co_queue_t co_queue_t;
@@ -73,7 +72,7 @@ inline static void co_queue_push(co_queue_t *q, co_t *co)
     q->tail->next = NULL;
 }
 
-inline static void co_queue_append(co_queue_t *q, const co_queue_t *q2)
+inline static void co_queue_merge(co_queue_t *q, const co_queue_t *q2)
 {
     assert(q);
     assert(q2);
@@ -101,33 +100,21 @@ struct co_sch_t {
 
 // channel
 struct chan_t {
-    // all the coroutines blocked by this channel
-    co_queue_t rq;  // read  blocked
-    co_queue_t wq;  // write blocked
+    // all coroutines blocked by this channel
+    co_queue_t rq;  // blocked when read
+    co_queue_t wq;  // blocked when write
 
     bool read_blocked;  // for unbuffered channel, cap = 0
 
     // how many messages in buffer now
     unsigned int len;
-
     // the max number of messages can be buffered
     unsigned int cap;
-
     // TODO: implement message queue
     void *msg[1];   // size = cap + 1
 };
 
 #define CHAN()     ((chan_t){.cap = 0,})
-
-inline static unsigned int chan_len(const chan_t *chan)
-{
-    return chan->len;
-}
-
-inline static unsigned int chan_cap(const chan_t *chan)
-{
-    return chan->cap;
-}
 
 static bool chan_try_read(co_t *co, chan_t *chan, void **msg_ptr)
 {
@@ -137,27 +124,27 @@ static bool chan_try_read(co_t *co, chan_t *chan, void **msg_ptr)
 
     bool ok;
 
-    if (chan_len(chan) > 0) {
-        ok = true;
-
+    if (chan->len > 0) {
         // FIXME: pop message
         chan->len--;
         *msg_ptr = chan->msg[chan->len];
-    } else {
-        ok = false;
 
+        ok = true;
+    } else {
         // sleep in background
-        co_queue_push(&chan->rq, co);       // add to blocking queue
+        co_queue_push(&chan->rq, co);       // put into blocking queue
         co->await_t.sch->stack_top = NULL;  // remove from scheduler
 
         // for unbuffered channel
         chan->read_blocked = true;
+
+        ok = false;
     }
 
     // wake up a writer if exist
-    co_t *w = co_queue_pop(&chan->wq);
-    if (w) {
-        co_queue_push(&((co_sch_t *)co->await_t.sch)->q, w);
+    co_t *writer = co_queue_pop(&chan->wq);
+    if (writer) {
+        co_queue_push(&((co_sch_t *)co->await_t.sch)->q, writer);
     }
 
     return ok;
@@ -170,27 +157,27 @@ static bool chan_try_write(co_t *co, chan_t *chan, void *msg)
 
     bool ok;
 
-    if (chan_cap(chan) + chan->read_blocked > chan_len(chan)) {
-        ok = true;
-
+    if (chan->cap + chan->read_blocked > chan->len) {
         // push message in buffer
         chan->msg[chan->len] = msg;
         chan->len++;
 
         // for unbuffered channel
         chan->read_blocked = false;
-    } else {
-        ok = false;
 
+        ok = true;
+    } else {
         // sleep in background
         co_queue_push(&chan->wq, co);
         co->await_t.sch->stack_top = NULL;
+
+        ok = false;
     }
 
     // wake up a reader
-    co_t *r = co_queue_pop(&chan->rq);
-    if (r) {
-        co_queue_push(&((co_sch_t *) co->await_t.sch)->q, r);
+    co_t *reader = co_queue_pop(&chan->rq);
+    if (reader) {
+        co_queue_push(&((co_sch_t *) co->await_t.sch)->q, reader);
     }
 
     return ok;
