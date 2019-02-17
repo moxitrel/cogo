@@ -2,6 +2,8 @@
 
 * API
 - co_start(co_t *, co_t *)  :: run a new coroutine concurrently.
+- co_chan_write(co_t *, chanptr_t, void *)  :: send a message to channel.
+- co_chan_read (co_t *, chanptr_t, void **) :: receive a message from channel.
 
 - co_t CO(void(*)(co_t *))  :: co_t constructor.
 - co_run(co_t *)            :: run until all coroutine finished.
@@ -17,7 +19,6 @@
 typedef struct co_t       co_t;
 typedef struct co_queue_t co_queue_t;
 typedef struct co_sch_t   co_sch_t;
-typedef struct chan_t     chan_t;
 
 // co_t: support concurrency
 struct co_t {
@@ -31,18 +32,26 @@ struct co_t {
     // when read  blocked, the stored value type is void **
     void *chan_msg;
 };
-// co_t CO(void(*)(co_t *)): co_t constructor, **await_t.sch isn't inited**.
-#define CO(FUN)         ((co_t){.await_t = AWAIT(FUN),})
 
-
-//
 // co_t queue
-//
 struct co_queue_t {
     co_t *head;
     co_t *tail;
 };
 
+// co_t scheduler
+struct co_sch_t {
+    // inherent await_sch_t
+    await_sch_t await_sch_t;
+
+    // all coroutines that run concurrently
+    co_queue_t q;
+};
+
+
+//
+// co_queue_t
+//
 inline static bool co_queue_empty(const co_queue_t *q)
 {
     assert(q);
@@ -93,109 +102,12 @@ inline static void co_queue_merge(co_queue_t *q, const co_queue_t *q1)
 }
 
 
-// co_t scheduler
-struct co_sch_t {
-    // inherent await_sch_t
-    await_sch_t await_sch_t;
-
-    // all coroutines that run concurrently
-    co_queue_t q;
-};
-
-
-//
-// channel
-//
-struct chan_t {
-    // all coroutines blocked by this channel
-    co_queue_t rq;  // blocked when read
-    co_queue_t wq;  // blocked when write
-
-    // how many messages in buffer now
-    unsigned int len;
-    // the max number of messages can be buffered
-    unsigned int cap;
-    // TODO: implement message queue
-    void *msg[1];   // size = cap + 1
-};
-
-#define CHAN()     ((chan_t){.cap = 0,})
-
-// co_chan_write(co_t *, chan_t *, void *);
-#define co_chan_write(CO,CHAN,MSG)  co_yield(chan_try_write((co_t *)(CO), (CHAN), (MSG)))
-
-// co_chan_read(co_t *, chan_t *, void **);
-#define co_chan_read(CO,CHAN,MSG)   co_yield(chan_try_read((co_t *)(CO), (CHAN), (MSG)))
-
-inline static co_t *chan_try_read(co_t *co, chan_t *chan, void **msg_ptr)
-{
-    assert(co);
-    assert(chan);
-    assert(msg_ptr);
-
-    co_t *writer;   // coroutine write to channel blocked
-
-    if (chan->len > 0) {
-        // FIXME: queue pop, not stack pop
-        chan->len--;
-        *msg_ptr = chan->msg[chan->len];
-
-        if ((writer = co_queue_pop(&chan->wq)) != NULL) {
-            // push writer's message
-            chan->msg[chan->len] = writer->chan_msg;
-            chan->len++;
-            // wake up the writer
-            co_queue_push(&((co_sch_t *)co->await_t.sch)->q, writer);
-        }
-    } else if ((writer = co_queue_pop(&chan->wq)) != NULL) {
-        // read cached message from writer
-        *msg_ptr = writer->chan_msg;
-        // wake up the writer
-        co_queue_push(&((co_sch_t *)co->await_t.sch)->q, writer);
-    } else {
-        // save message address for writing
-        co->chan_msg = msg_ptr;             // NOTE: the stored value type is void**
-        // sleep in background
-        co_queue_push(&chan->rq, co);       // put into blocking queue
-        co->await_t.sch->stack_top = NULL;  // remove from scheduler
-    }
-
-    return co;
-}
-
-inline static co_t *chan_try_write(co_t *co, chan_t *chan, void *msg)
-{
-    assert(co);
-    assert(chan);
-
-    co_t *reader;   // coroutine read from channel blocked
-
-    // 1. feed blocked reader first
-    // 2. feed message buffer
-    // 3. cache message in coroutine
-    if ((reader = co_queue_pop(&chan->rq)) != NULL) {
-        // send message to reader, the stored value type of chan_msg should be void**
-        *(void **)reader->chan_msg = msg;
-        // wake up the reader
-        co_queue_push(&((co_sch_t *)co->await_t.sch)->q, reader);
-    } else if (chan->cap > chan->len) {
-        // push message
-        chan->msg[chan->len] = msg;
-        chan->len++;
-    } else {
-        // cache message for reading
-        co->chan_msg = msg;
-        // sleep in background
-        co_queue_push(&chan->wq, co);
-        co->await_t.sch->stack_top = NULL;
-    }
-
-    return co;
-}
-
 //
 // co_t
 //
+
+// co_t CO(void(*)(co_t *)): co_t constructor, **await_t.sch isn't inited**.
+#define CO(FUN) ((co_t){.await_t = AWAIT(FUN),})
 
 // co_start(co_t *, co_t *): add a new coroutine to the scheduler.
 #define co_start(CO, CO2)  co_yield(co__concur((co_t *)(CO), (co_t *)(CO2)))
@@ -205,7 +117,7 @@ inline static co_t *co__concur(co_t *co, co_t *co1)
 {
     assert(co);
     assert(co1);
-    
+
     co1->await_t.sch = co->await_t.sch;
     co_queue_push(&((co_sch_t *)co->await_t.sch)->q, co1);
     return co;
@@ -228,6 +140,111 @@ static void co_run(void *co)
             co_queue_push(&sch.q, (co_t *)sch.await_sch_t.stack_top);
         }
     }
+}
+
+
+//
+// channel
+//
+
+#define chan_t(N)                                                   \
+struct {                                                            \
+    /* all coroutines blocked by this channel */                    \
+    co_queue_t rq;  /* blocked when read */                         \
+    co_queue_t wq;  /* blocked when write */                        \
+                                                                    \
+    size_t msg_begin;                                               \
+    size_t msg_end;                                                 \
+    size_t cap;     /* the max number of messages can be buffered */\
+    void *msg[N];                                                   \
+}
+
+typedef chan_t(0)  *chanptr_t;
+#define CHANPTR(N)  ((chanptr_t)&(chan_t(N)){.cap = (N)})
+
+inline static size_t chan_len(const chanptr_t chan)
+{
+    return chan->msg_end - chan->msg_begin;
+}
+
+// enqueue
+inline static void chan__push(chanptr_t chan, void *msg)
+{
+    chan->msg[chan->msg_end] = msg;
+    chan->msg_end = (chan->msg_end + 1) % chan->cap;
+}
+
+// dequeue
+inline static void chan__pop(chanptr_t chan, void **msg_ptr)
+{
+    *msg_ptr = chan->msg[chan->msg_begin];
+    chan->msg_begin = (chan->msg_begin + 1) % chan->cap;
+}
+
+// co_chan_write(co_t *, chanptr_t, void *);
+#define co_chan_write(CO,CHAN,MSG)  co_yield(chan_try_write((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
+
+// co_chan_read(co_t *, chanptr_t, void **);
+#define co_chan_read(CO,CHAN,MSG)   co_yield(chan_try_read ((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
+
+inline static co_t *chan_try_read(co_t *co, chanptr_t chan, void **msg_ptr)
+{
+    assert(co);
+    assert(chan);
+    assert(msg_ptr);
+
+    co_t *writer;   // coroutine write to channel blocked
+
+    if (chan_len(chan) > 0) {
+        chan__pop(chan, msg_ptr);
+        if ((writer = co_queue_pop(&chan->wq)) != NULL) {
+            // push cached message
+            chan__push(chan, writer->chan_msg);
+            // wake up the writer
+            co_queue_push(&((co_sch_t *)co->await_t.sch)->q, writer);
+        }
+    } else if ((writer = co_queue_pop(&chan->wq)) != NULL) {
+        // read cached message from writer
+        *msg_ptr = writer->chan_msg;
+        // wake up the writer
+        co_queue_push(&((co_sch_t *)co->await_t.sch)->q, writer);
+    } else {
+        // save message address for writing
+        co->chan_msg = msg_ptr;             // NOTE: the stored value type is void**
+        // sleep in background
+        co_queue_push(&chan->rq, co);       // put into blocking queue
+        co->await_t.sch->stack_top = NULL;  // remove from scheduler
+    }
+
+    return co;
+}
+
+inline static co_t *chan_try_write(co_t *co, chanptr_t chan, void *msg)
+{
+    assert(co);
+    assert(chan);
+
+    co_t *reader;   // coroutine read from channel blocked
+
+    // 1. feed blocked reader first
+    // 2. feed message buffer
+    // 3. cache message in coroutine
+    if ((reader = co_queue_pop(&chan->rq)) != NULL) {
+        // send message to reader, the stored value type of chan_msg should be void**
+        *(void **)reader->chan_msg = msg;
+        // wake up the reader
+        co_queue_push(&((co_sch_t *)co->await_t.sch)->q, reader);
+    } else if (chan->cap > chan_len(chan)) {
+        chan__push(chan, msg);
+    } else {
+        // cache message for reading
+        co->chan_msg = msg;
+        // sleep in background
+        co_queue_push(&chan->wq, co);
+        co->await_t.sch->stack_top = NULL;
+    }
+
+    return co;
 }
 
 #endif //COGO_CO_H

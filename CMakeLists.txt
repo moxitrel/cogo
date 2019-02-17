@@ -6,3 +6,4 @@ project(cogo
 enable_testing()
 
 add_subdirectory(test)
+add_subdirectory(example EXCLUDE_FROM_ALL)
