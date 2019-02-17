@@ -1,5 +1,9 @@
 /*
 
+* Drawbacks
+- Must specify the correct line numbers (__LINE__) of co_yield().
+- Avoid using local variables. (Local variables become invalid after co_yield())
+
 * API  (!!! not type safe !!!)
 - co_begin (gen_t *, ...) :: mark coroutine begin. List with line numbers of co_yield() and co_return().
 - co_end   (gen_t *)      :: mark coroutine end.
@@ -8,15 +12,14 @@
 
 - int co_state(gen_t *)   :: get the current running state.
 
-
 * Usage
 
 // 1. include header
-#include "gen_lineno.h"
+#include "gen_line_no.h"
 
 // 2. inherit gen_t (put in first)
 typedef struct {
-    gen_t co;
+    gen_t gen_t;
 
     //
     // declare vars for coroutine function
@@ -36,7 +39,7 @@ void co_fun(co_fun_t *co)
     int *i = &co->i;
 
     // 4. mark coroutine begin
-    co_begin(co,44,46);     // list line numbers (__LINE__) of co_yield() and co_return()
+    co_begin(co,44,46);     // list line numbers (__LINE__) of co_yield()
 
 
     // 5. user codes (don't use local variables)
@@ -71,11 +74,11 @@ void example(void)
 * Internal
 
     switch (pc) {
-    case  0: break;         // begin
+    case  0: break;         // coroutine begin
     case 11: goto yield_11; // restore
     ...                     // restore
     case  N: goto yield_N;  // restore
-    default: return;        // end
+    default: return;        // coroutine end
     }
 
     ...
@@ -103,37 +106,31 @@ void f(gen_t *co)
 ** Expand Macro
 void f(gen_t *co)
 {
- //
- // co_begin(co, 11);
- //
-    switch (co->pc) {
-    case  0: break;             // coroutine begin
-    case 11: goto CO_YIELD_11;  // restore
-    default: return;            // coroutine end
-    }
+    switch (co->pc) {           //
+    case  0: break;             //
+    case 11: goto CO_YIELD_11;  // co_begin(co, 11);
+    default: return;            //
+    }                           //
 
     for (co->i = 0; ; co->i++) {
-     //
-     // co_yield(co);
-     //
-        co->pc = 11;    // 1. save restore point, next call will be "case 11: goto CO_YIELD_11"
-        return;         // 2. yield
-CO_YIELD_11:;           // 3. put a label after each return as restore point
+
+        co->pc = 11;            //
+        return;                 // co_yield(co);
+CO_YIELD_11:;                   //
+
     }
 
- //
- // co_end(co);
- //
-    pc = -1;
+    pc = -1;                    // co_end(co);
 }
 
 
 * See Also
-- Coroutines in C (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
+- Coroutines in C               (https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html)
+- P99, advanced macro tricks    (http://p99.gforge.inria.fr/p99-html/index.html)
 
 */
-#ifndef COGOTO_GEN_H
-#define COGOTO_GEN_H
+#ifndef COGO_GEN_H
+#define COGO_GEN_H
 
 #ifndef assert
 #   define assert(...)  /* nop */
@@ -154,20 +151,15 @@ typedef struct {
 } gen_t;
 
 // gen_t.pc
-#define GEN_PC(CO)      (((gen_t *)(CO))->pc)
+#define GEN_PC(GEN)     (((gen_t *)(GEN))->pc)
 
 // get the current running state
-inline static int co_state(const gen_t *const co)
-{
-    assert(co);
-    return co->pc;
-}
+#define co_state(GEN)   GEN_PC(GEN)
 
-// co_begin(gen_t *, ...);
-// Mark coroutine begin.
-#define co_begin(CO, ...)                               \
+// co_begin(gen_t *, ...): mark coroutine begin.
+#define co_begin(GEN, ...)                              \
 do {                                                    \
-    switch (GEN_PC(CO)) {                               \
+    switch (GEN_PC(GEN)) {                              \
     case  0:                /* coroutine begin  */      \
         break;                                          \
     case -1:                /* coroutine end    */      \
@@ -175,36 +167,34 @@ do {                                                    \
  /* case  N:              *//* restore          */      \
  /*     goto CO_YIELD_N;  */                            \
     MAP(CASE_GOTO, __VA_ARGS__);                        \
-    default:                /* invalid _pc      */      \
+    default:                /* invalid  pc      */      \
         assert(((void)"pc isn't valid.", 0));           \
         goto CO_END;                                    \
     }                                                   \
 } while (0)
 
-// co_yield(gen_t *);
-// Yield from the coroutine.
-#define co_yield(CO, ...)                                                               \
+// co_yield(gen_t *): yield from the coroutine.
+#define co_yield(GEN, ...)                                                              \
 do {                                                                                    \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
-    GEN_PC(CO) = __LINE__;      /* 1. save the restore point, at label YIELD_N */       \
+    GEN_PC(GEN) = __LINE__;     /* 1. save the restore point, at label YIELD_N */       \
     goto CO_END;                /* 2. return */                                         \
 CO_LABEL(__LINE__):;            /* 3. put label after each *return* as restore point */ \
 } while (0)
 
-// co_return(gen_t *);
-// Return from the coroutine. (coroutine is finished)
-#define co_return(CO, ...)                                                              \
+// co_return(): end coroutine and return.
+#define co_return(...)                                                                  \
 do {                                                                                    \
     __VA_ARGS__;                /* run before return, intent for handle return value */ \
     goto CO_RETURN;             /* return */                                            \
+CO_LABEL(__LINE__):;            /* redundant label for co_begin() */                    \
 } while (0)
 
-// co_end(gen_t *)
-// Mark coroutine end.
-#define co_end(CO)                          \
+// co_end(gen_t *): mark coroutine end.
+#define co_end(GEN)                         \
 do {                                        \
 CO_RETURN:                                  \
-    GEN_PC(CO) = -1;   /* finish */         \
+    GEN_PC(GEN) = -1;       /* finish */    \
 CO_END:;                                    \
 } while (0)
 
@@ -245,7 +235,6 @@ CO_END:;                                    \
 //
 // See: https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments
 //      http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
-//      P99, advanced macro tricks (http://p99.gforge.inria.fr/p99-html/index.html)
 //
 #define LEN(...)                            \
 LEN_(                                       \
@@ -297,4 +286,4 @@ LEN_(                                       \
 #define MAP_18(F, X, ...) F(X); MAP_17(F, __VA_ARGS__)
 #define MAP_19(F, X, ...) F(X); MAP_18(F, __VA_ARGS__)
 
-#endif // COGOTO_GEN_H
+#endif // COGO_GEN_H

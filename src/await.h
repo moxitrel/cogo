@@ -1,71 +1,93 @@
-#ifndef COGOTO_AWAIT_H
-#define COGOTO_AWAIT_H
+/*
+
+* API  (!!! not type safe !!!)
+- co_await(await_t *, await_t *)    :: call another coroutine.
+
+- await_t AWAIT(void(*)(await_t *)) :: await_t constructor.
+- await_run(await_t *)              :: run a coroutine until finish.
+
+*/
+#ifndef COGO_AWAIT_H
+#define COGO_AWAIT_H
 
 #include "gen.h"
-#include <stddef.h>
 
-// await_t: support call stack.
-typedef struct await_t {
+typedef struct await_t     await_t;
+typedef struct await_sch_t await_sch_t;
+
+// await_t: gen_t with call stack support.
+struct await_t {
     // inherit gen_t
-    gen_t gen;
+    gen_t gen_t;
 
     // the coroutine function
-    void (*const fun)(struct await_t *);
+    void (*fun)(await_t *);
 
-    // The parent who call me. (build call stack)
-    struct await_t *caller;
+    // the lower call stack frame (who call me)
+    await_t *caller;
 
-    // the child who called by me, (the new call stack top), temporarily store.
-    struct await_t *stack_top;
-} await_t;
+    // scheduler, inited by co_await() or await_run()
+    await_sch_t *sch;
+};
 
-#define AWAIT(FUN)   ((await_t){.fun = (void (*)(await_t *))(FUN),})
+// await_t scheduler
+struct await_sch_t {
+    // call stack top, the coroutine run by scheduler
+    await_t *stack_top;
+};
 
-void await__await(await_t *co, await_t *callee)
+// await_t AWAIT(void(*)(await_t *): await_t constructor, **sch isn't inited**.
+#define AWAIT(FUN) ((await_t){          \
+    .fun = (void(*)(await_t *))(FUN),   \
+})
+
+// co_await(await_t *, await_t *): call another coroutine.
+#define co_await(AWAIT, CALLEE) co_yield(await__call((await_t *)(AWAIT), (await_t *)(CALLEE)))
+
+// push callee to call stack
+inline static await_t *await__call(await_t *await, await_t *callee)
 {
-    assert(co);
+    assert(await);
+    assert(await->sch);
     assert(callee);
 
-    callee->caller = co;        // (push)
-    co->stack_top = callee;     // record the new stack top temporarily
+    // call stack push
+    callee->caller = await;
+    callee->sch    = await->sch;
+    await->sch->stack_top = callee;  // set new stack top
+
+    return await;
 }
 
-// Run until yield, and return the call stack top.
-// Return NULL if coroutine finished.
-await_t *await_step(await_t *co)
+// run the coroutine at stack top until yield
+inline static void sch_step(await_sch_t *sch)
 {
-    assert(co);
+    assert(sch);
+    assert(sch->stack_top);
 
-    if (co_state(&co->gen) < 0) {
-        // set caller as the new stack top, (pop)
-        co = co->caller;
+    if (co_state(sch->stack_top) < 0) {
+        // call stack pop
+        sch->stack_top = sch->stack_top->caller;
     } else {
-        co->stack_top = NULL;   // clear
-        co->fun(co);
-        if (co->stack_top != NULL) {
-            // set callee as the new stack top
-            co = co->stack_top;
-        }
+        // run
+        sch->stack_top->fun(sch->stack_top);
     }
-
-    return co;
 }
 
-// Run the coroutine until finished.
-void await_run(await_t *co)
+// run the coroutine until finished.
+static void await_run(void *await)
 {
-    while (co != NULL) {
-        co = await_step(co);
+    assert(await);
+
+    // associate coroutine with a scheduler
+    await_sch_t sch = {
+        .stack_top = (await_t *)await,
+    };
+    ((await_t *)await)->sch = &sch;
+
+    while (sch.stack_top) {
+        sch_step(&sch);
     }
 }
 
-// Call another coroutine. (await)
-// co_await(await_t *, await_t *);
-#define co_await(CO, CALLEE)                    \
-do {                                            \
-    await_t *_co = (await_t *)(CO);             \
-    await__await(_co, (await_t *)(CALLEE));     \
-    co_yield(_co);                              \
-} while (0)
-
-#endif // COGOTO_AWAIT_H
+#endif // COGO_AWAIT_H
