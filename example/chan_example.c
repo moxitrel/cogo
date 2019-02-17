@@ -9,7 +9,7 @@
 
 typedef struct {
     co_t    co;
-    chan_t *chan;
+    chanptr_t chan;
     time_t  now;
     void   *msg;
 } waiter_t;
@@ -25,7 +25,7 @@ void waiter(waiter_t *co)
     co_end(co);
 }
 
-// waiter_t WAITER(chan_t *);
+// waiter_t WAITER(chanptr_t *);
 #define WAITER(C) ((waiter_t){      \
     .co = CO(waiter),               \
     .chan = (C),                    \
@@ -35,7 +35,7 @@ void waiter(waiter_t *co)
 
 typedef struct {
     co_t co;
-    chan_t *chan;
+    chanptr_t chan;
     waiter_t waiter;
     time_t      now;
     intmax_t    i;
@@ -70,6 +70,6 @@ void counter(counter_t *co)
 
 int main(void)
 {
-    chan_t c = CHAN();
-    co_run(&COUNTER(&c));
+    chanptr_t c = CHANPTR(0);
+    co_run(&COUNTER(c));
 }

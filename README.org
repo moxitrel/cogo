@@ -1,5 +1,5 @@
 * Introduction
-A stackless coroutine library written in pure C and C++, implemented yield, await, concurrency and blocking.
+A stackless coroutine library for C/C++, implemented yield, await, concurrency and channel.
 
 * Features
 - Easy to use
@@ -10,7 +10,7 @@ A stackless coroutine library written in pure C and C++, implemented yield, awai
 * Overview
 *** C++
 #+BEGIN_SRC C++
-#include "coroutine.h"
+#include "cogo.h"
 
 class <T> : public co_t {
     //
@@ -32,13 +32,13 @@ class <T> : public co_t {
 
 *** C
 #+BEGIN_SRC C
-#include "coroutine.h"
+#include "cogo.h"
 
 typedef struct {
-    co_t co;
+    co_t co_t;
 
     //
-    // declare local variables, return values as struct filed
+    // declare coroutine local variables, return values as struct filed
     //
 } <T>;
 
@@ -55,17 +55,14 @@ void fun(<T> *co)
 #+END_SRC
 
 * Example
-- [[./src/coroutine_sched_example.c][coroutine_sched_example.c]]
-- [[./src/coroutine_blocking_example.cpp][coroutine_blocking_example.cpp]]
-
+** Natural number generator
 *** C++
 #+BEGIN_SRC C++
-#include "coroutine.h"
+#include "cogo.h"
 
-// natural number generator
 struct Nat : public co_t {
                     //
-    int value;      // declare local variable and return values
+    int value;      // declare local variables and return values
                     //
 
     void operator()()
@@ -84,23 +81,22 @@ struct Nat : public co_t {
 
 int main()
 {
-    Nat nat;
-    nat();  // nat.value: 0
-    nat();  // nat.value: 1
-    nat();  // nat.value: 2
+    Nat n;
+    n();    // n.value: 0
+    n();    // n.value: 1
+    n();    // n.value: 2
 }
 #+END_SRC
 
 *** C
 #+BEGIN_SRC C
-#include "coroutine.h"
+#include "cogo.h"
 
-// natural number generator
 typedef struct {
-    co_t co;
+    co_t co_t;
 
                 //
-    int value;  // declare local variables, return values as struct filed
+    int value;  // declare local variables and return values
                 //
 } nat_t;
 
@@ -109,7 +105,7 @@ void nat(nat_t *co)
     co_begin(co);
 
                                             //
-    for (co->value = 0; ; co->value ++) {   //
+    for (co->value = 0; ; co->value++) {    //
         co_yield(co);                       // user code
     }                                       //
                                             //
@@ -119,13 +115,13 @@ void nat(nat_t *co)
 
 int main()
 {
-    nat_t x = {
-        .co = CO(nat),
+    nat_t n = {
+        .co_t = CO(nat),
     };
 
-    nat(&x);            // x.value: 0
-    nat(&x);            // x.value: 1
-    nat(&x);            // x.value: 2
+    nat(&n);    // n.value: 0
+    nat(&n);    // n.value: 1
+    nat(&n);    // n.value: 2
 }
 #+END_SRC
 
@@ -137,9 +133,9 @@ int main()
 *** C++
 #+BEGIN_SRC C++
 //
-// 1. include header "coroutine.h"
+// 1. include header "cogo.h"
 //
-#include "coroutine.h"
+#include "cogo.h"
 #include <stdio.h>
 
 //
@@ -228,7 +224,7 @@ int main()
 
 *** C
 #+BEGIN_SRC C
-#include "coroutine.h"      // 1. include header
+#include "cogo.h"           // 1. include header
 
 typedef struct {            // 2. inherit co_t
     co_t co;                // put co_t in first
