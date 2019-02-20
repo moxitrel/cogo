@@ -8,9 +8,8 @@
 #include <time.h>
 
 typedef struct {
-    co_t    co;
+    co_t    co_t;
     chanptr_t chan;
-    time_t  now;
     void   *msg;
 } waiter_t;
 
@@ -19,25 +18,23 @@ void waiter(waiter_t *co)
     co_begin(co);
 
     co_chan_read(co, co->chan, &co->msg);
-    co->now = time(NULL);
-    printf("%p wakeup: %s", co, ctime(&co->now));
+    printf("%p wakeup: %s", co, ctime(&(time_t){time(NULL)}));
 
     co_end(co);
 }
 
 // waiter_t WAITER(chanptr_t *);
 #define WAITER(C) ((waiter_t){      \
-    .co = CO(waiter),               \
+    .co_t = CO(waiter),             \
     .chan = (C),                    \
 })
 
 
 
 typedef struct {
-    co_t co;
+    co_t co_t;
     chanptr_t chan;
     waiter_t waiter;
-    time_t      now;
     intmax_t    i;
 } counter_t;
 
@@ -45,9 +42,7 @@ void counter(counter_t *co)
 {
     co_begin(co);
 
-    co->now = time(NULL);
-    printf("%p begin : %s", co, ctime(&co->now));
-
+    printf("%p begin : %s", co, ctime(&(time_t){time(NULL)}));
     co_start(co, &co->waiter);
 
     for (co->i = 0; co->i < ((intmax_t)1 << 31); co->i++) {
@@ -56,14 +51,12 @@ void counter(counter_t *co)
         }
     }
 
-    co->now = time(NULL);
-    printf("%p end   : %s", co, ctime(&co->now));
-
+    printf("%p end   : %s", co, ctime(&(time_t){time(NULL)}));
     co_end(co);
 }
 
 #define COUNTER(C)   ((counter_t){  \
-    .co = CO(counter),              \
+    .co_t = CO(counter),            \
     .chan = (C),                    \
     .waiter = WAITER(C),            \
 })

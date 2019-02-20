@@ -159,10 +159,18 @@ struct {                                                            \
     void *msg[N];                                                   \
 }
 
-typedef chan_t(0)  *chanptr_t;
+typedef chan_t(0)   *chanptr_t;
 #define CHANPTR(N)  ((chanptr_t)&(chan_t(N)){.cap = (N)})
+#define CHAN_INIT(P,N)  (*(chanptr_t)(P) = *(chanptr_t)&(chan_t(0)){.cap = (N)})
 
-inline static size_t chan_len(const chanptr_t chan)
+// co_chan_write(co_t *, chanptr_t, void *);
+#define co_chan_write(CO,CHAN,MSG)  co_yield(chan__write((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
+
+// co_chan_read(co_t *, chanptr_t, void **);
+#define co_chan_read(CO,CHAN,MSG)   co_yield(chan__read((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
+
+
+inline static size_t chan_len(chanptr_t chan)
 {
     return chan->msg_end - chan->msg_begin;
 }
@@ -170,24 +178,22 @@ inline static size_t chan_len(const chanptr_t chan)
 // enqueue
 inline static void chan__push(chanptr_t chan, void *msg)
 {
-    chan->msg[chan->msg_end] = msg;
-    chan->msg_end = (chan->msg_end + 1) % chan->cap;
+    chan->msg[chan->msg_end++] = msg;
+    if (chan->msg_end >= chan->cap) {
+        chan->msg_end = 0;
+    }
 }
 
 // dequeue
 inline static void chan__pop(chanptr_t chan, void **msg_ptr)
 {
-    *msg_ptr = chan->msg[chan->msg_begin];
-    chan->msg_begin = (chan->msg_begin + 1) % chan->cap;
+    *msg_ptr = chan->msg[chan->msg_begin++];
+    if (chan->msg_begin >= chan->cap) {
+        chan->msg_begin = 0;
+    }
 }
 
-// co_chan_write(co_t *, chanptr_t, void *);
-#define co_chan_write(CO,CHAN,MSG)  co_yield(chan_try_write((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
-
-// co_chan_read(co_t *, chanptr_t, void **);
-#define co_chan_read(CO,CHAN,MSG)   co_yield(chan_try_read ((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
-
-inline static co_t *chan_try_read(co_t *co, chanptr_t chan, void **msg_ptr)
+inline static co_t *chan__read(co_t *co, chanptr_t chan, void **msg_ptr)
 {
     assert(co);
     assert(chan);
@@ -219,7 +225,7 @@ inline static co_t *chan_try_read(co_t *co, chanptr_t chan, void **msg_ptr)
     return co;
 }
 
-inline static co_t *chan_try_write(co_t *co, chanptr_t chan, void *msg)
+inline static co_t *chan__write(co_t *co, chanptr_t chan, void *msg)
 {
     assert(co);
     assert(chan);
