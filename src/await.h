@@ -42,7 +42,7 @@ struct await_sch_t {
 })
 
 // co_await(await_t *, await_t *): call another coroutine.
-#define co_await(AWAIT, CALLEE) co_yield(await__call((await_t *)(AWAIT), (await_t *)(CALLEE)))
+#define co_await(AWAIT, CALLEE) co_yield(await__await((await_t *)(AWAIT), (await_t *)(CALLEE)))
 
 // push callee to call stack
 inline static await_t *await__await(await_t *await, await_t *callee)

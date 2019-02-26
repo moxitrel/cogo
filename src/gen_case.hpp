@@ -16,13 +16,12 @@ protected:
     int _pc = 0;
 public:
     // get the current running state
-    int state() const
+    int state() const noexcept
     {
         return _pc;
     }
 };
 
-// mark coroutine begin.
 // gen_t::co_begin();
 #define co_begin(...)                                   \
     switch (gen_t::_pc) {                               \
@@ -34,7 +33,7 @@ public:
     case  0:                    /* coroutine begin  */  \
 
 
-// co_yield();
+// gen_t::co_yield();
 #define co_yield(...)                                                                           \
 do {                                                                                            \
         gen_t::_pc = __LINE__;  /* 1. save the restore point, at label case __LINE__ */         \
@@ -43,16 +42,14 @@ do {                                                                            
 } while (0)
 
 
-// end coroutine and return.
 // gen_t::co_return();
-#define co_return(...)                                                                          \
-do {                                                                                            \
-        goto CO_RETURN;     /* return */                                                    \
+#define co_return(...)                                  \
+do {                                                    \
+        goto CO_RETURN;     /* return */                \
 } while (0)
 
 
-// mark coroutine end.
-// gen_t::co_end()
+// gen_t::co_end();
 #define co_end()                                        \
     CO_RETURN:                                          \
         gen_t::_pc = -1;   /* finish successfully */    \
