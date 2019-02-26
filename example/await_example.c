@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+// Fibonacci number
 typedef struct fibonacci {
     await_t await_t;
     unsigned int n;             // arg

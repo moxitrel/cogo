@@ -107,14 +107,17 @@ inline static void co_queue_merge(co_queue_t *q, const co_queue_t *q1)
 // co_t
 //
 
-// co_t CO(void(*)(co_t *)): co_t constructor, **await_t.sch isn't inited**.
-#define CO(FUN) ((co_t){.await_t = AWAIT(FUN),})
+// co_t CO(void(*)(co_t *)): co_t constructor.
+#define CO(FUN) ((co_t){                                    \
+    /* await_t.sch inited by co_start() or await_run()*/    \
+    .await_t = AWAIT(FUN),                                  \
+})
 
 // co_start(co_t *, co_t *): add a new coroutine to the scheduler.
-#define co_start(CO, CO2)  co_yield(co__concur((co_t *)(CO), (co_t *)(CO2)))
+#define co_start(CO, CO2)  co_yield(co__start((co_t *)(CO), (co_t *)(CO2)))
 
 // add co2 to the coroutine queue
-inline static co_t *co__concur(co_t *co, co_t *co1)
+inline static co_t *co__start(co_t *co, co_t *co1)
 {
     assert(co);
     assert(co1);
