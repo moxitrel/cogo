@@ -28,6 +28,7 @@ struct co_t {
     // build coroutine queue (run concurrently)
     co_t *next;
 
+    // cache channel message
     // when write blocked, the stored value type is void *
     // when read  blocked, the stored value type is void **
     void *chan_msg;
@@ -124,6 +125,7 @@ inline static co_t *co__concur(co_t *co, co_t *co1)
 }
 
 // run co as the entry coroutine, until all finished.
+// FIXME: scheduler stop successfully while expected blocking forever by channel.
 static void co_run(void *co)
 {
     assert(co);
@@ -149,45 +151,53 @@ static void co_run(void *co)
 
 #define chan_t(N)                                                   \
 struct {                                                            \
-    /* all coroutines blocked by this channel */                    \
-    co_queue_t rq;  /* blocked when read */                         \
-    co_queue_t wq;  /* blocked when write */                        \
+    /* rq, wq: all coroutines blocked by this channel */            \
+    co_queue_t rq;  /* blocked coroutines when read   */            \
+    co_queue_t wq;  /* blocked coroutines when write  */            \
                                                                     \
-    size_t msg_begin;                                               \
-    size_t msg_end;                                                 \
+    /* message buffer queue */                                      \
+    size_t msg_head;                                                \
+    size_t msg_end; /* just behind msg_tail */                      \
     size_t cap;     /* the max number of messages can be buffered */\
     void *msg[N];                                                   \
 }
 
-typedef chan_t(0)  *chanptr_t;
+typedef chan_t(1)   *chanptr_t;
 #define CHANPTR(N)  ((chanptr_t)&(chan_t(N)){.cap = (N)})
+#define CHAN_INIT(P,N)  (*(chanptr_t)(P) = *(chanptr_t)&(chan_t(1)){.cap = (N)})
 
-inline static size_t chan_len(const chanptr_t chan)
+// co_chan_write(co_t *, chanptr_t, void *);
+#define co_chan_write(CO,CHAN,MSG)  co_yield(chan__write((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
+
+// co_chan_read(co_t *, chanptr_t, void **);
+#define co_chan_read(CO,CHAN,MSG)   co_yield(chan__read((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
+
+
+inline static size_t chan_len(chanptr_t chan)
 {
-    return chan->msg_end - chan->msg_begin;
+    assert(chan);
+    return chan->msg_end - chan->msg_head;
 }
 
 // enqueue
 inline static void chan__push(chanptr_t chan, void *msg)
 {
-    chan->msg[chan->msg_end] = msg;
-    chan->msg_end = (chan->msg_end + 1) % chan->cap;
+    chan->msg[chan->msg_end++] = msg;
+    if (chan->msg_end >= chan->cap) {
+        chan->msg_end = 0;
+    }
 }
 
 // dequeue
 inline static void chan__pop(chanptr_t chan, void **msg_ptr)
 {
-    *msg_ptr = chan->msg[chan->msg_begin];
-    chan->msg_begin = (chan->msg_begin + 1) % chan->cap;
+    *msg_ptr = chan->msg[chan->msg_head++];
+    if (chan->msg_head >= chan->cap) {
+        chan->msg_head = 0;
+    }
 }
 
-// co_chan_write(co_t *, chanptr_t, void *);
-#define co_chan_write(CO,CHAN,MSG)  co_yield(chan_try_write((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
-
-// co_chan_read(co_t *, chanptr_t, void **);
-#define co_chan_read(CO,CHAN,MSG)   co_yield(chan_try_read ((co_t *)(CO), (chanptr_t)(CHAN), (MSG)))
-
-inline static co_t *chan_try_read(co_t *co, chanptr_t chan, void **msg_ptr)
+inline static co_t *chan__read(co_t *co, chanptr_t chan, void **msg_ptr)
 {
     assert(co);
     assert(chan);
@@ -219,7 +229,7 @@ inline static co_t *chan_try_read(co_t *co, chanptr_t chan, void **msg_ptr)
     return co;
 }
 
-inline static co_t *chan_try_write(co_t *co, chanptr_t chan, void *msg)
+inline static co_t *chan__write(co_t *co, chanptr_t chan, void *msg)
 {
     assert(co);
     assert(chan);

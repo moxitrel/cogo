@@ -45,7 +45,7 @@ struct await_sch_t {
 #define co_await(AWAIT, CALLEE) co_yield(await__call((await_t *)(AWAIT), (await_t *)(CALLEE)))
 
 // push callee to call stack
-inline static await_t *await__call(await_t *await, await_t *callee)
+inline static await_t *await__await(await_t *await, await_t *callee)
 {
     assert(await);
     assert(await->sch);
