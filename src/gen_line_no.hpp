@@ -27,14 +27,13 @@ protected:
     int _pc = 0;
 public:
     // get the current running state
-    int state() const
+    int state() const noexcept
     {
         return _pc;
     }
 };
 
-// mark coroutine begin.
-// gen_t::co_begin(...);
+// gen_t::co_begin(...): mark coroutine begin.
 #define co_begin(...)                                   \
 do {                                                    \
     switch (gen_t::_pc) {                               \
@@ -52,7 +51,7 @@ do {                                                    \
 } while (0)
 
 
-// co_yield(): yield from the coroutine.
+// gen_t::co_yield(): yield from the coroutine.
 #define co_yield(...)                                                                           \
 do {                                                                                            \
     gen_t::_pc = __LINE__;      /* 1. save the restore point, at label CO_YIELD_N */            \
@@ -61,7 +60,7 @@ CO_LABEL(__LINE__):;            /* 3. put a label after each return as restore p
 } while (0)
 
 
-// co_return(): end coroutine and return.
+// gen_t::co_return(): end coroutine and return.
 #define co_return(...)                                                                          \
 do {                                                                                            \
     goto CO_RETURN;             /* return */                                                    \
@@ -69,7 +68,7 @@ CO_LABEL(__LINE__):;            /* redundant label for co_begin() */            
 } while (0)
 
 
-// co_end(): mark coroutine end.
+// gen_t::co_end(): mark coroutine end.
 #define co_end(...)                                         \
 do {                                                        \
 CO_RETURN:                                                  \

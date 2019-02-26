@@ -17,14 +17,14 @@ protected:
     int _state = 0;
 public:
     // get the running state.
-    int state() const 
+    int state() const noexcept
     {
         return _state;
     }
 };
 
 
-// co_begin();
+// gen_t::co_begin();
 #define co_begin(...)                               \
 do {                                                \
     if (gen_t::_pc) {                               \
@@ -34,7 +34,7 @@ do {                                                \
 } while (0)
 
 
-// co_yield();
+// gen_t::co_yield();
 #define co_yield(...)                                                                           \
 do {                                                                                            \
     gen_t::_pc = &&CO_LABEL(__LINE__);  /* 1. save the restore point, at label CO_YIELD_N */    \
@@ -43,10 +43,10 @@ CO_LABEL(__LINE__):;                    /* 3. put label after each *return* as r
 } while (0)
 
 
-// co_return();
-#define co_return(...)                                                                          \
-do {                                                                                            \
-    goto CO_RETURN;             /* return */                                                    \
+// gen_t::co_return();
+#define co_return(...)                      \
+do {                                        \
+    goto CO_RETURN;         /* return */    \
 } while (0)
 
 
@@ -55,7 +55,7 @@ do {                                                                            
 do {                                        \
 CO_RETURN:                                  \
     gen_t::_pc = &&CO_END;                  \
-    gen_t::_state = -1;    /* finish */     \
+    gen_t::_state = -1;     /* finish */    \
 CO_END:;                                    \
 } while (0)
 
