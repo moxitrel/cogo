@@ -22,10 +22,6 @@ public:
     }
 };
 
-//
-// NOTE: co_begin(), co_end(), co_yield(), co_return() are not expressions. They are statements.
-//
-
 // mark coroutine begin.
 // gen_t::co_begin();
 #define co_begin(...)                                   \
@@ -38,11 +34,9 @@ public:
     case  0:                    /* coroutine begin  */  \
 
 
-// yield from the coroutine
-// gen_t::co_yield();
+// co_yield();
 #define co_yield(...)                                                                           \
 do {                                                                                            \
-        __VA_ARGS__;            /* run before return, intent for handle return value */         \
         gen_t::_pc = __LINE__;  /* 1. save the restore point, at label case __LINE__ */         \
         goto CO_END;            /* 2. return */                                                 \
     case __LINE__:;             /* 3. put a case after each return as restore point */          \
@@ -53,17 +47,16 @@ do {                                                                            
 // gen_t::co_return();
 #define co_return(...)                                                                          \
 do {                                                                                            \
-        __VA_ARGS__;            /* run before return, intent for handle return value */         \
-        goto CO_RETURN;         /* return */                                                    \
+        goto CO_RETURN;     /* return */                                                    \
 } while (0)
 
 
 // mark coroutine end.
 // gen_t::co_end()
-#define co_end()                                                \
-    CO_RETURN:                                                  \
-        gen_t::_pc = -1;   /* finish coroutine successfully */  \
-    CO_END:;                                                    \
+#define co_end()                                        \
+    CO_RETURN:                                          \
+        gen_t::_pc = -1;   /* finish successfully */    \
+    CO_END:;                                            \
     }
 
 #endif // COGO_GEN_H

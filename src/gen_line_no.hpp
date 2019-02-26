@@ -33,10 +33,6 @@ public:
     }
 };
 
-//
-// NOTE: co_begin(), co_end(), co_yield(), co_return() are not expressions. They are statements.
-//
-
 // mark coroutine begin.
 // gen_t::co_begin(...);
 #define co_begin(...)                                   \
