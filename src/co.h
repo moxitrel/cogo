@@ -1,12 +1,12 @@
 /*
 
 * API
-- co_start(co_t *, co_t *)  :: run a new coroutine concurrently.
+- co_start     (co_t *, co_t *)             :: run a new coroutine concurrently.
 - co_chan_write(co_t *, chanptr_t, void *)  :: send a message to channel.
 - co_chan_read (co_t *, chanptr_t, void **) :: receive a message from channel.
 
-- co_t CO(void(*)(co_t *))  :: co_t constructor.
-- co_run(co_t *)            :: run until all coroutine finished.
+- CO(void(*)(co_t *)) -> co_t   :: co_t constructor.
+- co_run(co_t *)                :: run until all coroutine finished.
 
 */
 #ifndef COGO_CO_H
@@ -113,9 +113,6 @@ inline static void co_queue_merge(co_queue_t *q, const co_queue_t *q1)
     .await_t = AWAIT(FUN),                                  \
 })
 
-// co_start(co_t *, co_t *): add a new coroutine to the scheduler.
-#define co_start(CO, CO2)  co_yield(co__start((co_t *)(CO), (co_t *)(CO2)))
-
 // add co2 to the coroutine queue
 inline static co_t *co__start(co_t *co, co_t *co1)
 {
@@ -126,6 +123,9 @@ inline static co_t *co__start(co_t *co, co_t *co1)
     co_queue_push(&((co_sch_t *)co->await_t.sch)->q, co1);
     return co;
 }
+
+// co_start(co_t *, co_t *): add a new coroutine to the scheduler.
+#define co_start(CO, CO2)  co_yield(co__start((co_t *)(CO), (co_t *)(CO2)))
 
 // run co as the entry coroutine, until all finished.
 // FIXME: scheduler stop successfully while expected blocking forever by channel.

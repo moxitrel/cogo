@@ -21,8 +21,8 @@ class Fibonacci : public await_t {
             fib_n1 = new Fibonacci(n - 1);
             fib_n2 = new Fibonacci(n - 2);
 
-            co_await(fib_n1);  // wait f(n-1) to finish
-            co_await(fib_n2);  // wait f(n-2) to finish
+            co_await(fib_n1);   // wait f(n-1) to finish
+            co_await(fib_n2);   // wait f(n-2) to finish
             v = fib_n1->value() + fib_n2->value();
 
             delete fib_n1;

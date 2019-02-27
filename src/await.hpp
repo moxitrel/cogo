@@ -2,6 +2,7 @@
 
 * API
 - co_await(await_t &)   :: call another coroutine.
+- co_await(await_t *)   :: ~
 
 - .run()                :: run the coroutine until finish.
 
@@ -13,10 +14,11 @@
 
 class await_t;
 class await_sch_t;
+class co_t;
 
-// await_t: add call stack support, behave like function
+// awaitable context: add call stack support, behave like function
 //  .run(): keep running until finish.
-class await_t : public gen_t {
+class await_t : protected gen_t {
     // the coroutine function
     virtual void operator()() = 0;
 
@@ -26,11 +28,13 @@ class await_t : public gen_t {
     // scheduler, inited by co_await() or .run()
     await_sch_t *sch;
 
-    friend await_sch_t;
 protected:
-    // co_await()
-    void _await(await_t &callee) noexcept;
-    void _await(await_t *callee) noexcept;
+    friend await_sch_t;
+    friend co_t;
+
+    // co_await(): call another coroutine, push callee into call stack
+    void _await(await_t &) noexcept;
+    void _await(await_t *) noexcept;
 
 public:
     virtual ~await_t() = default;
@@ -42,22 +46,26 @@ public:
 // scheduler for await_t
 class await_sch_t {
     // call stack top, the coroutine run by scheduler
-    await_t *stack_top; // inited by .run()
+    await_t *stack_top; // inited by await_t.run()
 
     friend await_t;
-protected:
+    friend co_t;
+
     // run until yield
     void step();
 };
 
 
+//
+// await_t
+//
 inline void await_t::_await(await_t &callee) noexcept
 {
-    assert(this->sch);
+    assert(sch);
 
     // call stack push
     callee.caller = this;
-    callee.sch = this->sch;
+    callee.sch = sch;
     callee.sch->stack_top = &callee;    // set new stack top
 }
 
@@ -67,7 +75,8 @@ inline void await_t::_await(await_t *callee) noexcept
     _await(*callee);
 }
 
-// await_t::co_await(await_t &co): call another coroutine.
+// await_t::co_await(await_t &)
+// await_t::co_await(await_t *)
 #define co_await(CO)                        \
 do {                                        \
     _await(CO);                             \
@@ -75,6 +84,22 @@ do {                                        \
 } while (0)
 
 
+inline void await_t::run()
+{
+    await_sch_t await_sch;
+
+    await_sch.stack_top = this;
+    sch = &await_sch;
+
+    while (await_sch.stack_top) {
+        await_sch.step();
+    }
+}
+
+
+//
+// await_sch_t
+//
 inline void await_sch_t::step()
 {
     if (stack_top->state() < 0) {
@@ -83,18 +108,6 @@ inline void await_sch_t::step()
     } else {
         // run
         stack_top->operator()();
-    }
-}
-
-inline void await_t::run()
-{
-    await_sch_t scheduler;
-
-    scheduler.stack_top = this;
-    sch = &scheduler;
-
-    while (scheduler.stack_top) {
-        scheduler.step();
     }
 }
 

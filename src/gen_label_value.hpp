@@ -1,3 +1,14 @@
+/*
+
+* API
+- co_begin ()   :: mark coroutine begin. List with line numbers of co_yield() and co_return().
+- co_end   ()   :: mark coroutine end.
+- co_yield ()   :: yield from coroutine.
+- co_return()   :: return with ending coroutine.
+
+- .state() -> int   :: get the current running state.
+
+*/
 #ifndef COGO_GEN_H
 #define COGO_GEN_H
 
