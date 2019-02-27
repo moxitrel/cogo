@@ -10,7 +10,7 @@
 - co_yield (gen_t *)      :: yield from coroutine.
 - co_return(gen_t *)      :: return with ending coroutine.
 
-- int co_state(gen_t *)   :: get the current running state.
+- co_state(gen_t *) -> int  :: get the current running state.
 
 * Usage
 

@@ -97,9 +97,9 @@ do {                                                                            
 } while (0)
 
 // co_return();
-#define co_return(...)                                                                  \
-do {                                                                                    \
-        goto CO_RETURN;     /* end coroutine */                                     \
+#define co_return(...)                                  \
+do {                                                    \
+        goto CO_RETURN;     /* end coroutine */         \
 } while (0)
 
 // co_end(gen_t *);
