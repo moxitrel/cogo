@@ -150,7 +150,7 @@ inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg)
         co_queue_push(&chan->mq, offsetof(co_msg_t, next), msg);
         if (chan_size >= chan->cap) {
             // sleep in background
-            co_queue_push_nonempty(&chan->cq, offsetof(co_t, next), co);
+            co_queue_push(&chan->cq, offsetof(co_t, next), co);
             ((cogo_co_t*)co)->sch->stack_top = NULL;
             return 1;
         }

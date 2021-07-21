@@ -43,11 +43,4 @@ static inline void* co_queue_pop_nonempty(co_queue_t* thiz, ptrdiff_t next)
     return node;
 }
 
-static inline void co_queue_push_nonempty(co_queue_t* thiz, ptrdiff_t next, void* node)
-{
-    CO_QUEUE_NEXT(thiz->tail, next) = node;
-    thiz->tail = node;
-    CO_QUEUE_NEXT(node, next) = NULL;
-}
-
 #endif  // MOXITREL_COGO_CO_IMPL_Q_H_
