@@ -13,7 +13,7 @@ CO_AWAIT    (cogo_co_t*): ...
 CO_START    (cogo_co_t*): ...
 
 co_t                                    : coroutine type to be inherited
-co_run          (co_t*)                 : run the coroutine until all finished
+co_run      (co_t*)                     : run the coroutine until all finished
 
 co_msg_t                                : channel message type
 co_chan_t                               : channel type
@@ -36,7 +36,6 @@ typedef struct co_msg   co_msg_t;
 struct co {
     // inherit cogo_co_t
     cogo_co_t cogo_co;
-
     // build coroutine queue
     co_t* next;
 };
