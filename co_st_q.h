@@ -9,7 +9,7 @@ typedef struct {
     void* tail;
 } co_queue_t;
 
-#define CO_QUEUE_NEXT(Q,N)    (*(void**)((intptr_t)(Q) + (N)))
+#define CO_QUEUE_NEXT(Q,N)    (*(void**)((uintptr_t)(Q) + (N)))
 
 static inline bool co_queue_empty(const co_queue_t* thiz)
 {
