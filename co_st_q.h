@@ -9,14 +9,14 @@ typedef struct {
     void* tail;
 } co_queue_t;
 
-#define CO_QUEUE_NEXT(Q,N)    (*(void**)((uintptr_t)(Q) + (N)))
+#define CO_QUEUE_NEXT(Q,N)    (*(void**)((intptr_t)(Q) + (N)))
 
 static inline bool co_queue_empty(const co_queue_t* thiz)
 {
     return thiz->head == NULL;
 }
 
-static inline void* co_queue_pop(co_queue_t* thiz, ptrdiff_t next)
+static inline void* co_queue_deq(co_queue_t* thiz, ptrdiff_t next)
 {
     void* node = thiz->head;
     if (!co_queue_empty(thiz)) {
@@ -25,7 +25,7 @@ static inline void* co_queue_pop(co_queue_t* thiz, ptrdiff_t next)
     return node;
 }
 
-static inline void co_queue_push(co_queue_t* thiz, ptrdiff_t next, void* node)
+static inline void co_queue_enq(co_queue_t* thiz, ptrdiff_t next, void* node)
 {
     if (co_queue_empty(thiz)) {
         thiz->head = node;
@@ -36,7 +36,7 @@ static inline void co_queue_push(co_queue_t* thiz, ptrdiff_t next, void* node)
     CO_QUEUE_NEXT(node, next) = NULL;
 }
 
-static inline void* co_queue_pop_nonempty(co_queue_t* thiz, ptrdiff_t next)
+static inline void* co_queue_deq_nonempty(co_queue_t* thiz, ptrdiff_t next)
 {
     void* node = thiz->head;
     thiz->head = CO_QUEUE_NEXT(thiz->head, next);

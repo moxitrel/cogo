@@ -47,20 +47,20 @@ struct co_sch {
     co_queue_t q;
 };
 
-// implement cogo_sch_push()
-inline int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co)
+// implement cogo_sch_enq()
+inline int cogo_sch_enq(cogo_sch_t* sch, cogo_co_t* co)
 {
     COGO_ASSERT(sch);
     COGO_ASSERT(co);
-    co_queue_push(&((co_sch_t*)sch)->q, offsetof(co_t, next), (co_t*)co);
+    co_queue_enq(&((co_sch_t*)sch)->q, offsetof(co_t, next), (co_t*)co);
     return 1;   // switch context
 }
 
-// implement cogo_sch_pop()
-inline cogo_co_t* cogo_sch_pop(cogo_sch_t* sch)
+// implement cogo_sch_deq()
+inline cogo_co_t* cogo_sch_deq(cogo_sch_t* sch)
 {
     COGO_ASSERT(sch);
-    return (cogo_co_t*)co_queue_pop(&((co_sch_t*)sch)->q, offsetof(co_t, next));
+    return (cogo_co_t*)co_queue_deq(&((co_sch_t*)sch)->q, offsetof(co_t, next));
 }
 
 static inline void co_run(void* co)
@@ -110,17 +110,17 @@ inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next)
 
     const ptrdiff_t chan_size = chan->size--;
     if (chan_size <= 0) {
-        co_queue_push(&chan->mq, offsetof(co_msg_t, next), msg_next);
+        co_queue_enq(&chan->mq, offsetof(co_msg_t, next), msg_next);
         // sleep in background
-        co_queue_push(&chan->cq, offsetof(co_t, next), co);     // append to blocking queue
+        co_queue_enq(&chan->cq, offsetof(co_t, next), co);     // append to blocking queue
         ((cogo_co_t*)co)->sch->stack_top = NULL;                // remove from scheduler
         return 1;
     } else {
-        msg_next->next = (co_msg_t*)co_queue_pop_nonempty(&chan->mq, offsetof(co_msg_t, next));
+        msg_next->next = (co_msg_t*)co_queue_deq_nonempty(&chan->mq, offsetof(co_msg_t, next));
         // wake up a writer if exists
         if (chan_size >= chan->cap) {
-            cogo_co_t* writer = (cogo_co_t*)co_queue_pop_nonempty(&chan->cq, offsetof(co_t, next));
-            return cogo_sch_push(((cogo_co_t*)co)->sch, writer);
+            cogo_co_t* writer = (cogo_co_t*)co_queue_deq_nonempty(&chan->cq, offsetof(co_t, next));
+            return cogo_sch_enq(((cogo_co_t*)co)->sch, writer);
         }
         return 0;
     }
@@ -143,15 +143,15 @@ inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg)
 
     const ptrdiff_t chan_size = chan->size++;
     if (chan_size < 0) {
-        ((co_msg_t*)co_queue_pop_nonempty(&chan->mq, offsetof(co_msg_t, next)))->next = msg;
+        ((co_msg_t*)co_queue_deq_nonempty(&chan->mq, offsetof(co_msg_t, next)))->next = msg;
         // wake up a reader
-        cogo_co_t* reader = (cogo_co_t*)co_queue_pop_nonempty(&chan->cq, offsetof(co_t, next));
-        return cogo_sch_push(((cogo_co_t*)co)->sch, reader);
+        cogo_co_t* reader = (cogo_co_t*)co_queue_deq_nonempty(&chan->cq, offsetof(co_t, next));
+        return cogo_sch_enq(((cogo_co_t*)co)->sch, reader);
     } else {
-        co_queue_push(&chan->mq, offsetof(co_msg_t, next), msg);
+        co_queue_enq(&chan->mq, offsetof(co_msg_t, next), msg);
         if (chan_size >= chan->cap) {
             // sleep in background
-            co_queue_push(&chan->cq, offsetof(co_t, next), co);
+            co_queue_enq(&chan->cq, offsetof(co_t, next), co);
             ((cogo_co_t*)co)->sch->stack_top = NULL;
             return 1;
         }
