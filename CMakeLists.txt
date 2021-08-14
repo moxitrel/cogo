@@ -1,68 +1,55 @@
 cmake_minimum_required(VERSION 3.13)
-
 project(Cogo)
-add_library(cogo)
-target_sources(cogo PRIVATE co_st.c)
 
-if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
-    include(CTest)
-    if (BUILD_TESTING)
-        include(GoogleTest)
-        find_package(GTest REQUIRED)
+set(CMAKE_C_STANDARD 99)
+add_library(cogo
+    co_st.c)
 
-        add_compile_options(-Weverything
-                -Wno-c99-extensions
-                -Wno-unused-label
-                -Wno-unreachable-code
-                -Wno-gnu-label-as-value
-                -Wno-gnu-zero-variadic-macro-arguments
+include(CTest)
+if (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
+    include(GoogleTest)
+    find_package(GTest REQUIRED)
 
-                -Wno-old-style-cast
-                -Wno-zero-as-null-pointer-constant
-                -Wno-c++98-compat
-                -Wno-c++98-compat-pedantic
-                -Wno-padded
-                -Wno-poison-system-directories
-                -Wno-global-constructors        # google-test
-                -Wno-missing-prototypes         # unit test
-        )
-        link_libraries(GTest::GTest GTest::Main)
+    add_compile_options(-Wall -Wextra
+        -Wno-c99-extensions
+        -Wno-unused-label
+        -Wno-unreachable-code
+        -Wno-gnu-label-as-value
+        -Wno-gnu-zero-variadic-macro-arguments
 
-        # yield_case
-        add_executable(yield_case_test)
-        target_sources(yield_case_test
-                PRIVATE yield_test.cpp)
-        target_compile_features(yield_case_test
-                PRIVATE cxx_std_11)
-        target_compile_definitions(yield_case_test
-                PRIVATE COGO_CASE)
-        gtest_discover_tests(yield_case_test)
+        -Wno-old-style-cast
+        -Wno-zero-as-null-pointer-constant
+        -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-padded
+        -Wno-global-constructors        # google-test
+        -Wno-missing-prototypes         # unit test
+    )
 
-        # yield_label_value
-        add_executable(yield_label_value_test)
-        target_sources(yield_label_value_test
-                PRIVATE yield_test.cpp)
-        target_compile_features(yield_label_value_test
-                PRIVATE cxx_std_11)
-        target_compile_definitions(yield_case_test
-                PRIVATE COGO_LABEL_VALUE)
-        gtest_discover_tests(yield_label_value_test)
+    set(CMAKE_CXX_STANDARD 11)
+    link_libraries(GTest::GTest GTest::Main)
 
-        # co
-        add_executable(co_test)
-        target_sources(co_test
-                PRIVATE co_test.cpp)
-        target_compile_features(co_test
-                PRIVATE cxx_std_14)
-        gtest_discover_tests(co_test)
+    # yield_case
+    add_executable(test_yield_case
+        yield_test.cpp)
+    target_compile_definitions(test_yield_case
+        PRIVATE COGO_CASE)
+    gtest_discover_tests(test_yield_case)
 
-        # co_st
-        add_executable(co_st_test)
-        target_sources(co_st_test
-                PRIVATE co_st_test.cpp)
-        target_compile_features(co_st_test
-                PRIVATE cxx_std_11)
-        gtest_discover_tests(co_st_test)
+    # yield_label_value
+    add_executable(test_yield_label_value
+        yield_test.cpp)
+    target_compile_definitions(test_yield_label_value
+        PRIVATE COGO_LABEL_VALUE)
+    gtest_discover_tests(test_yield_label_value)
 
-    endif ()
-endif ()
+    # co
+    add_executable(test_co
+        co_test.cpp)
+    gtest_discover_tests(test_co)
+
+    # co_st
+    add_executable(test_co_st
+        co_st_test.cpp)
+    gtest_discover_tests(test_co_st)
+endif()

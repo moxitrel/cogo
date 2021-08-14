@@ -3,6 +3,8 @@
 # ignore files begin with dot default
 .*
 !.gitignore
+!.editorconfig
+!.clang-format
 
 # others
 compile_commands.json

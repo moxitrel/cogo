@@ -18,11 +18,12 @@ cogo_co_t                   : coroutine type, should be inherited by user.
 cogo_sch_t                  : sheduler  type, should be inherited by user.
 cogo_sch_step(cogo_sch_t*)  : Run the current coroutine until yield or finished, return the next coroutine to be run.
 
-inline int cogo_sch_enq(cogo_sch_t*, cogo_co_t*);
-    Add a coroutine to the running queue. *need to be implemented by user*
+// TODO: add a coroutine to the running queue.
+inline int cogo_sch_add(cogo_sch_t*, cogo_co_t*);
 
-inline cogo_co_t* cogo_sch_deq(cogo_sch_t*);
-    Pop a coroutine to be run. *need to be implemented by user*
+// TODO: remove and return the next coroutine to be run.
+inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
+
 
 */
 #ifndef MOXITREL_COGO_CO_H_
@@ -54,12 +55,12 @@ struct cogo_sch {
     cogo_co_t* stack_top;
 };
 
-// push coroutine into the concurrent queue
+// add coroutine into the concurrent queue
 // switch context if return !0
-inline int cogo_sch_enq(cogo_sch_t*, cogo_co_t*);
+inline int cogo_sch_add(cogo_sch_t*, cogo_co_t*);
 
-// pop the next coroutine to be run
-inline cogo_co_t* cogo_sch_deq(cogo_sch_t*);
+// remove and rethrn the next coroutine to be run
+inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
 
 //
 // cogo_co_t
@@ -88,7 +89,7 @@ static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee)
 // CO_START(cogo_co_t*): add a new coroutine to the scheduler.
 #define CO_START(CO)                                                            \
 do {                                                                            \
-    if (cogo_sch_enq(((cogo_co_t*)(CO_THIS))->sch, (cogo_co_t*)(CO)) != 0) {    \
+    if (cogo_sch_add(((cogo_co_t*)(CO_THIS))->sch, (cogo_co_t*)(CO)) != 0) {    \
         CO_YIELD;                                                               \
     }                                                                           \
 } while (0)
@@ -110,7 +111,7 @@ inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch)
         }
         if (CO_STATE(sch->stack_top) > 0) {
             // yield
-            cogo_sch_enq(sch, sch->stack_top);
+            cogo_sch_add(sch, sch->stack_top);
             break;
         }
         if (CO_STATE(sch->stack_top) == 0) {
@@ -125,7 +126,7 @@ inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch)
         COGO_ASSERT(((void)"ImpossibleCase",0));
         break;  // discard the coroutine
     }
-    return sch->stack_top = cogo_sch_deq(sch);
+    return sch->stack_top = cogo_sch_rm(sch);
 }
 
 #undef CO_DECLARE

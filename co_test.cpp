@@ -1,10 +1,12 @@
-#include <assert.h>
 #include "co.h"
-#include "gtest/gtest.h"
+
+#include <assert.h>
 #include <stdlib.h>
 
+#include "gtest/gtest.h"
+
 // put a coroutine into queue
-inline int cogo_sch_enq(cogo_sch_t* sch, cogo_co_t* co)
+inline int cogo_sch_add(cogo_sch_t* sch, cogo_co_t* co)
 {
     assert(sch);
     assert(sch->stack_top);
@@ -17,7 +19,7 @@ inline int cogo_sch_enq(cogo_sch_t* sch, cogo_co_t* co)
 }
 
 // fetch the next coroutine to be run
-inline cogo_co_t* cogo_sch_deq(cogo_sch_t* sch)
+inline cogo_co_t* cogo_sch_rm(cogo_sch_t* sch)
 {
     assert(sch);
     return sch->stack_top;

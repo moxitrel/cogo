@@ -1,0 +1,16 @@
+---
+BasedOnStyle: Google
+---
+DisableFormat: true
+Language: Cpp
+Standard: Auto
+
+ColumnLimit: 0
+IndentWidth: 4
+ContinuationIndentWidth: 8
+
+IndentPPDirectives: AfterHash
+IndentCaseLabels: false
+
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
+---

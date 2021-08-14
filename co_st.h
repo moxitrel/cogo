@@ -25,9 +25,10 @@ CO_CHAN_READ (co_chan_t*, co_msg_t*)    : receive a message from channel, the re
 #ifndef MOXITREL_COGO_CO_IMPL_H_
 #define MOXITREL_COGO_CO_IMPL_H_
 
+#include <stddef.h>
+
 #include "co.h"
 #include "co_st_q.h"
-#include <stddef.h>
 
 typedef struct co       co_t;
 typedef struct co_sch   co_sch_t;
@@ -47,8 +48,8 @@ struct co_sch {
     co_queue_t q;
 };
 
-// implement cogo_sch_enq()
-inline int cogo_sch_enq(cogo_sch_t* sch, cogo_co_t* co)
+// implement cogo_sch_add()
+inline int cogo_sch_add(cogo_sch_t* sch, cogo_co_t* co)
 {
     COGO_ASSERT(sch);
     COGO_ASSERT(co);
@@ -56,8 +57,8 @@ inline int cogo_sch_enq(cogo_sch_t* sch, cogo_co_t* co)
     return 1;   // switch context
 }
 
-// implement cogo_sch_deq()
-inline cogo_co_t* cogo_sch_deq(cogo_sch_t* sch)
+// implement cogo_sch_rm()
+inline cogo_co_t* cogo_sch_rm(cogo_sch_t* sch)
 {
     COGO_ASSERT(sch);
     return (cogo_co_t*)co_queue_deq(&((co_sch_t*)sch)->q, offsetof(co_t, next));
@@ -120,7 +121,7 @@ inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next)
         // wake up a writer if exists
         if (chan_size >= chan->cap) {
             cogo_co_t* writer = (cogo_co_t*)co_queue_deq_nonempty(&chan->cq, offsetof(co_t, next));
-            return cogo_sch_enq(((cogo_co_t*)co)->sch, writer);
+            return cogo_sch_add(((cogo_co_t*)co)->sch, writer);
         }
         return 0;
     }
@@ -146,7 +147,7 @@ inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg)
         ((co_msg_t*)co_queue_deq_nonempty(&chan->mq, offsetof(co_msg_t, next)))->next = msg;
         // wake up a reader
         cogo_co_t* reader = (cogo_co_t*)co_queue_deq_nonempty(&chan->cq, offsetof(co_t, next));
-        return cogo_sch_enq(((cogo_co_t*)co)->sch, reader);
+        return cogo_sch_add(((cogo_co_t*)co)->sch, reader);
     } else {
         co_queue_enq(&chan->mq, offsetof(co_msg_t, next), msg);
         if (chan_size >= chan->cap) {
