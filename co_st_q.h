@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct {
+typedef struct co_queue {
     void* head;
     void* tail;
 } co_queue_t;

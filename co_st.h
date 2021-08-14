@@ -80,7 +80,7 @@ struct co_msg {
     co_msg_t* next;
 };
 
-typedef struct {
+typedef struct co_chan {
     // all coroutines blocked by this channel
     co_queue_t cq;
     // message queue

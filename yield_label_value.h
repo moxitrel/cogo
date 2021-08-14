@@ -45,7 +45,7 @@ yield_end:;                     //
 #endif
 
 // yield context
-typedef struct {
+typedef struct cogo_yield {
     // start point where coroutine function continue to run after yield.
     const void* cogo_pc;
 

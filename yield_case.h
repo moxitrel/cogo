@@ -57,7 +57,7 @@ void nat_func(nat_t* CO_THIS)
 #endif
 
 // yield context
-typedef struct {
+typedef struct cogo_yield {
     // start point where coroutine function continue to run after yield.
     //   0: inited
     //  >0: running
