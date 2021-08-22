@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.13)
 project(Cogo)
-
-set(CMAKE_C_STANDARD 99)
-add_library(cogo
-    co_st.c)
-
 include(CTest)
+
+add_library(cogo co_st.c)
+target_compile_features(cogo PUBLIC c_std_99)
+
 if (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     include(GoogleTest)
     find_package(GTest REQUIRED)
