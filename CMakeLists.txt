@@ -5,6 +5,7 @@ include(CheckCCompilerFlag)
 
 add_library(cogo co_st.c)
 target_compile_features(cogo PUBLIC c_std_99)
+target_include_directories(cogo INTERFACE ${PROJECT_SOURCE_DIR})
 check_c_compiler_flag(-Wno-unused-label HAS_FLAG_NO_UNUSED_LABEL)
 check_c_compiler_flag(-Wno-gnu-label-as-value HAS_FLAG_NO_GNU_LABEL_AS_VALUE)
 check_c_compiler_flag(-Wno-unreachable-code HAS_FLAG_NO_UNREACHABLE_CODE)
