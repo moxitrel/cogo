@@ -36,20 +36,20 @@ if (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     link_libraries(cogo GTest::GTest GTest::Main)
 
     # yield_case
-    add_executable(test_yield_case yield_test.cpp)
-    target_compile_definitions(test_yield_case PRIVATE COGO_CASE)
-    gtest_discover_tests(test_yield_case)
+    add_executable(yield_case_test yield_test.cpp)
+    target_compile_definitions(yield_case_test PRIVATE COGO_CASE)
+    gtest_discover_tests(yield_case_test)
 
     # yield_label_value
-    add_executable(test_yield_label_value yield_test.cpp)
-    target_compile_definitions(test_yield_label_value PRIVATE COGO_LABEL_VALUE)
-    gtest_discover_tests(test_yield_label_value)
+    add_executable(yield_label_value_test yield_test.cpp)
+    target_compile_definitions(yield_label_value_test PRIVATE COGO_LABEL_VALUE)
+    gtest_discover_tests(yield_label_value_test)
 
     # co
-    add_executable(test_co co_test.cpp)
-    gtest_discover_tests(test_co)
+    add_executable(co_test co_test.cpp)
+    gtest_discover_tests(co_test)
 
     # co_st
-    add_executable(test_co_st co_st_test.cpp)
-    gtest_discover_tests(test_co_st)
+    add_executable(co_st_test co_st_test.cpp)
+    gtest_discover_tests(co_st_test)
 endif()
