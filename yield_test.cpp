@@ -78,10 +78,10 @@ CO_END:
 
 TEST(cogo_yield_t, Prologue)
 {
-    Prologue prologue = {
+    Prologue prologue = CO_MAKE(Prologue,
         .enter = 0,
         .exit = 0,
-    };
+    );
 
     while(CO_STATE(&prologue) >= 0) {
         Prologue_func(&prologue);
