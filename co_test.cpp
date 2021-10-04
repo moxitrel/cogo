@@ -21,7 +21,7 @@ inline cogo_co_t* cogo_sch_rm(cogo_sch_t* sch) {
     return sch->stack_top;
 }
 
-void cogo_co_run(void* co) {
+static inline void cogo_co_run(void* co) {
     cogo_sch_t sch = {
             .stack_top = (cogo_co_t*)co,
     };

@@ -74,14 +74,14 @@ inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
         CO_YIELD;                                               \
     } while (0)
 static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee) {
-    //  COGO_ASSERT(thiz);
+    //COGO_ASSERT(thiz);
     COGO_ASSERT(thiz->sch);
     COGO_ASSERT(thiz->sch->stack_top == thiz);
     COGO_ASSERT(callee);
 
     // call stack push
     callee->caller = thiz->sch->stack_top;
-    //  callee->sch = thiz->sch->stack_top->sch;
+    //callee->sch = thiz->sch->stack_top->sch;
     thiz->sch->stack_top = callee;
 }
 
