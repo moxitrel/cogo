@@ -1,5 +1,6 @@
 #ifndef MOXITREL_COGO_UTILS_H_
 #define MOXITREL_COGO_UTILS_H_
+// clang-format off
 
 // Get nth element of items. (BUG)
 //
@@ -25,9 +26,9 @@
 // See: https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments
 //      http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
 #define COGO_ARG_GET(PAREN_COUNT, PAREN_ARGS)                              \
-    COGO_ARG_GET_01N(                                                       \
-        COGO_HAS_COMMA(COGO_REMOVE_PAREN PAREN_COUNT),                      \
-        COGO_HAS_COMMA(COGO_GET_COMMA COGO_REMOVE_PAREN PAREN_COUNT ()),    \
+    COGO_ARG_GET_01N(                                                      \
+        COGO_HAS_COMMA(COGO_REMOVE_PAREN PAREN_COUNT),                     \
+        COGO_HAS_COMMA(COGO_GET_COMMA COGO_REMOVE_PAREN PAREN_COUNT ()),   \
         COGO_ARG_BUGGET1( COGO_REMOVE_PAREN PAREN_ARGS),                   \
         COGO_ARG_BUGGET1(,COGO_REMOVE_PAREN PAREN_ARGS),                   \
         COGO_ARG_BUGGET(PAREN_COUNT, PAREN_ARGS)                           \

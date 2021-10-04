@@ -3,7 +3,6 @@ BasedOnStyle: Google
 ---
 Language: Cpp
 Standard: Auto
-DisableFormat: false
 
 ColumnLimit: 0
 IndentWidth: 4
@@ -18,7 +17,4 @@ ReflowComments:  false
 IndentPPDirectives: BeforeHash
 AlignConsecutiveMacros: AcrossEmptyLinesAndComments
 IncludeBlocks: Merge
-
-DerivePointerAlignment: false
-PointerAlignment: Left
 ---

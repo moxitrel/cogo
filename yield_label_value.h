@@ -55,10 +55,10 @@ typedef struct cogo_yield {
 
 // cogo_yield_t.cogo_pc
 // CO_THIS: point to coroutine object.
-#define COGO_PC      (((cogo_yield_t*)(CO_THIS))->cogo_pc)
+#define COGO_PC      (((cogo_yield_t *)(CO_THIS))->cogo_pc)
 
 // get the current running state
-#define CO_STATE(CO) (((cogo_yield_t*)(CO))->cogo_pc)
+#define CO_STATE(CO) (((cogo_yield_t *)(CO))->cogo_pc)
 
 #define CO_BEGIN                            \
     switch (COGO_PC) {                      \
@@ -68,7 +68,7 @@ typedef struct cogo_yield {
     case -1:                                \
         goto cogo_return;                   \
     default:                                \
-        goto*(const void*)COGO_PC;          \
+        goto *(const void *)COGO_PC;        \
     }                                       \
     cogo_enter
 
