@@ -26,13 +26,12 @@ CO_CHAN_READ (co_chan_t*, co_msg_t*)    : receive a message from channel, the re
 #define MOXITREL_COGO_CO_IMPL_H_
 
 #include <stddef.h>
-
 #include "co.h"
 #include "co_st_q.h"
 
-typedef struct co       co_t;
-typedef struct co_sch   co_sch_t;
-typedef struct co_msg   co_msg_t;
+typedef struct co co_t;
+typedef struct co_sch co_sch_t;
+typedef struct co_msg co_msg_t;
 
 struct co {
     // inherit cogo_co_t
@@ -49,30 +48,27 @@ struct co_sch {
 };
 
 // implement cogo_sch_add()
-inline int cogo_sch_add(cogo_sch_t* sch, cogo_co_t* co)
-{
+inline int cogo_sch_add(cogo_sch_t* sch, cogo_co_t* co) {
     COGO_ASSERT(sch);
     COGO_ASSERT(co);
     co_queue_enq(&((co_sch_t*)sch)->q, offsetof(co_t, next), (co_t*)co);
-    return 1;   // switch context
+    return 1;  // switch context
 }
 
 // implement cogo_sch_rm()
-inline cogo_co_t* cogo_sch_rm(cogo_sch_t* sch)
-{
+inline cogo_co_t* cogo_sch_rm(cogo_sch_t* sch) {
     COGO_ASSERT(sch);
     return (cogo_co_t*)co_queue_deq(&((co_sch_t*)sch)->q, offsetof(co_t, next));
 }
 
-static inline void co_run(void* co)
-{
+static inline void co_run(void* co) {
     co_sch_t sch = {
-        .cogo_sch = {
-            .stack_top = (cogo_co_t*)co,
-        },
+            .cogo_sch = {
+                    .stack_top = (cogo_co_t*)co,
+            },
     };
-    while (cogo_sch_step((cogo_sch_t*)&sch))
-    {}
+    while (cogo_sch_step((cogo_sch_t*)&sch)) {
+    }
 }
 
 // channel message
@@ -91,19 +87,18 @@ typedef struct co_chan {
     const ptrdiff_t cap;
 } co_chan_t;
 
-#define CO_CHAN_MAKE(N)    ((co_chan_t){.cap = (N),})
+#define CO_CHAN_MAKE(N) ((co_chan_t){.cap = (N)})
 
 // CO_CHAN_READ(co_chan_t*, co_msg_t*);
 // MSG_NEXT: the read message sit in MSG_NEXT->next
-#define CO_CHAN_READ(CHAN, MSG_NEXT)                                                \
-do {                                                                                \
-    if (cogo_chan_read((co_t*)(CO_THIS), (CHAN), (MSG_NEXT)) != 0) {                \
-        CO_YIELD;                                                                   \
-    }                                                                               \
-} while (0)
-inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next)
-{
-//  COGO_ASSERT(co);
+#define CO_CHAN_READ(CHAN, MSG_NEXT)                                     \
+    do {                                                                 \
+        if (cogo_chan_read((co_t*)(CO_THIS), (CHAN), (MSG_NEXT)) != 0) { \
+            CO_YIELD;                                                    \
+        }                                                                \
+    } while (0)
+inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next) {
+    //  COGO_ASSERT(co);
     COGO_ASSERT(chan);
     COGO_ASSERT(chan->cap >= 0);
     COGO_ASSERT(chan->size > PTRDIFF_MIN);
@@ -113,8 +108,8 @@ inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next)
     if (chan_size <= 0) {
         co_queue_enq(&chan->mq, offsetof(co_msg_t, next), msg_next);
         // sleep in background
-        co_queue_enq(&chan->cq, offsetof(co_t, next), co);     // append to blocking queue
-        ((cogo_co_t*)co)->sch->stack_top = NULL;                // remove from scheduler
+        co_queue_enq(&chan->cq, offsetof(co_t, next), co);  // append to blocking queue
+        ((cogo_co_t*)co)->sch->stack_top = NULL;            // remove from scheduler
         return 1;
     } else {
         msg_next->next = (co_msg_t*)co_queue_deq_nonempty(&chan->mq, offsetof(co_msg_t, next));
@@ -128,15 +123,14 @@ inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next)
 }
 
 // CO_CHAN_WRITE(co_chan_t*, co_msg_t*);
-#define CO_CHAN_WRITE(CHAN, MSG)                                                                \
-do {                                                                                            \
-    if (cogo_chan_write((co_t*)(CO_THIS), (CHAN), (co_msg_t*)(MSG)) != 0) {                     \
-        CO_YIELD;                                                                               \
-    }                                                                                           \
-} while (0)
-inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg)
-{
-//  COGO_ASSERT(co);
+#define CO_CHAN_WRITE(CHAN, MSG)                                                \
+    do {                                                                        \
+        if (cogo_chan_write((co_t*)(CO_THIS), (CHAN), (co_msg_t*)(MSG)) != 0) { \
+            CO_YIELD;                                                           \
+        }                                                                       \
+    } while (0)
+inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg) {
+    //  COGO_ASSERT(co);
     COGO_ASSERT(chan);
     COGO_ASSERT(chan->cap >= 0);
     COGO_ASSERT(chan->size < PTRDIFF_MAX);
@@ -161,14 +155,11 @@ inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg)
 }
 
 #undef CO_DECLARE
-#define CO_DECLARE(NAME, ...)                           \
+#define CO_DECLARE(NAME, ...) \
     COGO_DECLARE(NAME, co_t co, __VA_ARGS__)
 
 #undef CO_MAKE
-#define CO_MAKE(NAME, ...)                              \
-    ((NAME){                                            \
-        .co = {.cogo_co = {.func = NAME##_func}},       \
-        __VA_ARGS__                                     \
-    })
+#define CO_MAKE(NAME, ...) \
+    ((NAME){.co = {.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
 
 #endif  // MOXITREL_COGO_CO_IMPL_H_
