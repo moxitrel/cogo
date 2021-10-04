@@ -37,69 +37,61 @@ yield_end:;                     //
 */
 #ifndef MOXITREL_COGO_YIELD_IMPL_H_
 #define MOXITREL_COGO_YIELD_IMPL_H_
+#include <stdint.h>
 
 #ifdef assert
-#   define COGO_ASSERT(...) assert(__VA_ARGS__)
+    #define COGO_ASSERT(...) assert(__VA_ARGS__)
 #else
-#   define COGO_ASSERT(...) /*nop*/
+    #define COGO_ASSERT(...) /* nop */
 #endif
 
 // yield context
 typedef struct cogo_yield {
     // start point where coroutine function continue to run after yield.
-    const void* cogo_pc;
-
     //  0: inited
-    // >0: running
     // -1: finish successfully
-    int cogo_state;
+    intptr_t cogo_pc;
 } cogo_yield_t;
 
 // cogo_yield_t.cogo_pc
 // CO_THIS: point to coroutine object.
-#define COGO_PC         (((cogo_yield_t*)(CO_THIS))->cogo_pc)
-
-// cogo_yield_t.cogo_state
-#define COGO_STATE      (((cogo_yield_t*)(CO_THIS))->cogo_state)
+#define COGO_PC      (((cogo_yield_t*)(CO_THIS))->cogo_pc)
 
 // get the current running state
-#define CO_STATE(CO)    (((cogo_yield_t*)(CO))->cogo_state)
+#define CO_STATE(CO) (((cogo_yield_t*)(CO))->cogo_pc)
 
-
-#define CO_BEGIN                        \
-    if (COGO_STATE == 0) {              \
-        COGO_PC = &&cogo_enter;         \
-        COGO_STATE = __LINE__;          \
-    }                                   \
-    goto *COGO_PC;                      \
-cogo_enter
-
+#define CO_BEGIN                            \
+    switch (COGO_PC) {                      \
+    case 0:                                 \
+        COGO_PC = (intptr_t)(&&cogo_enter); \
+        goto cogo_enter;                    \
+    case -1:                                \
+        goto cogo_return;                   \
+    default:                                \
+        goto*(const void*)COGO_PC;          \
+    }                                       \
+    cogo_enter
 
 #define CO_YIELD                                                        \
     do {                                                                \
-        COGO_PC = &&COGO_LABEL;         /* 1. save restore point */     \
-    /*  COGO_STATE = __LINE__; */                                       \
-        goto cogo_exit;                 /* 2. return */                 \
-    COGO_LABEL:;                        /* 3. restore point */          \
+        COGO_PC = (intptr_t)(&&COGO_LABEL); /* 1. save restore point */ \
+        goto cogo_exit;                     /* 2. return */             \
+    COGO_LABEL:;                            /* 3. restore point */      \
     } while (0)
 
+#define CO_RETURN \
+    goto cogo_return /* end coroutine */
 
-#define CO_RETURN                                   \
-    goto cogo_return        /* end coroutine */     \
-
-
-#define CO_END                                      \
-    cogo_return:                                    \
-        COGO_PC = &&cogo_exit;                      \
-        COGO_STATE = -1;   /* finish */             \
+#define CO_END                 \
+cogo_return:                   \
+    COGO_PC = -1; /* finish */ \
     cogo_exit
-
 
 // Make goto label.
 // e.g. COGO_LABEL(13)       -> cogo_yield_13
 //      COGO_LABEL(__LINE__) -> cogo_yield_118
-#define COGO_LABEL          COGO_LABEL1(__LINE__)
-#define COGO_LABEL1(...)    COGO_LABEL2(__VA_ARGS__)
-#define COGO_LABEL2(N)      cogo_yield_##N
+#define COGO_LABEL       COGO_LABEL1(__LINE__)
+#define COGO_LABEL1(...) COGO_LABEL2(__VA_ARGS__)
+#define COGO_LABEL2(N)   cogo_yield_##N
 
-#endif // MOXITREL_COGO_YIELD_IMPL_H_
+#endif  // MOXITREL_COGO_YIELD_IMPL_H_

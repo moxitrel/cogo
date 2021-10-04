@@ -1,16 +1,24 @@
 ---
 BasedOnStyle: Google
 ---
-DisableFormat: true
 Language: Cpp
 Standard: Auto
+DisableFormat: false
 
 ColumnLimit: 0
 IndentWidth: 4
 ContinuationIndentWidth: 8
+ConstructorInitializerIndentWidth: 8
+AccessModifierOffset: -4
 
 IndentPPDirectives: AfterHash
 IndentCaseLabels: false
 
+ReflowComments:  false
+IndentPPDirectives: BeforeHash
 AlignConsecutiveMacros: AcrossEmptyLinesAndComments
+IncludeBlocks: Merge
+
+DerivePointerAlignment: false
+PointerAlignment: Left
 ---

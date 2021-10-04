@@ -31,8 +31,8 @@ inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
 
 #include "yield.h"
 
-typedef struct cogo_co      cogo_co_t;      // coroutine
-typedef struct cogo_sch     cogo_sch_t;     // scheduler
+typedef struct cogo_co cogo_co_t;    // coroutine
+typedef struct cogo_sch cogo_sch_t;  // scheduler
 
 // support call stack, concurrency
 struct cogo_co {
@@ -67,77 +67,67 @@ inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
 //
 
 // CO_AWAIT(cogo_co_t*): call another coroutine.
-// CO: require no loop in call train.
-#define CO_AWAIT(CO)                                                \
-do {                                                                \
-    cogo_co_await((cogo_co_t*)(CO_THIS), (cogo_co_t*)(CO));         \
-    CO_YIELD;                                                       \
-} while (0)
-static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee)
-{
-//  COGO_ASSERT(thiz);
+// NOTE: require no loop in call chain.
+#define CO_AWAIT(CO)                                            \
+    do {                                                        \
+        cogo_co_await((cogo_co_t*)(CO_THIS), (cogo_co_t*)(CO)); \
+        CO_YIELD;                                               \
+    } while (0)
+static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee) {
+    //  COGO_ASSERT(thiz);
     COGO_ASSERT(thiz->sch);
     COGO_ASSERT(thiz->sch->stack_top == thiz);
     COGO_ASSERT(callee);
 
     // call stack push
     callee->caller = thiz->sch->stack_top;
-//  callee->sch = thiz->sch->stack_top->sch;
+    //  callee->sch = thiz->sch->stack_top->sch;
     thiz->sch->stack_top = callee;
 }
 
 // CO_START(cogo_co_t*): add a new coroutine to the scheduler.
-#define CO_START(CO)                                                            \
-do {                                                                            \
-    if (cogo_sch_add(((cogo_co_t*)(CO_THIS))->sch, (cogo_co_t*)(CO)) != 0) {    \
-        CO_YIELD;                                                               \
-    }                                                                           \
-} while (0)
+#define CO_START(CO)                                                             \
+    do {                                                                         \
+        if (cogo_sch_add(((cogo_co_t*)(CO_THIS))->sch, (cogo_co_t*)(CO)) != 0) { \
+            CO_YIELD;                                                            \
+        }                                                                        \
+    } while (0)
 
 //
 // cogo_sch_t
 //
 
 // run the coroutine in stack top until yield or finished, return the next coroutine to be run.
-inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch)
-{
+inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
     COGO_ASSERT(sch);
     while (sch->stack_top) {
         sch->stack_top->sch = sch;
         sch->stack_top->func(sch->stack_top);
         if (!sch->stack_top) {
             // blocked
+            goto exit;
+        }
+        switch (CO_STATE(sch->stack_top)) {
+        case 0:  // await
             break;
-        }
-        if (CO_STATE(sch->stack_top) > 0) {
-            // yield
-            cogo_sch_add(sch, sch->stack_top);
-            break;
-        }
-        if (CO_STATE(sch->stack_top) == 0) {
-            // await
-            continue;
-        }
-        if (CO_STATE(sch->stack_top) == -1) {
-            // return
+        case -1:  // return
             sch->stack_top = sch->stack_top->caller;
-            continue;
+            break;
+        default:  // yield
+            cogo_sch_add(sch, sch->stack_top);
+            goto exit;
         }
-        COGO_ASSERT(((void)"ImpossibleCase",0));
-        break;  // discard the coroutine
     }
+exit:
     return sch->stack_top = cogo_sch_rm(sch);
 }
 
 #undef CO_DECLARE
-#define CO_DECLARE(NAME, ...)                                   \
+#define CO_DECLARE(NAME, ...) \
     COGO_DECLARE(NAME, cogo_co_t cogo_co, __VA_ARGS__)
 
 #undef CO_MAKE
-#define CO_MAKE(NAME, ...)                                      \
-    ((NAME){                                                    \
-        .cogo_co = {.func = NAME##_func},                       \
-        __VA_ARGS__                                             \
-    })
+#define CO_MAKE(NAME, ...) \
+    ((NAME){.cogo_co = {.func = NAME##_func}, __VA_ARGS__})
 
-#endif // MOXITREL_COGO_CO_H_
+#endif  // MOXITREL_COGO_CO_H_
