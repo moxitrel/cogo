@@ -23,17 +23,17 @@ TEST(cogo_yield_t, Yield) {
     EXPECT_EQ(cogoYield.v, 0);
 
     CogoYield_func(&cogoYield);
-    EXPECT_NE(CO_STATE(&cogoYield), 0);   // running
-    EXPECT_NE(CO_STATE(&cogoYield), -1);  // running
+    EXPECT_NE(CO_STATE(&cogoYield), 0);    // running
+    EXPECT_NE(CO_STATE(&cogoYield), -1u);  // running
     EXPECT_EQ(cogoYield.v, 1);
 
     CogoYield_func(&cogoYield);
-    EXPECT_EQ(CO_STATE(&cogoYield), -1);  // end
+    EXPECT_EQ(CO_STATE(&cogoYield), -1u);  // end
     EXPECT_EQ(cogoYield.v, 2);
 
     // noop when coroutine end
     CogoYield_func(&cogoYield);
-    EXPECT_EQ(CO_STATE(&cogoYield), -1);
+    EXPECT_EQ(CO_STATE(&cogoYield), -1u);
     EXPECT_EQ(cogoYield.v, 2);
 }
 
@@ -51,7 +51,7 @@ TEST(cogo_yield_t, Return) {
     EXPECT_EQ(cogoReturn.v, 0);
 
     CogoReturn_func(&cogoReturn);
-    EXPECT_EQ(CO_STATE(&cogoReturn), -1);  // end
+    EXPECT_EQ(CO_STATE(&cogoReturn), -1u);  // end
     EXPECT_EQ(cogoReturn.v, 1);
 }
 
@@ -71,7 +71,7 @@ CO_END:
 TEST(cogo_yield_t, Prologue) {
     Prologue prologue = CO_MAKE(Prologue, .enter = 0, .exit = 0);
 
-    while (CO_STATE(&prologue) != -1) {
+    while (CO_STATE(&prologue) != -1u) {
         Prologue_func(&prologue);
     }
 

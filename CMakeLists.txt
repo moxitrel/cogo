@@ -3,9 +3,10 @@ project(Cogo)
 include(CTest)
 include(CheckCCompilerFlag)
 
-add_library(cogo co_st.c)
-target_compile_features(cogo PUBLIC c_std_99)
+add_library(cogo INTERFACE)
+target_sources(cogo INTERFACE co_st.c)
 target_include_directories(cogo INTERFACE ${PROJECT_SOURCE_DIR})
+target_compile_features(cogo INTERFACE c_std_99)
 check_c_compiler_flag(-Wno-unused-label HAS_FLAG_NO_UNUSED_LABEL)
 check_c_compiler_flag(-Wno-gnu-label-as-value HAS_FLAG_NO_GNU_LABEL_AS_VALUE)
 check_c_compiler_flag(-Wno-unreachable-code HAS_FLAG_NO_UNREACHABLE_CODE)
@@ -19,17 +20,19 @@ if (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     include(GoogleTest)
     find_package(GTest REQUIRED)
 
-    add_compile_options(-Wall -Wextra
-        -Wno-c99-extensions
-        -Wno-gnu-zero-variadic-macro-arguments
+    add_compile_options(
+        -Wall -Wextra
 
-        -Wno-old-style-cast
-        -Wno-zero-as-null-pointer-constant
-        -Wno-c++98-compat
-        -Wno-c++98-compat-pedantic
-        -Wno-padded
-        -Wno-global-constructors        # google-test
-        -Wno-missing-prototypes         # unit test
+        # -Wno-c99-extensions
+        # -Wno-gnu-zero-variadic-macro-arguments
+
+        # -Wno-old-style-cast
+        # -Wno-zero-as-null-pointer-constant
+        # -Wno-c++98-compat
+        # -Wno-c++98-compat-pedantic
+        # -Wno-padded
+        # -Wno-global-constructors        # google-test
+        # -Wno-missing-prototypes         # unit test
     )
 
     set(CMAKE_CXX_STANDARD 11)

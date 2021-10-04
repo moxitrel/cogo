@@ -62,7 +62,7 @@ typedef struct cogo_yield {
     //   0: inited
     //  >0: running
     //  -1: finished
-    int cogo_pc;
+    unsigned cogo_pc;
 } cogo_yield_t;
 
 // cogo_yield_t.cogo_pc
@@ -77,7 +77,7 @@ typedef struct cogo_yield {
     default: /* invalid  pc */                         \
         COGO_ASSERT(((void)"cogo_pc isn't valid", 0)); \
         goto cogo_exit;                                \
-    case -1: /* coroutine end */                       \
+    case -1u: /* coroutine end */                      \
         goto cogo_exit;                                \
     case 0 /* coroutine begin */
 
@@ -91,10 +91,10 @@ typedef struct cogo_yield {
 #define CO_RETURN \
     goto cogo_return /* end coroutine */
 
-#define CO_END                 \
-cogo_return:                   \
-    COGO_PC = -1; /* finish */ \
-    }                          \
+#define CO_END                  \
+cogo_return:                    \
+    COGO_PC = -1u; /* finish */ \
+    }                           \
     cogo_exit
 
 #endif  // MOXITREL_COGO_YIELD_IMPL_H_

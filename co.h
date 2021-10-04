@@ -110,7 +110,7 @@ inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
         switch (CO_STATE(sch->stack_top)) {
         case 0:  // await
             break;
-        case -1:  // return
+        case -1u:  // return
             sch->stack_top = sch->stack_top->caller;
             break;
         default:  // yield

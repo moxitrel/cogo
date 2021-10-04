@@ -21,7 +21,7 @@ inline cogo_co_t* cogo_sch_rm(cogo_sch_t* sch) {
     return sch->stack_top;
 }
 
-static void cogo_co_run(void* co) {
+void cogo_co_run(void* co) {
     cogo_sch_t sch = {
             .stack_top = (cogo_co_t*)co,
     };
@@ -78,9 +78,9 @@ TEST(cogo_co_t, Step) {
 
     // F3 co_return
     co = cogo_sch_step(&sch);
-    EXPECT_EQ(CO_STATE(&f1), -1);
-    EXPECT_EQ(CO_STATE(&f2), -1);
-    EXPECT_EQ(CO_STATE(&f3), -1);
+    EXPECT_EQ(CO_STATE(&f1), -1u);
+    EXPECT_EQ(CO_STATE(&f2), -1u);
+    EXPECT_EQ(CO_STATE(&f3), -1u);
 }
 
 static unsigned fibonacci(unsigned n) {

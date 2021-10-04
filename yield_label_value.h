@@ -50,7 +50,7 @@ typedef struct cogo_yield {
     // start point where coroutine function continue to run after yield.
     //  0: inited
     // -1: finish successfully
-    intptr_t cogo_pc;
+    uintptr_t cogo_pc;
 } cogo_yield_t;
 
 // cogo_yield_t.cogo_pc
@@ -60,31 +60,31 @@ typedef struct cogo_yield {
 // get the current running state
 #define CO_STATE(CO) (((cogo_yield_t *)(CO))->cogo_pc)
 
-#define CO_BEGIN                            \
-    switch (COGO_PC) {                      \
-    case 0:                                 \
-        COGO_PC = (intptr_t)(&&cogo_enter); \
-        goto cogo_enter;                    \
-    case -1:                                \
-        goto cogo_return;                   \
-    default:                                \
-        goto *(const void *)COGO_PC;        \
-    }                                       \
+#define CO_BEGIN                             \
+    switch (COGO_PC) {                       \
+    case 0:                                  \
+        COGO_PC = (uintptr_t)(&&cogo_enter); \
+        goto cogo_enter;                     \
+    case -1u:                                \
+        goto cogo_return;                    \
+    default:                                 \
+        goto *(const void *)COGO_PC;         \
+    }                                        \
     cogo_enter
 
-#define CO_YIELD                                                        \
-    do {                                                                \
-        COGO_PC = (intptr_t)(&&COGO_LABEL); /* 1. save restore point */ \
-        goto cogo_exit;                     /* 2. return */             \
-    COGO_LABEL:;                            /* 3. restore point */      \
+#define CO_YIELD                                                         \
+    do {                                                                 \
+        COGO_PC = (uintptr_t)(&&COGO_LABEL); /* 1. save restore point */ \
+        goto cogo_exit;                      /* 2. return */             \
+    COGO_LABEL:;                             /* 3. restore point */      \
     } while (0)
 
 #define CO_RETURN \
     goto cogo_return /* end coroutine */
 
-#define CO_END                 \
-cogo_return:                   \
-    COGO_PC = -1; /* finish */ \
+#define CO_END                  \
+cogo_return:                    \
+    COGO_PC = -1u; /* finish */ \
     cogo_exit
 
 // Make goto label.
