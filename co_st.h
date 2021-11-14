@@ -130,7 +130,7 @@ inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next) {
         }                                                                       \
     } while (0)
 inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg) {
-    //  COGO_ASSERT(co);
+    COGO_ASSERT(co);
     COGO_ASSERT(chan);
     COGO_ASSERT(chan->cap >= 0);
     COGO_ASSERT(chan->size < PTRDIFF_MAX);
