@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.13)
 project(Cogo)
+
 include(CTest)
 include(CheckCCompilerFlag)
 
 add_library(cogo INTERFACE)
-target_sources(cogo INTERFACE co_st.c)
+target_sources(cogo INTERFACE co.c co_st.c)
 target_include_directories(cogo INTERFACE ${PROJECT_SOURCE_DIR})
 target_compile_features(cogo INTERFACE c_std_99)
 check_c_compiler_flag(-Wno-unused-label HAS_FLAG_NO_UNUSED_LABEL)

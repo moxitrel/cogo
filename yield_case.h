@@ -95,6 +95,6 @@ typedef struct cogo_yield {
 cogo_return:                    \
     COGO_PC = -1u; /* finish */ \
     }                           \
-    cogo_exit
+    cogo_exit // label
 
 #endif  // MOXITREL_COGO_YIELD_IMPL_H_

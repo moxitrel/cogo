@@ -87,17 +87,12 @@
 #define COGO_MAP_18(SEP, F, X, ...)   F(X) SEP COGO_MAP_17(SEP, F, __VA_ARGS__)
 #define COGO_MAP_19(SEP, F, X, ...)   F(X) SEP COGO_MAP_18(SEP, F, __VA_ARGS__)
 
-// COGO_IFNIL(ID)(SK,FK): Expand to <SK> if ID defined as empty, i.e. "#define ID", else FK
-#define COGO_IFNIL(...)                 COGO_IFNIL1(COGO_ARG_EMPTY(__VA_ARGS__))
-#define COGO_IFNIL1(...)                COGO_IFNIL2(__VA_ARGS__)
-#define COGO_IFNIL2(BOOL)               COGO_IFNIL_##BOOL
-#define COGO_IFNIL_1(...)               COGO_IFNIL_T(__VA_ARGS__)
-#define COGO_IFNIL_T(SK,...)            SK
-#define COGO_IFNIL_0(...)               COGO_IFNIL_F(__VA_ARGS__)
-#define COGO_IFNIL_F(SK,...)            COGO_IFNIL_F1(COGO_ARG_EMPTY(__VA_ARGS__), __VA_ARGS__)
-#define COGO_IFNIL_F1(...)              COGO_IFNIL_F2(__VA_ARGS__)
-#define COGO_IFNIL_F2(N,...)            COGO_IFNIL_F_##N(__VA_ARGS__)
-#define COGO_IFNIL_F_1(...)
-#define COGO_IFNIL_F_0(FK)              FK
+// Expand to SK if ID defined as empty, i.e. "#define ID", else FK
+#define COGO_IFNIL(ID,SK,FK)        COGO_IFNIL1(COGO_ARG_EMPTY(ID),SK,FK)
+#define COGO_IFNIL1(...)            COGO_IFNIL2(__VA_ARGS__)
+#define COGO_IFNIL2(BOOL,SK,FK)     COGO_IFNIL3_##BOOL(SK,FK)
+#define COGO_IFNIL3_1(SK,FK)        SK
+#define COGO_IFNIL3_0(SK,FK)        FK
 
+#define COGO_ARG(...)   __VA_ARGS__
 #endif // MOXITREL_COGO_UTILS_H_

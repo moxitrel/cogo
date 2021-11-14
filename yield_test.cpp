@@ -46,7 +46,7 @@ CO_END:;
 }
 
 TEST(cogo_yield_t, Return) {
-    CogoReturn cogoReturn = CO_MAKE(CogoReturn, .v = 0);
+    CogoReturn cogoReturn = CO_MAKE(CogoReturn, 0);
     EXPECT_EQ(CO_STATE(&cogoReturn), 0);  // init
     EXPECT_EQ(cogoReturn.v, 0);
 
@@ -69,7 +69,7 @@ CO_END:
 }
 
 TEST(cogo_yield_t, Prologue) {
-    Prologue prologue = CO_MAKE(Prologue, .enter = 0, .exit = 0);
+    Prologue prologue = CO_MAKE(Prologue, 0, 0);
 
     while (CO_STATE(&prologue) != -1u) {
         Prologue_func(&prologue);

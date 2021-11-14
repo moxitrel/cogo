@@ -98,7 +98,7 @@ typedef struct co_chan {
         }                                                                \
     } while (0)
 inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next) {
-    //  COGO_ASSERT(co);
+    COGO_ASSERT(co);
     COGO_ASSERT(chan);
     COGO_ASSERT(chan->cap >= 0);
     COGO_ASSERT(chan->size > PTRDIFF_MIN);
@@ -160,6 +160,6 @@ inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg) {
 
 #undef CO_MAKE
 #define CO_MAKE(NAME, ...) \
-    ((NAME){.co = {.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
+    ((NAME){{.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
 
 #endif  // MOXITREL_COGO_CO_IMPL_H_

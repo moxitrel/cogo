@@ -74,7 +74,7 @@ inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
         CO_YIELD;                                               \
     } while (0)
 static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee) {
-    //COGO_ASSERT(thiz);
+    COGO_ASSERT(thiz);
     COGO_ASSERT(thiz->sch);
     COGO_ASSERT(thiz->sch->stack_top == thiz);
     COGO_ASSERT(callee);
@@ -105,20 +105,20 @@ inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
         sch->stack_top->func(sch->stack_top);
         if (!sch->stack_top) {
             // blocked
-            goto exit;
+            break;
         }
         switch (CO_STATE(sch->stack_top)) {
         case 0:  // await
-            break;
+            continue;
         case -1u:  // return
             sch->stack_top = sch->stack_top->caller;
-            break;
+            continue;
         default:  // yield
             cogo_sch_add(sch, sch->stack_top);
-            goto exit;
+            break;
         }
+        break;
     }
-exit:
     return sch->stack_top = cogo_sch_rm(sch);
 }
 
@@ -128,6 +128,6 @@ exit:
 
 #undef CO_MAKE
 #define CO_MAKE(NAME, ...) \
-    ((NAME){.cogo_co = {.func = NAME##_func}, __VA_ARGS__})
+    ((NAME){{.func = NAME##_func}, __VA_ARGS__})
 
 #endif  // MOXITREL_COGO_CO_H_
