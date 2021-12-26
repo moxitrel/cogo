@@ -4,19 +4,19 @@
 
 // Get nth element of items. (BUG)
 //
-// e.g. COGO_ARG_BUGGET(()        , (P0,P1,P2,P3,...))  -> P1 (bug, want P0)
-//      COGO_ARG_BUGGET((_1)      , (P0,P1,P2,P3,...))  -> P1
-//      COGO_ARG_BUGGET((_1,_2)   , (P0,P1,P2,P3,...))  -> P2
-//      COGO_ARG_BUGGET((_1,_2,_3), (P0,P1,P2,P3,...))  -> P3
-#define COGO_ARG_BUGGET(PAREN_COUNT, PAREN_ARGS)                    \
-    COGO_ARG_BUGGET1(COGO_REMOVE_PAREN PAREN_COUNT, COGO_REMOVE_PAREN PAREN_ARGS)
-#define COGO_ARG_BUGGET1(...)  COGO_ARG_BUGGET2(__VA_ARGS__)
-#define COGO_ARG_BUGGET2(                                           \
+// e.g. COGO_ARG_BUGET(()        , (P0,P1,P2,P3,...))  -> P1 (bug, want P0)
+//      COGO_ARG_BUGET((_1)      , (P0,P1,P2,P3,...))  -> P1
+//      COGO_ARG_BUGET((_1,_2)   , (P0,P1,P2,P3,...))  -> P2
+//      COGO_ARG_BUGET((_1,_2,_3), (P0,P1,P2,P3,...))  -> P3
+#define COGO_ARG_BUGET(PAREN_COUNT, PAREN_ARGS)                     \
+    COGO_ARG_BUGET1(COGO_RM_PAREN PAREN_COUNT, COGO_RM_PAREN PAREN_ARGS)
+#define COGO_ARG_BUGET1(...)  COGO_ARG_BUGET2(__VA_ARGS__)
+#define COGO_ARG_BUGET2(                                            \
      _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,               \
     _11, _12, _13, _14, _15, _16, _17, _18, _19,   N, ...)          N
-#define COGO_REMOVE_PAREN(...)  __VA_ARGS__
+#define COGO_RM_PAREN(...)  __VA_ARGS__
 
-// Get nth element of items. (Solved the COGO_ARG_BUGGET(...)'s BUG)
+// Get nth element of items. (Solved the COGO_ARG_BUGET(...)'s BUG)
 //
 // e.g. COGO_ARG_GET(()        , (P0,P1,P2,P3,...)) -> COGO_ARG_GET_01N(0,1,P0,P1,P1) -> ARG_GET_01(P0,P1,P1) -> P0
 //      COGO_ARG_GET((_1)      , (P0,P1,P2,P3,...)) -> COGO_ARG_GET_01N(0,0,P0,P1,P1) -> ARG_GET_00(P0,P1,P1) -> P1
@@ -25,20 +25,20 @@
 //
 // See: https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments
 //      http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
-#define COGO_ARG_GET(PAREN_COUNT, PAREN_ARGS)                              \
-    COGO_ARG_GET_01N(                                                      \
-        COGO_HAS_COMMA(COGO_REMOVE_PAREN PAREN_COUNT),                     \
-        COGO_HAS_COMMA(COGO_GET_COMMA COGO_REMOVE_PAREN PAREN_COUNT ()),   \
-        COGO_ARG_BUGGET1( COGO_REMOVE_PAREN PAREN_ARGS),                   \
-        COGO_ARG_BUGGET1(,COGO_REMOVE_PAREN PAREN_ARGS),                   \
-        COGO_ARG_BUGGET(PAREN_COUNT, PAREN_ARGS)                           \
+#define COGO_ARG_GET(PAREN_COUNT, PAREN_ARGS)                               \
+    COGO_ARG_GET_01N(                                                       \
+        COGO_HAS_COMMA(COGO_RM_PAREN PAREN_COUNT),                          \
+        COGO_HAS_COMMA(COGO_GET_COMMA COGO_RM_PAREN PAREN_COUNT ()),        \
+        COGO_ARG_BUGET1( COGO_RM_PAREN PAREN_ARGS),                         \
+        COGO_ARG_BUGET1(,COGO_RM_PAREN PAREN_ARGS),                         \
+        COGO_ARG_BUGET(PAREN_COUNT, PAREN_ARGS)                             \
     )
 #define COGO_ARG_GET_01N(...)            COGO_ARG_GET_01N1(__VA_ARGS__)
 #define COGO_ARG_GET_01N1(D1, D2, ...)   COGO_ARG_GET_##D1##D2(__VA_ARGS__)
 #define COGO_ARG_GET_01(O,I,N)           O
 #define COGO_ARG_GET_00(O,I,N)           I
 #define COGO_ARG_GET_11(O,I,N)           N
-#define COGO_HAS_COMMA(...)              COGO_ARG_BUGGET1(__VA_ARGS__, COGO_HAS_COMMA_PADDING)
+#define COGO_HAS_COMMA(...)              COGO_ARG_BUGET1(__VA_ARGS__, COGO_HAS_COMMA_PADDING)
 #define COGO_GET_COMMA(...)              ,
 #define COGO_HAS_COMMA_PADDING                              \
       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,       \
@@ -94,5 +94,6 @@
 #define COGO_IFNIL3_1(SK,FK)        SK
 #define COGO_IFNIL3_0(SK,FK)        FK
 
-#define COGO_ARG(...)   __VA_ARGS__
+#define COGO_ARG(...)               COGO_RM_PAREN(__VA_ARGS__)
+
 #endif // MOXITREL_COGO_UTILS_H_

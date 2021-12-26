@@ -6,7 +6,7 @@ CO_END                  : ...
 CO_YIELD                : ...
 CO_RETURN               : ...
 CO_THIS                 : ...
-CO_STATE    (CO)        : ...
+CO_STATUS    (CO)        : ...
 CO_DECLARE  (NAME, ...) : ...
 CO_DEFINE   (NAME)      : ...
 CO_AWAIT    (cogo_co_t*): ...
@@ -27,7 +27,6 @@ CO_CHAN_READ (co_chan_t*, co_msg_t*)    : receive a message from channel, the re
 
 #include <stddef.h>
 #include "co.h"
-#include "co_st_q.h"
 
 typedef struct co co_t;
 typedef struct co_sch co_sch_t;
@@ -40,25 +39,39 @@ struct co {
     co_t* next;
 };
 
+//
+// COGO_QUEUE_T             (co_t)
+// COGO_QUEUE_EMPTY         (co_t) (const COGO_QUEUE_T(co_t)*)
+// COGO_QUEUE_POP           (co_t) (      COGO_QUEUE_T(co_t)*)
+// COGO_QUEUE_POP_NONEMPTY  (co_t) (      COGO_QUEUE_T(co_t)*)
+// COGO_QUEUE_PUSH          (co_t) (      COGO_QUEUE_T(co_t)*, co_t*)
+//
+#undef COGO_QUEUE_ITEM_T
+#undef COGO_QUEUE_ITEM_NEXT
+#define COGO_QUEUE_ITEM_T       co_t
+#define COGO_QUEUE_ITEM_NEXT(P) ((P)->next)
+#include "co_st_q.inc"
 struct co_sch {
     // inherent cogo_sch_t
     cogo_sch_t cogo_sch;
     // coroutine queue run concurrently
-    co_queue_t q;
+    COGO_QUEUE_T(co_t)
+    q;
 };
 
 // implement cogo_sch_add()
 inline int cogo_sch_add(cogo_sch_t* sch, cogo_co_t* co) {
     COGO_ASSERT(sch);
     COGO_ASSERT(co);
-    co_queue_enq(&((co_sch_t*)sch)->q, offsetof(co_t, next), (co_t*)co);
+    COGO_QUEUE_PUSH(co_t)
+    (&((co_sch_t*)sch)->q, (co_t*)co);
     return 1;  // switch context
 }
 
 // implement cogo_sch_rm()
 inline cogo_co_t* cogo_sch_rm(cogo_sch_t* sch) {
     COGO_ASSERT(sch);
-    return (cogo_co_t*)co_queue_deq(&((co_sch_t*)sch)->q, offsetof(co_t, next));
+    return (cogo_co_t*)COGO_QUEUE_POP(co_t)(&((co_sch_t*)sch)->q);
 }
 
 static inline void co_run(void* co) {
@@ -76,11 +89,23 @@ struct co_msg {
     co_msg_t* next;
 };
 
+//
+// COGO_QUEUE_T             (co_msg_t)
+// COGO_QUEUE_EMPTY         (co_msg_t) (const COGO_QUEUE_T(co_msg_t)*)
+// COGO_QUEUE_POP           (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
+// COGO_QUEUE_POP_NONEMPTY  (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
+// COGO_QUEUE_PUSH          (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*, co_msg_t*)
+//
+#undef COGO_QUEUE_ITEM_T
+#undef COGO_QUEUE_ITEM_NEXT
+#define COGO_QUEUE_ITEM_T       co_msg_t
+#define COGO_QUEUE_ITEM_NEXT(P) ((P)->next)
+#include "co_st_q.inc"
 typedef struct co_chan {
     // all coroutines blocked by this channel
-    co_queue_t cq;
+    COGO_QUEUE_T(co_t) cq;
     // message queue
-    co_queue_t mq;
+    COGO_QUEUE_T(co_msg_t) mq;
     // current size
     ptrdiff_t size;
     // max size
@@ -106,16 +131,16 @@ inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next) {
 
     const ptrdiff_t chan_size = chan->size--;
     if (chan_size <= 0) {
-        co_queue_enq(&chan->mq, offsetof(co_msg_t, next), msg_next);
+        COGO_QUEUE_PUSH(co_msg_t)(&chan->mq, msg_next);
         // sleep in background
-        co_queue_enq(&chan->cq, offsetof(co_t, next), co);  // append to blocking queue
-        ((cogo_co_t*)co)->sch->stack_top = NULL;            // remove from scheduler
+        COGO_QUEUE_PUSH(co_t)(&chan->cq, co);     // append to blocking queue
+        ((cogo_co_t*)co)->sch->stack_top = NULL;  // remove from scheduler
         return 1;
     } else {
-        msg_next->next = (co_msg_t*)co_queue_deq_nonempty(&chan->mq, offsetof(co_msg_t, next));
+        msg_next->next = COGO_QUEUE_POP_NONEMPTY(co_msg_t)(&chan->mq);
         // wake up a writer if exists
         if (chan_size >= chan->cap) {
-            cogo_co_t* writer = (cogo_co_t*)co_queue_deq_nonempty(&chan->cq, offsetof(co_t, next));
+            cogo_co_t* writer = (cogo_co_t*)COGO_QUEUE_POP_NONEMPTY(co_t)(&chan->cq);
             return cogo_sch_add(((cogo_co_t*)co)->sch, writer);
         }
         return 0;
@@ -138,15 +163,15 @@ inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg) {
 
     const ptrdiff_t chan_size = chan->size++;
     if (chan_size < 0) {
-        ((co_msg_t*)co_queue_deq_nonempty(&chan->mq, offsetof(co_msg_t, next)))->next = msg;
+        COGO_QUEUE_POP_NONEMPTY(co_msg_t)(&chan->mq)->next = msg;
         // wake up a reader
-        cogo_co_t* reader = (cogo_co_t*)co_queue_deq_nonempty(&chan->cq, offsetof(co_t, next));
+        cogo_co_t* reader = (cogo_co_t*)COGO_QUEUE_POP_NONEMPTY(co_t)(&chan->cq);
         return cogo_sch_add(((cogo_co_t*)co)->sch, reader);
     } else {
-        co_queue_enq(&chan->mq, offsetof(co_msg_t, next), msg);
+        COGO_QUEUE_PUSH(co_msg_t)(&chan->mq, msg);
         if (chan_size >= chan->cap) {
             // sleep in background
-            co_queue_enq(&chan->cq, offsetof(co_t, next), co);
+            COGO_QUEUE_PUSH(co_t)(&chan->cq, co);
             ((cogo_co_t*)co)->sch->stack_top = NULL;
             return 1;
         }

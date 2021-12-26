@@ -5,10 +5,11 @@ CO_BEGIN      : coroutine begin label.
 CO_END        : coroutine end label.
 CO_YIELD      : yield from coroutine.
 CO_RETURN     : return from coroutine.
-CO_STATE(CO)  : get the current running state.
+CO_THIS       : point to coroutine object.
+CO_STATUS(CO) : get the current running status.
+    >0: running
      0: inited
     -1: finished
-  else: running
 
 * Example
 void nat_func(nat_t* CO_THIS)
@@ -59,25 +60,24 @@ void nat_func(nat_t* CO_THIS)
 // yield context
 typedef struct cogo_yield {
     // start point where coroutine function continue to run after yield.
-    //   0: inited
     //  >0: running
+    //   0: inited
     //  -1: finished
-    unsigned cogo_pc;
+    int cogo_pc;
 } cogo_yield_t;
 
 // cogo_yield_t.cogo_pc
-// CO_THIS: point to coroutine object.
-#define COGO_PC      (((cogo_yield_t*)(CO_THIS))->cogo_pc)
+#define COGO_PC       (((cogo_yield_t*)(CO_THIS))->cogo_pc)
 
 // get the current running state
-#define CO_STATE(CO) (((cogo_yield_t*)(CO))->cogo_pc)
+#define CO_STATUS(CO) (((cogo_yield_t*)(CO))->cogo_pc)
 
 #define CO_BEGIN                                       \
     switch (COGO_PC) {                                 \
     default: /* invalid  pc */                         \
         COGO_ASSERT(((void)"cogo_pc isn't valid", 0)); \
         goto cogo_exit;                                \
-    case -1u: /* coroutine end */                      \
+    case -1: /* coroutine end */                       \
         goto cogo_exit;                                \
     case 0 /* coroutine begin */
 
@@ -91,10 +91,11 @@ typedef struct cogo_yield {
 #define CO_RETURN \
     goto cogo_return /* end coroutine */
 
-#define CO_END                  \
-cogo_return:                    \
-    COGO_PC = -1u; /* finish */ \
-    }                           \
-    cogo_exit // label
+#define CO_END                   \
+cogo_return:                     \
+    COGO_PC = -1; /* finished */ \
+    }                            \
+    /* clang-format off */       \
+cogo_exit /* clang-format on */
 
 #endif  // MOXITREL_COGO_YIELD_IMPL_H_

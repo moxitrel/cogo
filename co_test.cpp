@@ -58,29 +58,29 @@ TEST(cogo_co_t, Step) {
     cogo_sch_t sch = {
             .stack_top = (cogo_co_t*)&f1,
     };
-    ASSERT_EQ(CO_STATE(&f1), 0);
-    ASSERT_EQ(CO_STATE(&f2), 0);
-    ASSERT_EQ(CO_STATE(&f3), 0);
+    ASSERT_EQ(CO_STATUS(&f1), 0);
+    ASSERT_EQ(CO_STATUS(&f2), 0);
+    ASSERT_EQ(CO_STATUS(&f3), 0);
 
     // F2 yield
     auto co = cogo_sch_step(&sch);
     EXPECT_EQ(co, (cogo_co_t*)&f2);
-    EXPECT_GT(CO_STATE(&f1), 0);
-    EXPECT_GT(CO_STATE(&f2), 0);
-    EXPECT_EQ(CO_STATE(&f3), 0);
+    EXPECT_GT(CO_STATUS(&f1), 0);
+    EXPECT_GT(CO_STATUS(&f2), 0);
+    EXPECT_EQ(CO_STATUS(&f3), 0);
 
     // F3 first yield
     co = cogo_sch_step(&sch);
     EXPECT_EQ(co, (cogo_co_t*)&f3);
-    EXPECT_GT(CO_STATE(&f1), 0);
-    EXPECT_GT(CO_STATE(&f2), 0);
-    EXPECT_GT(CO_STATE(&f3), 0);
+    EXPECT_GT(CO_STATUS(&f1), 0);
+    EXPECT_GT(CO_STATUS(&f2), 0);
+    EXPECT_GT(CO_STATUS(&f3), 0);
 
     // F3 co_return
     co = cogo_sch_step(&sch);
-    EXPECT_EQ(CO_STATE(&f1), -1u);
-    EXPECT_EQ(CO_STATE(&f2), -1u);
-    EXPECT_EQ(CO_STATE(&f3), -1u);
+    EXPECT_EQ(CO_STATUS(&f1), -1);
+    EXPECT_EQ(CO_STATUS(&f2), -1);
+    EXPECT_EQ(CO_STATUS(&f3), -1);
 }
 
 static unsigned fibonacci(unsigned n) {
@@ -115,8 +115,8 @@ CO_BEGIN:
         assert(fib_n1 != nullptr);
         assert(fib_n2 != nullptr);
 
-        *fib_n1 = CO_MAKE(Fibonacci, n - 1);
-        *fib_n2 = CO_MAKE(Fibonacci, n - 2);
+        *fib_n1 = CO_MAKE(Fibonacci, .n = n - 1);
+        *fib_n2 = CO_MAKE(Fibonacci, .n = n - 2);
         CO_AWAIT(fib_n1);  // eval f(n-1)
         CO_AWAIT(fib_n2);  // eval f(n-2)
         v = fib_n1->v + fib_n2->v;
@@ -134,11 +134,11 @@ TEST(cogo_co_t, Run) {
         Fibonacci fib;
         unsigned value;
     } example[] = {
-            {CO_MAKE(Fibonacci, 0), fibonacci(0)},
-            {CO_MAKE(Fibonacci, 1), fibonacci(1)},
-            {CO_MAKE(Fibonacci, 11), fibonacci(11)},
-            {CO_MAKE(Fibonacci, 23), fibonacci(23)},
-            {CO_MAKE(Fibonacci, 29), fibonacci(29)},
+            {CO_MAKE(Fibonacci, .n = 0), fibonacci(0)},
+            {CO_MAKE(Fibonacci, .n = 1), fibonacci(1)},
+            {CO_MAKE(Fibonacci, .n = 11), fibonacci(11)},
+            {CO_MAKE(Fibonacci, .n = 23), fibonacci(23)},
+            {CO_MAKE(Fibonacci, .n = 29), fibonacci(29)},
     };
 
     for (size_t i = 0; i < sizeof(example) / sizeof(example[0]); i++) {

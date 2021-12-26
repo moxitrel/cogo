@@ -5,7 +5,7 @@ CO_BEGIN                : ...
 CO_END                  : ...
 CO_YIELD                : ...
 CO_RETURN               : ...
-CO_STATE  (CO)          : ...
+CO_STATUS  (CO)          : ...
 CO_THIS                 : ...
 CO_DECLARE(NAME, ...)   : ...
 CO_DEFINE (NAME)        : ...
@@ -59,7 +59,7 @@ struct cogo_sch {
 // switch context if return !0
 inline int cogo_sch_add(cogo_sch_t*, cogo_co_t*);
 
-// remove and rethrn the next coroutine to be run
+// pop the next coroutine to be run
 inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
 
 //
@@ -107,10 +107,10 @@ inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
             // blocked
             break;
         }
-        switch (CO_STATE(sch->stack_top)) {
+        switch (CO_STATUS(sch->stack_top)) {
         case 0:  // await
             continue;
-        case -1u:  // return
+        case -1:  // return
             sch->stack_top = sch->stack_top->caller;
             continue;
         default:  // yield
