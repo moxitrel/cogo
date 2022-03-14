@@ -55,16 +55,14 @@ struct co_sch {
     // inherent cogo_sch_t
     cogo_sch_t cogo_sch;
     // coroutine queue run concurrently
-    COGO_QUEUE_T(co_t)
-    q;
+    COGO_QUEUE_T(co_t) q;
 };
 
 // implement cogo_sch_add()
 inline int cogo_sch_add(cogo_sch_t* sch, cogo_co_t* co) {
     COGO_ASSERT(sch);
     COGO_ASSERT(co);
-    COGO_QUEUE_PUSH(co_t)
-    (&((co_sch_t*)sch)->q, (co_t*)co);
+    COGO_QUEUE_PUSH(co_t)(&((co_sch_t*)sch)->q, (co_t*)co);
     return 1;  // switch context
 }
 
@@ -185,6 +183,6 @@ inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg) {
 
 #undef CO_MAKE
 #define CO_MAKE(NAME, ...) \
-    ((NAME){{.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
+    ((NAME##_t){{.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
 
 #endif  // MOXITREL_COGO_CO_IMPL_H_

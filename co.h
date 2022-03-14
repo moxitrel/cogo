@@ -128,6 +128,6 @@ inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
 
 #undef CO_MAKE
 #define CO_MAKE(NAME, ...) \
-    ((NAME){{.func = NAME##_func}, __VA_ARGS__})
+    ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
 
 #endif  // MOXITREL_COGO_CO_H_

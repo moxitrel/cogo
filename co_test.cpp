@@ -29,7 +29,7 @@ static inline void cogo_co_run(void* co) {
     }
 }
 
-CO_DECLARE(static F3) {
+CO_DECLARE(static fc3) {
 CO_BEGIN:
     CO_YIELD;
     CO_RETURN;
@@ -37,21 +37,21 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(static F2, F3 f3) {
+CO_DECLARE(static fc2, fc3_t f3) {
 CO_BEGIN:
     CO_YIELD;
-    CO_AWAIT(&((F2*)CO_THIS)->f3);
+    CO_AWAIT(&((fc2_t*)CO_THIS)->f3);
 CO_END:;
 }
 
-CO_DECLARE(static F1, F2 f2) {
+CO_DECLARE(static fc1, fc2_t f2) {
 CO_BEGIN:
-    CO_AWAIT(&((F1*)CO_THIS)->f2);
+    CO_AWAIT(&((fc1_t*)CO_THIS)->f2);
 CO_END:;
 }
 
 TEST(cogo_co_t, Step) {
-    F1 f1 = CO_MAKE(F1, CO_MAKE(F2, CO_MAKE(F3)));
+    fc1_t f1 = CO_MAKE(fc1, CO_MAKE(fc2, CO_MAKE(fc3)));
     auto& f2 = f1.f2;
     auto& f3 = f2.f3;
 
@@ -62,21 +62,21 @@ TEST(cogo_co_t, Step) {
     ASSERT_EQ(CO_STATUS(&f2), 0);
     ASSERT_EQ(CO_STATUS(&f3), 0);
 
-    // F2 yield
+    // fc2 yield
     auto co = cogo_sch_step(&sch);
     EXPECT_EQ(co, (cogo_co_t*)&f2);
     EXPECT_GT(CO_STATUS(&f1), 0);
     EXPECT_GT(CO_STATUS(&f2), 0);
     EXPECT_EQ(CO_STATUS(&f3), 0);
 
-    // F3 first yield
+    // fc3 first yield
     co = cogo_sch_step(&sch);
     EXPECT_EQ(co, (cogo_co_t*)&f3);
     EXPECT_GT(CO_STATUS(&f1), 0);
     EXPECT_GT(CO_STATUS(&f2), 0);
     EXPECT_GT(CO_STATUS(&f3), 0);
 
-    // F3 co_return
+    // fc3 co_return
     co = cogo_sch_step(&sch);
     EXPECT_EQ(CO_STATUS(&f1), -1);
     EXPECT_EQ(CO_STATUS(&f2), -1);
@@ -94,8 +94,8 @@ static unsigned fibonacci(unsigned n) {
     }
 }
 
-CO_DECLARE(static Fibonacci, unsigned n, unsigned v, Fibonacci* fib_n1, Fibonacci* fib_n2) {
-    auto* thiz = (Fibonacci*)CO_THIS;
+CO_DECLARE(static fibonacci, unsigned n, unsigned v, fibonacci_t* fib_n1, fibonacci_t* fib_n2) {
+    auto* thiz = (fibonacci_t*)CO_THIS;
     auto& n = thiz->n;
     auto& v = thiz->v;
     auto& fib_n1 = thiz->fib_n1;
@@ -110,13 +110,13 @@ CO_BEGIN:
         v = 1;
         CO_RETURN;
     default:  // f(n) = f(n-1) + f(n-2)
-        fib_n1 = (Fibonacci*)malloc(sizeof(*fib_n1));
-        fib_n2 = (Fibonacci*)malloc(sizeof(*fib_n2));
+        fib_n1 = (fibonacci_t*)malloc(sizeof(*fib_n1));
+        fib_n2 = (fibonacci_t*)malloc(sizeof(*fib_n2));
         assert(fib_n1 != nullptr);
         assert(fib_n2 != nullptr);
 
-        *fib_n1 = CO_MAKE(Fibonacci, .n = n - 1);
-        *fib_n2 = CO_MAKE(Fibonacci, .n = n - 2);
+        *fib_n1 = CO_MAKE(fibonacci, .n = n - 1);
+        *fib_n2 = CO_MAKE(fibonacci, .n = n - 2);
         CO_AWAIT(fib_n1);  // eval f(n-1)
         CO_AWAIT(fib_n2);  // eval f(n-2)
         v = fib_n1->v + fib_n2->v;
@@ -131,14 +131,14 @@ CO_END:;
 
 TEST(cogo_co_t, Run) {
     struct {
-        Fibonacci fib;
+        fibonacci_t fib;
         unsigned value;
     } example[] = {
-            {CO_MAKE(Fibonacci, .n = 0), fibonacci(0)},
-            {CO_MAKE(Fibonacci, .n = 1), fibonacci(1)},
-            {CO_MAKE(Fibonacci, .n = 11), fibonacci(11)},
-            {CO_MAKE(Fibonacci, .n = 23), fibonacci(23)},
-            {CO_MAKE(Fibonacci, .n = 29), fibonacci(29)},
+            {CO_MAKE(fibonacci, .n = 0), fibonacci(0)},
+            {CO_MAKE(fibonacci, .n = 1), fibonacci(1)},
+            {CO_MAKE(fibonacci, .n = 11), fibonacci(11)},
+            {CO_MAKE(fibonacci, .n = 23), fibonacci(23)},
+            {CO_MAKE(fibonacci, .n = 29), fibonacci(29)},
     };
 
     for (size_t i = 0; i < sizeof(example) / sizeof(example[0]); i++) {

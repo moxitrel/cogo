@@ -45,14 +45,14 @@ NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g
 #define COGO_STRUCT1(...)         COGO_STRUCT2(__VA_ARGS__)
 #define COGO_STRUCT2(N, ...)      COGO_STRUCT3_##N(__VA_ARGS__)
 #define COGO_STRUCT3_1(NAME, ...) /* NAME: Type */ \
-    typedef struct NAME NAME;                      \
+    typedef struct NAME NAME##_t;                  \
     struct NAME {                                  \
         COGO_MAP(;, COGO_ID, __VA_ARGS__);         \
     }
-#define COGO_STRUCT3_2(NAME, ...) /* NAME: static Type */                 \
-    typedef struct COGO_REMOVE_LINKAGE_##NAME COGO_REMOVE_LINKAGE_##NAME; \
-    struct COGO_REMOVE_LINKAGE_##NAME {                                   \
-        COGO_MAP(;, COGO_ID, __VA_ARGS__);                                \
+#define COGO_STRUCT3_2(NAME, ...) /* NAME: static Type */                     \
+    typedef struct COGO_REMOVE_LINKAGE_##NAME COGO_REMOVE_LINKAGE_##NAME##_t; \
+    struct COGO_REMOVE_LINKAGE_##NAME {                                       \
+        COGO_MAP(;, COGO_ID, __VA_ARGS__);                                    \
     }
 
 #define COGO_DECLARE(NAME, BASE, ...)                                                                 \
@@ -66,6 +66,6 @@ NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g
     COGO_DECLARE(NAME, cogo_yield_t cogo_yield, __VA_ARGS__)
 
 #define CO_MAKE(NAME, ...) \
-    ((NAME){{0}, __VA_ARGS__})
+    ((NAME##_t){{0}, __VA_ARGS__})
 
 #endif  // MOXITREL_COGO_YIELD_H_
