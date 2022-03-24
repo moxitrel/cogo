@@ -29,7 +29,7 @@ inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
 #ifndef MOXITREL_COGO_CO_H_
 #define MOXITREL_COGO_CO_H_
 
-#include "yield.h"
+#include "cogo_yield.h"
 
 typedef struct cogo_co cogo_co_t;    // coroutine
 typedef struct cogo_sch cogo_sch_t;  // scheduler

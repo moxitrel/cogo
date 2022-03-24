@@ -26,7 +26,7 @@ CO_CHAN_READ (co_chan_t*, co_msg_t*)    : receive a message from channel, the re
 #define MOXITREL_COGO_CO_IMPL_H_
 
 #include <stddef.h>
-#include "co.h"
+#include "cogo_co.h"
 
 typedef struct co co_t;
 typedef struct co_sch co_sch_t;

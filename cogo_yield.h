@@ -19,9 +19,9 @@ NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g
 #define MOXITREL_COGO_YIELD_H_
 
 #if defined(__GNUC__)
-    #include "yield_label_value.h"
+    #include "cogo_yield_label_value.h"
 #else
-    #include "yield_case.h"
+    #include "cogo_yield_case.h"
 #endif
 
 #include "utils.h"

@@ -1,13 +1,13 @@
 #include <assert.h>
 
 #if defined(COGO_CASE)
-    #include "yield_case.h"
+    #include "cogo_yield_case.h"
 #elif defined(COGO_LABEL_VALUE)
-    #include "yield_label_value.h"
+    #include "cogo_yield_label_value.h"
 #endif
 
 #include "gtest/gtest.h"
-#include "yield.h"
+#include "cogo_yield.h"
 
 CO_DECLARE(static coyield, int v) {
 CO_BEGIN:

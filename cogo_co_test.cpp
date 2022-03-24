@@ -1,4 +1,4 @@
-#include "co.h"
+#include "cogo_co.h"
 #include <assert.h>
 #include <stdlib.h>
 #include "gtest/gtest.h"
