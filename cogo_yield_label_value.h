@@ -35,6 +35,7 @@ yield_end:;                     //
 - Use GCC extension.
 
 */
+// clang-format off
 #ifndef MOXITREL_COGO_YIELD_IMPL_H_
 #define MOXITREL_COGO_YIELD_IMPL_H_
 #include <stdint.h>
@@ -44,6 +45,9 @@ yield_end:;                     //
 #else
     #define COGO_ASSERT(...) /* nop */
 #endif
+
+#define COGO_STATUS_STARTED     0
+#define COGO_STATUS_STOPPED     -1
 
 // yield context
 typedef struct cogo_yield {
@@ -59,34 +63,32 @@ typedef struct cogo_yield {
 // get the current running state
 #define CO_STATUS(CO) ((intptr_t)((cogo_yield_t *)(CO))->cogo_pc)
 
-#define CO_BEGIN                                                                                    \
-    if (!COGO_PC) {                                                                                 \
-        goto cogo_enter;                                                                            \
-        /* remove compiler error: indirect goto in function with no address-of-label expressions */ \
-        COGO_PC = &&cogo_enter;                                                                     \
-    } else if (COGO_PC == (const void *)-1) {                                                       \
-        goto cogo_exit;                                                                             \
-    } else {                                                                                        \
-        goto *COGO_PC;                                                                              \
-    }                                                                                               \
-    /* clang-format off */                                                                          \
-cogo_enter /* clang-format on */
+#define CO_BEGIN                                                \
+    switch((intptr_t)COGO_PC) {                                 \
+    case COGO_STATUS_STARTED:                                   \
+        goto cogo_enter;                                        \
+        COGO_PC = &&cogo_enter;  /* remove compiler error */    \
+    case COGO_STATUS_STOPPED:                                   \
+        goto cogo_exit;                                         \
+    default:                                                    \
+        goto *COGO_PC;                                          \
+    }                                                           \
+    cogo_enter
 
-#define CO_YIELD                                            \
-    do {                                                    \
-        COGO_PC = &&COGO_LABEL; /* 1. save restore point */ \
-        goto cogo_exit;         /* 2. return */             \
-    COGO_LABEL:;                /* 3. restore point */      \
+#define CO_YIELD                                                \
+    do {                                                        \
+        COGO_PC = &&COGO_LABEL; /* 1. save restore point */     \
+        goto cogo_exit;         /* 2. return */                 \
+    COGO_LABEL:;                /* 3. restore point */          \
     } while (0)
 
-#define CO_RETURN \
-    goto cogo_return /* end coroutine */
+#define CO_RETURN                                               \
+    goto cogo_return            /* end coroutine */
 
-#define CO_END                                 \
-cogo_return:                                   \
-    COGO_PC = (const void *)-1; /* finished */ \
-    /* clang-format off */                     \
-cogo_exit                   /* clang-format on */
+#define CO_END                                                  \
+    cogo_return:                                                \
+        COGO_PC = (const void *)COGO_STATUS_STOPPED;            \
+    cogo_exit
 
 // Make goto label.
 // e.g. COGO_LABEL(13)       -> cogo_yield_13

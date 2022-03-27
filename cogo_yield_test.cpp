@@ -6,8 +6,8 @@
     #include "cogo_yield_label_value.h"
 #endif
 
-#include "gtest/gtest.h"
 #include "cogo_yield.h"
+#include "gtest/gtest.h"
 
 CO_DECLARE(static coyield, int v) {
 CO_BEGIN:
@@ -19,21 +19,21 @@ CO_END:;
 
 TEST(cogo_yield_t, Yield) {
     coyield_t coyield1 = CO_MAKE(coyield, 0);
-    EXPECT_EQ(CO_STATUS(&coyield1), 0);  // init
+    EXPECT_EQ(CO_STATUS(&coyield1), COGO_STATUS_STARTED);  // init
     EXPECT_EQ(coyield1.v, 0);
 
     coyield_func(&coyield1);
-    EXPECT_NE(CO_STATUS(&coyield1), 0);   // running
-    EXPECT_NE(CO_STATUS(&coyield1), -1);  // running
+    EXPECT_NE(CO_STATUS(&coyield1), COGO_STATUS_STARTED);  // running
+    EXPECT_NE(CO_STATUS(&coyield1), COGO_STATUS_STOPPED);  // running
     EXPECT_EQ(coyield1.v, 1);
 
     coyield_func(&coyield1);
-    EXPECT_EQ(CO_STATUS(&coyield1), -1);  // end
+    EXPECT_EQ(CO_STATUS(&coyield1), COGO_STATUS_STOPPED);  // end
     EXPECT_EQ(coyield1.v, 2);
 
     // noop when coroutine end
     coyield_func(&coyield1);
-    EXPECT_EQ(CO_STATUS(&coyield1), -1);
+    EXPECT_EQ(CO_STATUS(&coyield1), COGO_STATUS_STOPPED);
     EXPECT_EQ(coyield1.v, 2);
 }
 
@@ -47,11 +47,11 @@ CO_END:;
 
 TEST(cogo_yield_t, Return) {
     coreturn_t coreturn1 = CO_MAKE(coreturn, 0);
-    EXPECT_EQ(CO_STATUS(&coreturn1), 0);  // init
+    EXPECT_EQ(CO_STATUS(&coreturn1), COGO_STATUS_STARTED);  // init
     EXPECT_EQ(coreturn1.v, 0);
 
     coreturn_func(&coreturn1);
-    EXPECT_EQ(CO_STATUS(&coreturn1), -1);  // end
+    EXPECT_EQ(CO_STATUS(&coreturn1), COGO_STATUS_STOPPED);  // end
     EXPECT_EQ(coreturn1.v, 1);
 }
 
@@ -71,7 +71,7 @@ CO_END:
 TEST(cogo_yield_t, Prologue) {
     prologue_t prologue = CO_MAKE(prologue, 0, 0);
 
-    while (CO_STATUS(&prologue) != -1) {
+    while (CO_STATUS(&prologue) != COGO_STATUS_STOPPED) {
         prologue_func(&prologue);
         std::printf("%jx\n", (uintmax_t)CO_STATUS(&prologue));
     }

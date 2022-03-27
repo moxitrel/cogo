@@ -46,19 +46,19 @@ if (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     set(CMAKE_CXX_STANDARD 11)
     link_libraries(cogo GTest::GTest GTest::Main)
 
-    # yield_case
+    # cogo_yield_case
     add_executable(cogo_yield_case_test cogo_yield_test.cpp)
     target_compile_definitions(cogo_yield_case_test PRIVATE COGO_CASE)
     target_compile_options(cogo_yield_case_test PRIVATE -Wno-unreachable-code)
     gtest_discover_tests(cogo_yield_case_test)
 
-    # yield_label_value
+    # cogo_yield_label_value
     add_executable(cogo_yield_label_value_test cogo_yield_test.cpp)
     target_compile_definitions(cogo_yield_label_value_test PRIVATE COGO_LABEL_VALUE)
     target_compile_options(cogo_yield_label_value_test PRIVATE -Wno-unreachable-code)
     gtest_discover_tests(cogo_yield_label_value_test)
 
-    # co
+    # cogo_co
     add_executable(cogo_co_test cogo_co_test.cpp)
     gtest_discover_tests(cogo_co_test)
 

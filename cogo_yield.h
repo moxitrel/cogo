@@ -15,6 +15,7 @@ CO_MAKE   (NAME, ...)   : coroutine maker.
 NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g. Nat_func
 
 */
+// clang-format off
 #ifndef MOXITREL_COGO_YIELD_H_
 #define MOXITREL_COGO_YIELD_H_
 
@@ -59,13 +60,13 @@ NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g
     COGO_IFNIL(COGO_ARG(__VA_ARGS__), COGO_STRUCT(NAME, BASE), COGO_STRUCT(NAME, BASE, __VA_ARGS__)); \
     CO_DEFINE(NAME)
 
-#define CO_DEFINE(NAME) \
+#define CO_DEFINE(NAME)         \
     void NAME##_func(void* CO_THIS)
 
-#define CO_DECLARE(NAME, ...) \
+#define CO_DECLARE(NAME, ...)   \
     COGO_DECLARE(NAME, cogo_yield_t cogo_yield, __VA_ARGS__)
 
-#define CO_MAKE(NAME, ...) \
+#define CO_MAKE(NAME, ...)      \
     ((NAME##_t){{0}, __VA_ARGS__})
 
 #endif  // MOXITREL_COGO_YIELD_H_

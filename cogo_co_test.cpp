@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 
 // put a coroutine into queue
-inline int cogo_sch_add(cogo_sch_t* sch, cogo_co_t* co) {
+inline int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
     assert(sch);
     assert(sch->stack_top);
     assert(co);
@@ -16,7 +16,7 @@ inline int cogo_sch_add(cogo_sch_t* sch, cogo_co_t* co) {
 }
 
 // fetch the next coroutine to be run
-inline cogo_co_t* cogo_sch_rm(cogo_sch_t* sch) {
+inline cogo_co_t* cogo_sch_pop(cogo_sch_t* sch) {
     assert(sch);
     return sch->stack_top;
 }
@@ -38,49 +38,51 @@ CO_END:;
 }
 
 CO_DECLARE(static fc2, fc3_t f3) {
+    auto* thiz = static_cast<fc2_t*>(CO_THIS);
 CO_BEGIN:
     CO_YIELD;
-    CO_AWAIT(&((fc2_t*)CO_THIS)->f3);
+    CO_AWAIT(&thiz->f3);
 CO_END:;
 }
 
 CO_DECLARE(static fc1, fc2_t f2) {
+    auto* thiz = static_cast<fc1_t*>(CO_THIS);
 CO_BEGIN:
-    CO_AWAIT(&((fc1_t*)CO_THIS)->f2);
+    CO_AWAIT(&thiz->f2);
 CO_END:;
 }
 
 TEST(cogo_co_t, Step) {
-    fc1_t f1 = CO_MAKE(fc1, CO_MAKE(fc2, CO_MAKE(fc3)));
-    auto& f2 = f1.f2;
-    auto& f3 = f2.f3;
+    auto&& f1 = CO_MAKE(fc1, CO_MAKE(fc2, CO_MAKE(fc3)));
+    auto&& f2 = f1.f2;
+    auto&& f3 = f2.f3;
 
     cogo_sch_t sch = {
             .stack_top = (cogo_co_t*)&f1,
     };
-    ASSERT_EQ(CO_STATUS(&f1), 0);
-    ASSERT_EQ(CO_STATUS(&f2), 0);
-    ASSERT_EQ(CO_STATUS(&f3), 0);
+    ASSERT_EQ(CO_STATUS(&f1), COGO_STATUS_STARTED);
+    ASSERT_EQ(CO_STATUS(&f2), COGO_STATUS_STARTED);
+    ASSERT_EQ(CO_STATUS(&f3), COGO_STATUS_STARTED);
 
     // fc2 yield
     auto co = cogo_sch_step(&sch);
     EXPECT_EQ(co, (cogo_co_t*)&f2);
-    EXPECT_GT(CO_STATUS(&f1), 0);
-    EXPECT_GT(CO_STATUS(&f2), 0);
-    EXPECT_EQ(CO_STATUS(&f3), 0);
+    EXPECT_GT(CO_STATUS(&f1), COGO_STATUS_STARTED);
+    EXPECT_GT(CO_STATUS(&f2), COGO_STATUS_STARTED);
+    EXPECT_EQ(CO_STATUS(&f3), COGO_STATUS_STARTED);
 
     // fc3 first yield
     co = cogo_sch_step(&sch);
     EXPECT_EQ(co, (cogo_co_t*)&f3);
-    EXPECT_GT(CO_STATUS(&f1), 0);
-    EXPECT_GT(CO_STATUS(&f2), 0);
-    EXPECT_GT(CO_STATUS(&f3), 0);
+    EXPECT_GT(CO_STATUS(&f1), COGO_STATUS_STARTED);
+    EXPECT_GT(CO_STATUS(&f2), COGO_STATUS_STARTED);
+    EXPECT_GT(CO_STATUS(&f3), COGO_STATUS_STARTED);
 
     // fc3 co_return
     co = cogo_sch_step(&sch);
-    EXPECT_EQ(CO_STATUS(&f1), -1);
-    EXPECT_EQ(CO_STATUS(&f2), -1);
-    EXPECT_EQ(CO_STATUS(&f3), -1);
+    EXPECT_EQ(CO_STATUS(&f1), COGO_STATUS_STOPPED);
+    EXPECT_EQ(CO_STATUS(&f2), COGO_STATUS_STOPPED);
+    EXPECT_EQ(CO_STATUS(&f3), COGO_STATUS_STOPPED);
 }
 
 static unsigned fibonacci(unsigned n) {
@@ -95,7 +97,7 @@ static unsigned fibonacci(unsigned n) {
 }
 
 CO_DECLARE(static fibonacci, unsigned n, unsigned v, fibonacci_t* fib_n1, fibonacci_t* fib_n2) {
-    auto* thiz = (fibonacci_t*)CO_THIS;
+    auto* thiz = static_cast<fibonacci_t*>(CO_THIS);
     auto& n = thiz->n;
     auto& v = thiz->v;
     auto& fib_n1 = thiz->fib_n1;
@@ -110,19 +112,19 @@ CO_BEGIN:
         v = 1;
         CO_RETURN;
     default:  // f(n) = f(n-1) + f(n-2)
-        fib_n1 = (fibonacci_t*)malloc(sizeof(*fib_n1));
-        fib_n2 = (fibonacci_t*)malloc(sizeof(*fib_n2));
-        assert(fib_n1 != nullptr);
-        assert(fib_n2 != nullptr);
-
+        fib_n1 = (fibonacci_t*)operator new(sizeof(*fib_n1));
+        fib_n2 = (fibonacci_t*)operator new(sizeof(*fib_n2));
+        assert(fib_n1);
+        assert(fib_n2);
         *fib_n1 = CO_MAKE(fibonacci, .n = n - 1);
         *fib_n2 = CO_MAKE(fibonacci, .n = n - 2);
+
         CO_AWAIT(fib_n1);  // eval f(n-1)
         CO_AWAIT(fib_n2);  // eval f(n-2)
         v = fib_n1->v + fib_n2->v;
 
-        free(fib_n1);
-        free(fib_n2);
+        operator delete(fib_n1);
+        operator delete(fib_n2);
         CO_RETURN;
     }
 

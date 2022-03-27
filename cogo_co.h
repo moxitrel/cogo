@@ -5,7 +5,7 @@ CO_BEGIN                : ...
 CO_END                  : ...
 CO_YIELD                : ...
 CO_RETURN               : ...
-CO_STATUS  (CO)          : ...
+CO_STATUS  (CO)         : ...
 CO_THIS                 : ...
 CO_DECLARE(NAME, ...)   : ...
 CO_DEFINE (NAME)        : ...
@@ -19,10 +19,10 @@ cogo_sch_t                  : sheduler  type, should be inherited by user.
 cogo_sch_step(cogo_sch_t*)  : Run the current coroutine until yield or finished, return the next coroutine to be run.
 
 // TODO: add a coroutine to the running queue.
-inline int cogo_sch_add(cogo_sch_t*, cogo_co_t*);
+inline int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 
 // TODO: remove and return the next coroutine to be run.
-inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
+inline cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
 
 */
@@ -57,10 +57,10 @@ struct cogo_sch {
 
 // add coroutine into the concurrent queue
 // switch context if return !0
-inline int cogo_sch_add(cogo_sch_t*, cogo_co_t*);
+inline int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 
 // pop the next coroutine to be run
-inline cogo_co_t* cogo_sch_rm(cogo_sch_t*);
+inline cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
 //
 // cogo_co_t
@@ -86,11 +86,11 @@ static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee) {
 }
 
 // CO_START(cogo_co_t*): add a new coroutine to the scheduler.
-#define CO_START(CO)                                                             \
-    do {                                                                         \
-        if (cogo_sch_add(((cogo_co_t*)(CO_THIS))->sch, (cogo_co_t*)(CO)) != 0) { \
-            CO_YIELD;                                                            \
-        }                                                                        \
+#define CO_START(CO)                                                              \
+    do {                                                                          \
+        if (cogo_sch_push(((cogo_co_t*)(CO_THIS))->sch, (cogo_co_t*)(CO)) != 0) { \
+            CO_YIELD;                                                             \
+        }                                                                         \
     } while (0)
 
 //
@@ -108,18 +108,18 @@ inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
             break;
         }
         switch (CO_STATUS(sch->stack_top)) {
-        case 0:  // await
+        case COGO_STATUS_STARTED:  // await
             continue;
-        case -1:  // return
+        case COGO_STATUS_STOPPED:  // return
             sch->stack_top = sch->stack_top->caller;
             continue;
         default:  // yield
-            cogo_sch_add(sch, sch->stack_top);
+            cogo_sch_push(sch, sch->stack_top);
             break;
         }
         break;
     }
-    return sch->stack_top = cogo_sch_rm(sch);
+    return sch->stack_top = cogo_sch_pop(sch);
 }
 
 #undef CO_DECLARE

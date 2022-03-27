@@ -48,14 +48,18 @@ void nat_func(nat_t* CO_THIS)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
+// clang-format off
 #ifndef MOXITREL_COGO_YIELD_IMPL_H_
 #define MOXITREL_COGO_YIELD_IMPL_H_
 
 #ifdef assert
-    #define COGO_ASSERT(...) assert(__VA_ARGS__)
+    #define COGO_ASSERT(...)    assert(__VA_ARGS__)
 #else
-    #define COGO_ASSERT(...) /* nop */
+    #define COGO_ASSERT(...)    /* nop */
 #endif
+
+#define COGO_STATUS_STARTED     0
+#define COGO_STATUS_STOPPED     -1
 
 // yield context
 typedef struct cogo_yield {
@@ -67,35 +71,34 @@ typedef struct cogo_yield {
 } cogo_yield_t;
 
 // cogo_yield_t.cogo_pc
-#define COGO_PC       (((cogo_yield_t*)(CO_THIS))->cogo_pc)
+#define COGO_PC         (((cogo_yield_t*)(CO_THIS))->cogo_pc)
 
 // get the current running state
-#define CO_STATUS(CO) (((cogo_yield_t*)(CO))->cogo_pc)
+#define CO_STATUS(CO)   (((cogo_yield_t*)(CO))->cogo_pc)
 
-#define CO_BEGIN                                       \
-    switch (COGO_PC) {                                 \
-    default: /* invalid  pc */                         \
-        COGO_ASSERT(((void)"cogo_pc isn't valid", 0)); \
-        goto cogo_exit;                                \
-    case -1: /* coroutine end */                       \
-        goto cogo_exit;                                \
-    case 0 /* coroutine begin */
+#define CO_BEGIN                                        \
+    switch (COGO_PC) {                                  \
+    default:                /* invalid  pc */           \
+        COGO_ASSERT(((void)"cogo_pc isn't valid", 0));  \
+        goto cogo_exit;                                 \
+    case COGO_STATUS_STOPPED: /* coroutine end */       \
+        goto cogo_exit;                                 \
+    case COGO_STATUS_STARTED  /* coroutine begin */
 
-#define CO_YIELD                                                               \
-    do {                                                                       \
-        COGO_PC = __LINE__; /* 1. save the restore point, at case __LINE__: */ \
-        goto cogo_exit;     /* 2. return */                                    \
-    case __LINE__:;         /* 3. restore point */                             \
+#define CO_YIELD                                                                \
+    do {                                                                        \
+        COGO_PC = __LINE__; /* 1. save the restore point, at case __LINE__: */  \
+        goto cogo_exit;     /* 2. return */                                     \
+    case __LINE__:;         /* 3. restore point */                              \
     } while (0)
 
-#define CO_RETURN \
-    goto cogo_return /* end coroutine */
+#define CO_RETURN                                   \
+    goto cogo_return        /* end coroutine */
 
-#define CO_END                   \
-cogo_return:                     \
-    COGO_PC = -1; /* finished */ \
-    }                            \
-    /* clang-format off */       \
-cogo_exit /* clang-format on */
+#define CO_END                                      \
+    cogo_return:                                    \
+        COGO_PC = COGO_STATUS_STOPPED;              \
+        }                                           \
+    cogo_exit
 
 #endif  // MOXITREL_COGO_YIELD_IMPL_H_
