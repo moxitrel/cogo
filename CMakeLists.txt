@@ -65,4 +65,8 @@ if (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     # co_st
     add_executable(co_st_test co_st_test.cpp)
     gtest_discover_tests(co_st_test)
+
+    # res_mgmt
+    add_executable(res_mgmt_test res_mgmt_test.cpp)
+    gtest_discover_tests(res_mgmt_test)
 endif()

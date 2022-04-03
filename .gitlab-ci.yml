@@ -1,0 +1,22 @@
+variables:
+  GTEST_ROOT: /usr/src/googletest/googletest
+
+default:
+  image: registry.gitlab.com/colorate/res_mgmt
+
+unit_test:
+  script:
+    # build googletest
+    - "cmake -S $GTEST_ROOT -B $GTEST_ROOT"
+    - "cmake --build $GTEST_ROOT"
+
+    # build
+    - "cd $(mktemp -d)"
+    - "cmake $CI_PROJECT_DIR -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+    - "cmake --build ."
+
+    # static analysis
+    - "cppcheck --project=compile_commands.json --enable=warning,performance,portability --error-exitcode=1"
+
+    # test
+    - "ctest --output-on-failure"
