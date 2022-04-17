@@ -77,28 +77,28 @@ typedef struct cogo_yield {
 #define CO_STATUS(CO)   (((cogo_yield_t*)(CO))->cogo_pc)
 
 #define CO_BEGIN                                        \
-    switch (COGO_PC) {                                  \
-    default:                /* invalid  pc */           \
+    switch (CO_STATUS(CO_THIS)) {                       \
+    default:                    /* invalid  pc */       \
         COGO_ASSERT(((void)"cogo_pc isn't valid", 0));  \
         goto cogo_exit;                                 \
-    case COGO_STATUS_STOPPED: /* coroutine end */       \
+    case COGO_STATUS_STOPPED:   /* coroutine end */     \
         goto cogo_exit;                                 \
-    case COGO_STATUS_STARTED  /* coroutine begin */
+    case COGO_STATUS_STARTED    /* coroutine begin */
 
-#define CO_YIELD                                                                \
-    do {                                                                        \
-        COGO_PC = __LINE__; /* 1. save the restore point, at case __LINE__: */  \
-        goto cogo_exit;     /* 2. return */                                     \
-    case __LINE__:;         /* 3. restore point */                              \
+#define CO_YIELD                                                                    \
+    do {                                                                            \
+        COGO_PC = __LINE__;     /* 1. save the restore point, at case __LINE__: */  \
+        goto cogo_exit;         /* 2. return */                                     \
+    case __LINE__:;             /* 3. restore point */                              \
     } while (0)
 
-#define CO_RETURN                                   \
-    goto cogo_return        /* end coroutine */
+#define CO_RETURN                                       \
+    goto cogo_return            /* end coroutine */
 
-#define CO_END                                      \
-    cogo_return:                                    \
-        COGO_PC = COGO_STATUS_STOPPED;              \
-        }                                           \
+#define CO_END                                          \
+    cogo_return:                                        \
+        COGO_PC = COGO_STATUS_STOPPED;                  \
+    }                                                   \
     cogo_exit
 
 #endif  // MOXITREL_COGO_YIELD_IMPL_H_

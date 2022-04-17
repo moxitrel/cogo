@@ -2,31 +2,31 @@
 #include <assert.h>
 #include "gtest/gtest.h"
 
-CO_DECLARE(static recv, co_chan_t* c, co_msg_t msgNext) {
-    auto* thiz = static_cast<recv_t*>(CO_THIS);
+CO_DECLARE(static recv, co_chan_t* chan, co_msg_t msg) {
+    auto& self = *static_cast<recv_t*>(CO_THIS);
 CO_BEGIN:
-    CO_CHAN_READ(thiz->c, &thiz->msgNext);
+    CO_CHAN_READ(self.chan, &self.msg);
 CO_END:;
 }
 
-CO_DECLARE(static send, co_chan_t* c, co_msg_t msg) {
+CO_DECLARE(static send, co_chan_t* chan, co_msg_t msg) {
     auto& self = *static_cast<send_t*>(CO_THIS);
 CO_BEGIN:
-    CO_CHAN_WRITE(self.c, &self.msg);
+    CO_CHAN_WRITE(self.chan, &self.msg);
 CO_END:;
 }
 
-CO_DECLARE(static entry, recv_t recv1, send_t send1) {
-    auto& self = *static_cast<entry_t*>(CO_THIS);
+CO_DECLARE(static main, recv_t recv, send_t send) {
+    auto& self = *static_cast<main_t*>(CO_THIS);
 CO_BEGIN:
-    CO_START(&self.recv1);
-    CO_START(&self.send1);
+    CO_START(&self.recv);
+    CO_START(&self.send);
 CO_END:;
 }
 
-TEST(co_chan_t, ReadWrite) {
-    auto c0 = CO_CHAN_MAKE(0);
-    auto entry = CO_MAKE(entry, CO_MAKE(recv, .c = &c0), CO_MAKE(send, .c = &c0));
-    co_run(&entry);
-    EXPECT_EQ(&entry.send1.msg, entry.recv1.msgNext.next);
+TEST(CogoChan, CoChan) {
+    auto chan = CO_CHAN_MAKE(0);
+    auto main = CO_MAKE(main, CO_MAKE(recv, &chan), CO_MAKE(send, &chan));
+    co_run(&main);
+    EXPECT_EQ(&main.send.msg, main.recv.msg.next);
 }

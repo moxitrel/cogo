@@ -36,6 +36,7 @@ typedef struct co_msg co_msg_t;
 struct co {
     // inherit cogo_co_t
     cogo_co_t cogo_co;
+
     // build coroutine queue
     co_t* next;
 };
@@ -55,6 +56,7 @@ struct co {
 struct co_sch {
     // inherent cogo_sch_t
     cogo_sch_t cogo_sch;
+
     // coroutine queue run concurrently
     COGO_QUEUE_T(co_t) q;
 };
@@ -80,6 +82,7 @@ static inline void co_run(void* co) {
             },
     };
     while (cogo_sch_step((cogo_sch_t*)&sch)) {
+        // noop
     }
 }
 
@@ -103,10 +106,13 @@ struct co_msg {
 typedef struct co_chan {
     // all coroutines blocked by this channel
     COGO_QUEUE_T(co_t) cq;
+
     // message queue
     COGO_QUEUE_T(co_msg_t) mq;
+
     // current size
     ptrdiff_t size;
+
     // max size
     const ptrdiff_t cap;
 } co_chan_t;
@@ -115,11 +121,11 @@ typedef struct co_chan {
 
 // CO_CHAN_READ(co_chan_t*, co_msg_t*);
 // MSG_NEXT: the read message sit in MSG_NEXT->next
-#define CO_CHAN_READ(CHAN, MSG_NEXT)                                     \
-    do {                                                                 \
-        if (cogo_chan_read((co_t*)(CO_THIS), (CHAN), (MSG_NEXT)) != 0) { \
-            CO_YIELD;                                                    \
-        }                                                                \
+#define CO_CHAN_READ(CHAN, MSG_NEXT)                                        \
+    do {                                                                    \
+        if (cogo_chan_read((co_t*)(CO_THIS), (CHAN), (MSG_NEXT)) != 0) {    \
+            CO_YIELD;                                                       \
+        }                                                                   \
     } while (0)
 inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next) {
     COGO_ASSERT(co);
@@ -137,12 +143,12 @@ inline int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next) {
         return 1;
     } else {
         msg_next->next = COGO_QUEUE_POP_NONEMPTY(co_msg_t)(&chan->mq);
-        // wake up a writer if exists
-        if (chan_size >= chan->cap) {
-            cogo_co_t* writer = (cogo_co_t*)COGO_QUEUE_POP_NONEMPTY(co_t)(&chan->cq);
-            return cogo_sch_push(((cogo_co_t*)co)->sch, writer);
+        if (chan_size < chan->cap) {
+            return 0;
         }
-        return 0;
+        // wake up a writer if exists
+        cogo_co_t* writer = (cogo_co_t*)COGO_QUEUE_POP_NONEMPTY(co_t)(&chan->cq);
+        return cogo_sch_push(((cogo_co_t*)co)->sch, writer);
     }
 }
 
@@ -168,22 +174,22 @@ inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg) {
         return cogo_sch_push(((cogo_co_t*)co)->sch, reader);
     } else {
         COGO_QUEUE_PUSH(co_msg_t)(&chan->mq, msg);
-        if (chan_size >= chan->cap) {
-            // sleep in background
-            COGO_QUEUE_PUSH(co_t)(&chan->cq, co);
-            ((cogo_co_t*)co)->sch->stack_top = NULL;
-            return 1;
+        if (chan_size < chan->cap) {
+            return 0;
         }
-        return 0;
+        // sleep in background
+        COGO_QUEUE_PUSH(co_t)(&chan->cq, co);
+        ((cogo_co_t*)co)->sch->stack_top = NULL;
+        return 1;
     }
 }
 
 #undef CO_DECLARE
-#define CO_DECLARE(NAME, ...) \
+#define CO_DECLARE(NAME, ...)   \
     COGO_DECLARE(NAME, co_t co, __VA_ARGS__)
 
 #undef CO_MAKE
-#define CO_MAKE(NAME, ...) \
+#define CO_MAKE(NAME, ...)      \
     ((NAME##_t){{.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
 
 #endif  // MOXITREL_COGO_CO_IMPL_H_

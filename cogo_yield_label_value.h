@@ -64,7 +64,7 @@ typedef struct cogo_yield {
 #define CO_STATUS(CO) ((intptr_t)((cogo_yield_t *)(CO))->cogo_pc)
 
 #define CO_BEGIN                                                \
-    switch((intptr_t)COGO_PC) {                                 \
+    switch(CO_STATUS(CO_THIS)) {                                \
     case COGO_STATUS_STARTED:                                   \
         goto cogo_enter;                                        \
         COGO_PC = &&cogo_enter;  /* remove compiler error */    \

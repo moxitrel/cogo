@@ -1,9 +1,9 @@
 #include "cogo_co.h"
-#include <assert.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdlib>
+#include <memory>
 #include "gtest/gtest.h"
 
-// put a coroutine into queue
 inline int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
     assert(sch);
     assert(sch->stack_top);
@@ -15,7 +15,6 @@ inline int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
     return 1;
 }
 
-// fetch the next coroutine to be run
 inline cogo_co_t* cogo_sch_pop(cogo_sch_t* sch) {
     assert(sch);
     return sch->stack_top;
@@ -23,13 +22,14 @@ inline cogo_co_t* cogo_sch_pop(cogo_sch_t* sch) {
 
 static inline void cogo_co_run(void* co) {
     cogo_sch_t sch = {
-            .stack_top = (cogo_co_t*)co,
+            .stack_top = static_cast<cogo_co_t*>(co),
     };
     while (cogo_sch_step(&sch)) {
+        // noop
     }
 }
 
-CO_DECLARE(static fc3) {
+CO_DECLARE(static f3) {
 CO_BEGIN:
     CO_YIELD;
     CO_RETURN;
@@ -37,28 +37,26 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(static fc2, fc3_t f3) {
-    auto* thiz = static_cast<fc2_t*>(CO_THIS);
+CO_DECLARE(static f2, f3_t f3) {
 CO_BEGIN:
     CO_YIELD;
-    CO_AWAIT(&thiz->f3);
+    CO_AWAIT(&static_cast<f2_t*>(CO_THIS)->f3);
 CO_END:;
 }
 
-CO_DECLARE(static fc1, fc2_t f2) {
-    auto* thiz = static_cast<fc1_t*>(CO_THIS);
+CO_DECLARE(static f1, f2_t f2) {
 CO_BEGIN:
-    CO_AWAIT(&thiz->f2);
+    CO_AWAIT(&static_cast<f1_t*>(CO_THIS)->f2);
 CO_END:;
 }
 
-TEST(cogo_co_t, Step) {
-    auto&& f1 = CO_MAKE(fc1, CO_MAKE(fc2, CO_MAKE(fc3)));
+TEST(CogoCo, Step) {
+    auto&& f1 = CO_MAKE(f1, CO_MAKE(f2, CO_MAKE(f3)));
     auto&& f2 = f1.f2;
     auto&& f3 = f2.f3;
 
     cogo_sch_t sch = {
-            .stack_top = (cogo_co_t*)&f1,
+            .stack_top = reinterpret_cast<cogo_co_t*>(&f1),
     };
     ASSERT_EQ(CO_STATUS(&f1), COGO_STATUS_STARTED);
     ASSERT_EQ(CO_STATUS(&f2), COGO_STATUS_STARTED);
@@ -66,14 +64,14 @@ TEST(cogo_co_t, Step) {
 
     // fc2 yield
     auto co = cogo_sch_step(&sch);
-    EXPECT_EQ(co, (cogo_co_t*)&f2);
+    EXPECT_EQ(co, reinterpret_cast<cogo_co_t*>(&f2));
     EXPECT_GT(CO_STATUS(&f1), COGO_STATUS_STARTED);
     EXPECT_GT(CO_STATUS(&f2), COGO_STATUS_STARTED);
     EXPECT_EQ(CO_STATUS(&f3), COGO_STATUS_STARTED);
 
     // fc3 first yield
     co = cogo_sch_step(&sch);
-    EXPECT_EQ(co, (cogo_co_t*)&f3);
+    EXPECT_EQ(co, reinterpret_cast<cogo_co_t*>(&f3));
     EXPECT_GT(CO_STATUS(&f1), COGO_STATUS_STARTED);
     EXPECT_GT(CO_STATUS(&f2), COGO_STATUS_STARTED);
     EXPECT_GT(CO_STATUS(&f3), COGO_STATUS_STARTED);
@@ -85,7 +83,9 @@ TEST(cogo_co_t, Step) {
     EXPECT_EQ(CO_STATUS(&f3), COGO_STATUS_STOPPED);
 }
 
-static unsigned fibonacci(unsigned n) {
+static int fibonacci(int n) {
+    assert(n >= 0);
+
     switch (n) {
     case 0:
         return 1;
@@ -96,13 +96,15 @@ static unsigned fibonacci(unsigned n) {
     }
 }
 
-CO_DECLARE(static fibonacci, unsigned n, unsigned v, fibonacci_t* fib_n1, fibonacci_t* fib_n2) {
+CO_DECLARE(static fibonacci, int n, int v, fibonacci_t* fib_n1, fibonacci_t* fib_n2) {
     auto* thiz = static_cast<fibonacci_t*>(CO_THIS);
     auto& n = thiz->n;
     auto& v = thiz->v;
     auto& fib_n1 = thiz->fib_n1;
     auto& fib_n2 = thiz->fib_n2;
+    auto alloc = std::allocator<fibonacci_t>{};
 CO_BEGIN:
+    assert(n >= 0);
 
     switch (n) {
     case 0:  // f(0) = 1
@@ -112,19 +114,19 @@ CO_BEGIN:
         v = 1;
         CO_RETURN;
     default:  // f(n) = f(n-1) + f(n-2)
-        fib_n1 = (fibonacci_t*)operator new(sizeof(*fib_n1));
-        fib_n2 = (fibonacci_t*)operator new(sizeof(*fib_n2));
+        fib_n1 = std::allocator_traits<decltype(alloc)>::allocate(alloc, 1);
+        fib_n2 = std::allocator_traits<decltype(alloc)>::allocate(alloc, 1);
         assert(fib_n1);
         assert(fib_n2);
-        *fib_n1 = CO_MAKE(fibonacci, .n = n - 1);
-        *fib_n2 = CO_MAKE(fibonacci, .n = n - 2);
+        *fib_n1 = CO_MAKE(fibonacci, n - 1);
+        *fib_n2 = CO_MAKE(fibonacci, n - 2);
 
         CO_AWAIT(fib_n1);  // eval f(n-1)
         CO_AWAIT(fib_n2);  // eval f(n-2)
         v = fib_n1->v + fib_n2->v;
 
-        operator delete(fib_n1);
-        operator delete(fib_n2);
+        std::allocator_traits<decltype(alloc)>::deallocate(alloc, fib_n1, 1);
+        std::allocator_traits<decltype(alloc)>::deallocate(alloc, fib_n2, 1);
         CO_RETURN;
     }
 
@@ -134,13 +136,13 @@ CO_END:;
 TEST(cogo_co_t, Run) {
     struct {
         fibonacci_t fib;
-        unsigned value;
+        int value;
     } example[] = {
-            {CO_MAKE(fibonacci, .n = 0), fibonacci(0)},
-            {CO_MAKE(fibonacci, .n = 1), fibonacci(1)},
-            {CO_MAKE(fibonacci, .n = 11), fibonacci(11)},
-            {CO_MAKE(fibonacci, .n = 23), fibonacci(23)},
-            {CO_MAKE(fibonacci, .n = 29), fibonacci(29)},
+            {CO_MAKE(fibonacci, 0), fibonacci(0)},
+            {CO_MAKE(fibonacci, 1), fibonacci(1)},
+            {CO_MAKE(fibonacci, 11), fibonacci(11)},
+            {CO_MAKE(fibonacci, 23), fibonacci(23)},
+            {CO_MAKE(fibonacci, 29), fibonacci(29)},
     };
 
     for (size_t i = 0; i < sizeof(example) / sizeof(example[0]); i++) {

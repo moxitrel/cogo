@@ -21,7 +21,7 @@ cogo_sch_step(cogo_sch_t*)  : Run the current coroutine until yield or finished,
 // TODO: add a coroutine to the running queue.
 inline int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 
-// TODO: remove and return the next coroutine to be run.
+// TODO: return and remove the next coroutine to be run.
 inline cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
 
@@ -45,13 +45,13 @@ struct cogo_co {
     // build call stack
     cogo_co_t* caller;
 
-    // scheduler, updated by cogo_sch_step()
+    // scheduler
     cogo_sch_t* sch;
 };
 
 // cogo_co_t scheduler
 struct cogo_sch {
-    // the coroutine run by scheduler
+    // the current coroutine run by scheduler
     cogo_co_t* stack_top;
 };
 
@@ -59,7 +59,7 @@ struct cogo_sch {
 // switch context if return !0
 inline int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 
-// pop the next coroutine to be run
+// return the next coroutine to be run, and remove it from the queue
 inline cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
 //
