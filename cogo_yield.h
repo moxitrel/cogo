@@ -16,10 +16,12 @@ NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g
 
 */
 // clang-format off
-#ifndef MOXITREL_COGO_YIELD_H_
-#define MOXITREL_COGO_YIELD_H_
+#ifndef COGO_COGO_YIELD_H_
+#define COGO_COGO_YIELD_H_
 
-#if defined(__GNUC__)
+#if defined(COGO_YIELD_CASE)
+    #include "cogo_yield_case.h"
+#elif defined(COGO_YIELD_LABEL_VALUE) || defined(__GNUC__)
     #include "cogo_yield_label_value.h"
 #else
     #include "cogo_yield_case.h"
@@ -69,4 +71,4 @@ NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g
 #define CO_MAKE(NAME, ...)      \
     ((NAME##_t){{0}, __VA_ARGS__})
 
-#endif  // MOXITREL_COGO_YIELD_H_
+#endif /* COGO_COGO_YIELD_H_ */

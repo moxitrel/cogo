@@ -18,16 +18,16 @@ cogo_co_t                   : coroutine type, should be inherited by user.
 cogo_sch_t                  : sheduler  type, should be inherited by user.
 cogo_sch_step(cogo_sch_t*)  : Run the current coroutine until yield or finished, return the next coroutine to be run.
 
-// TODO: add a coroutine to the running queue.
+// add a coroutine to the running queue.
 inline int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 
-// TODO: return and remove the next coroutine to be run.
+// return and remove the next coroutine to be run.
 inline cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
 
 */
-#ifndef MOXITREL_COGO_CO_H_
-#define MOXITREL_COGO_CO_H_
+#ifndef COGO_COGO_CO_H_
+#define COGO_COGO_CO_H_
 
 #include "cogo_yield.h"
 
@@ -130,4 +130,4 @@ inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
 #define CO_MAKE(NAME, ...) \
     ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
 
-#endif  // MOXITREL_COGO_CO_H_
+#endif /* COGO_COGO_CO_H_ */

@@ -36,8 +36,8 @@ yield_end:;                     //
 
 */
 // clang-format off
-#ifndef MOXITREL_COGO_YIELD_IMPL_H_
-#define MOXITREL_COGO_YIELD_IMPL_H_
+#ifndef COGO_COGO_YIELD_IMPL_H_
+#define COGO_COGO_YIELD_IMPL_H_
 #include <stdint.h>
 
 #ifdef assert
@@ -53,15 +53,15 @@ yield_end:;                     //
 typedef struct cogo_yield {
     // start point where coroutine function continue to run after yield.
     //  0: inited
-    // -1: finish successfully
-    const void *cogo_pc;
+    // -1: finished
+    const void* cogo_pc;
 } cogo_yield_t;
 
 // cogo_yield_t.cogo_pc
-#define COGO_PC       (((cogo_yield_t *)(CO_THIS))->cogo_pc)
+#define COGO_PC       (((cogo_yield_t*)(CO_THIS))->cogo_pc)
 
 // get the current running state
-#define CO_STATUS(CO) ((intptr_t)((cogo_yield_t *)(CO))->cogo_pc)
+#define CO_STATUS(CO) ((intptr_t)((cogo_yield_t*)(CO))->cogo_pc)
 
 #define CO_BEGIN                                                \
     switch(CO_STATUS(CO_THIS)) {                                \
@@ -87,7 +87,7 @@ typedef struct cogo_yield {
 
 #define CO_END                                                  \
     cogo_return:                                                \
-        COGO_PC = (const void *)COGO_STATUS_STOPPED;            \
+        COGO_PC = (const void*)COGO_STATUS_STOPPED;             \
     cogo_exit
 
 // Make goto label.
@@ -97,4 +97,4 @@ typedef struct cogo_yield {
 #define COGO_LABEL1(...) COGO_LABEL2(__VA_ARGS__)
 #define COGO_LABEL2(N)   cogo_yield_##N
 
-#endif  // MOXITREL_COGO_YIELD_IMPL_H_
+#endif /* COGO_COGO_YIELD_IMPL_H_ */

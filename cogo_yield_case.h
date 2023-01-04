@@ -49,8 +49,8 @@ void nat_func(nat_t* CO_THIS)
 
 */
 // clang-format off
-#ifndef MOXITREL_COGO_YIELD_IMPL_H_
-#define MOXITREL_COGO_YIELD_IMPL_H_
+#ifndef COGO_COGO_YIELD_IMPL_H_
+#define COGO_COGO_YIELD_IMPL_H_
 
 #ifdef assert
     #define COGO_ASSERT(...)    assert(__VA_ARGS__)
@@ -101,4 +101,4 @@ typedef struct cogo_yield {
     }                                                   \
     cogo_exit
 
-#endif  // MOXITREL_COGO_YIELD_IMPL_H_
+#endif /* COGO_COGO_YIELD_IMPL_H_ */

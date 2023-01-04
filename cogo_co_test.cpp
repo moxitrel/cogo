@@ -1,8 +1,8 @@
-#include "cogo_co.h"
 #include <cassert>
 #include <cstdlib>
 #include <memory>
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+#include "cogo_co.h"
 
 inline int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
     assert(sch);
@@ -22,7 +22,7 @@ inline cogo_co_t* cogo_sch_pop(cogo_sch_t* sch) {
 
 static inline void cogo_co_run(void* co) {
     cogo_sch_t sch = {
-            .stack_top = static_cast<cogo_co_t*>(co),
+        .stack_top = static_cast<cogo_co_t*>(co),
     };
     while (cogo_sch_step(&sch)) {
         // noop
@@ -38,32 +38,34 @@ CO_END:;
 }
 
 CO_DECLARE(static f2, f3_t f3) {
+    auto* thiz = static_cast<f2_t*>(CO_THIS);
 CO_BEGIN:
     CO_YIELD;
-    CO_AWAIT(&static_cast<f2_t*>(CO_THIS)->f3);
+    CO_AWAIT(&thiz->f3);
 CO_END:;
 }
 
 CO_DECLARE(static f1, f2_t f2) {
+    auto* thiz = static_cast<f1_t*>(CO_THIS);
 CO_BEGIN:
-    CO_AWAIT(&static_cast<f1_t*>(CO_THIS)->f2);
+    CO_AWAIT(&thiz->f2);
 CO_END:;
 }
 
 TEST(CogoCo, Step) {
-    auto&& f1 = CO_MAKE(f1, CO_MAKE(f2, CO_MAKE(f3)));
-    auto&& f2 = f1.f2;
-    auto&& f3 = f2.f3;
+    auto f1 = CO_MAKE(f1, CO_MAKE(f2, CO_MAKE(f3)));
+    auto& f2 = f1.f2;
+    auto& f3 = f2.f3;
 
     cogo_sch_t sch = {
-            .stack_top = reinterpret_cast<cogo_co_t*>(&f1),
+        .stack_top = reinterpret_cast<cogo_co_t*>(&f1),
     };
     ASSERT_EQ(CO_STATUS(&f1), COGO_STATUS_STARTED);
     ASSERT_EQ(CO_STATUS(&f2), COGO_STATUS_STARTED);
     ASSERT_EQ(CO_STATUS(&f3), COGO_STATUS_STARTED);
 
     // fc2 yield
-    auto co = cogo_sch_step(&sch);
+    auto* co = cogo_sch_step(&sch);
     EXPECT_EQ(co, reinterpret_cast<cogo_co_t*>(&f2));
     EXPECT_GT(CO_STATUS(&f1), COGO_STATUS_STARTED);
     EXPECT_GT(CO_STATUS(&f2), COGO_STATUS_STARTED);
@@ -116,8 +118,6 @@ CO_BEGIN:
     default:  // f(n) = f(n-1) + f(n-2)
         fib_n1 = std::allocator_traits<decltype(alloc)>::allocate(alloc, 1);
         fib_n2 = std::allocator_traits<decltype(alloc)>::allocate(alloc, 1);
-        assert(fib_n1);
-        assert(fib_n2);
         *fib_n1 = CO_MAKE(fibonacci, n - 1);
         *fib_n2 = CO_MAKE(fibonacci, n - 2);
 
@@ -138,11 +138,11 @@ TEST(cogo_co_t, Run) {
         fibonacci_t fib;
         int value;
     } example[] = {
-            {CO_MAKE(fibonacci, 0), fibonacci(0)},
-            {CO_MAKE(fibonacci, 1), fibonacci(1)},
-            {CO_MAKE(fibonacci, 11), fibonacci(11)},
-            {CO_MAKE(fibonacci, 23), fibonacci(23)},
-            {CO_MAKE(fibonacci, 29), fibonacci(29)},
+        {CO_MAKE(fibonacci, 0), fibonacci(0)},
+        {CO_MAKE(fibonacci, 1), fibonacci(1)},
+        {CO_MAKE(fibonacci, 11), fibonacci(11)},
+        {CO_MAKE(fibonacci, 23), fibonacci(23)},
+        {CO_MAKE(fibonacci, 29), fibonacci(29)},
     };
 
     for (size_t i = 0; i < sizeof(example) / sizeof(example[0]); i++) {

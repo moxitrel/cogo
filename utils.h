@@ -1,5 +1,5 @@
-#ifndef MOXITREL_COGO_UTILS_H_
-#define MOXITREL_COGO_UTILS_H_
+#ifndef COGO_UTILS_H_
+#define COGO_UTILS_H_
 // clang-format off
 
 // Get nth element of items. (BUG)
@@ -96,4 +96,4 @@
 
 #define COGO_ARG(...)               COGO_RM_PAREN(__VA_ARGS__)
 
-#endif // MOXITREL_COGO_UTILS_H_
+#endif /* COGO_UTILS_H_ */

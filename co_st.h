@@ -23,8 +23,8 @@ CO_CHAN_READ (co_chan_t*, co_msg_t*)    : receive a message from channel, the re
 
 */
 // clang-format off
-#ifndef MOXITREL_COGO_CO_IMPL_H_
-#define MOXITREL_COGO_CO_IMPL_H_
+#ifndef COGO_CO_IMPL_H_
+#define COGO_CO_IMPL_H_
 
 #include <stddef.h>
 #include "cogo_co.h"
@@ -77,9 +77,9 @@ inline cogo_co_t* cogo_sch_pop(cogo_sch_t* sch) {
 
 static inline void co_run(void* co) {
     co_sch_t sch = {
-            .cogo_sch = {
-                    .stack_top = (cogo_co_t*)co,
-            },
+        .cogo_sch = {
+            .stack_top = (cogo_co_t*)co,
+        },
     };
     while (cogo_sch_step((cogo_sch_t*)&sch)) {
         // noop
@@ -114,7 +114,7 @@ typedef struct co_chan {
     ptrdiff_t size;
 
     // max size
-    const ptrdiff_t cap;
+    ptrdiff_t cap;
 } co_chan_t;
 
 #define CO_CHAN_MAKE(N) ((co_chan_t){.cap = (N)})
@@ -192,4 +192,4 @@ inline int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg) {
 #define CO_MAKE(NAME, ...)      \
     ((NAME##_t){{.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
 
-#endif  // MOXITREL_COGO_CO_IMPL_H_
+#endif /* COGO_CO_IMPL_H_ */

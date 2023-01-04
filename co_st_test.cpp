@@ -1,26 +1,32 @@
+#include <cassert>
+#include <gtest/gtest.h>
 #include "co_st.h"
-#include <assert.h>
-#include "gtest/gtest.h"
 
 CO_DECLARE(static recv, co_chan_t* chan, co_msg_t msg) {
     auto& self = *static_cast<recv_t*>(CO_THIS);
+    auto& chan = self.chan;
+    auto& msg = self.msg;
 CO_BEGIN:
-    CO_CHAN_READ(self.chan, &self.msg);
+    CO_CHAN_READ(chan, &msg);
 CO_END:;
 }
 
 CO_DECLARE(static send, co_chan_t* chan, co_msg_t msg) {
     auto& self = *static_cast<send_t*>(CO_THIS);
+    auto& chan = self.chan;
+    auto& msg = self.msg;
 CO_BEGIN:
-    CO_CHAN_WRITE(self.chan, &self.msg);
+    CO_CHAN_WRITE(chan, &msg);
 CO_END:;
 }
 
 CO_DECLARE(static main, recv_t recv, send_t send) {
     auto& self = *static_cast<main_t*>(CO_THIS);
+    auto& recv = self.recv;
+    auto& send = self.send;
 CO_BEGIN:
-    CO_START(&self.recv);
-    CO_START(&self.send);
+    CO_START(&recv);
+    CO_START(&send);
 CO_END:;
 }
 
