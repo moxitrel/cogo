@@ -12,11 +12,11 @@ CO_END:;
 
 TEST(CogoYield, CoYield) {
     coyield_t coyield = CO_MAKE(coyield, 0);
-    EXPECT_EQ(CO_STATUS(&coyield), COGO_STATUS_STARTED);  // init
+    EXPECT_EQ(CO_STATUS(&coyield), COGO_STATUS_INITED);   // init
     EXPECT_EQ(coyield.v, 0);
 
     coyield_func(&coyield);
-    EXPECT_NE(CO_STATUS(&coyield), COGO_STATUS_STARTED);  // running
+    EXPECT_NE(CO_STATUS(&coyield), COGO_STATUS_INITED);   // running
     EXPECT_NE(CO_STATUS(&coyield), COGO_STATUS_STOPPED);  // running
     EXPECT_EQ(coyield.v, 1);
 
@@ -40,7 +40,7 @@ CO_END:;
 
 TEST(CogoYield, CoReturn) {
     coreturn_t coreturn = CO_MAKE(coreturn, 0);
-    EXPECT_EQ(CO_STATUS(&coreturn), COGO_STATUS_STARTED);  // init
+    EXPECT_EQ(CO_STATUS(&coreturn), COGO_STATUS_INITED);  // init
     EXPECT_EQ(coreturn.v, 0);
 
     coreturn_func(&coreturn);

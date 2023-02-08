@@ -19,11 +19,10 @@ cogo_sch_t                  : sheduler  type, should be inherited by user.
 cogo_sch_step(cogo_sch_t*)  : Run the current coroutine until yield or finished, return the next coroutine to be run.
 
 // add a coroutine to the running queue.
-inline int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
+int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 
 // return and remove the next coroutine to be run.
-inline cogo_co_t* cogo_sch_pop(cogo_sch_t*);
-
+cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
 */
 #ifndef COGO_COGO_CO_H_
@@ -57,14 +56,10 @@ struct cogo_sch {
 
 // add coroutine into the concurrent queue
 // switch context if return !0
-inline int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
+int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 
 // return the next coroutine to be run, and remove it from the queue
-inline cogo_co_t* cogo_sch_pop(cogo_sch_t*);
-
-//
-// cogo_co_t
-//
+cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
 // CO_AWAIT(cogo_co_t*): call another coroutine.
 // NOTE: require no loop in call chain.
@@ -93,34 +88,8 @@ static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee) {
         }                                                                         \
     } while (0)
 
-//
-// cogo_sch_t
-//
-
 // run the coroutine in stack top until yield or finished, return the next coroutine to be run.
-inline cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
-    COGO_ASSERT(sch);
-    while (sch->stack_top) {
-        sch->stack_top->sch = sch;
-        sch->stack_top->func(sch->stack_top);
-        if (!sch->stack_top) {
-            // blocked
-            break;
-        }
-        switch (CO_STATUS(sch->stack_top)) {
-        case COGO_STATUS_STARTED:  // await
-            continue;
-        case COGO_STATUS_STOPPED:  // return
-            sch->stack_top = sch->stack_top->caller;
-            continue;
-        default:  // yield
-            cogo_sch_push(sch, sch->stack_top);
-            break;
-        }
-        break;
-    }
-    return sch->stack_top = cogo_sch_pop(sch);
-}
+cogo_co_t* cogo_sch_step(cogo_sch_t* sch);
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \

@@ -58,7 +58,7 @@ void nat_func(nat_t* CO_THIS)
     #define COGO_ASSERT(...)    /* nop */
 #endif
 
-#define COGO_STATUS_STARTED     0
+#define COGO_STATUS_INITED      0
 #define COGO_STATUS_STOPPED     -1
 
 // yield context
@@ -83,7 +83,7 @@ typedef struct cogo_yield {
         goto cogo_exit;                                 \
     case COGO_STATUS_STOPPED:   /* coroutine end */     \
         goto cogo_exit;                                 \
-    case COGO_STATUS_STARTED    /* coroutine begin */
+    case COGO_STATUS_INITED     /* coroutine begin */
 
 #define CO_YIELD                                                                    \
     do {                                                                            \

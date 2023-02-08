@@ -46,7 +46,7 @@ yield_end:;                     //
     #define COGO_ASSERT(...) /* nop */
 #endif
 
-#define COGO_STATUS_STARTED     0
+#define COGO_STATUS_INITED      0
 #define COGO_STATUS_STOPPED     -1
 
 // yield context
@@ -65,7 +65,7 @@ typedef struct cogo_yield {
 
 #define CO_BEGIN                                                \
     switch(CO_STATUS(CO_THIS)) {                                \
-    case COGO_STATUS_STARTED:                                   \
+    case COGO_STATUS_INITED:                                    \
         goto cogo_enter;                                        \
         COGO_PC = &&cogo_enter;  /* remove compiler error */    \
     case COGO_STATUS_STOPPED:                                   \

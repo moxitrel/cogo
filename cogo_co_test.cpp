@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include "cogo_co.h"
 
-inline int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
+int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
     assert(sch);
     assert(sch->stack_top);
     assert(co);
@@ -15,7 +15,7 @@ inline int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
     return 1;
 }
 
-inline cogo_co_t* cogo_sch_pop(cogo_sch_t* sch) {
+cogo_co_t* cogo_sch_pop(cogo_sch_t* sch) {
     assert(sch);
     return sch->stack_top;
 }
@@ -60,23 +60,23 @@ TEST(CogoCo, Step) {
     cogo_sch_t sch = {
         .stack_top = reinterpret_cast<cogo_co_t*>(&f1),
     };
-    ASSERT_EQ(CO_STATUS(&f1), COGO_STATUS_STARTED);
-    ASSERT_EQ(CO_STATUS(&f2), COGO_STATUS_STARTED);
-    ASSERT_EQ(CO_STATUS(&f3), COGO_STATUS_STARTED);
+    ASSERT_EQ(CO_STATUS(&f1), COGO_STATUS_INITED);
+    ASSERT_EQ(CO_STATUS(&f2), COGO_STATUS_INITED);
+    ASSERT_EQ(CO_STATUS(&f3), COGO_STATUS_INITED);
 
     // fc2 yield
     auto* co = cogo_sch_step(&sch);
     EXPECT_EQ(co, reinterpret_cast<cogo_co_t*>(&f2));
-    EXPECT_GT(CO_STATUS(&f1), COGO_STATUS_STARTED);
-    EXPECT_GT(CO_STATUS(&f2), COGO_STATUS_STARTED);
-    EXPECT_EQ(CO_STATUS(&f3), COGO_STATUS_STARTED);
+    EXPECT_GT(CO_STATUS(&f1), COGO_STATUS_INITED);
+    EXPECT_GT(CO_STATUS(&f2), COGO_STATUS_INITED);
+    EXPECT_EQ(CO_STATUS(&f3), COGO_STATUS_INITED);
 
     // fc3 first yield
     co = cogo_sch_step(&sch);
     EXPECT_EQ(co, reinterpret_cast<cogo_co_t*>(&f3));
-    EXPECT_GT(CO_STATUS(&f1), COGO_STATUS_STARTED);
-    EXPECT_GT(CO_STATUS(&f2), COGO_STATUS_STARTED);
-    EXPECT_GT(CO_STATUS(&f3), COGO_STATUS_STARTED);
+    EXPECT_GT(CO_STATUS(&f1), COGO_STATUS_INITED);
+    EXPECT_GT(CO_STATUS(&f2), COGO_STATUS_INITED);
+    EXPECT_GT(CO_STATUS(&f3), COGO_STATUS_INITED);
 
     // fc3 co_return
     co = cogo_sch_step(&sch);
