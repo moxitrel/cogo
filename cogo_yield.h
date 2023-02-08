@@ -65,9 +65,11 @@ NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g
 #define CO_DEFINE(NAME)         \
     void NAME##_func(void* CO_THIS)
 
+#undef CO_DECLARE
 #define CO_DECLARE(NAME, ...)   \
     COGO_DECLARE(NAME, cogo_yield_t cogo_yield, __VA_ARGS__)
 
+#undef CO_MAKE
 #define CO_MAKE(NAME, ...)      \
     ((NAME##_t){{0}, __VA_ARGS__})
 

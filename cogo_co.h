@@ -26,6 +26,7 @@ int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
 */
+// clang-format off
 #ifndef COGO_COGO_CO_H_
 #define COGO_COGO_CO_H_
 
