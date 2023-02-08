@@ -18,6 +18,7 @@ cogo_co_t                   : coroutine type, should be inherited by user.
 cogo_sch_t                  : sheduler  type, should be inherited by user.
 cogo_sch_step(cogo_sch_t*)  : Run the current coroutine until yield or finished, return the next coroutine to be run.
 
+* TODO: implemented by user
 // add a coroutine to the running queue.
 int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 
@@ -61,6 +62,9 @@ int cogo_sch_push(cogo_sch_t*, cogo_co_t*);
 // return the next coroutine to be run, and remove it from the queue
 cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
+// run the coroutine in stack top until yield or finished, return the next coroutine to be run.
+cogo_co_t* cogo_sch_step(cogo_sch_t* sch);
+
 // CO_AWAIT(cogo_co_t*): call another coroutine.
 // NOTE: require no loop in call chain.
 #define CO_AWAIT(CO)                                            \
@@ -87,9 +91,6 @@ static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee) {
             CO_YIELD;                                                             \
         }                                                                         \
     } while (0)
-
-// run the coroutine in stack top until yield or finished, return the next coroutine to be run.
-cogo_co_t* cogo_sch_step(cogo_sch_t* sch);
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
