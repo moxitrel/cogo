@@ -40,23 +40,23 @@ typedef struct cogo_sch cogo_sch_t;  // scheduler
 
 // support call stack, concurrency
 struct cogo_co {
-    // inherit cogo_yield_t
-    cogo_yield_t cogo_yield;
+  // inherit cogo_yield_t
+  cogo_yield_t cogo_yield;
 
-    // the coroutine function
-    void (*func)(void*);
+  // the coroutine function
+  void (*func)(void*);
 
-    // build call stack
-    cogo_co_t* caller;
+  // build call stack
+  cogo_co_t* caller;
 
-    // scheduler
-    cogo_sch_t* sch;
+  // scheduler
+  cogo_sch_t* sch;
 };
 
 // cogo_co_t scheduler
 struct cogo_sch {
-    // the current coroutine run by scheduler
-    cogo_co_t* stack_top;
+  // the current coroutine run by scheduler
+  cogo_co_t* stack_top;
 };
 
 // add coroutine into the concurrent queue
@@ -68,47 +68,41 @@ cogo_co_t* cogo_sch_pop(cogo_sch_t*);
 
 // CO_AWAIT(cogo_co_t*): call another coroutine.
 // NOTE: require no loop in call chain.
-#define CO_AWAIT(CO)                                            \
-    do {                                                        \
-_Pragma("GCC diagnostic push")                                  \
-_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")          \
-        cogo_co_await((cogo_co_t*)(co_this), (cogo_co_t*)(CO)); \
-_Pragma("GCC diagnostic pop")                                   \
-        CO_YIELD;                                               \
-    } while (0)
+#define CO_AWAIT(CO)                                      \
+  do {                                                    \
+    cogo_co_await((cogo_co_t*)co_this, (cogo_co_t*)(CO)); \
+    CO_YIELD;                                             \
+  } while (0)
 static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee) {
-    COGO_ASSERT(thiz);
-    COGO_ASSERT(thiz->sch);
-    COGO_ASSERT(thiz->sch->stack_top == thiz);
-    COGO_ASSERT(callee);
+  COGO_ASSERT(thiz);
+  COGO_ASSERT(thiz->sch);
+  COGO_ASSERT(thiz->sch->stack_top == thiz);
+  COGO_ASSERT(callee);
 
-    // call stack push
-    callee->caller = thiz->sch->stack_top;
-    //callee->sch = thiz->sch->stack_top->sch;
-    thiz->sch->stack_top = callee;
+  // call stack push
+  callee->caller = thiz->sch->stack_top;
+  //callee->sch = thiz->sch->stack_top->sch;
+  thiz->sch->stack_top = callee;
 }
 
 // CO_START(cogo_co_t*): add a new coroutine to the scheduler.
-#define CO_START(CO)                                                                \
-    do {                                                                            \
-_Pragma("GCC diagnostic push")                                                      \
-_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")                              \
-        if (cogo_sch_push(((cogo_co_t*)(co_this))->sch, (cogo_co_t*)(CO)) != 0) {   \
-_Pragma("GCC diagnostic pop")                                                       \
-            CO_YIELD;                                                               \
-        }                                                                           \
-    } while (0)
+#define CO_START(CO)                                                        \
+  do {                                                                      \
+    if (cogo_sch_push(((cogo_co_t*)co_this)->sch, (cogo_co_t*)(CO)) != 0) { \
+      CO_YIELD;                                                             \
+    }                                                                       \
+  } while (0)
 
 // run the coroutine in stack top until yield or finished, return the next coroutine to be run.
 cogo_co_t* cogo_sch_step(cogo_sch_t* sch);
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
-    COGO_DECLARE(NAME, cogo_co_t cogo_co, __VA_ARGS__)
+  COGO_DECLARE(NAME, cogo_co_t cogo_co, __VA_ARGS__)
 
 #undef CO_MAKE
 #define CO_MAKE(NAME, ...) \
-    ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
+  ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
 
 #ifdef __cplusplus
 }

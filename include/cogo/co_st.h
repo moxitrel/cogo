@@ -1,4 +1,3 @@
-// clang-format off
 /*
 
 * API
@@ -28,6 +27,7 @@ CO_CHAN_READ (co_chan_t*, co_msg_t*)    : receive a message from channel, the re
 #define COGO_CO_IMPL_H_
 
 #include <stddef.h>
+
 #include "cogo_co.h"
 
 #ifdef __cplusplus
@@ -39,16 +39,16 @@ typedef struct co_sch co_sch_t;
 typedef struct co_msg co_msg_t;
 
 struct co {
-    // inherit cogo_co_t
-    cogo_co_t cogo_co;
+  // inherit cogo_co_t
+  cogo_co_t cogo_co;
 
-    // build coroutine queue
-    co_t* next;
+  // build coroutine queue
+  co_t* next;
 };
 
 //
 // COGO_QUEUE_T             (co_t)
-// COGO_QUEUE_EMPTY         (co_t) (const COGO_QUEUE_T(co_t)*)
+// COGO_QUEUE_IS_EMPTY      (co_t) (const COGO_QUEUE_T(co_t)*)
 // COGO_QUEUE_POP           (co_t) (      COGO_QUEUE_T(co_t)*)
 // COGO_QUEUE_POP_NONEMPTY  (co_t) (      COGO_QUEUE_T(co_t)*)
 // COGO_QUEUE_PUSH          (co_t) (      COGO_QUEUE_T(co_t)*, co_t*)
@@ -59,36 +59,33 @@ struct co {
 #define COGO_QUEUE_ITEM_NEXT(P) ((P)->next)
 #include "co_st_q.inc"
 struct co_sch {
-    // inherent cogo_sch_t
-    cogo_sch_t cogo_sch;
+  // inherent cogo_sch_t
+  cogo_sch_t cogo_sch;
 
-    // coroutine queue run concurrently
-    COGO_QUEUE_T(co_t) q;
+  // coroutine queue run concurrently
+  COGO_QUEUE_T(co_t)
+  q;
 };
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#pragma GCC diagnostic ignored "-Wc++20-designator"
 static inline void co_run(void* co) {
-    co_sch_t sch = {
-        .cogo_sch = {
-            .stack_top = (cogo_co_t*)co,
-        },
-    };
-    while (cogo_sch_step((cogo_sch_t*)&sch)) {
-        // noop
-    }
+  co_sch_t sch = {
+      .cogo_sch = {
+          .stack_top = (cogo_co_t*)co,
+      },
+  };
+  while (cogo_sch_step((cogo_sch_t*)&sch)) {
+    // noop
+  }
 }
-#pragma GCC diagnostic pop
 
 // channel message
 struct co_msg {
-    co_msg_t* next;
+  co_msg_t* next;
 };
 
 //
 // COGO_QUEUE_T             (co_msg_t)
-// COGO_QUEUE_EMPTY         (co_msg_t) (const COGO_QUEUE_T(co_msg_t)*)
+// COGO_QUEUE_IS_EMPTY         (co_msg_t) (const COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_POP           (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_POP_NONEMPTY  (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_PUSH          (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*, co_msg_t*)
@@ -99,53 +96,49 @@ struct co_msg {
 #define COGO_QUEUE_ITEM_NEXT(P) ((P)->next)
 #include "co_st_q.inc"
 typedef struct co_chan {
-    // all coroutines blocked by this channel
-    COGO_QUEUE_T(co_t) cq;
+  // all coroutines blocked by this channel
+  COGO_QUEUE_T(co_t)
+  cq;
 
-    // message queue
-    COGO_QUEUE_T(co_msg_t) mq;
+  // message queue
+  COGO_QUEUE_T(co_msg_t)
+  mq;
 
-    // current size
-    ptrdiff_t size;
+  // current size
+  ptrdiff_t size;
 
-    // max size
-    ptrdiff_t cap;
+  // max size
+  ptrdiff_t cap;
 } co_chan_t;
 
 #define CO_CHAN_MAKE(N) ((co_chan_t){.cap = (N)})
 
 // CO_CHAN_READ(co_chan_t*, co_msg_t*);
 // MSG_NEXT: the read message sit in MSG_NEXT->next
-#define CO_CHAN_READ(CHAN, MSG_NEXT)                                        \
-    do {                                                                    \
-_Pragma("GCC diagnostic push")                                                      \
-_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")                              \
-        if (cogo_chan_read((co_t*)(co_this), (CHAN), (MSG_NEXT)) != 0) {    \
-_Pragma("GCC diagnostic pop")                                                       \
-            CO_YIELD;                                                       \
-        }                                                                   \
-    } while (0)
+#define CO_CHAN_READ(CHAN, MSG_NEXT)                               \
+  do {                                                             \
+    if (cogo_chan_read((co_t*)co_this, (CHAN), (MSG_NEXT)) != 0) { \
+      CO_YIELD;                                                    \
+    }                                                              \
+  } while (0)
 int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next);
 
 // CO_CHAN_WRITE(co_chan_t*, co_msg_t*);
-#define CO_CHAN_WRITE(CHAN, MSG)                                                \
-    do {                                                                        \
-_Pragma("GCC diagnostic push")                                                      \
-_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")                              \
-        if (cogo_chan_write((co_t*)(co_this), (CHAN), (co_msg_t*)(MSG)) != 0) { \
-_Pragma("GCC diagnostic pop")                                                       \
-            CO_YIELD;                                                           \
-        }                                                                       \
-    } while (0)
+#define CO_CHAN_WRITE(CHAN, MSG)                                          \
+  do {                                                                    \
+    if (cogo_chan_write((co_t*)co_this, (CHAN), (co_msg_t*)(MSG)) != 0) { \
+      CO_YIELD;                                                           \
+    }                                                                     \
+  } while (0)
 int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg);
 
 #undef CO_DECLARE
-#define CO_DECLARE(NAME, ...)   \
-    COGO_DECLARE(NAME, co_t co, __VA_ARGS__)
+#define CO_DECLARE(NAME, ...) \
+  COGO_DECLARE(NAME, co_t co, __VA_ARGS__)
 
 #undef CO_MAKE
-#define CO_MAKE(NAME, ...)      \
-    ((NAME##_t){{.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
+#define CO_MAKE(NAME, ...) \
+  ((NAME##_t){{.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
 
 #ifdef __cplusplus
 }

@@ -12,52 +12,33 @@ add_library(cogo
 target_include_directories(cogo PUBLIC include)
 target_compile_features(cogo PUBLIC c_std_99)
 
-target_compile_options(cogo PRIVATE
-    $<$<BOOL:${W_EVERYTHING}>:-Weverything>
-    -Wno-error
+check_c_compiler_flag(-Weverything W_EVERYTHING)
+check_c_compiler_flag(-Wno-padded WNO_PADDED)
+target_compile_options(cogo PUBLIC
+    $<$<BOOL:${WNO_PADDED}>:-Wno-padded>
 )
 
 if (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
-    # find_package(GTest REQUIRED)
-    # include(GoogleTest)
     include(cmake/unity.cmake)
 
-    set(CMAKE_C_COMPILER    clang++)
+    # set(CMAKE_C_COMPILER    clang++)
 
-    check_cxx_compiler_flag(-Weverything W_EVERYTHING)
-    check_cxx_compiler_flag(-Wno-extra-semi-stmt WNO_EXTRA_SEMI_STMT)
-    check_cxx_compiler_flag(-Wno-missing-prototypes WNO_MISSING_PROTOTYPES)
-    check_cxx_compiler_flag(-Wno-unreachable-code WNO_UNREACHABLE_CODE)
-    check_cxx_compiler_flag(-Wno-padded WNO_PADDED)
-    check_cxx_compiler_flag(-Wno-missing-field-initializers WNO_MISSING_FIELD_INITIALIZERS)
-    check_cxx_compiler_flag(-Wno-old-style-cast WNO_OLD_STYLE_CAST)
-    # check_cxx_compiler_flag(-Wno-global-constructors WNO_GLOBAL_CONSTRUCTORS)
-    # check_cxx_compiler_flag(-Wno-c++98-compat-pedantic WNO_CPP98_COMPAT_PEDANTIC)
-    # check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments HAS_FLAG_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-    # check_cxx_compiler_flag(-Wno-static-in-inline HAS_FLAG_NO_STATIC_IN_INLINE)
-
-    # check_cxx_compiler_flag(-Wno-zero-as-null-pointer-constant WNO_ZERO_AS_NULL_POINTER_CONSTANT)
+    check_c_compiler_flag(-Wno-extra-semi-stmt WNO_EXTRA_SEMI_STMT)
+    check_c_compiler_flag(-Wno-missing-prototypes WNO_MISSING_PROTOTYPES)
+    check_c_compiler_flag(-Wno-missing-declarations WNO_MISSING_DECLARATIONS)
+    check_c_compiler_flag(-Wno-unreachable-code WNO_UNREACHABLE_CODE)
+    check_c_compiler_flag(-Wno-missing-field-initializers WNO_MISSING_FIELD_INITIALIZERS)
+    check_c_compiler_flag(-Wno-old-style-cast WNO_OLD_STYLE_CAST)
+    check_c_compiler_flag(-Wno-suggest-attribute WNO_SUGGEST_ATTRIBUTE)
     add_compile_options(
-        $<$<BOOL:${W_EVERYTHING}>:-Weverything>
-        # $<$<BOOL:${WNO_EXTRA_SEMI_STMT}>:-Wno-extra-semi-stmt>
-        $<$<BOOL:${WNO_PADDED}>:-Wno-padded>
+        ${PROJECT_COMPILE_OPTIONS_STATIC_ANALYSIS}
+
         $<$<BOOL:${WNO_MISSING_PROTOTYPES}>:-Wno-missing-prototypes>
+        $<$<BOOL:${WNO_MISSING_DECLARATIONS}>:-Wno-missing-declarations>
         $<$<BOOL:${WNO_UNREACHABLE_CODE}>:-Wno-unreachable-code>
         $<$<BOOL:${WNO_MISSING_FIELD_INITIALIZERS}>:-Wno-missing-field-initializers>
-        $<$<BOOL:${WNO_OLD_STYLE_CAST}>:-Wno-old-style-cast>
-        # $<$<BOOL:${WNO_GLOBAL_CONSTRUCTORS}>:-Wno-global-constructors> # google-test
-        # $<$<BOOL:${WNO_CPP98_COMPAT_PEDANTIC}>:-Wno-c++98-compat-pedantic>
-
-        # $<$<BOOL:${HAS_FLAG_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS}>:-Wno-gnu-zero-variadic-macro-arguments>
-        # $<$<BOOL:${HAS_FLAG_NO_STATIC_IN_INLINE}>:-Wno-static-in-inline>
-        # $<$<BOOL:${WNO_ZERO_AS_NULL_POINTER_CONSTANT}>:-Wno-zero-as-null-pointer-constant>
-        #
-        # -Wno-useless-cast
-        -Wno-c++98-compat-pedantic
-        -Wno-c++20-designator
-        -Wno-c99-extensions
-        -Wno-zero-as-null-pointer-constant
-        -Wno-error
+        $<$<BOOL:${WNO_SUGGEST_ATTRIBUTE}>:-Wno-suggest-attribute=const>
+        $<$<BOOL:${WNO_SUGGEST_ATTRIBUTE}>:-Wno-suggest-attribute=pure>
     )
 
     link_libraries(cogo)

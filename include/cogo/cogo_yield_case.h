@@ -1,4 +1,3 @@
-// clang-format off
 /* Use Duff's Device (Protothreads)
 
 * API
@@ -49,76 +48,71 @@ void nat_func(nat_t* co_this)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
-#ifndef COGO_COGO_YIELD_IMPL_H_
-#define COGO_COGO_YIELD_IMPL_H_
+#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
+#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
+
+#include "macro_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifdef assert
-    #define COGO_ASSERT(...)    assert(__VA_ARGS__)
+#define COGO_ASSERT(...) assert(__VA_ARGS__)
 #else
-    #define COGO_ASSERT(...)    /*noop*/
+#define COGO_ASSERT(...)
 #endif
 
-#define COGO_STATUS_INITED      0
-#define COGO_STATUS_STOPPED     -1
+#ifdef __cplusplus
+#define COGO_NOWARN_OLD_STYLE_CAST(...) \
+  CX2_WITH_PRAGMA("GCC diagnostic ignored \"-Wold-style-cast\"", __VA_ARGS__)
+#else
+#define COGO_NOWARN_OLD_STYLE_CAST(...)
+#endif
+
+#define COGO_STATUS_INITED 0
+#define COGO_STATUS_STOPPED -1
 
 // yield context
 typedef struct cogo_yield {
-    // start point where coroutine function continue to run after yield.
-    //  >0: running
-    //   0: inited
-    //  -1: finished
-    int cogo_pc;
+  // start point where coroutine function continue to run after yield.
+  //  >0: running
+  //   0: inited
+  //  -1: finished
+  int cogo_pc;
 } cogo_yield_t;
 
 // cogo_yield_t.cogo_pc
-#define COGO_PC                                         \
-_Pragma("GCC diagnostic push")                          \
-_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")  \
-    (((cogo_yield_t*)(co_this))->cogo_pc)               \
-_Pragma("GCC diagnostic pop")
+#define COGO_PC (((cogo_yield_t*)co_this)->cogo_pc)
 
 // get the current running state
-static inline int co_status(void* co)
-{
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-    return ((cogo_yield_t*)co)->cogo_pc;
-#pragma GCC diagnostic pop
-}
+static inline int co_status(void* co) { return ((cogo_yield_t*)co)->cogo_pc; }
 
-#define CO_BEGIN                                        \
-    switch (co_status(co_this)) {                       \
-    default:                    /* invalid  pc */       \
-        COGO_ASSERT(((void)"cogo_pc isn't valid", 0));  \
-        goto cogo_exit;                                 \
-    case COGO_STATUS_STOPPED:   /* coroutine end */     \
-        goto cogo_exit;                                 \
-    case COGO_STATUS_INITED     /* coroutine begin */
+#define CO_BEGIN                                     \
+  switch (co_status(co_this)) {                      \
+    default: /* invalid  pc */                       \
+      COGO_ASSERT(((void)"cogo_pc isn't valid", 0)); \
+      goto cogo_exit;                                \
+    case COGO_STATUS_STOPPED: /* coroutine end */    \
+      goto cogo_exit;                                \
+    case COGO_STATUS_INITED /* coroutine begin */
 
-#define CO_YIELD                                                                    \
-    do {                                                                            \
-        COGO_PC = __LINE__;     /* 1. save the restore point, at case __LINE__: */  \
-        goto cogo_exit;         /* 2. return */                                     \
-    case __LINE__:;             /* 3. restore point */                              \
-    } while (0)
+#define CO_YIELD                                                                \
+  do {                                                                          \
+    /**/ COGO_PC = __LINE__; /* 1. save the restore point, at case __LINE__: */ \
+    /**/ goto cogo_exit;     /* 2. return */                                    \
+    case __LINE__:;          /* 3. restore point */                             \
+  } while (0)
 
-#define CO_RETURN                                       \
-    goto cogo_return            /* end coroutine */
+#define CO_RETURN goto cogo_return /* end coroutine */
 
-#define CO_END                                          \
-_Pragma("GCC diagnostic push")                          \
-_Pragma("GCC diagnostic ignored \"-Wunused-label\"")    \
-    cogo_return:                                        \
-_Pragma("GCC diagnostic pop")                           \
-        COGO_PC = COGO_STATUS_STOPPED;                  \
-    }                                                   \
-    cogo_exit
+#define CO_END                                                               \
+  CX2_WITH_PRAGMA("GCC diagnostic ignored \"-Wunused-label\"", cogo_return:) \
+  /**/ COGO_PC = COGO_STATUS_STOPPED;                                        \
+  }                                                                          \
+  cogo_exit
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* COGO_COGO_YIELD_IMPL_H_ */
+#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_

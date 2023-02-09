@@ -34,7 +34,7 @@ static inline void cogo_co_run(void* co) {
   }
 }
 
-CO_DECLARE(static f3) {
+CO_DECLARE(f3) {
 CO_BEGIN:
 
   CO_YIELD;
@@ -44,7 +44,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(static f2, f3_t f3) {
+CO_DECLARE(f2, f3_t f3) {
   f2_t* thiz = (f2_t*)co_this;
 CO_BEGIN:
 
@@ -54,7 +54,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(static f1, f2_t f2) {
+CO_DECLARE(f1, f2_t f2) {
   f1_t* thiz = (f1_t*)co_this;
 CO_BEGIN:
 
@@ -109,7 +109,7 @@ static int fibonacci(int n) {
   }
 }
 
-CO_DECLARE(static fibonacci, int n, int v, fibonacci_t* fib_n1, fibonacci_t* fib_n2) {
+CO_DECLARE(fibonacci, int n, int v, fibonacci_t* fib_n1, fibonacci_t* fib_n2) {
   fibonacci_t* thiz = (fibonacci_t*)co_this;
 CO_BEGIN:
   assert(thiz->n > 0);
@@ -122,6 +122,9 @@ CO_BEGIN:
     default:  // f(n) = f(n-1) + f(n-2)
       thiz->fib_n1 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n1));
       thiz->fib_n2 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n2));
+      TEST_ASSERT_NOT_NULL(thiz->fib_n1);
+      TEST_ASSERT_NOT_NULL(thiz->fib_n2);
+
       *thiz->fib_n1 = CO_MAKE(fibonacci, thiz->n - 1);
       *thiz->fib_n2 = CO_MAKE(fibonacci, thiz->n - 2);
 

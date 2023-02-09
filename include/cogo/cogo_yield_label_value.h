@@ -1,4 +1,3 @@
-// clang-format off
 /* Labels as Values (GCC Extension)
 
 * Example
@@ -41,84 +40,61 @@ yield_end:;                     //
 
 #include <stdint.h>
 
+#include "macro_utils.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifdef assert
-    #define COGO_ASSERT(...) assert(__VA_ARGS__)
+#define COGO_ASSERT(...) assert(__VA_ARGS__)
 #else
-    #define COGO_ASSERT(...) /*noop*/
+#define COGO_ASSERT(...) /*noop*/
 #endif
 
-#define COGO_STATUS_INITED      0
-#define COGO_STATUS_STOPPED     -1
+#define COGO_STATUS_INITED  0
+#define COGO_STATUS_STOPPED -1
 
 // yield context
 typedef struct cogo_yield {
-    // start point where coroutine function continue to run after yield.
-    //  0: inited
-    // -1: finished
-    intptr_t cogo_pc;
+  // start point where coroutine function continue to run after yield.
+  //  0: inited
+  // -1: finished
+  intptr_t cogo_pc;
 } cogo_yield_t;
 
 // cogo_yield_t.cogo_pc
-#define COGO_PC                                         \
-_Pragma("GCC diagnostic push")                          \
-_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")  \
-    (((cogo_yield_t*)(co_this))->cogo_pc)               \
-_Pragma("GCC diagnostic pop")
+#define COGO_PC (((cogo_yield_t *)co_this)->cogo_pc)
 
 // get the current running state
-static inline intptr_t co_status(void* co)
-{
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-    return ((cogo_yield_t*)co)->cogo_pc;
-#pragma GCC diagnostic pop
-}
+static inline intptr_t co_status(void *co) { return ((cogo_yield_t *)co)->cogo_pc; }
 
-#define CO_BEGIN                                                \
-    switch(co_status(co_this)) {                                \
-    case COGO_STATUS_INITED:                                    \
-        goto cogo_enter;                                        \
-_Pragma("GCC diagnostic push")                                  \
-_Pragma("GCC diagnostic ignored \"-Wgnu-label-as-value\"")      \
-_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")          \
-        COGO_PC = (intptr_t)&&cogo_enter;                       \
-_Pragma("GCC diagnostic pop")                                   \
-    case COGO_STATUS_STOPPED:                                   \
-        goto cogo_exit;                                         \
-    default:                                                    \
-_Pragma("GCC diagnostic push")                                  \
-_Pragma("GCC diagnostic ignored \"-Wgnu-label-as-value\"")      \
-_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")          \
-        goto *(const void *)COGO_PC;                            \
-_Pragma("GCC diagnostic pop")                                   \
-    }                                                           \
-    cogo_enter
+#define CO_BEGIN                           \
+  switch (co_status(co_this)) {            \
+    case COGO_STATUS_INITED:               \
+      goto cogo_enter;                     \
+      /* HACK: overcome compiling error */ \
+      COGO_PC = (intptr_t)(&&cogo_enter);  \
+    case COGO_STATUS_STOPPED:              \
+      goto cogo_exit;                      \
+    default:                               \
+      goto *(const void *)COGO_PC;         \
+  }                                        \
+  cogo_enter
 
-#define CO_YIELD                                                        \
-    do {                                                                \
-_Pragma("GCC diagnostic push")                                          \
-_Pragma("GCC diagnostic ignored \"-Wgnu-label-as-value\"")              \
-_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")                  \
-        COGO_PC = (intptr_t)&&COGO_LABEL;   /* 1. save restore point */ \
-_Pragma("GCC diagnostic pop")                                           \
-        goto cogo_exit;                     /* 2. return */             \
-    COGO_LABEL:;                            /* 3. restore point */      \
-    } while (0)
+#define CO_YIELD                                                    \
+  do {                                                              \
+    COGO_PC = (intptr_t)(&&COGO_LABEL); /* 1. save restore point */ \
+    goto cogo_exit;                     /* 2. return */             \
+  COGO_LABEL:;                          /* 3. restore point */      \
+  } while (0)
 
-#define CO_RETURN                                                   \
-    goto cogo_return            /* end coroutine */                 \
+#define CO_RETURN goto cogo_return /* end coroutine */
 
-#define CO_END                                                      \
-_Pragma("GCC diagnostic push")                                      \
-_Pragma("GCC diagnostic ignored \"-Wunused-label\"")                \
-    cogo_return:                                                    \
-_Pragma("GCC diagnostic pop")                                       \
-        COGO_PC = COGO_STATUS_STOPPED;                              \
-    cogo_exit
+#define CO_END                        \
+  cogo_return:                        \
+  /**/ COGO_PC = COGO_STATUS_STOPPED; \
+  cogo_exit
 
 // Make goto label.
 // e.g. COGO_LABEL(13)       -> cogo_yield_13
