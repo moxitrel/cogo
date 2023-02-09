@@ -1,3 +1,4 @@
+// clang-format off
 /*
 
 * API
@@ -5,10 +6,11 @@ CO_BEGIN                : ...
 CO_END                  : ...
 CO_YIELD                : ...
 CO_RETURN               : ...
-CO_THIS                 : ...
-CO_STATUS   (CO)        : ...
+co_this                 : ...
+co_status   (CO)        : ...
 CO_DECLARE  (NAME, ...) : ...
 CO_DEFINE   (NAME)      : ...
+CO_MAKE     (NAME, ...) : ...
 CO_AWAIT    (cogo_co_t*): ...
 CO_START    (cogo_co_t*): ...
 
@@ -22,12 +24,15 @@ CO_CHAN_WRITE(co_chan_t*, co_msg_t*)    : send a message to channel
 CO_CHAN_READ (co_chan_t*, co_msg_t*)    : receive a message from channel, the result stored in co_msg_t.next
 
 */
-// clang-format off
 #ifndef COGO_CO_IMPL_H_
 #define COGO_CO_IMPL_H_
 
 #include <stddef.h>
 #include "cogo_co.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct co co_t;
 typedef struct co_sch co_sch_t;
@@ -61,6 +66,9 @@ struct co_sch {
     COGO_QUEUE_T(co_t) q;
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wc++20-designator"
 static inline void co_run(void* co) {
     co_sch_t sch = {
         .cogo_sch = {
@@ -71,6 +79,7 @@ static inline void co_run(void* co) {
         // noop
     }
 }
+#pragma GCC diagnostic pop
 
 // channel message
 struct co_msg {
@@ -109,7 +118,10 @@ typedef struct co_chan {
 // MSG_NEXT: the read message sit in MSG_NEXT->next
 #define CO_CHAN_READ(CHAN, MSG_NEXT)                                        \
     do {                                                                    \
-        if (cogo_chan_read((co_t*)(CO_THIS), (CHAN), (MSG_NEXT)) != 0) {    \
+_Pragma("GCC diagnostic push")                                                      \
+_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")                              \
+        if (cogo_chan_read((co_t*)(co_this), (CHAN), (MSG_NEXT)) != 0) {    \
+_Pragma("GCC diagnostic pop")                                                       \
             CO_YIELD;                                                       \
         }                                                                   \
     } while (0)
@@ -118,7 +130,10 @@ int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next);
 // CO_CHAN_WRITE(co_chan_t*, co_msg_t*);
 #define CO_CHAN_WRITE(CHAN, MSG)                                                \
     do {                                                                        \
-        if (cogo_chan_write((co_t*)(CO_THIS), (CHAN), (co_msg_t*)(MSG)) != 0) { \
+_Pragma("GCC diagnostic push")                                                      \
+_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")                              \
+        if (cogo_chan_write((co_t*)(co_this), (CHAN), (co_msg_t*)(MSG)) != 0) { \
+_Pragma("GCC diagnostic pop")                                                       \
             CO_YIELD;                                                           \
         }                                                                       \
     } while (0)
@@ -132,4 +147,7 @@ int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg);
 #define CO_MAKE(NAME, ...)      \
     ((NAME##_t){{.cogo_co = {.func = NAME##_func}}, __VA_ARGS__})
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* COGO_CO_IMPL_H_ */

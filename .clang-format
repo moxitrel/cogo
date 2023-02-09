@@ -1,0 +1,81 @@
+---
+BasedOnStyle: Google
+
+ColumnLimit: 0
+---
+Language: Cpp
+Standard: Auto
+
+#define SHORT_NAME       42
+#define LONGER_NAME      0x007f
+#define EVEN_LONGER_NAME (2)
+#
+#define foo(x)           (x * x)
+#/* some comment */
+#define bar(y, z)        (y + z)
+#
+# AlignConsecutiveMacros: AcrossEmptyLines
+
+# DontAlign: #define A \
+#             int aaaa; \
+#             int b; \
+#             int dddddddddd;
+#
+# Left     : #define A  \
+#             int aaaa; \
+#             int b;    \
+#             int dddddddddd;
+#
+# Right    : #define A                                                        \
+#             int aaaa;                                                       \
+#             int b;                                                          \
+#             int dddddddddd;
+#AlignEscapedNewlines: Right
+
+# macros that should be interpreted as foreach loops instead of as function calls
+#ForEachMacros:
+#   - foreach
+#   - Q_FOREACH
+#   - BOOST_FOREACH
+
+# A regular expression matching macros that start a block and end a block
+#With:
+# MacroBlockBegin: "^NS_MAP_BEGIN|NS_TABLE_HEAD$"
+# MacroBlockEnd: "^NS_MAP_END|\
+# NS_TABLE_.*_END$"
+#
+# NS_MAP_BEGIN
+#   foo();
+# NS_MAP_END
+#
+# NS_TABLE_HEAD
+#   bar();
+# NS_TABLE_FOO_END
+#
+#Without:
+# NS_MAP_BEGIN
+# foo();
+# NS_MAP_END
+#
+# NS_TABLE_HEAD
+# bar();
+# NS_TABLE_FOO_END
+#
+#MacroBlockBegin: ''
+#MacroBlockEnd:   ''
+
+##
+## Comment
+##
+
+# false:
+# // veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of information
+# /* second veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of information */
+#
+# true:
+# // veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of
+# // information
+# /* second veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of
+#  * information */
+#ReflowComments:  false
+---

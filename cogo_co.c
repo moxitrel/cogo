@@ -1,4 +1,4 @@
-#include "cogo_co.h"
+#include <cogo/cogo_co.h>
 
 cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
     COGO_ASSERT(sch);
@@ -9,7 +9,7 @@ cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
             // blocked
             break;
         }
-        switch (CO_STATUS(sch->stack_top)) {
+        switch (co_status(sch->stack_top)) {
         case COGO_STATUS_INITED:    // await
             continue;
         case COGO_STATUS_STOPPED:   // return
@@ -17,9 +17,9 @@ cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
             continue;
         default:  // yield
             cogo_sch_push(sch, sch->stack_top);
-            break;
+            goto exit;
         }
-        break;
     }
+exit:
     return sch->stack_top = cogo_sch_pop(sch);
 }

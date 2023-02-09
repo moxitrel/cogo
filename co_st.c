@@ -1,4 +1,4 @@
-#include "co_st.h"
+#include <cogo/co_st.h>
 
 // implement cogo_sch_push()
 int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {

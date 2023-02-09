@@ -211,7 +211,7 @@ int main(void)
 - CO_START (co_t *, co_t *) :: Add a coroutine to scheduler to run.
 
 - CO_RUN  (co_t *) :: loop running until finish all coroutines
-+ CO_STATUS(co_t *) :: Return the current running state of coroutine /obj/.
++ co_status(co_t *) :: Return the current running state of coroutine /obj/.
   -  0: ready
   - >0: running
   - <0: stopped, coroutine is finished

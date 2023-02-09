@@ -1,3 +1,4 @@
+// clang-format off
 /*
 
 * API
@@ -5,17 +6,15 @@ CO_BEGIN      : ...
 CO_END        : ...
 CO_YIELD      : ...
 CO_RETURN     : ...
-CO_THIS       : ...
-CO_STATUS(CO) : ...
+co_this       : ...
+co_status(CO) : ...
 
-CO_ARG                  : the parameter name of coroutine function.
 CO_DECLARE(NAME, ...)   : declare a coroutine.
 CO_DEFINE (NAME)        : define a declared coroutine which not defined.
 CO_MAKE   (NAME, ...)   : coroutine maker.
 NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g. Nat_func
 
 */
-// clang-format off
 #ifndef COGO_COGO_YIELD_H_
 #define COGO_COGO_YIELD_H_
 
@@ -28,6 +27,10 @@ NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g
 #endif
 
 #include "utils.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // COGO_STRUCT(Type, T1 field1, ...): define a struct named <Type>
 //
@@ -63,14 +66,20 @@ NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g
     CO_DEFINE(NAME)
 
 #define CO_DEFINE(NAME)         \
-    void NAME##_func(void* CO_THIS)
+    void NAME##_func(void* co_this)
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...)   \
     COGO_DECLARE(NAME, cogo_yield_t cogo_yield, __VA_ARGS__)
 
 #undef CO_MAKE
-#define CO_MAKE(NAME, ...)      \
-    ((NAME##_t){{0}, __VA_ARGS__})
+#define CO_MAKE(NAME, ...)                              \
+_Pragma("GCC diagnostic push")                          \
+_Pragma("GCC diagnostic ignored \"-Wc99-extensions\"")  \
+    ((NAME##_t){{}, __VA_ARGS__})                      \
+_Pragma("GCC diagnostic pop")
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* COGO_COGO_YIELD_H_ */

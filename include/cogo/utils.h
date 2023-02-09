@@ -1,6 +1,10 @@
+// clang-format off
 #ifndef COGO_UTILS_H_
 #define COGO_UTILS_H_
-// clang-format off
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Get nth element of items. (BUG)
 //
@@ -96,4 +100,7 @@
 
 #define COGO_ARG(...)               COGO_RM_PAREN(__VA_ARGS__)
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* COGO_UTILS_H_ */
