@@ -7,6 +7,9 @@ extern "C" {
 
 #define CX2_IDENTITY(...)      __VA_ARGS__
 
+#define CX2_TO_STRING(...)     CX2_TO_STRING1(__VA_ARGS__)
+#define CX2_TO_STRING1(...)    #__VA_ARGS__
+
 // Get the nth element of tuple.
 // e.g. CX2_GET_BY_COMMA(        , P0,P1,P2,P3,...)  -> P1 (bug, want P0)
 //      CX2_GET_BY_COMMA(_1      , P0,P1,P2,P3,...)  -> P1
@@ -23,8 +26,7 @@ extern "C" {
     _51, _52, _53, _54, _55, _56, _57, _58, _59, N, ...) \
   N
 
-// Get the nth element of tuple. (Solved the CX2_GET_BY_COMMA(...)'s BUG)
-//
+// Get the nth element of tuple. (Resolved the CX2_GET_BY_COMMA(...)'s BUG)
 // e.g. CX2_GET(        , P0,P1,P2,P3,...) -> CX2_GET_01N(0,1,P0,P1,P1) -> ARG_GET_01(P0,P1,P1) -> P0
 //      CX2_GET(_1      , P0,P1,P2,P3,...) -> CX2_GET_01N(0,0,P0,P1,P1) -> ARG_GET_00(P0,P1,P1) -> P1
 //      CX2_GET(_1,_2   , P0,P1,P2,P3,...) -> CX2_GET_01N(1,1,P0,P1,P2) -> ARG_GET_11(P0,P1,P2) -> P2
@@ -153,11 +155,12 @@ extern "C" {
 #define CX2_IF_NIL3_1(SK, FK)      SK
 #define CX2_IF_NIL3_0(SK, FK)      FK
 
-#define CX2_WITH_PRAGMA(STR_PARAMS, ...) \
-  _Pragma("GCC diagnostic push")         \
-      _Pragma(STR_PARAMS)                \
-          __VA_ARGS__                    \
+#define CX2_NO_WARN(OPT, ...)                                             \
+  _Pragma("GCC diagnostic push")                                          \
+      _Pragma(CX2_TO_STRING(CX2_STRING_OF_PRAGMA_DIAGNOSTIC_IGNORE(OPT))) \
+          __VA_ARGS__                                                     \
               _Pragma("GCC diagnostic pop")
+#define CX2_STRING_OF_PRAGMA_DIAGNOSTIC_IGNORE(OPT) GCC diagnostic ignored OPT
 
 #ifdef __cplusplus
 }

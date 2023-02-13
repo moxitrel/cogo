@@ -5,17 +5,17 @@ include(CTest)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
+check_c_compiler_flag(-Wno-padded _WNO_PADDED)
+
 add_library(cogo
     cogo_co.c
     co_st.c
 )
 target_include_directories(cogo PUBLIC include)
 target_compile_features(cogo PUBLIC c_std_99)
-
-check_c_compiler_flag(-Weverything W_EVERYTHING)
-check_c_compiler_flag(-Wno-padded WNO_PADDED)
 target_compile_options(cogo PUBLIC
-    $<$<BOOL:${WNO_PADDED}>:-Wno-padded>
+    $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
+    ${PROJECT_COMPILE_OPTIONS_STATIC_ANALYSIS}
 )
 
 if (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
@@ -34,8 +34,8 @@ if (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
         ${PROJECT_COMPILE_OPTIONS_STATIC_ANALYSIS}
 
         $<$<BOOL:${WNO_MISSING_PROTOTYPES}>:-Wno-missing-prototypes>
-        $<$<BOOL:${WNO_MISSING_DECLARATIONS}>:-Wno-missing-declarations>
         $<$<BOOL:${WNO_UNREACHABLE_CODE}>:-Wno-unreachable-code>
+        $<$<BOOL:${WNO_MISSING_DECLARATIONS}>:-Wno-missing-declarations>
         $<$<BOOL:${WNO_MISSING_FIELD_INITIALIZERS}>:-Wno-missing-field-initializers>
         $<$<BOOL:${WNO_SUGGEST_ATTRIBUTE}>:-Wno-suggest-attribute=const>
         $<$<BOOL:${WNO_SUGGEST_ATTRIBUTE}>:-Wno-suggest-attribute=pure>

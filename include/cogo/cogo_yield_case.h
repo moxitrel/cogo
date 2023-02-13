@@ -70,7 +70,7 @@ extern "C" {
 #define COGO_NOWARN_OLD_STYLE_CAST(...)
 #endif
 
-#define COGO_STATUS_INITED 0
+#define COGO_STATUS_INITED  0
 #define COGO_STATUS_STOPPED -1
 
 // yield context
@@ -88,13 +88,14 @@ typedef struct cogo_yield {
 // get the current running state
 static inline int co_status(void* co) { return ((cogo_yield_t*)co)->cogo_pc; }
 
-#define CO_BEGIN                                     \
-  switch (co_status(co_this)) {                      \
-    default: /* invalid  pc */                       \
-      COGO_ASSERT(((void)"cogo_pc isn't valid", 0)); \
-      goto cogo_exit;                                \
-    case COGO_STATUS_STOPPED: /* coroutine end */    \
-      goto cogo_exit;                                \
+#define CO_BEGIN                                                    \
+  switch (co_status(co_this)) {                                     \
+    default: /* invalid  pc */                                      \
+      COGO_ASSERT(((void)"cogo_pc isn't valid", 0));                \
+      goto cogo_exit;                                               \
+      goto cogo_return;       /* HACK: no warning -Wunused-label */ \
+    case COGO_STATUS_STOPPED: /* coroutine end */                   \
+      goto cogo_exit;                                               \
     case COGO_STATUS_INITED /* coroutine begin */
 
 #define CO_YIELD                                                                \
@@ -106,10 +107,10 @@ static inline int co_status(void* co) { return ((cogo_yield_t*)co)->cogo_pc; }
 
 #define CO_RETURN goto cogo_return /* end coroutine */
 
-#define CO_END                                                               \
-  CX2_WITH_PRAGMA("GCC diagnostic ignored \"-Wunused-label\"", cogo_return:) \
-  /**/ COGO_PC = COGO_STATUS_STOPPED;                                        \
-  }                                                                          \
+#define CO_END                        \
+  cogo_return:                        \
+  /**/ COGO_PC = COGO_STATUS_STOPPED; \
+  }                                   \
   cogo_exit
 
 #ifdef __cplusplus
