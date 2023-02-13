@@ -155,12 +155,12 @@ extern "C" {
 #define CX2_IF_NIL3_1(SK, FK)      SK
 #define CX2_IF_NIL3_0(SK, FK)      FK
 
-#define CX2_NO_WARN(OPT, ...)                                             \
-  _Pragma("GCC diagnostic push")                                          \
-      _Pragma(CX2_TO_STRING(CX2_STRING_OF_PRAGMA_DIAGNOSTIC_IGNORE(OPT))) \
-          __VA_ARGS__                                                     \
+#define CX2_NO_WARN(OPT, ...)                                        \
+  _Pragma("GCC diagnostic push")                                     \
+      _Pragma(CX2_TO_STRING(CX2_PRAGMA_GCC_DIAGNOSTIC_IGNORED(OPT))) \
+          __VA_ARGS__                                                \
               _Pragma("GCC diagnostic pop")
-#define CX2_STRING_OF_PRAGMA_DIAGNOSTIC_IGNORE(OPT) GCC diagnostic ignored OPT
+#define CX2_PRAGMA_GCC_DIAGNOSTIC_IGNORED(OPT) GCC diagnostic ignored OPT
 
 #ifdef __cplusplus
 }

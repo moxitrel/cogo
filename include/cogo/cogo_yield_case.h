@@ -48,8 +48,8 @@ void nat_func(nat_t* co_this)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
-#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
-#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
+#ifndef COGO_COGO_YIELD_IMPL_H_
+#define COGO_COGO_YIELD_IMPL_H_
 
 #include "macro_utils.h"
 
@@ -61,13 +61,6 @@ extern "C" {
 #define COGO_ASSERT(...) assert(__VA_ARGS__)
 #else
 #define COGO_ASSERT(...)
-#endif
-
-#ifdef __cplusplus
-#define COGO_NOWARN_OLD_STYLE_CAST(...) \
-  CX2_WITH_PRAGMA("GCC diagnostic ignored \"-Wold-style-cast\"", __VA_ARGS__)
-#else
-#define COGO_NOWARN_OLD_STYLE_CAST(...)
 #endif
 
 #define COGO_STATUS_INITED  0
@@ -116,4 +109,4 @@ static inline int co_status(void* co) { return ((cogo_yield_t*)co)->cogo_pc; }
 #ifdef __cplusplus
 }
 #endif
-#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
+#endif  // COGO_COGO_YIELD_IMPL_H_

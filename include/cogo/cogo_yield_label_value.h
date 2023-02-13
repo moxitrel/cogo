@@ -69,16 +69,19 @@ typedef struct cogo_yield {
 // get the current running state
 static inline intptr_t co_status(void *co) { return ((cogo_yield_t *)co)->cogo_pc; }
 
-#define CO_BEGIN                                       \
-  switch (co_status(co_this)) {                        \
-    case COGO_STATUS_INITED:                           \
-      goto cogo_enter;                                 \
-      goto cogo_return; /* HACK: avoid unused label */ \
-    case COGO_STATUS_STOPPED:                          \
-      goto cogo_exit;                                  \
-    default:                                           \
-      goto *(const void *)COGO_PC;                     \
-  }                                                    \
+#define CO_BEGIN                                                                                     \
+  switch (co_status(co_this)) {                                                                      \
+    case COGO_STATUS_INITED:                                                                         \
+      goto cogo_enter;                                                                               \
+      /* HACK: avoid error - unused label */                                                         \
+      goto cogo_return;                                                                              \
+      /* HACK: avoid clang error - indirect goto in function with no address-of-label expressions */ \
+      COGO_PC = (intptr_t)(&&cogo_enter);                                                            \
+    case COGO_STATUS_STOPPED:                                                                        \
+      goto cogo_exit;                                                                                \
+    default:                                                                                         \
+      goto *(const void *)COGO_PC;                                                                   \
+  }                                                                                                  \
   cogo_enter
 
 #define CO_YIELD                                                    \
