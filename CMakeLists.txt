@@ -19,7 +19,6 @@ target_compile_options(cogo PUBLIC
     $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
     $<$<BOOL:${_WNO_GNU_LABEL_AS_VALUE}>:-Wno-gnu-label-as-value>
     $<$<BOOL:${_WNO_PEDANTIC}>:-Wno-pedantic>
-    # ${PROJECT_COMPILE_OPTIONS_STATIC_ANALYSIS}
 )
 
 if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))

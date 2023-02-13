@@ -4,8 +4,7 @@
 int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
   COGO_ASSERT(sch);
   COGO_ASSERT(co);
-  COGO_QUEUE_PUSH(co_t)
-  (&((co_sch_t*)sch)->q, (co_t*)co);
+  (COGO_QUEUE_PUSH(co_t)(&((co_sch_t*)sch)->q, (co_t*)co));
   return 1;  // switch context
 }
 
@@ -24,11 +23,9 @@ int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next) {
 
   const ptrdiff_t chan_size = chan->size--;
   if (chan_size <= 0) {
-    COGO_QUEUE_PUSH(co_msg_t)
-    (&chan->mq, msg_next);
+    (COGO_QUEUE_PUSH(co_msg_t)(&chan->mq, msg_next));
     // sleep in background
-    COGO_QUEUE_PUSH(co_t)
-    (&chan->cq, co);                          // append to blocking queue
+    (COGO_QUEUE_PUSH(co_t)(&chan->cq, co));   // append to blocking queue
     ((cogo_co_t*)co)->sch->stack_top = NULL;  // remove from scheduler
     return 1;
   } else {
@@ -51,20 +48,17 @@ int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg) {
 
   const ptrdiff_t chan_size = chan->size++;
   if (chan_size < 0) {
-    COGO_QUEUE_POP_NONEMPTY(co_msg_t)
-    (&chan->mq)->next = msg;
+    (COGO_QUEUE_POP_NONEMPTY(co_msg_t)(&chan->mq))->next = msg;
     // wake up a reader
     cogo_co_t* reader = (cogo_co_t*)COGO_QUEUE_POP_NONEMPTY(co_t)(&chan->cq);
     return cogo_sch_push(((cogo_co_t*)co)->sch, reader);
   } else {
-    COGO_QUEUE_PUSH(co_msg_t)
-    (&chan->mq, msg);
+    (COGO_QUEUE_PUSH(co_msg_t)(&chan->mq, msg));
     if (chan_size < chan->cap) {
       return 0;
     }
     // sleep in background
-    COGO_QUEUE_PUSH(co_t)
-    (&chan->cq, co);
+    (COGO_QUEUE_PUSH(co_t)(&chan->cq, co));
     ((cogo_co_t*)co)->sch->stack_top = NULL;
     return 1;
   }

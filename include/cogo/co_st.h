@@ -63,8 +63,7 @@ struct co_sch {
   cogo_sch_t cogo_sch;
 
   // coroutine queue run concurrently
-  COGO_QUEUE_T(co_t)
-  q;
+  /**/ COGO_QUEUE_T(co_t) q;
 };
 
 static inline void co_run(void* co) {
@@ -85,7 +84,7 @@ struct co_msg {
 
 //
 // COGO_QUEUE_T             (co_msg_t)
-// COGO_QUEUE_IS_EMPTY         (co_msg_t) (const COGO_QUEUE_T(co_msg_t)*)
+// COGO_QUEUE_IS_EMPTY      (co_msg_t) (const COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_POP           (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_POP_NONEMPTY  (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_PUSH          (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*, co_msg_t*)
@@ -97,12 +96,10 @@ struct co_msg {
 #include "co_st_q.inc"
 typedef struct co_chan {
   // all coroutines blocked by this channel
-  COGO_QUEUE_T(co_t)
-  cq;
+  /**/ COGO_QUEUE_T(co_t) cq;
 
   // message queue
-  COGO_QUEUE_T(co_msg_t)
-  mq;
+  /**/ COGO_QUEUE_T(co_msg_t) mq;
 
   // current size
   ptrdiff_t size;
