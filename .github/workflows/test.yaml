@@ -5,4 +5,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: sudo apt-get -y install cmake make gcc clang
+      - run: find / -iname 'test.sh'
       - run: ${{ github.workspace }}/test.sh
