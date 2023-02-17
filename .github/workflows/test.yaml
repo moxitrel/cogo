@@ -1,8 +1,8 @@
-name: unit test
+name: Test
 on: [push]
 jobs:
   unit-test:
     runs-on: ubuntu-latest
     steps:
       - run: sudo apt-get -y install cmake make gcc clang
-      - run: ${env.GITHUB_WORKSPACE}/test.sh
+      - run: ${{env.GITHUB_WORKSPACE}}/test.sh
