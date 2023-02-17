@@ -6,4 +6,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - run: sudo apt-get -y install cmake make gcc clang
-      - run: test.sh $(mktemp -d)
+      - run: pwd
+      - run: ${{ github.workspace }}/test.sh $(mktemp -d)
