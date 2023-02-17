@@ -4,6 +4,6 @@ jobs:
   unit-test:
     runs-on: ubuntu-latest
     steps:
-    #   - run: sudo apt-get -y install cmake make gcc clang
-      - run: find / -iname 'test.sh' 2> /dev/null
+      - uses: actions/checkout@v3
+      - run: sudo apt-get -y install cmake make gcc clang
       - run: ${{ github.workspace }}/test.sh
