@@ -5,7 +5,8 @@ COGO_QUEUE_ITEM_NEXT()  : return the next element
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "macro_utils.h"
+#ifndef COGO_CO_ST_Q_INC_
+#define COGO_CO_ST_Q_INC_
 
 #define COGO_QUEUE_T(T)             COGO_QUEUE_T1(T)
 #define COGO_QUEUE_T1(T)            cogo_##T##_queue_t
@@ -22,11 +23,13 @@ COGO_QUEUE_ITEM_NEXT()  : return the next element
 #define COGO_QUEUE_POP_NONEMPTY(T)  COGO_QUEUE_POP_NONEMPTY1(T)
 #define COGO_QUEUE_POP_NONEMPTY1(T) cogo_##T##_queue_pop_nonempty
 
-#define COGO_Q_T                    COGO_QUEUE_T(COGO_QUEUE_ITEM_T)
-#define COGO_Q_IS_EMPTY             COGO_QUEUE_IS_EMPTY(COGO_QUEUE_ITEM_T)
-#define COGO_Q_POP                  COGO_QUEUE_POP(COGO_QUEUE_ITEM_T)
-#define COGO_Q_PUSH                 COGO_QUEUE_PUSH(COGO_QUEUE_ITEM_T)
-#define COGO_Q_POP_NONEMPTY         COGO_QUEUE_POP_NONEMPTY(COGO_QUEUE_ITEM_T)
+#endif  // COGO_CO_ST_Q_INC_
+
+#define COGO_Q_T            COGO_QUEUE_T(COGO_QUEUE_ITEM_T)
+#define COGO_Q_IS_EMPTY     COGO_QUEUE_IS_EMPTY(COGO_QUEUE_ITEM_T)
+#define COGO_Q_POP          COGO_QUEUE_POP(COGO_QUEUE_ITEM_T)
+#define COGO_Q_PUSH         COGO_QUEUE_PUSH(COGO_QUEUE_ITEM_T)
+#define COGO_Q_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(COGO_QUEUE_ITEM_T)
 
 typedef struct {
   COGO_QUEUE_ITEM_T* head;

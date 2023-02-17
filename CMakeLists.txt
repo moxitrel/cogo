@@ -3,7 +3,6 @@ project(cogo)
 
 include(CTest)
 include(CheckCCompilerFlag)
-include(CheckCXXCompilerFlag)
 
 add_library(cogo
     cogo_co.c
@@ -13,11 +12,9 @@ target_include_directories(cogo PUBLIC include)
 target_compile_features(cogo PUBLIC c_std_99)
 
 check_c_compiler_flag(-Wno-padded _WNO_PADDED)
-check_c_compiler_flag(-Wno-gnu-label-as-value _WNO_GNU_LABEL_AS_VALUE)
 check_c_compiler_flag(-Wno-pedantic _WNO_PEDANTIC)
 target_compile_options(cogo PUBLIC
     $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
-    $<$<BOOL:${_WNO_GNU_LABEL_AS_VALUE}>:-Wno-gnu-label-as-value>
     $<$<BOOL:${_WNO_PEDANTIC}>:-Wno-pedantic>
 )
 

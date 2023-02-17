@@ -2,9 +2,10 @@
 
 # ignore files begin with dot default
 .*
-!.gitignore
-!.editorconfig
 !.clang-format
+!.editorconfig
+!.github/
+!.gitignore
 !.gitlab-ci.yml
 
 # others
