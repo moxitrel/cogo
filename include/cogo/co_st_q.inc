@@ -36,12 +36,12 @@ typedef struct {
   COGO_QUEUE_ITEM_T* tail;
 } COGO_Q_T;
 
-static inline bool COGO_Q_IS_EMPTY(const COGO_Q_T* thiz) {
+static inline bool COGO_Q_IS_EMPTY(COGO_Q_T const* const thiz) {
   return thiz->head == NULL;
 }
 
 // dequeue, return NULL if empty
-static inline COGO_QUEUE_ITEM_T* COGO_Q_POP(COGO_Q_T* thiz) {
+static inline COGO_QUEUE_ITEM_T* COGO_Q_POP(COGO_Q_T* const thiz) {
   COGO_QUEUE_ITEM_T* node = thiz->head;
   if (!COGO_Q_IS_EMPTY(thiz)) {
     thiz->head = COGO_QUEUE_ITEM_NEXT(thiz->head);
@@ -50,7 +50,7 @@ static inline COGO_QUEUE_ITEM_T* COGO_Q_POP(COGO_Q_T* thiz) {
 }
 
 // enqueue
-static inline void COGO_Q_PUSH(COGO_Q_T* thiz, COGO_QUEUE_ITEM_T* node) {
+static inline void COGO_Q_PUSH(COGO_Q_T* const thiz, COGO_QUEUE_ITEM_T* const node) {
   if (COGO_Q_IS_EMPTY(thiz)) {
     thiz->head = node;
   } else {
@@ -60,7 +60,7 @@ static inline void COGO_Q_PUSH(COGO_Q_T* thiz, COGO_QUEUE_ITEM_T* node) {
   COGO_QUEUE_ITEM_NEXT(node) = NULL;
 }
 
-static inline COGO_QUEUE_ITEM_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* thiz) {
+static inline COGO_QUEUE_ITEM_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const thiz) {
   COGO_QUEUE_ITEM_T* node = thiz->head;
   thiz->head = COGO_QUEUE_ITEM_NEXT(thiz->head);
   return node;

@@ -73,7 +73,7 @@ cogo_co_t* cogo_sch_pop(cogo_sch_t*);
     cogo_co_await((cogo_co_t*)co_this, (cogo_co_t*)(CO)); \
     CO_YIELD;                                             \
   } while (0)
-static inline void cogo_co_await(cogo_co_t* thiz, cogo_co_t* callee) {
+static inline void cogo_co_await(cogo_co_t* const thiz, cogo_co_t* const callee) {
   COGO_ASSERT(thiz);
   COGO_ASSERT(thiz->sch);
   COGO_ASSERT(thiz->sch->stack_top == thiz);

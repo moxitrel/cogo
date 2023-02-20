@@ -24,7 +24,7 @@ static void test_yield(void) {
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
   coyield_func(&co);
-  TEST_ASSERT_NOT_EQUAL_UINT(CO_STATUS_INIT, co_status(&co));   // running
+  TEST_ASSERT_NOT_EQUAL_UINT(CO_STATUS_INIT, co_status(&co));  // running
   TEST_ASSERT_NOT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co));  // running
   TEST_ASSERT_EQUAL_INT(1, co.v);
 

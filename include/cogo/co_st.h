@@ -66,7 +66,7 @@ struct co_sch {
   /**/ COGO_QUEUE_T(co_t) q;
 };
 
-static inline void co_run(void* co) {
+static inline void co_run(void* const co) {
   co_sch_t sch = {
       .cogo_sch = {
           .stack_top = (cogo_co_t*)co,

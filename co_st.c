@@ -1,7 +1,8 @@
 #include <cogo/co_st.h>
+#include <limits.h>
 
 // implement cogo_sch_push()
-int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
+int cogo_sch_push(cogo_sch_t* const sch, cogo_co_t* const co) {
   COGO_ASSERT(sch);
   COGO_ASSERT(co);
   (COGO_QUEUE_PUSH(co_t)(&((co_sch_t*)sch)->q, (co_t*)co));
@@ -9,12 +10,12 @@ int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
 }
 
 // implement cogo_sch_pop()
-cogo_co_t* cogo_sch_pop(cogo_sch_t* sch) {
+cogo_co_t* cogo_sch_pop(cogo_sch_t* const sch) {
   COGO_ASSERT(sch);
   return (cogo_co_t*)COGO_QUEUE_POP(co_t)(&((co_sch_t*)sch)->q);
 }
 
-int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next) {
+int cogo_chan_read(co_t* const co, co_chan_t* const chan, co_msg_t* const msg_next) {
   COGO_ASSERT(co);
   COGO_ASSERT(chan);
   COGO_ASSERT(chan->cap >= 0);
@@ -39,7 +40,7 @@ int cogo_chan_read(co_t* co, co_chan_t* chan, co_msg_t* msg_next) {
   }
 }
 
-int cogo_chan_write(co_t* co, co_chan_t* chan, co_msg_t* msg) {
+int cogo_chan_write(co_t* const co, co_chan_t* const chan, co_msg_t* const msg) {
   COGO_ASSERT(co);
   COGO_ASSERT(chan);
   COGO_ASSERT(chan->cap >= 0);

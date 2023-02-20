@@ -79,16 +79,18 @@ typedef struct cogo_yield {
 #define COGO_PC (((cogo_yield_t*)co_this)->cogo_pc)
 
 // get the current running state
-static inline int co_status(void* co) { return ((cogo_yield_t*)co)->cogo_pc; }
+static inline int co_status(void const* const co) {
+  return ((cogo_yield_t const*)co)->cogo_pc;
+}
 
-#define CO_BEGIN                                               \
-  switch (co_status(co_this)) {                                \
-    default: /* invalid  pc */                                 \
-      COGO_ASSERT(((void)"cogo_pc isn't valid", 0));           \
-      goto cogo_exit;                                          \
-      goto cogo_return;  /* HACK: no warning -Wunused-label */ \
-    case CO_STATUS_FINI: /* coroutine end */                   \
-      goto cogo_exit;                                          \
+#define CO_BEGIN                                          \
+  switch (co_status(co_this)) {                           \
+    default: /* invalid  pc */                            \
+      COGO_ASSERT(((void)"cogo_pc isn't valid", 0));      \
+      goto cogo_exit;                                     \
+      goto cogo_return;  /* HACK: no warn unused label */ \
+    case CO_STATUS_FINI: /* coroutine end */              \
+      goto cogo_exit;                                     \
     case CO_STATUS_INIT /* coroutine begin */
 
 #define CO_YIELD                                                                \

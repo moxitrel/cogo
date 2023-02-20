@@ -67,8 +67,8 @@ extern "C" {
 #define CO_DEFINE(NAME)    CO_DEFINE1(CX2_COUNT(COGO_COMMA_##NAME), NAME)
 #define CO_DEFINE1(...)    CO_DEFINE2(__VA_ARGS__)
 #define CO_DEFINE2(N, ...) CO_DEFINE3_##N(__VA_ARGS__)
-#define CO_DEFINE3_1(NAME) void NAME##_func(void* co_this)
-#define CO_DEFINE3_2(NAME) static void COGO_REMOVE_LINKAGE_##NAME##_func(void* co_this)
+#define CO_DEFINE3_1(NAME) void NAME##_func(void* const co_this)
+#define CO_DEFINE3_2(NAME) static void COGO_REMOVE_LINKAGE_##NAME##_func(void* const co_this)
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
