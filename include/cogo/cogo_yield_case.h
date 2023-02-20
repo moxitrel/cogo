@@ -63,8 +63,8 @@ extern "C" {
 #define COGO_ASSERT(...) /*noop*/
 #endif
 
-#define CO_STATUS_INITED  0
-#define CO_STATUS_STOPPED -1
+#define CO_STATUS_INIT 0
+#define CO_STATUS_FINI -1
 
 // yield context
 typedef struct cogo_yield {
@@ -81,15 +81,15 @@ typedef struct cogo_yield {
 // get the current running state
 static inline int co_status(void* co) { return ((cogo_yield_t*)co)->cogo_pc; }
 
-#define CO_BEGIN                                                  \
-  switch (co_status(co_this)) {                                   \
-    default: /* invalid  pc */                                    \
-      COGO_ASSERT(((void)"cogo_pc isn't valid", 0));              \
-      goto cogo_exit;                                             \
-      goto cogo_return;     /* HACK: no warning -Wunused-label */ \
-    case CO_STATUS_STOPPED: /* coroutine end */                   \
-      goto cogo_exit;                                             \
-    case CO_STATUS_INITED /* coroutine begin */
+#define CO_BEGIN                                               \
+  switch (co_status(co_this)) {                                \
+    default: /* invalid  pc */                                 \
+      COGO_ASSERT(((void)"cogo_pc isn't valid", 0));           \
+      goto cogo_exit;                                          \
+      goto cogo_return;  /* HACK: no warning -Wunused-label */ \
+    case CO_STATUS_FINI: /* coroutine end */                   \
+      goto cogo_exit;                                          \
+    case CO_STATUS_INIT /* coroutine begin */
 
 #define CO_YIELD                                                                \
   do {                                                                          \
@@ -100,10 +100,10 @@ static inline int co_status(void* co) { return ((cogo_yield_t*)co)->cogo_pc; }
 
 #define CO_RETURN goto cogo_return /* end coroutine */
 
-#define CO_END                      \
-  cogo_return:                      \
-  /**/ COGO_PC = CO_STATUS_STOPPED; \
-  }                                 \
+#define CO_END                   \
+  cogo_return:                   \
+  /**/ COGO_PC = CO_STATUS_FINI; \
+  }                              \
   cogo_exit
 
 #ifdef __cplusplus
