@@ -58,8 +58,8 @@ extern "C" {
 #define COGO_ASSERT(...) /*noop*/
 #endif
 
-#define COGO_STATUS_INITED  0
-#define COGO_STATUS_STOPPED -1
+#define CO_STATUS_INITED  0
+#define CO_STATUS_STOPPED -1
 
 // yield context
 typedef struct cogo_yield {
@@ -77,13 +77,13 @@ static inline intptr_t co_status(void *co) { return ((cogo_yield_t *)co)->cogo_p
 
 #define CO_BEGIN                                                                                     \
   switch (co_status(co_this)) {                                                                      \
-    case COGO_STATUS_INITED:                                                                         \
+    case CO_STATUS_INITED:                                                                           \
       goto cogo_enter;                                                                               \
       /* HACK: avoid error - unused label */                                                         \
       goto cogo_return;                                                                              \
       /* HACK: avoid clang error - indirect goto in function with no address-of-label expressions */ \
       COGO_PC = COGO_WNO_GNU_LABEL_AS_VALUE((intptr_t)(&&cogo_enter));                               \
-    case COGO_STATUS_STOPPED:                                                                        \
+    case CO_STATUS_STOPPED:                                                                          \
       goto cogo_exit;                                                                                \
     default:                                                                                         \
       goto COGO_WNO_GNU_LABEL_AS_VALUE(*(const void *)COGO_PC);                                      \
@@ -99,9 +99,9 @@ static inline intptr_t co_status(void *co) { return ((cogo_yield_t *)co)->cogo_p
 
 #define CO_RETURN goto cogo_return /* end coroutine */
 
-#define CO_END                        \
-  cogo_return:                        \
-  /**/ COGO_PC = COGO_STATUS_STOPPED; \
+#define CO_END                      \
+  cogo_return:                      \
+  /**/ COGO_PC = CO_STATUS_STOPPED; \
   cogo_exit
 
 // Make goto label.

@@ -10,9 +10,9 @@ cogo_co_t* cogo_sch_step(cogo_sch_t* sch) {
       break;
     }
     switch (co_status(sch->stack_top)) {
-      case COGO_STATUS_INITED:  // await
+      case CO_STATUS_INITED:  // await
         continue;
-      case COGO_STATUS_STOPPED:  // return
+      case CO_STATUS_STOPPED:  // return
         sch->stack_top = sch->stack_top->caller;
         continue;
       default:  // yield

@@ -1,22 +1,22 @@
-#ifndef CX2_MACRO_UTILS_H_
-#define CX2_MACRO_UTILS_H_
+#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_MACRO_UTILS_H_
+#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_MACRO_UTILS_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define CX2_IDENTITY(...)      __VA_ARGS__
+#define CX2_IDENTITY(...)        __VA_ARGS__
 
-#define CX2_TO_STRING(...)     CX2_TO_STRING1(__VA_ARGS__)
-#define CX2_TO_STRING1(...)    #__VA_ARGS__
+#define CX2_TO_STRING(...)       CX2_TO_STRING1(__VA_ARGS__)
+#define CX2_TO_STRING1(...)      #__VA_ARGS__
 
 // Get the nth element of tuple.
-// e.g. CX2_GET_BY_COMMA(        , P0,P1,P2,P3,...)  -> P1 (bug, want P0)
-//      CX2_GET_BY_COMMA(_1      , P0,P1,P2,P3,...)  -> P1
-//      CX2_GET_BY_COMMA(_1,_2   , P0,P1,P2,P3,...)  -> P2
-//      CX2_GET_BY_COMMA(_1,_2,_3, P0,P1,P2,P3,...)  -> P3
-#define CX2_GET_BY_COMMA(...)  CX2_GET_BY_COMMA1(__VA_ARGS__)
-#define CX2_GET_BY_COMMA1(...) CX2_GET_BY_COMMA2(__VA_ARGS__)
+// e.g. CX2_GET_BY_COMMA(()        , P0,P1,P2,P3,...)  -> P1 (bug, want P0)
+//      CX2_GET_BY_COMMA((_1)      , P0,P1,P2,P3,...)  -> P1
+//      CX2_GET_BY_COMMA((_1,_2)   , P0,P1,P2,P3,...)  -> P2
+//      CX2_GET_BY_COMMA((_1,_2,_3), P0,P1,P2,P3,...)  -> P3
+#define CX2_GET_BY_COMMA(X, ...) CX2_GET_BY_COMMA1(CX2_REMOVE_PAREN X, __VA_ARGS__)
+#define CX2_GET_BY_COMMA1(...)   CX2_GET_BY_COMMA2(__VA_ARGS__)
 #define CX2_GET_BY_COMMA2(                               \
     _1, _2, _3, _4, _5, _6, _7, _8, _9, _10,             \
     _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
@@ -25,22 +25,23 @@ extern "C" {
     _41, _42, _43, _44, _45, _46, _47, _48, _49, _50,    \
     _51, _52, _53, _54, _55, _56, _57, _58, _59, N, ...) \
   N
+#define CX2_REMOVE_PAREN(...) __VA_ARGS__
 
 // Get the nth element of tuple. (Resolved the CX2_GET_BY_COMMA(...)'s BUG)
-// e.g. CX2_GET(        , P0,P1,P2,P3,...) -> CX2_GET_01N(0,1,P0,P1,P1) -> ARG_GET_01(P0,P1,P1) -> P0
-//      CX2_GET(_1      , P0,P1,P2,P3,...) -> CX2_GET_01N(0,0,P0,P1,P1) -> ARG_GET_00(P0,P1,P1) -> P1
-//      CX2_GET(_1,_2   , P0,P1,P2,P3,...) -> CX2_GET_01N(1,1,P0,P1,P2) -> ARG_GET_11(P0,P1,P2) -> P2
-//      CX2_GET(_1,_2,_3, P0,P1,P2,P3,...) -> CX2_GET_01N(1,1,P0,P1,P3) -> ARG_GET_11(P0,P1,P3) -> P3
+// e.g. CX2_GET(()        , P0,P1,P2,P3,...) -> CX2_GET_01N(0,1,P0,P1,P1) -> ARG_GET_01(P0,P1,P1) -> P0
+//      CX2_GET((_1)      , P0,P1,P2,P3,...) -> CX2_GET_01N(0,0,P0,P1,P1) -> ARG_GET_00(P0,P1,P1) -> P1
+//      CX2_GET((_1,_2)   , P0,P1,P2,P3,...) -> CX2_GET_01N(1,1,P0,P1,P2) -> ARG_GET_11(P0,P1,P2) -> P2
+//      CX2_GET((_1,_2,_3), P0,P1,P2,P3,...) -> CX2_GET_01N(1,1,P0,P1,P3) -> ARG_GET_11(P0,P1,P3) -> P3
 //
 // See: https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments
 //      http://p99.gforge.inria.fr/p99-html/p99__args_8h_source.html
-#define CX2_GET(X0, ...)                   \
-  CX2_GET_01N(                             \
-      CX2_HAS_COMMA(X0),                   \
-      CX2_HAS_COMMA(CX2_COMMA X0 /**/ ()), \
-      CX2_GET_BY_COMMA(__VA_ARGS__),       \
-      CX2_GET_BY_COMMA(, __VA_ARGS__),     \
-      CX2_GET_BY_COMMA(X0, __VA_ARGS__))
+#define CX2_GET(X, ...)                                    \
+  CX2_GET_01N(                                             \
+      CX2_HAS_COMMA(CX2_REMOVE_PAREN X),                   \
+      CX2_HAS_COMMA(CX2_COMMA CX2_REMOVE_PAREN X /**/ ()), \
+      CX2_GET_BY_COMMA(__VA_ARGS__),                       \
+      CX2_GET_BY_COMMA(, __VA_ARGS__),                     \
+      CX2_GET_BY_COMMA(X, __VA_ARGS__))
 #define CX2_GET_01N(...)          CX2_GET_01N1(__VA_ARGS__)
 #define CX2_GET_01N1(D1, D2, ...) CX2_GET_##D1##D2(__VA_ARGS__)
 #define CX2_GET_01(O, I, N)       O
@@ -58,7 +59,7 @@ extern "C" {
 
 // Count the number of arguments.
 #define CX2_COUNT(...)    CX2_COUNT1(__VA_ARGS__)
-#define CX2_COUNT1(...)   CX2_GET(__VA_ARGS__, CX2_COUNT_PADDING)
+#define CX2_COUNT1(...)   CX2_GET((__VA_ARGS__), CX2_COUNT_PADDING)
 #define CX2_COUNT_PADDING CX2_IDENTITY(     \
     59, 58, 57, 56, 55, 54, 53, 52, 51, 50, \
     49, 48, 47, 46, 45, 44, 43, 42, 41, 40, \
@@ -69,7 +70,7 @@ extern "C" {
 
 // Is arg list empty?
 #define CX2_IS_EMPTY(...)    CX2_IS_EMPTY1(__VA_ARGS__)
-#define CX2_IS_EMPTY1(...)   CX2_GET(__VA_ARGS__, CX2_IS_EMPTY_PADDING)
+#define CX2_IS_EMPTY1(...)   CX2_GET((__VA_ARGS__), CX2_IS_EMPTY_PADDING)
 #define CX2_IS_EMPTY_PADDING CX2_IDENTITY( \
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          \
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          \
@@ -164,4 +165,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif  // CX2_MACRO_UTILS_H_
+#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_MACRO_UTILS_H_
