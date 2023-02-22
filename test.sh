@@ -3,7 +3,7 @@
 export CC="gcc"
 export CFLAGS="-Wall -Wextra -Wc++-compat"
 
-if [ -n $1 ]
+if [ -n "$1" ]
 then
     BUILD_DIR=$1
 else
