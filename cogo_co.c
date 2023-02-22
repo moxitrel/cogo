@@ -17,9 +17,9 @@ cogo_co_t* cogo_sch_step(cogo_sch_t* const sch) {
         continue;
       default:  // yield
         cogo_sch_push(sch, sch->stack_top);
-        goto exit;
+        goto break_while;
     }
   }
-exit:
+break_while:
   return sch->stack_top = cogo_sch_pop(sch);
 }

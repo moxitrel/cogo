@@ -3,12 +3,6 @@
 #include <stdlib.h>
 #include <unity.h>
 
-void setUp(void) {
-}
-
-void tearDown(void) {
-}
-
 int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
   assert(sch);
   assert(sch->stack_top);
@@ -156,6 +150,12 @@ static void test_run(void) {
     cogo_co_run(&example[i].fib);
     TEST_ASSERT_EQUAL_INT(example[i].fib.v, example[i].value);
   }
+}
+
+void setUp(void) {
+}
+
+void tearDown(void) {
 }
 
 int main(void) {

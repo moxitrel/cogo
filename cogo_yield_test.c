@@ -2,12 +2,6 @@
 #include <cogo/cogo_yield.h>
 #include <unity.h>
 
-void setUp(void) {
-}
-
-void tearDown(void) {
-}
-
 CO_DECLARE(coyield, int v) {
 CO_BEGIN:
 
@@ -82,6 +76,12 @@ static void test_prologue(void) {
   prologue_func(&co);
   TEST_ASSERT_EQUAL_INT(4, co.enter);
   TEST_ASSERT_EQUAL_INT(4, co.exit);
+}
+
+void setUp(void) {
+}
+
+void tearDown(void) {
 }
 
 int main(void) {

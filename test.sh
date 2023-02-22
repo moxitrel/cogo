@@ -12,6 +12,5 @@ fi
 
 cd `dirname $0`
 cmake -S . -B $BUILD_DIR            \
-    -DCMAKE_BUILD_TYPE=Debug        \
 && cmake --build $BUILD_DIR -- -j   \
 && ctest --test-dir $BUILD_DIR --output-on-failure --schedule-random
