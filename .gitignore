@@ -6,7 +6,6 @@
 !.editorconfig
 !.github/
 !.gitignore
-!.gitlab-ci.yml
 
 # others
 compile_commands.json
