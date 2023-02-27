@@ -1,7 +1,7 @@
 #!/bin/sh
 
 export CC="gcc"
-export CFLAGS="-Wall -Wextra -Wc++-compat"
+export CFLAGS="-Wc++-compat -Wall -Wextra -Wconversion -fanalyzer"
 
 if [ -n "$1" ]
 then
