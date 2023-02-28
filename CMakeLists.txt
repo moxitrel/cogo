@@ -27,7 +27,6 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     check_c_compiler_flag(-Wno-missing-field-initializers WNO_MISSING_FIELD_INITIALIZERS)
     check_c_compiler_flag(-Wno-suggest-attribute WNO_SUGGEST_ATTRIBUTE)
     add_compile_options(
-        ${PROJECT_COMPILE_OPTIONS_STATIC_ANALYSIS}
         $<$<BOOL:${WNO_MISSING_PROTOTYPES}>:-Wno-missing-prototypes>
         $<$<BOOL:${WNO_UNREACHABLE_CODE}>:-Wno-unreachable-code>
         $<$<BOOL:${WNO_MISSING_DECLARATIONS}>:-Wno-missing-declarations>

@@ -12,5 +12,5 @@ fi
 
 cd `dirname $0`
 cmake -S . -B $BUILD_DIR            \
-&& cmake --build $BUILD_DIR -- -j   \
+&& cmake --build $BUILD_DIR         \
 && ctest --test-dir $BUILD_DIR --output-on-failure --schedule-random
