@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <cogo/cogo_st.h>
+#include <cogo/cogo_co.h>
 #include <unity.h>
 
 CO_DECLARE(recv, co_chan_t* chan, co_msg_t msg) {
@@ -27,7 +27,7 @@ CO_END:;
 static void test_chan(void) {
   co_chan_t chan = CO_CHAN_MAKE(0);
   main_t main = CO_MAKE(main, CO_MAKE(recv, &chan), CO_MAKE(send, &chan));
-  cogo_st_run(&main);
+  cogo_co_run(&main);
   TEST_ASSERT_EQUAL_PTR(&main.send.msg, main.recv.msg.next);
 }
 

@@ -6,7 +6,7 @@ include(CheckCCompilerFlag)
 
 add_library(cogo
     src/cogo_await.c
-    src/cogo_st.c
+    src/cogo_co.c
 )
 target_include_directories(cogo PUBLIC include)
 target_compile_features(cogo PUBLIC c_std_99)
@@ -49,7 +49,7 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     add_executable(test_cogo_await src/cogo_await_test.c)
     add_test(NAME test_cogo_await COMMAND test_cogo_await)
 
-    # cogo_st
-    add_executable(test_cogo_st src/cogo_st_test.c)
-    add_test(NAME test_cogo_st COMMAND test_cogo_st)
+    # cogo_co
+    add_executable(test_cogo_co src/cogo_co_test.c)
+    add_test(NAME test_cogo_co COMMAND test_cogo_co)
 endif()
