@@ -1,0 +1,142 @@
+/*
+
+* API
+CO_BEGIN
+CO_END
+CO_YIELD
+CO_RETURN
+co_this
+co_status   ()
+CO_DECLARE  (NAME, ...)
+CO_DEFINE   (NAME)
+CO_MAKE     (NAME, ...)
+CO_AWAIT    (cogo_await_t*)
+CO_START    (cogo_await_t*)
+cogo_st_t                               : coroutine type
+cogo_st_sch_t                           : sheduler  type
+cogo_st_run (cogo_st_t*)                : run the coroutine until all finished
+co_msg_t                                : channel message type
+co_chan_t                               : channel type
+CO_CHAN_MAKE (size_t)                   : return a channel with capacity size_t
+CO_CHAN_WRITE(co_chan_t*, co_msg_t*)    : send a message to channel
+CO_CHAN_READ (co_chan_t*, co_msg_t*)    : receive a message from channel, the result stored in co_msg_t.next
+
+*/
+#ifndef COGO_COGO_ST_H_
+#define COGO_COGO_ST_H_
+
+#include <stddef.h>
+
+#include "cogo_await.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct cogo_st cogo_st_t;
+typedef struct cogo_sch_st cogo_st_sch_t;
+typedef struct co_msg co_msg_t;
+
+struct cogo_st {
+  // inherit cogo_await_t
+  cogo_await_t super;
+
+  // build coroutine queue
+  cogo_st_t* next;
+};
+
+//
+// COGO_QUEUE_T             (cogo_st_t)
+// COGO_QUEUE_IS_EMPTY      (cogo_st_t) (const COGO_QUEUE_T(cogo_st_t)*)
+// COGO_QUEUE_POP           (cogo_st_t) (      COGO_QUEUE_T(cogo_st_t)*)
+// COGO_QUEUE_POP_NONEMPTY  (cogo_st_t) (      COGO_QUEUE_T(cogo_st_t)*)
+// COGO_QUEUE_PUSH          (cogo_st_t) (      COGO_QUEUE_T(cogo_st_t)*, cogo_st_t*)
+//
+#undef COGO_QUEUE_ITEM_T
+#undef COGO_QUEUE_NEXT
+#define COGO_QUEUE_ITEM_T  cogo_st_t
+#define COGO_QUEUE_NEXT(P) ((P)->next)
+#include "cogo_st_queue_template.h"
+struct cogo_sch_st {
+  // inherent cogo_sch_t
+  cogo_await_sch_t super;
+
+  // coroutine queue run concurrently
+  /**/ COGO_QUEUE_T(cogo_st_t) q;
+};
+
+static inline void cogo_st_run(void* const co) {
+  cogo_st_sch_t sch = {
+      .super = {
+          .stack_top = (cogo_await_t*)co,
+      },
+  };
+  while (cogo_sch_step(&sch.super)) {
+    // noop
+  }
+}
+
+// channel message
+struct co_msg {
+  co_msg_t* next;
+};
+
+//
+// COGO_QUEUE_T             (co_msg_t)
+// COGO_QUEUE_IS_EMPTY      (co_msg_t) (const COGO_QUEUE_T(co_msg_t)*)
+// COGO_QUEUE_POP           (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
+// COGO_QUEUE_POP_NONEMPTY  (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
+// COGO_QUEUE_PUSH          (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*, co_msg_t*)
+//
+#undef COGO_QUEUE_ITEM_T
+#undef COGO_QUEUE_NEXT
+#define COGO_QUEUE_ITEM_T  co_msg_t
+#define COGO_QUEUE_NEXT(P) ((P)->next)
+#include "cogo_st_queue_template.h"
+typedef struct co_chan {
+  // all coroutines blocked by this channel
+  /**/ COGO_QUEUE_T(cogo_st_t) cq;
+
+  // message queue
+  /**/ COGO_QUEUE_T(co_msg_t) mq;
+
+  // current size
+  ptrdiff_t size;
+
+  // max size
+  ptrdiff_t cap;
+} co_chan_t;
+
+#define CO_CHAN_MAKE(N) ((co_chan_t){.cap = (N)})
+
+// CO_CHAN_READ(co_chan_t*, co_msg_t*);
+// MSG_NEXT: the read message sit in MSG_NEXT->next
+#define CO_CHAN_READ(CHAN, MSG_NEXT)                                    \
+  do {                                                                  \
+    if (cogo_chan_read((cogo_st_t*)co_this, (CHAN), (MSG_NEXT)) != 0) { \
+      CO_YIELD;                                                         \
+    }                                                                   \
+  } while (0)
+int cogo_chan_read(cogo_st_t* co, co_chan_t* chan, co_msg_t* msg_next);
+
+// CO_CHAN_WRITE(co_chan_t*, co_msg_t*);
+#define CO_CHAN_WRITE(CHAN, MSG)                                               \
+  do {                                                                         \
+    if (cogo_chan_write((cogo_st_t*)co_this, (CHAN), (co_msg_t*)(MSG)) != 0) { \
+      CO_YIELD;                                                                \
+    }                                                                          \
+  } while (0)
+int cogo_chan_write(cogo_st_t* co, co_chan_t* chan, co_msg_t* msg);
+
+#undef CO_DECLARE
+#define CO_DECLARE(NAME, ...) \
+  COGO_DECLARE(NAME, cogo_st_t co, __VA_ARGS__)
+
+#undef CO_MAKE
+#define CO_MAKE(NAME, ...) \
+  ((NAME##_t){{.super = {.func = NAME##_func}}, __VA_ARGS__})
+
+#ifdef __cplusplus
+}
+#endif
+#endif  // COGO_COGO_ST_H_

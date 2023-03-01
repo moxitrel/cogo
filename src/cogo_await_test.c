@@ -1,9 +1,9 @@
 #include <assert.h>
-#include <cogo/cogo_co.h>
+#include <cogo/cogo_await.h>
 #include <stdlib.h>
 #include <unity.h>
 
-int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
+int cogo_sch_push(cogo_await_sch_t* sch, cogo_await_t* co) {
   assert(sch);
   assert(sch->stack_top);
   assert(co);
@@ -14,14 +14,14 @@ int cogo_sch_push(cogo_sch_t* sch, cogo_co_t* co) {
   return 1;
 }
 
-cogo_co_t* cogo_sch_pop(cogo_sch_t* sch) {
+cogo_await_t* cogo_sch_pop(cogo_await_sch_t* sch) {
   assert(sch);
   return sch->stack_top;
 }
 
-static inline void cogo_co_run(void* co) {
-  cogo_sch_t sch = {
-      .stack_top = (cogo_co_t*)co,
+static inline void co_run(void* co) {
+  cogo_await_sch_t sch = {
+      .stack_top = (cogo_await_t*)co,
   };
   while (cogo_sch_step(&sch)) {
     // noop
@@ -59,8 +59,8 @@ CO_END:;
 
 static void test_step(void) {
   f1_t comain = CO_MAKE(f1, CO_MAKE(f2, CO_MAKE(f3)));
-  cogo_sch_t sch = {
-      .stack_top = (cogo_co_t*)&comain,
+  cogo_await_sch_t sch = {
+      .stack_top = (cogo_await_t*)&comain,
   };
 
   f1_t* f1 = &comain;
@@ -71,7 +71,7 @@ static void test_step(void) {
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(f3));
 
   // fc2 yield
-  cogo_co_t* co = cogo_sch_step(&sch);
+  cogo_await_t* co = cogo_sch_step(&sch);
   TEST_ASSERT_EQUAL_PTR(f2, co);
   TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(f1));
   TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(f2));
@@ -147,7 +147,7 @@ static void test_run(void) {
   };
 
   for (size_t i = 0; i < sizeof(example) / sizeof(example[0]); i++) {
-    cogo_co_run(&example[i].fib);
+    co_run(&example[i].fib);
     TEST_ASSERT_EQUAL_INT(example[i].fib.v, example[i].value);
   }
 }

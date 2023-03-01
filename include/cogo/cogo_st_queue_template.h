@@ -1,12 +1,12 @@
 /*
-COGO_QUEUE_ITEM_T       : the element type of queue
-COGO_QUEUE_ITEM_NEXT()  : return the next element
+COGO_QUEUE_ITEM_T  : the element type of queue
+COGO_QUEUE_NEXT()  : return the next element
 */
 #include <stdbool.h>
 #include <stddef.h>
 
-#ifndef COGO_CO_ST_Q_INC_
-#define COGO_CO_ST_Q_INC_
+#ifndef COGO_COGO_ST_QUEUE_TEMPLATE_H_
+#define COGO_COGO_ST_QUEUE_TEMPLATE_H_
 
 #define COGO_QUEUE_T(T)             COGO_QUEUE_T1(T)
 #define COGO_QUEUE_T1(T)            cogo_##T##_queue_t
@@ -23,7 +23,7 @@ COGO_QUEUE_ITEM_NEXT()  : return the next element
 #define COGO_QUEUE_POP_NONEMPTY(T)  COGO_QUEUE_POP_NONEMPTY1(T)
 #define COGO_QUEUE_POP_NONEMPTY1(T) cogo_##T##_queue_pop_nonempty
 
-#endif  // COGO_CO_ST_Q_INC_
+#endif  // COGO_COGO_ST_QUEUE_TEMPLATE_H_
 
 #define COGO_Q_T            COGO_QUEUE_T(COGO_QUEUE_ITEM_T)
 #define COGO_Q_IS_EMPTY     COGO_QUEUE_IS_EMPTY(COGO_QUEUE_ITEM_T)
@@ -36,33 +36,33 @@ typedef struct {
   COGO_QUEUE_ITEM_T* tail;
 } COGO_Q_T;
 
-static inline bool COGO_Q_IS_EMPTY(COGO_Q_T const* const thiz) {
-  return thiz->head == NULL;
+static inline bool COGO_Q_IS_EMPTY(COGO_Q_T const* const q) {
+  return q->head == NULL;
 }
 
 // dequeue, return NULL if empty
-static inline COGO_QUEUE_ITEM_T* COGO_Q_POP(COGO_Q_T* const thiz) {
-  COGO_QUEUE_ITEM_T* node = thiz->head;
-  if (!COGO_Q_IS_EMPTY(thiz)) {
-    thiz->head = COGO_QUEUE_ITEM_NEXT(thiz->head);
+static inline COGO_QUEUE_ITEM_T* COGO_Q_POP(COGO_Q_T* const q) {
+  COGO_QUEUE_ITEM_T* node = q->head;
+  if (!COGO_Q_IS_EMPTY(q)) {
+    q->head = COGO_QUEUE_NEXT(q->head);
   }
   return node;
 }
 
 // enqueue
-static inline void COGO_Q_PUSH(COGO_Q_T* const thiz, COGO_QUEUE_ITEM_T* const node) {
-  if (COGO_Q_IS_EMPTY(thiz)) {
-    thiz->head = node;
+static inline void COGO_Q_PUSH(COGO_Q_T* const q, COGO_QUEUE_ITEM_T* const node) {
+  if (COGO_Q_IS_EMPTY(q)) {
+    q->head = node;
   } else {
-    COGO_QUEUE_ITEM_NEXT(thiz->tail) = node;
+    COGO_QUEUE_NEXT(q->tail) = node;
   }
-  thiz->tail = node;
-  COGO_QUEUE_ITEM_NEXT(node) = NULL;
+  q->tail = node;
+  COGO_QUEUE_NEXT(node) = NULL;
 }
 
-static inline COGO_QUEUE_ITEM_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const thiz) {
-  COGO_QUEUE_ITEM_T* node = thiz->head;
-  thiz->head = COGO_QUEUE_ITEM_NEXT(thiz->head);
+static inline COGO_QUEUE_ITEM_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {
+  COGO_QUEUE_ITEM_T* node = q->head;
+  q->head = COGO_QUEUE_NEXT(q->head);
   return node;
 }
 

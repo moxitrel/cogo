@@ -5,19 +5,18 @@
 extern "C" {
 #endif
 
-#define CX2_IDENTITY(...)        __VA_ARGS__
+#define CX2_IDENTITY(...)     __VA_ARGS__
 
-#define CX2_TO_STRING(...)       CX2_TO_STRING1(__VA_ARGS__)
-#define CX2_TO_STRING1(...)      #__VA_ARGS__
+#define CX2_TO_STRING(...)    CX2_TO_STRING1(__VA_ARGS__)
+#define CX2_TO_STRING1(...)   #__VA_ARGS__
 
 // Get the nth element of tuple.
-// e.g. CX2_GET_BY_COMMA(CX2_IDENTITY()        , P0,P1,P2,P3,...)  -> P1 (bug, want P0)
-//      CX2_GET_BY_COMMA(CX2_IDENTITY(_1)      , P0,P1,P2,P3,...)  -> P1
-//      CX2_GET_BY_COMMA(CX2_IDENTITY(_1,_2)   , P0,P1,P2,P3,...)  -> P2
-//      CX2_GET_BY_COMMA(CX2_IDENTITY(_1,_2,_3), P0,P1,P2,P3,...)  -> P3
-#define CX2_GET_BY_COMMA(I, ...) CX2_GET_BY_COMMA1(I, __VA_ARGS__)
-#define CX2_GET_BY_COMMA1(...)   CX2_GET_BY_COMMA2(__VA_ARGS__)
-#define CX2_GET_BY_COMMA2(                               \
+// e.g. CX2_GET_BY_COMMA(        , P0,P1,P2,P3,...)  -> P1 (bug, want P0)
+//      CX2_GET_BY_COMMA(_1      , P0,P1,P2,P3,...)  -> P1
+//      CX2_GET_BY_COMMA(_1,_2   , P0,P1,P2,P3,...)  -> P2
+//      CX2_GET_BY_COMMA(_1,_2,_3, P0,P1,P2,P3,...)  -> P3
+#define CX2_GET_BY_COMMA(...) CX2_GET_BY_COMMA1(__VA_ARGS__)
+#define CX2_GET_BY_COMMA1(                               \
     _1, _2, _3, _4, _5, _6, _7, _8, _9, _10,             \
     _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,    \
     _21, _22, _23, _24, _25, _26, _27, _28, _29, _30,    \

@@ -5,8 +5,8 @@ include(CTest)
 include(CheckCCompilerFlag)
 
 add_library(cogo
-    src/cogo_co.c
-    src/co_st.c
+    src/cogo_await.c
+    src/cogo_st.c
 )
 target_include_directories(cogo PUBLIC include)
 target_compile_features(cogo PUBLIC c_std_99)
@@ -22,6 +22,7 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     check_c_compiler_flag(-Wno-missing-field-initializers WNO_MISSING_FIELD_INITIALIZERS)
     check_c_compiler_flag(-Wno-suggest-attribute WNO_SUGGEST_ATTRIBUTE)
     add_compile_options(
+
         # $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
         # $<$<BOOL:${_WNO_PEDANTIC}>:-Wno-pedantic>
         $<$<BOOL:${WNO_MISSING_PROTOTYPES}>:-Wno-missing-prototypes>
@@ -44,11 +45,11 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     target_compile_definitions(test_yield_label_value PRIVATE COGO_YIELD_LABEL_VALUE)
     add_test(NAME test_yield_label_value COMMAND test_yield_label_value)
 
-    # cogo_co
-    add_executable(test_cogo_co src/cogo_co_test.c)
-    add_test(NAME test_cogo_co COMMAND test_cogo_co)
+    # cogo_await
+    add_executable(test_cogo_await src/cogo_await_test.c)
+    add_test(NAME test_cogo_await COMMAND test_cogo_await)
 
-    # co_st
-    add_executable(test_co_st src/co_st_test.c)
-    add_test(NAME test_co_st COMMAND test_co_st)
+    # cogo_st
+    add_executable(test_cogo_st src/cogo_st_test.c)
+    add_test(NAME test_cogo_st COMMAND test_cogo_st)
 endif()

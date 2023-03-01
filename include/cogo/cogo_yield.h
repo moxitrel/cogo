@@ -1,17 +1,17 @@
 /*
 
 * API
-CO_BEGIN      : ...
-CO_END        : ...
-CO_YIELD      : ...
-CO_RETURN     : ...
-co_this       : ...
-co_status(CO) : ...
-
+CO_BEGIN
+CO_END
+CO_YIELD
+CO_RETURN
+co_this
+co_status ()
 CO_DECLARE(NAME, ...)   : declare a coroutine.
 CO_DEFINE (NAME)        : define a declared coroutine which not defined.
-CO_MAKE   (NAME, ...)   : coroutine maker.
-NAME_func               : coroutine function name, made by CO_DECLARE(NAME), e.g. Nat_func
+CO_MAKE   (NAME, ...)   : construct a coroutine
+NAME_t                  : coroutine type created by CO_DECLARE()
+NAME_func               : coroutine function created by CO_DECLARE()
 
 */
 #ifndef COGO_COGO_YIELD_H_

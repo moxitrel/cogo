@@ -1,6 +1,6 @@
-#include <cogo/cogo_co.h>
+#include <cogo/cogo_await.h>
 
-cogo_co_t* cogo_sch_step(cogo_sch_t* const sch) {
+cogo_await_t* cogo_sch_step(cogo_await_sch_t* const sch) {
   COGO_ASSERT(sch);
   while (sch->stack_top) {
     sch->stack_top->sch = sch;
