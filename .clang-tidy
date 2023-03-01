@@ -1,0 +1,17 @@
+---
+Checks: '
+    bugprone-*,
+    cert-*,
+    clang-analyzer-*,
+    clang-diagnostic-*,
+        -clang-diagnostic-unused-macros,
+        -clang-diagnostic-unused-function,
+    concurrency-*,
+    misc-*,
+    performance-*,
+    portability-*,
+    readability-*,
+        -readability-identifier-length,
+    '
+FormatStyle: file
+...

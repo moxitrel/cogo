@@ -7,9 +7,9 @@ CO_YIELD      : yield from coroutine.
 CO_RETURN     : return from coroutine.
 co_this       : point to coroutine object.
 co_status()   : get the current running status.
-    >0: running
-     0: inited
-    -1: finished
+  >0: running
+   0: inited
+  -1: finished
 
 * Example
 void nat_func(nat_t* co_this)
@@ -48,10 +48,8 @@ void nat_func(nat_t* co_this)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
-#ifndef COGO_COGO_YIELD_IMPL_H_
-#define COGO_COGO_YIELD_IMPL_H_
-
-#include "macro_utils.h"
+#ifndef COGO_COGO_YIELD_CASE_H_
+#define COGO_COGO_YIELD_CASE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,7 +62,7 @@ extern "C" {
 #endif
 
 #define CO_STATUS_INIT 0
-#define CO_STATUS_FINI -1
+#define CO_STATUS_FINI (-1)
 
 // yield context
 typedef struct cogo_yield {
@@ -72,43 +70,43 @@ typedef struct cogo_yield {
   //  >0: running
   //   0: inited
   //  -1: finished
-  int cogo_pc;
+  int pc;
 } cogo_yield_t;
 
-// cogo_yield_t.cogo_pc
-#define COGO_PC (((cogo_yield_t*)co_this)->cogo_pc)
+// cogo_yield_t.pc
+#define COGO_YIELD_PC (((cogo_yield_t*)co_this)->pc)
 
 // get the current running state
 static inline int co_status(void const* const co) {
-  return ((cogo_yield_t const*)co)->cogo_pc;
+  return ((cogo_yield_t const*)co)->pc;
 }
 
 #define CO_BEGIN                                          \
   switch (co_status(co_this)) {                           \
     default: /* invalid  pc */                            \
-      COGO_ASSERT(((void)"cogo_pc isn't valid", 0));      \
+      COGO_ASSERT(((void)"pc isn't valid", 0));           \
       goto cogo_exit;                                     \
       goto cogo_return;  /* HACK: no warn unused label */ \
     case CO_STATUS_FINI: /* coroutine end */              \
       goto cogo_exit;                                     \
     case CO_STATUS_INIT /* coroutine begin */
 
-#define CO_YIELD                                                                \
-  do {                                                                          \
-    /**/ COGO_PC = __LINE__; /* 1. save the restore point, at case __LINE__: */ \
-    /**/ goto cogo_exit;     /* 2. return */                                    \
-    case __LINE__:;          /* 3. restore point */                             \
+#define CO_YIELD                                                                      \
+  do {                                                                                \
+    /**/ COGO_YIELD_PC = __LINE__; /* 1. save the restore point, at case __LINE__: */ \
+    /**/ goto cogo_exit;           /* 2. return */                                    \
+    case __LINE__:;                /* 3. restore point */                             \
   } while (0)
 
-#define CO_RETURN goto cogo_return /* end coroutine */
+#define CO_RETURN goto cogo_return /* fini coroutine */
 
-#define CO_END                   \
-  cogo_return:                   \
-  /**/ COGO_PC = CO_STATUS_FINI; \
-  }                              \
+#define CO_END                         \
+  cogo_return:                         \
+  /**/ COGO_YIELD_PC = CO_STATUS_FINI; \
+  }                                    \
   cogo_exit
 
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_COGO_YIELD_IMPL_H_
+#endif  // COGO_COGO_YIELD_CASE_H_

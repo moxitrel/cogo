@@ -72,7 +72,7 @@ extern "C" {
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_yield_t cogo_yield, __VA_ARGS__)
+  COGO_DECLARE(NAME, cogo_yield_t super, __VA_ARGS__)
 
 #undef CO_MAKE
 #define CO_MAKE(NAME, ...) \

@@ -35,8 +35,8 @@ yield_end:;                     //
 - Use GCC extension.
 
 */
-#ifndef COGO_COGO_YIELD_IMPL_H_
-#define COGO_COGO_YIELD_IMPL_H_
+#ifndef COGO_COGO_YIELD_LABEL_VALUE_H_
+#define COGO_COGO_YIELD_LABEL_VALUE_H_
 
 #include <stdint.h>
 
@@ -66,15 +66,15 @@ typedef struct cogo_yield {
   // start point where coroutine function continue to run after yield.
   //  0: inited
   // -1: finished
-  uintptr_t cogo_pc;
+  uintptr_t pc;
 } cogo_yield_t;
 
-// cogo_yield_t.cogo_pc
-#define COGO_PC (((cogo_yield_t *)co_this)->cogo_pc)
+// cogo_yield_t.pc
+#define COGO_YIELD_PC (((cogo_yield_t *)co_this)->pc)
 
 // get the current running state
 static inline uintptr_t co_status(void const *const co) {
-  return ((cogo_yield_t const *)co)->cogo_pc;
+  return ((cogo_yield_t const *)co)->pc;
 }
 
 #define CO_BEGIN                                                                                     \
@@ -84,31 +84,30 @@ static inline uintptr_t co_status(void const *const co) {
       /* HACK: no warn unused label */                                                               \
       goto cogo_return;                                                                              \
       /* HACK: avoid clang error - indirect goto in function with no address-of-label expressions */ \
-      COGO_PC = COGO_WNO_GNU_LABEL_AS_VALUE((uintptr_t)(&&cogo_enter));                              \
+      COGO_YIELD_PC = COGO_WNO_GNU_LABEL_AS_VALUE((uintptr_t)(&&cogo_enter));                        \
     case CO_STATUS_FINI:                                                                             \
       goto cogo_exit;                                                                                \
     default:                                                                                         \
-      goto COGO_WNO_GNU_LABEL_AS_VALUE(*(void const *)COGO_PC);                                      \
+      goto COGO_WNO_GNU_LABEL_AS_VALUE(*(void const *)COGO_YIELD_PC);                                \
   }                                                                                                  \
   cogo_enter
 
-#define CO_YIELD                                                                                  \
-  do {                                                                                            \
-    COGO_PC = COGO_WNO_GNU_LABEL_AS_VALUE((uintptr_t)(&&COGO_LABEL)); /* 1. save restore point */ \
-    goto cogo_exit;                                                   /* 2. return */             \
-  COGO_LABEL:;                                                        /* 3. restore point */      \
+#define CO_YIELD                                                                                        \
+  do {                                                                                                  \
+    COGO_YIELD_PC = COGO_WNO_GNU_LABEL_AS_VALUE((uintptr_t)(&&COGO_LABEL)); /* 1. save restore point */ \
+    goto cogo_exit;                                                         /* 2. return */             \
+  COGO_LABEL:;                                                              /* 3. restore point */      \
   } while (0)
 
-#define CO_RETURN goto cogo_return /* end coroutine */
+#define CO_RETURN goto cogo_return /* fini coroutine */
 
-#define CO_END                   \
-  cogo_return:                   \
-  /**/ COGO_PC = CO_STATUS_FINI; \
+#define CO_END                         \
+  cogo_return:                         \
+  /**/ COGO_YIELD_PC = CO_STATUS_FINI; \
   cogo_exit
 
 // Make goto label.
-// e.g. COGO_LABEL(13)       -> cogo_yield_13
-//      COGO_LABEL(__LINE__) -> cogo_yield_118
+// e.g. COGO_LABEL -> COGO_LABEL(__LINE__) -> cogo_yield_118
 #define COGO_LABEL       COGO_LABEL1(__LINE__)
 #define COGO_LABEL1(...) COGO_LABEL2(__VA_ARGS__)
 #define COGO_LABEL2(N)   cogo_yield_##N
@@ -116,4 +115,4 @@ static inline uintptr_t co_status(void const *const co) {
 #ifdef __cplusplus
 }
 #endif
-#endif /* COGO_COGO_YIELD_IMPL_H_ */
+#endif /* COGO_COGO_YIELD_LABEL_VALUE_H_ */

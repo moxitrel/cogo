@@ -6,14 +6,14 @@ CO_END
 CO_YIELD
 CO_RETURN
 co_this
-co_status   ()
+co_status ()
 CO_DECLARE  (NAME, ...)
 CO_DEFINE   (NAME)
 CO_MAKE     (NAME, ...)
 CO_AWAIT    (cogo_await_t*)
-CO_START    (cogo_await_t*)
+CO_START    (cogo_await_t*)             : run a new coroutine concurrently.
 cogo_co_t                               : coroutine type
-cogo_co_sch_t                           : sheduler  type
+cogo_co_sched_t                         : sheduler  type
 cogo_co_run (cogo_co_t*)                : run the coroutine until all finished
 co_msg_t                                : channel message type
 co_chan_t                               : channel type
@@ -34,8 +34,7 @@ extern "C" {
 #endif
 
 typedef struct cogo_co cogo_co_t;
-typedef struct cogo_sch_co cogo_co_sch_t;
-typedef struct co_msg co_msg_t;
+typedef struct cogo_co_sched cogo_co_sched_t;
 
 struct cogo_co {
   // inherit cogo_await_t
@@ -52,34 +51,50 @@ struct cogo_co {
 // COGO_QUEUE_POP_NONEMPTY  (cogo_co_t) (      COGO_QUEUE_T(cogo_co_t)*)
 // COGO_QUEUE_PUSH          (cogo_co_t) (      COGO_QUEUE_T(cogo_co_t)*, cogo_co_t*)
 //
-#undef COGO_QUEUE_ITEM_T
+#undef COGO_QUEUE_ELEMENT_T
 #undef COGO_QUEUE_NEXT
-#define COGO_QUEUE_ITEM_T  cogo_co_t
-#define COGO_QUEUE_NEXT(P) ((P)->next)
+#define COGO_QUEUE_ELEMENT_T cogo_co_t
+#define COGO_QUEUE_NEXT(P)   ((P)->next)
 #include "cogo_queue_st_template.h"
-struct cogo_sch_co {
-  // inherent cogo_sch_t
-  cogo_await_sch_t super;
+struct cogo_co_sched {
+  // inherent cogo_await_sched_t
+  cogo_await_sched_t super;
 
   // coroutine queue run concurrently
   /**/ COGO_QUEUE_T(cogo_co_t) q;
 };
 
+static inline int cogo_co_sched_push(cogo_co_sched_t* sched, cogo_co_t* co) {
+  return cogo_await_sched_push(&sched->super, &co->super);
+}
+
+static inline cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* sched) {
+  return (cogo_co_t*)cogo_await_sched_step(&sched->super);
+}
+
+// CO_START(cogo_co_t*): add a new coroutine to the scheduler.
+#define CO_START(CO)                                                                                       \
+  do {                                                                                                     \
+    if (cogo_co_sched_push((cogo_co_sched_t*)((cogo_co_t*)co_this)->super.sched, (cogo_co_t*)(CO)) != 0) { \
+      CO_YIELD;                                                                                            \
+    }                                                                                                      \
+  } while (0)
+
 static inline void cogo_co_run(void* const co) {
-  cogo_co_sch_t sch = {
+  cogo_co_sched_t sched = {
       .super = {
           .stack_top = (cogo_await_t*)co,
       },
   };
-  while (cogo_sch_step(&sch.super)) {
+  while (cogo_co_sched_step(&sched)) {
     // noop
   }
 }
 
 // channel message
-struct co_msg {
-  co_msg_t* next;
-};
+typedef struct co_msg {
+  struct co_msg* next;
+} co_msg_t;
 
 //
 // COGO_QUEUE_T             (co_msg_t)
@@ -88,10 +103,10 @@ struct co_msg {
 // COGO_QUEUE_POP_NONEMPTY  (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_PUSH          (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*, co_msg_t*)
 //
-#undef COGO_QUEUE_ITEM_T
+#undef COGO_QUEUE_ELEMENT_T
 #undef COGO_QUEUE_NEXT
-#define COGO_QUEUE_ITEM_T  co_msg_t
-#define COGO_QUEUE_NEXT(P) ((P)->next)
+#define COGO_QUEUE_ELEMENT_T co_msg_t
+#define COGO_QUEUE_NEXT(P)   ((P)->next)
 #include "cogo_queue_st_template.h"
 typedef struct co_chan {
   // all coroutines blocked by this channel
@@ -130,7 +145,7 @@ int cogo_chan_write(cogo_co_t* co, co_chan_t* chan, co_msg_t* msg);
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_co_t co, __VA_ARGS__)
+  COGO_DECLARE(NAME, cogo_co_t super, __VA_ARGS__)
 
 #undef CO_MAKE
 #define CO_MAKE(NAME, ...) \

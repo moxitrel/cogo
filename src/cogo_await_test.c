@@ -3,32 +3,32 @@
 #include <stdlib.h>
 #include <unity.h>
 
-int cogo_sch_push(cogo_await_sch_t* sch, cogo_await_t* co) {
-  assert(sch);
-  assert(sch->stack_top);
+int cogo_await_sched_push(cogo_await_sched_t* sched, cogo_await_t* co) {
+  assert(sched);
+  assert(sched->stack_top);
   assert(co);
-  if (co != sch->stack_top) {
-    co->caller = sch->stack_top;
-    sch->stack_top = co;
+  if (co != sched->stack_top) {
+    co->caller = sched->stack_top;
+    sched->stack_top = co;
   }
   return 1;
 }
 
-cogo_await_t* cogo_sch_pop(cogo_await_sch_t* sch) {
-  assert(sch);
-  return sch->stack_top;
+cogo_await_t* cogo_await_sched_pop(cogo_await_sched_t* sched) {
+  assert(sched);
+  return sched->stack_top;
 }
 
-static inline void co_run(void* co) {
-  cogo_await_sch_t sch = {
-      .stack_top = (cogo_await_t*)co,
+static inline void cogo_await_run(cogo_await_t* co) {
+  cogo_await_sched_t sched = {
+      .stack_top = co,
   };
-  while (cogo_sch_step(&sch)) {
+  while (cogo_await_sched_step(&sched)) {
     // noop
   }
 }
 
-CO_DECLARE(f3) {
+CO_DECLARE(co3) {
 CO_BEGIN:
 
   CO_YIELD;
@@ -38,57 +38,57 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(f2, f3_t f3) {
-  f2_t* thiz = (f2_t*)co_this;
+CO_DECLARE(co2, co3_t co3) {
+  co2_t* thiz = (co2_t*)co_this;
 CO_BEGIN:
 
   CO_YIELD;
-  CO_AWAIT(&thiz->f3);
+  CO_AWAIT(&thiz->co3);
 
 CO_END:;
 }
 
-CO_DECLARE(f1, f2_t f2) {
-  f1_t* thiz = (f1_t*)co_this;
+CO_DECLARE(co1, co2_t co2) {
+  co1_t* thiz = (co1_t*)co_this;
 CO_BEGIN:
 
-  CO_AWAIT(&thiz->f2);
+  CO_AWAIT(&thiz->co2);
 
 CO_END:;
 }
 
 static void test_step(void) {
-  f1_t comain = CO_MAKE(f1, CO_MAKE(f2, CO_MAKE(f3)));
-  cogo_await_sch_t sch = {
-      .stack_top = (cogo_await_t*)&comain,
+  co1_t comain = CO_MAKE(co1, CO_MAKE(co2, CO_MAKE(co3)));
+  cogo_await_sched_t sched = {
+      .stack_top = &comain.super,
   };
 
-  f1_t* f1 = &comain;
-  f2_t* f2 = &f1->f2;
-  f3_t* f3 = &f2->f3;
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(f1));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(f2));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(f3));
+  co1_t* co1 = &comain;
+  co2_t* co2 = &co1->co2;
+  co3_t* co3 = &co2->co3;
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co1));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co2));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co3));
 
   // fc2 yield
-  cogo_await_t* co = cogo_sch_step(&sch);
-  TEST_ASSERT_EQUAL_PTR(f2, co);
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(f1));
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(f2));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(f3));
+  cogo_await_t* co = cogo_await_sched_step(&sched);
+  TEST_ASSERT_EQUAL_PTR(co2, co);
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co1));
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co2));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co3));
 
   // fc3 first yield
-  co = cogo_sch_step(&sch);
-  TEST_ASSERT_EQUAL_PTR(f3, co);
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(f1));
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(f2));
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(f3));
+  co = cogo_await_sched_step(&sched);
+  TEST_ASSERT_EQUAL_PTR(co3, co);
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co1));
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co2));
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co3));
 
   // fc3 co_return
-  co = cogo_sch_step(&sch);
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(f1));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(f2));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(f3));
+  co = cogo_await_sched_step(&sched);
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(co1));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(co2));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(co3));
 }
 
 static int fibonacci(int n) {
@@ -147,7 +147,7 @@ static void test_run(void) {
   };
 
   for (size_t i = 0; i < sizeof(example) / sizeof(example[0]); i++) {
-    co_run(&example[i].fib);
+    cogo_await_run(&example[i].fib.super);
     TEST_ASSERT_EQUAL_INT(example[i].fib.v, example[i].value);
   }
 }

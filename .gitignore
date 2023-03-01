@@ -3,6 +3,7 @@
 # ignore files begin with dot default
 .*
 !.clang-format
+!.clang-tidy
 !.editorconfig
 !.github/
 !.gitignore
