@@ -11,23 +11,19 @@ add_library(cogo
 target_include_directories(cogo PUBLIC include)
 target_compile_features(cogo PUBLIC c_std_99)
 
-check_c_compiler_flag(-Wno-padded _WNO_PADDED)
-check_c_compiler_flag(-Wno-pedantic _WNO_PEDANTIC)
-target_compile_options(cogo PUBLIC
-    $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
-    $<$<BOOL:${_WNO_PEDANTIC}>:-Wno-pedantic>
-)
-
 if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     include(cmake/unity.cmake)
 
+    # check_c_compiler_flag(-Wno-padded _WNO_PADDED)
+    # check_c_compiler_flag(-Wno-pedantic _WNO_PEDANTIC)
     check_c_compiler_flag(-Wno-missing-prototypes WNO_MISSING_PROTOTYPES)
     check_c_compiler_flag(-Wno-unreachable-code WNO_UNREACHABLE_CODE)
     check_c_compiler_flag(-Wno-missing-declarations WNO_MISSING_DECLARATIONS)
     check_c_compiler_flag(-Wno-missing-field-initializers WNO_MISSING_FIELD_INITIALIZERS)
     check_c_compiler_flag(-Wno-suggest-attribute WNO_SUGGEST_ATTRIBUTE)
     add_compile_options(
-        ${PROJECT_COMPILE_OPTIONS_STATIC_ANALYSIS}
+        # $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
+        # $<$<BOOL:${_WNO_PEDANTIC}>:-Wno-pedantic>
         $<$<BOOL:${WNO_MISSING_PROTOTYPES}>:-Wno-missing-prototypes>
         $<$<BOOL:${WNO_UNREACHABLE_CODE}>:-Wno-unreachable-code>
         $<$<BOOL:${WNO_MISSING_DECLARATIONS}>:-Wno-missing-declarations>

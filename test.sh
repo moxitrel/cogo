@@ -1,7 +1,7 @@
 #!/bin/sh
 
 export CC="gcc"
-export CFLAGS="-Wall -Wextra -Wc++-compat"
+export CFLAGS="-Wc++-compat -Wall -Wextra -Wconversion -fanalyzer"
 
 if [ -n "$1" ]
 then
@@ -12,5 +12,5 @@ fi
 
 cd `dirname $0`
 cmake -S . -B $BUILD_DIR            \
-&& cmake --build $BUILD_DIR -- -j   \
+&& cmake --build $BUILD_DIR         \
 && ctest --test-dir $BUILD_DIR --output-on-failure --schedule-random
