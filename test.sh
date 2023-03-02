@@ -27,6 +27,6 @@ export CFLAGS="-Oz -g3 \
 do_test || exit $?
 
 export CC="gcc"
-export CFLAGS="-Oz -g3 -fkeep-inline-functions \
+export CFLAGS="-Os -g3 -fkeep-inline-functions \
     -Wc++-compat -Werror -Wall -Wextra -Wconversion -fanalyzer"
 do_test || exit $?
