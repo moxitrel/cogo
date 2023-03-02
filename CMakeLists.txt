@@ -6,7 +6,8 @@ include(CheckCCompilerFlag)
 
 add_library(cogo
     src/cogo_await.c
-    src/cogo_co.c
+    src/cogo_co_chan.c
+    src/cogo_co_st.c
 )
 target_include_directories(cogo PUBLIC include)
 target_compile_features(cogo PUBLIC c_std_99)
@@ -35,21 +36,21 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
 
     link_libraries(cogo)
 
-    # cogo_yield: case
+    # yield: case
     add_executable(test_yield_case src/cogo_yield_test.c)
     target_compile_definitions(test_yield_case PRIVATE COGO_YIELD_CASE)
     add_test(NAME test_yield_case COMMAND test_yield_case)
 
-    # cogo_yield: label value
+    # yield: label value
     add_executable(test_yield_label_value src/cogo_yield_test.c)
     target_compile_definitions(test_yield_label_value PRIVATE COGO_YIELD_LABEL_VALUE)
     add_test(NAME test_yield_label_value COMMAND test_yield_label_value)
 
-    # cogo_await
-    add_executable(test_cogo_await src/cogo_await_test.c)
-    add_test(NAME test_cogo_await COMMAND test_cogo_await)
+    # await
+    add_executable(test_await src/cogo_await_test.c)
+    add_test(NAME test_await COMMAND test_await)
 
-    # cogo_co
-    add_executable(test_cogo_co src/cogo_co_test.c)
-    add_test(NAME test_cogo_co COMMAND test_cogo_co)
+    # channel
+    add_executable(test_chan src/cogo_co_test.c)
+    add_test(NAME test_chan COMMAND test_chan)
 endif()

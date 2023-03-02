@@ -5,8 +5,8 @@ COGO_QUEUE_NEXT()   : return the next element
 #include <stdbool.h>
 #include <stddef.h>
 
-#ifndef COGO_COGO_QUEUE_ST_TEMPLATE_H_
-#define COGO_COGO_QUEUE_ST_TEMPLATE_H_
+#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_QUEUE_TEMPLATE_ST_H_
+#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_QUEUE_TEMPLATE_ST_H_
 
 #define COGO_QUEUE_T(T)             COGO_QUEUE_T1(T)
 #define COGO_QUEUE_T1(T)            cogo_##T##_queue_t
@@ -23,7 +23,7 @@ COGO_QUEUE_NEXT()   : return the next element
 #define COGO_QUEUE_POP_NONEMPTY(T)  COGO_QUEUE_POP_NONEMPTY1(T)
 #define COGO_QUEUE_POP_NONEMPTY1(T) cogo_##T##_queue_pop_nonempty
 
-#endif  // COGO_COGO_QUEUE_ST_TEMPLATE_H_
+#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_QUEUE_TEMPLATE_ST_H_
 
 #define COGO_Q_T            COGO_QUEUE_T(COGO_QUEUE_ELEMENT_T)
 #define COGO_Q_IS_EMPTY     COGO_QUEUE_IS_EMPTY(COGO_QUEUE_ELEMENT_T)

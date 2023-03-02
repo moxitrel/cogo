@@ -4,7 +4,7 @@
 #include <unity.h>
 
 int cogo_await_sched_push(cogo_await_sched_t* sched, cogo_await_t* co) {
-  assert(sched && sched->stack_top && co);
+  COGO_ASSERT(sched && sched->stack_top && co);
   if (co != sched->stack_top) {
     cogo_await_call(sched->stack_top, co);
   }
@@ -12,11 +12,11 @@ int cogo_await_sched_push(cogo_await_sched_t* sched, cogo_await_t* co) {
 }
 
 cogo_await_t* cogo_await_sched_pop(cogo_await_sched_t* sched) {
-  assert(sched);
+  COGO_ASSERT(sched);
   return sched->stack_top;
 }
 
-static inline void cogo_await_run(void* const co) {
+static inline void co_run(void* const co) {
   cogo_await_sched_t sched = {
       .stack_top = (cogo_await_t*)co,
   };
@@ -143,7 +143,7 @@ static void test_run(void) {
   };
 
   for (size_t i = 0; i < sizeof(example) / sizeof(example[0]); i++) {
-    cogo_await_run(&example[i].fib);
+    co_run(&example[i].fib);
     TEST_ASSERT_EQUAL_INT(example[i].fib.v, example[i].value);
   }
 }

@@ -15,7 +15,8 @@ function do_test {
 }
 
 export CC="clang"
-export CFLAGS="-Oz -g3 -Werror -Weverything \
+export CFLAGS="-Oz -g3 \
+    -Werror -Weverything \
     -Wno-declaration-after-statement \
     -Wno-extra-semi-stmt \
     -Wno-switch-enum \
@@ -26,5 +27,6 @@ export CFLAGS="-Oz -g3 -Werror -Weverything \
 do_test || exit $?
 
 export CC="gcc"
-export CFLAGS="-Oz -g3 -fkeep-inline-functions -Wc++-compat -Werror -Wall -Wextra -Wconversion -fanalyzer"
+export CFLAGS="-Oz -g3 -fkeep-inline-functions \
+    -Wc++-compat -Werror -Wall -Wextra -Wconversion -fanalyzer"
 do_test || exit $?
