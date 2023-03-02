@@ -27,7 +27,7 @@ CO_END:;
 static void test_chan(void) {
   co_chan_t chan = CO_CHAN_MAKE(0);
   main_t main = CO_MAKE(main, CO_MAKE(recv, &chan), CO_MAKE(send, &chan));
-  cogo_co_run(&main);
+  cogo_co_run((cogo_co_t*)&main);
   TEST_ASSERT_EQUAL_PTR(&main.send.msg, main.recv.msg.next);
 }
 

@@ -6,7 +6,7 @@ CO_END
 CO_YIELD
 CO_RETURN
 co_this
-co_status ()
+co_status   ()
 CO_DECLARE  (NAME, ...)
 CO_DEFINE   (NAME)
 CO_MAKE     (NAME, ...)
@@ -44,40 +44,30 @@ struct cogo_co {
   cogo_co_t* next;
 };
 
-//
 // COGO_QUEUE_T             (cogo_co_t)
 // COGO_QUEUE_IS_EMPTY      (cogo_co_t) (const COGO_QUEUE_T(cogo_co_t)*)
 // COGO_QUEUE_POP           (cogo_co_t) (      COGO_QUEUE_T(cogo_co_t)*)
 // COGO_QUEUE_POP_NONEMPTY  (cogo_co_t) (      COGO_QUEUE_T(cogo_co_t)*)
 // COGO_QUEUE_PUSH          (cogo_co_t) (      COGO_QUEUE_T(cogo_co_t)*, cogo_co_t*)
-//
 #undef COGO_QUEUE_ELEMENT_T
 #undef COGO_QUEUE_NEXT
 #define COGO_QUEUE_ELEMENT_T cogo_co_t
-#define COGO_QUEUE_NEXT(P)   ((P)->next)
+#define COGO_QUEUE_NEXT(CO)  ((CO)->next)
 #include "cogo_queue_st_template.h"
 struct cogo_co_sched {
   // inherent cogo_await_sched_t
   cogo_await_sched_t super;
 
-  // coroutine queue run concurrently
+  // other coroutines to run concurrently
   /**/ COGO_QUEUE_T(cogo_co_t) q;
 };
 
-static inline int cogo_co_sched_push(cogo_co_sched_t* sched, cogo_co_t* co) {
-  return cogo_await_sched_push(&sched->super, &co->super);
-}
-
-static inline cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* sched) {
-  return (cogo_co_t*)cogo_await_sched_step(&sched->super);
-}
-
-// CO_START(cogo_co_t*): add a new coroutine to the scheduler.
-#define CO_START(CO)                                                                                       \
-  do {                                                                                                     \
-    if (cogo_co_sched_push((cogo_co_sched_t*)((cogo_co_t*)co_this)->super.sched, (cogo_co_t*)(CO)) != 0) { \
-      CO_YIELD;                                                                                            \
-    }                                                                                                      \
+// CO_START(cogo_await_t*): add a new coroutine to the scheduler.
+#define CO_START(CO)                                                                        \
+  do {                                                                                      \
+    if (cogo_await_sched_push(((cogo_await_t*)co_this)->sched, (cogo_await_t*)(CO)) != 0) { \
+      CO_YIELD;                                                                             \
+    }                                                                                       \
   } while (0)
 
 static inline void cogo_co_run(void* const co) {
@@ -86,7 +76,7 @@ static inline void cogo_co_run(void* const co) {
           .stack_top = (cogo_await_t*)co,
       },
   };
-  while (cogo_co_sched_step(&sched)) {
+  while (cogo_await_sched_step(&sched.super)) {
     // noop
   }
 }
@@ -96,17 +86,15 @@ typedef struct co_msg {
   struct co_msg* next;
 } co_msg_t;
 
-//
 // COGO_QUEUE_T             (co_msg_t)
 // COGO_QUEUE_IS_EMPTY      (co_msg_t) (const COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_POP           (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_POP_NONEMPTY  (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*)
 // COGO_QUEUE_PUSH          (co_msg_t) (      COGO_QUEUE_T(co_msg_t)*, co_msg_t*)
-//
 #undef COGO_QUEUE_ELEMENT_T
 #undef COGO_QUEUE_NEXT
 #define COGO_QUEUE_ELEMENT_T co_msg_t
-#define COGO_QUEUE_NEXT(P)   ((P)->next)
+#define COGO_QUEUE_NEXT(MSG) ((MSG)->next)
 #include "cogo_queue_st_template.h"
 typedef struct co_chan {
   // all coroutines blocked by this channel
@@ -125,14 +113,14 @@ typedef struct co_chan {
 #define CO_CHAN_MAKE(N) ((co_chan_t){.cap = (N)})
 
 // CO_CHAN_READ(co_chan_t*, co_msg_t*);
-// MSG_NEXT: the read message sit in MSG_NEXT->next
+// MSG_NEXT: the read message is MSG_NEXT->next
 #define CO_CHAN_READ(CHAN, MSG_NEXT)                                    \
   do {                                                                  \
     if (cogo_chan_read((cogo_co_t*)co_this, (CHAN), (MSG_NEXT)) != 0) { \
       CO_YIELD;                                                         \
     }                                                                   \
   } while (0)
-int cogo_chan_read(cogo_co_t* co, co_chan_t* chan, co_msg_t* msg_next);
+int cogo_chan_read(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg_next);
 
 // CO_CHAN_WRITE(co_chan_t*, co_msg_t*);
 #define CO_CHAN_WRITE(CHAN, MSG)                                               \
@@ -141,7 +129,7 @@ int cogo_chan_read(cogo_co_t* co, co_chan_t* chan, co_msg_t* msg_next);
       CO_YIELD;                                                                \
     }                                                                          \
   } while (0)
-int cogo_chan_write(cogo_co_t* co, co_chan_t* chan, co_msg_t* msg);
+int cogo_chan_write(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg);
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \

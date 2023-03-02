@@ -4,12 +4,9 @@
 #include <unity.h>
 
 int cogo_await_sched_push(cogo_await_sched_t* sched, cogo_await_t* co) {
-  assert(sched);
-  assert(sched->stack_top);
-  assert(co);
+  assert(sched && sched->stack_top && co);
   if (co != sched->stack_top) {
-    co->caller = sched->stack_top;
-    sched->stack_top = co;
+    cogo_await_call(sched->stack_top, co);
   }
   return 1;
 }
@@ -19,9 +16,9 @@ cogo_await_t* cogo_await_sched_pop(cogo_await_sched_t* sched) {
   return sched->stack_top;
 }
 
-static inline void cogo_await_run(cogo_await_t* co) {
+static inline void cogo_await_run(void* const co) {
   cogo_await_sched_t sched = {
-      .stack_top = co,
+      .stack_top = (cogo_await_t*)co,
   };
   while (cogo_await_sched_step(&sched)) {
     // noop
@@ -58,12 +55,12 @@ CO_END:;
 }
 
 static void test_step(void) {
-  co1_t comain = CO_MAKE(co1, CO_MAKE(co2, CO_MAKE(co3)));
+  co1_t main = CO_MAKE(co1, CO_MAKE(co2, CO_MAKE(co3)));
   cogo_await_sched_t sched = {
-      .stack_top = &comain.super,
+      .stack_top = &main.super,
   };
 
-  co1_t* co1 = &comain;
+  co1_t* co1 = &main;
   co2_t* co2 = &co1->co2;
   co3_t* co3 = &co2->co3;
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co1));
@@ -116,9 +113,8 @@ CO_BEGIN:
     default:  // f(n) = f(n-1) + f(n-2)
       thiz->fib_n1 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n1));
       thiz->fib_n2 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n2));
-      TEST_ASSERT_NOT_NULL(thiz->fib_n1);
-      TEST_ASSERT_NOT_NULL(thiz->fib_n2);
-
+      assert(thiz->fib_n1);
+      assert(thiz->fib_n2);
       *thiz->fib_n1 = CO_MAKE(fibonacci, thiz->n - 1);
       *thiz->fib_n2 = CO_MAKE(fibonacci, thiz->n - 2);
 
@@ -147,7 +143,7 @@ static void test_run(void) {
   };
 
   for (size_t i = 0; i < sizeof(example) / sizeof(example[0]); i++) {
-    cogo_await_run(&example[i].fib.super);
+    cogo_await_run(&example[i].fib);
     TEST_ASSERT_EQUAL_INT(example[i].fib.v, example[i].value);
   }
 }

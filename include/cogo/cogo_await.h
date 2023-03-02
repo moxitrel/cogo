@@ -10,12 +10,12 @@ co_status ()
 CO_DECLARE(NAME, ...)
 CO_DEFINE (NAME)
 CO_MAKE   (NAME, ...)
-CO_AWAIT  (cogo_await_t*)   : call another coroutine.
-cogo_await_t                : coroutine type
-cogo_await_sched_t          : sheduler  type
-cogo_await_sched_step(cogo_await_sched_t*)  : run the current coroutine until yield or finished, return the next coroutine to be run.
+CO_AWAIT  (cogo_await_t*)         : call another coroutine.
+cogo_await_t                      : coroutine type
+cogo_await_sched_t                : sheduler  type
+cogo_await_sched_step(cogo_await_sched_t*): run the current coroutine until yield or finished, return the next coroutine to be run.
 cogo_await_sched_push(cogo_await_sched_t*, cogo_await_t*): add coroutine to the running queue, should be implemented by user
-cogo_await_sched_pop (cogo_await_sched_t*)  : return and remove the next coroutine to be run, should be implemented by user
+cogo_await_sched_pop (cogo_await_sched_t*): return and remove the next coroutine to be run, should be implemented by user
 
 */
 #ifndef COGO_COGO_AWAIT_H_
@@ -47,7 +47,7 @@ struct cogo_await {
 
 // cogo_await_t scheduler
 struct cogo_await_sched {
-  // the current coroutine run by scheduler
+  // current running coroutine
   cogo_await_t* stack_top;
 };
 
@@ -62,22 +62,29 @@ cogo_await_t* cogo_await_sched_pop(cogo_await_sched_t* sched);
 cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* sched);
 
 // CO_AWAIT(cogo_await_t*): call another coroutine.
-// NOTE: require no loop in call chain.
-#define CO_AWAIT(CO)                                               \
-  do {                                                             \
-    cogo_await_await((cogo_await_t*)co_this, (cogo_await_t*)(CO)); \
-    CO_YIELD;                                                      \
+#define CO_AWAIT(CALLEE)                                              \
+  do {                                                                \
+    cogo_await_call((cogo_await_t*)co_this, (cogo_await_t*)(CALLEE)); \
+    CO_YIELD;                                                         \
   } while (0)
-static inline void cogo_await_await(cogo_await_t* const caller, cogo_await_t* const callee) {
-  COGO_ASSERT(caller);
-  COGO_ASSERT(caller->sched);
-  COGO_ASSERT(caller->sched->stack_top == caller);
-  COGO_ASSERT(callee);
-
+static inline void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
+  COGO_ASSERT(co_this && co_this->sched && callee && !callee->caller && callee != co_this);
+  // COGO_ASSERT(co_this->sched->stack_top == co_this);
+#if 0
+  // check no loop in call chain
+  for (cogo_await_t* co = co_this; co; co = co->caller) {
+    COGO_ASSERT(callee != co);
+  }
+#endif
   // call stack push
-  callee->caller = caller;
-  //callee->sched = caller->sched;
-  caller->sched->stack_top = callee;
+  callee->caller = co_this->sched->stack_top;
+  //callee->sched = co_this->sched->stack_top->sched;
+  co_this->sched->stack_top = callee;
+}
+
+static inline cogo_await_t* cogo_await_return(cogo_await_t* const co_this) {
+  COGO_ASSERT(co_this && co_this->sched);
+  return co_this->sched->stack_top = co_this->caller;
 }
 
 #undef CO_DECLARE
@@ -91,4 +98,4 @@ static inline void cogo_await_await(cogo_await_t* const caller, cogo_await_t* co
 #ifdef __cplusplus
 }
 #endif
-#endif /* COGO_COGO_AWAIT_H_ */
+#endif  // COGO_COGO_AWAIT_H_
