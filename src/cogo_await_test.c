@@ -20,7 +20,7 @@ static inline void co_run(void* const co) {
   cogo_await_sched_t sched = {
       .stack_top = (cogo_await_t*)co,
   };
-  while (cogo_await_sched_step(&sched)) {
+  while (cogo_sched_step(&sched)) {
     // noop
   }
 }
@@ -68,21 +68,21 @@ static void test_step(void) {
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co3));
 
   // fc2 yield
-  cogo_await_t* co = cogo_await_sched_step(&sched);
+  cogo_await_t* co = cogo_sched_step(&sched);
   TEST_ASSERT_EQUAL_PTR(co2, co);
   TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co1));
   TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co2));
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co3));
 
   // fc3 first yield
-  co = cogo_await_sched_step(&sched);
+  co = cogo_sched_step(&sched);
   TEST_ASSERT_EQUAL_PTR(co3, co);
   TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co1));
   TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co2));
   TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co3));
 
   // fc3 co_return
-  co = cogo_await_sched_step(&sched);
+  co = cogo_sched_step(&sched);
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(co1));
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(co2));
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(co3));

@@ -13,7 +13,9 @@ CO_MAKE   (NAME, ...)
 CO_AWAIT  (cogo_await_t*)         : call another coroutine.
 cogo_await_t                      : coroutine type
 cogo_await_sched_t                : sheduler  type
-cogo_await_sched_step(cogo_await_sched_t*): run the current coroutine until yield or finished, return the next coroutine to be run.
+
+cogo_sched_step(cogo_await_sched_t*): run the current coroutine until yield or finished, return the next coroutine to be run.
+
 cogo_await_sched_push(cogo_await_sched_t*, cogo_await_t*): add coroutine to the running queue, should be implemented by user
 cogo_await_sched_pop (cogo_await_sched_t*): return and remove the next coroutine to be run, should be implemented by user
 
@@ -59,7 +61,7 @@ int cogo_await_sched_push(cogo_await_sched_t* sched, cogo_await_t* co);
 cogo_await_t* cogo_await_sched_pop(cogo_await_sched_t* sched);
 
 // run the coroutine in stack top until yield or finished, return the next coroutine to be run.
-cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* sched);
+cogo_await_t* cogo_sched_step(cogo_await_sched_t* sched);
 
 // CO_AWAIT(cogo_await_t*): call another coroutine.
 #define CO_AWAIT(CALLEE)                                              \

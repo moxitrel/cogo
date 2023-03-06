@@ -5,7 +5,7 @@ include(CTest)
 include(CheckCCompilerFlag)
 
 add_library(cogo
-    src/cogo_await.c
+    src/cogo_sched_step.c
     src/cogo_co_chan.c
     src/cogo_co_st.c
 )

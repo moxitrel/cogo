@@ -19,7 +19,7 @@ void co_run(void* const co) {
           .stack_top = (cogo_await_t*)co,
       },
   };
-  while (cogo_await_sched_step(&sched.super)) {
+  while (cogo_sched_step(&sched.super)) {
     // noop
   }
 }
