@@ -62,6 +62,14 @@ struct cogo_co_sched {
   /**/ COGO_QUEUE_T(cogo_co_t) q;
 };
 
+// CO_START(cogo_await_t*): add a new coroutine to the scheduler.
+#define CO_START(CO)                                                                        \
+  do {                                                                                      \
+    if (cogo_await_sched_push(((cogo_await_t*)co_this)->sched, (cogo_await_t*)(CO)) != 0) { \
+      CO_YIELD;                                                                             \
+    }                                                                                       \
+  } while (0)
+
 // channel message
 typedef struct co_msg {
   struct co_msg* next;

@@ -87,14 +87,6 @@ static inline cogo_await_t* cogo_await_return(cogo_await_t* const co_this) {
   return co_this->sched->stack_top = co_this->caller;
 }
 
-// CO_START(cogo_await_t*): add a new coroutine to the scheduler.
-#define CO_START(CO)                                                                        \
-  do {                                                                                      \
-    if (cogo_await_sched_push(((cogo_await_t*)co_this)->sched, (cogo_await_t*)(CO)) != 0) { \
-      CO_YIELD;                                                                             \
-    }                                                                                       \
-  } while (0)
-
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE(NAME, cogo_await_t super, __VA_ARGS__)
