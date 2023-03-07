@@ -33,7 +33,7 @@ void cogo_await_run(cogo_await_t* const co) {
   cogo_await_sched_t sched = {
       .stack_top = co,
   };
-  while (cogo_await_sched_step(&sched)) {
+  while (CO_SCHED_STEP(&sched)) {
     // noop
   }
 }
