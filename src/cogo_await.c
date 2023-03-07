@@ -7,35 +7,24 @@
 #endif
 
 // run until yield
-cogo_await_t* cogo_sched_step(cogo_await_sched_t* const sched) {
+cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* const sched) {
   COGO_ASSERT(sched && sched->stack_top);
   for (;;) {
     sched->stack_top->sched = sched;
     sched->stack_top->func(sched->stack_top);
-    if (!sched->stack_top) {
-      // blocked
-      if (!(sched->stack_top = cogo_await_sched_pop(sched))) {
-        // no more active coroutines
-        goto exit;
-      }
-      continue;
-    }
     switch (co_status(sched->stack_top)) {
       case CO_STATUS_FINI:  // return
         if (!cogo_await_return(sched->stack_top)) {
           // return from root
-          goto exit_next;
+          goto exit;
         }
         COGO_FALLTHROUGH;
       case CO_STATUS_INIT:  // await
         continue;
       default:  // yield
-        cogo_await_sched_push(sched, sched->stack_top);
-        goto exit_next;
+        goto exit;
     }
   }
-exit_next:
-  sched->stack_top = cogo_await_sched_pop(sched);
 exit:
   return sched->stack_top;
 }
