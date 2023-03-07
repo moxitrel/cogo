@@ -38,9 +38,9 @@ static void test_step(void) {
       .stack_top = &main.super,
   };
 
-  co1_t* co1 = &main;
-  co2_t* co2 = &co1->co2;
-  co3_t* co3 = &co2->co3;
+  co1_t* const co1 = &main;
+  co2_t* const co2 = &co1->co2;
+  co3_t* const co3 = &co2->co3;
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co1));
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co2));
   TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co3));
