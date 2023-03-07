@@ -54,6 +54,15 @@ struct cogo_await_sched {
 // run the coroutine in stack top until yield or finished.
 cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* sched);
 
+// run the coroutines until all finished
+void cogo_await_run(cogo_await_t* co);
+
+// CO_AWAIT(cogo_await_t*): call another coroutine.
+#define CO_AWAIT(CALLEE)                                              \
+  do {                                                                \
+    cogo_await_call((cogo_await_t*)co_this, (cogo_await_t*)(CALLEE)); \
+    CO_YIELD;                                                         \
+  } while (0)
 static inline void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
   COGO_ASSERT(co_this && co_this->sched && callee && !callee->caller && callee != co_this);
   // COGO_ASSERT(co_this->sched->stack_top == co_this);
@@ -75,23 +84,8 @@ static inline cogo_await_t* cogo_await_return(cogo_await_t* const co_this) {
   return co_this->sched->stack_top = co_this->caller;
 }
 
-static inline void cogo_await_run(cogo_await_t* const co) {
-  cogo_await_sched_t sched = {
-      .stack_top = co,
-  };
-  while (cogo_await_sched_step(&sched)) {
-    // noop
-  }
-}
-
-// CO_AWAIT(cogo_await_t*): call another coroutine.
-#define CO_AWAIT(CALLEE)                                              \
-  do {                                                                \
-    cogo_await_call((cogo_await_t*)co_this, (cogo_await_t*)(CALLEE)); \
-    CO_YIELD;                                                         \
-  } while (0)
-
 #define CO_SCHED_STEP(SCHED) cogo_await_sched_step((cogo_await_sched_t*)SCHED)
+
 #define CO_RUN(CO)           cogo_await_run((cogo_await_t*)CO)
 
 #undef CO_DECLARE

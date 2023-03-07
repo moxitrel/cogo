@@ -14,7 +14,7 @@ CO_END:;
 }
 
 CO_DECLARE(co2, co3_t co3) {
-  co2_t* thiz = (co2_t*)co_this;
+  co2_t* const thiz = (co2_t*)co_this;
 CO_BEGIN:
 
   CO_YIELD;
@@ -24,7 +24,7 @@ CO_END:;
 }
 
 CO_DECLARE(co1, co2_t co2) {
-  co1_t* thiz = (co1_t*)co_this;
+  co1_t* const thiz = (co1_t*)co_this;
 CO_BEGIN:
 
   CO_AWAIT(&thiz->co2);
@@ -79,7 +79,7 @@ static int fibonacci(int n) {
 }
 
 CO_DECLARE(fibonacci, int n, int v, fibonacci_t* fib_n1, fibonacci_t* fib_n2) {
-  fibonacci_t* thiz = (fibonacci_t*)co_this;
+  fibonacci_t* const thiz = (fibonacci_t*)co_this;
 CO_BEGIN:
   assert(thiz->n > 0);
 

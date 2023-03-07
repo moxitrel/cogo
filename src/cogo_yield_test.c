@@ -53,7 +53,7 @@ static void test_return(void) {
 }
 
 CO_DECLARE(prologue_tester, int enter, int exit) {
-  prologue_tester_t *thiz = (prologue_tester_t *)co_this;
+  prologue_tester_t *const thiz = (prologue_tester_t *)co_this;
   thiz->enter++;
 CO_BEGIN:
 

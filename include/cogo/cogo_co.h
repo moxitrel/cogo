@@ -71,6 +71,7 @@ cogo_co_t* cogo_co_sched_pop(cogo_co_sched_t* sched);
 // run the coroutine in stack top until yield or finished.
 cogo_await_t* cogo_co_sched_step(cogo_await_sched_t* const sched);
 
+// run the coroutines until all finished
 void cogo_co_run(cogo_co_t* const co);
 
 // CO_START(cogo_co_t*): add a new coroutine to the scheduler.

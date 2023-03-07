@@ -28,3 +28,12 @@ cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* const sched) {
 exit:
   return sched->stack_top;
 }
+
+void cogo_await_run(cogo_await_t* const co) {
+  cogo_await_sched_t sched = {
+      .stack_top = co,
+  };
+  while (cogo_await_sched_step(&sched)) {
+    // noop
+  }
+}
