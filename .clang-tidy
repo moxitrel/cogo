@@ -4,6 +4,8 @@ Checks: '
     cert-*,
     clang-analyzer-*,
     clang-diagnostic-*,
+        -clang-diagnostic-unused-function,
+        -clang-diagnostic-unused-macros,
     concurrency-*,
     misc-*,
     performance-*,

@@ -3,21 +3,21 @@
 #include <unity.h>
 
 CO_DECLARE(recv, co_chan_t* chan, co_msg_t msg) {
-  recv_t* thiz = (recv_t*)co_this;
+  recv_t* const thiz = (recv_t*)co_this;
 CO_BEGIN:
   CO_CHAN_READ(thiz->chan, &thiz->msg);
 CO_END:;
 }
 
 CO_DECLARE(send, co_chan_t* chan, co_msg_t msg) {
-  send_t* thiz = (send_t*)co_this;
+  send_t* const thiz = (send_t*)co_this;
 CO_BEGIN:
   CO_CHAN_WRITE(thiz->chan, &thiz->msg);
 CO_END:;
 }
 
 CO_DECLARE(main, recv_t recv, send_t send) {
-  main_t* thiz = (main_t*)co_this;
+  main_t* const thiz = (main_t*)co_this;
 CO_BEGIN:
   CO_START(&thiz->recv);
   CO_START(&thiz->send);

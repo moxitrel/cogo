@@ -63,7 +63,7 @@ static inline void cogo_await_call_fast(cogo_await_t* const co_this, cogo_await_
   //callee->sched = co_this->sched->stack_top->sched;
   co_this->sched->stack_top = callee;
 }
-void cogo_await_call_check(cogo_await_t* const co_this, cogo_await_t* const callee);
+void cogo_await_call_check(cogo_await_t* co_this, cogo_await_t* callee);
 
 static inline cogo_await_t* cogo_await_return(cogo_await_t* const co_this) {
   COGO_ASSERT(co_this && co_this->sched);

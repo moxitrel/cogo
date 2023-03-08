@@ -23,8 +23,8 @@ CO_CHAN_WRITE (co_chan_t*, co_msg_t*) : send a message to channel
 CO_CHAN_READ  (co_chan_t*, co_msg_t*) : receive a message from channel, the result stored in co_msg_t.next
 
 */
-#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_CO_H_
-#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_CO_H_
+#ifndef COGO_COGO_CO_H_
+#define COGO_COGO_CO_H_
 
 #include <stddef.h>
 
@@ -52,7 +52,10 @@ typedef struct cogo_co {
 #define COGO_QUEUE_ELEMENT_T cogo_co_t
 #define COGO_QUEUE_NEXT(CO)  ((CO)->next)
 #include "cogo_queue_template_st.h"
-#define COGO_CQ_T COGO_QUEUE_T(cogo_co_t)
+#define COGO_CQ_T            COGO_QUEUE_T(cogo_co_t)
+#define COGO_CQ_PUSH         COGO_QUEUE_PUSH(cogo_co_t)
+#define COGO_CQ_POP          COGO_QUEUE_POP(cogo_co_t)
+#define COGO_CQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_co_t)
 typedef struct cogo_co_sched {
   // inherent cogo_await_sched_t
   cogo_await_sched_t super;
@@ -91,7 +94,10 @@ typedef struct co_msg {
 #define COGO_QUEUE_ELEMENT_T co_msg_t
 #define COGO_QUEUE_NEXT(MSG) ((MSG)->next)
 #include "cogo_queue_template_st.h"
-#define COGO_MQ_T COGO_QUEUE_T(co_msg_t)
+#define COGO_MQ_T            COGO_QUEUE_T(co_msg_t)
+#define COGO_MQ_PUSH         COGO_QUEUE_PUSH(co_msg_t)
+#define COGO_MQ_POP          COGO_QUEUE_POP(co_msg_t)
+#define COGO_MQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(co_msg_t)
 typedef struct co_chan {
   // all coroutines blocked by this channel
   COGO_CQ_T cq;
@@ -148,4 +154,4 @@ void cogo_co_run(cogo_co_t* co);
 #ifdef __cplusplus
 }
 #endif
-#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_CO_H_
+#endif  // COGO_COGO_CO_H_

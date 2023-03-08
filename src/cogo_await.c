@@ -26,13 +26,15 @@ void cogo_await_call_check(cogo_await_t* const co_this, cogo_await_t* const call
 
 // run until yield
 cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* const sched) {
-  COGO_ASSERT(sched && sched->stack_top);
+#define STACK_TOP sched->stack_top
+  COGO_ASSERT(sched && STACK_TOP);
+
   for (;;) {
-    sched->stack_top->sched = sched;
-    sched->stack_top->func(sched->stack_top);
-    switch (cogo_status(sched->stack_top)) {
+    STACK_TOP->sched = sched;
+    STACK_TOP->func(STACK_TOP);
+    switch (cogo_status(STACK_TOP)) {
       case CO_STATUS_FINI:  // return
-        if (!cogo_await_return(sched->stack_top)) {
+        if (!cogo_await_return(STACK_TOP)) {
           // return from root
           goto exit;
         }
@@ -44,7 +46,9 @@ cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* const sched) {
     }
   }
 exit:
-  return sched->stack_top;
+  return STACK_TOP;
+
+#undef STACK_TOP
 }
 
 void cogo_await_run(cogo_await_t* const co) {
