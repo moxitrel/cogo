@@ -9,21 +9,22 @@
 
 // run until yield
 cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* sched) {
-  COGO_ASSERT(sched && sched->super.stack_top);
+#define STACK_TOP sched->super.stack_top
+  COGO_ASSERT(sched && STACK_TOP);
   for (;;) {
-    sched->super.stack_top->sched = &sched->super;
-    sched->super.stack_top->func(sched->super.stack_top);
-    if (!sched->super.stack_top) {
+    STACK_TOP->sched = &sched->super;
+    STACK_TOP->func(STACK_TOP);
+    if (!STACK_TOP) {
       // blocked
-      if (!(sched->super.stack_top = &cogo_co_sched_pop(sched)->super)) {
+      if (!(STACK_TOP = &cogo_co_sched_pop(sched)->super)) {
         // no more active coroutines
         goto exit;
       }
       continue;
     }
-    switch (cogo_status(sched->super.stack_top)) {
+    switch (cogo_status(STACK_TOP)) {
       case CO_STATUS_FINI:  // return
-        if (!cogo_await_return(sched->super.stack_top)) {
+        if (!cogo_await_return(STACK_TOP)) {
           // return from root
           goto exit_next;
         }
@@ -31,14 +32,15 @@ cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* sched) {
       case CO_STATUS_INIT:  // await
         continue;
       default:  // yield
-        cogo_co_sched_push(sched, (cogo_co_t*)sched->super.stack_top);
+        cogo_co_sched_push(sched, (cogo_co_t*)STACK_TOP);
         goto exit_next;
     }
   }
 exit_next:
-  sched->super.stack_top = &cogo_co_sched_pop(sched)->super;
+  STACK_TOP = &cogo_co_sched_pop(sched)->super;
 exit:
-  return (cogo_co_t*)sched->super.stack_top;
+  return (cogo_co_t*)STACK_TOP;
+#undef STACK_TOP
 }
 
 int cogo_chan_read(cogo_co_t* const co_this, co_chan_t* const chan, co_msg_t* const msg_next) {
