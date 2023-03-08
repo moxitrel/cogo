@@ -6,7 +6,6 @@ CO_END
 CO_YIELD
 CO_RETURN
 co_this
-co_status     ()
 CO_DECLARE    (NAME, ...)
 CO_DEFINE     (NAME)
 CO_MAKE       (NAME, ...)
@@ -24,8 +23,8 @@ CO_CHAN_WRITE (co_chan_t*, co_msg_t*) : send a message to channel
 CO_CHAN_READ  (co_chan_t*, co_msg_t*) : receive a message from channel, the result stored in co_msg_t.next
 
 */
-#ifndef COGO_COGO_CO_H_
-#define COGO_COGO_CO_H_
+#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_CO_H_
+#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_CO_H_
 
 #include <stddef.h>
 
@@ -53,12 +52,13 @@ typedef struct cogo_co {
 #define COGO_QUEUE_ELEMENT_T cogo_co_t
 #define COGO_QUEUE_NEXT(CO)  ((CO)->next)
 #include "cogo_queue_template_st.h"
+#define COGO_CQ_T COGO_QUEUE_T(cogo_co_t)
 typedef struct cogo_co_sched {
   // inherent cogo_await_sched_t
   cogo_await_sched_t super;
 
   // other coroutines to run concurrently
-  /**/ COGO_QUEUE_T(cogo_co_t) q;
+  COGO_CQ_T q;
 } cogo_co_sched_t;
 
 // add coroutine to the concurrent queue
@@ -67,12 +67,6 @@ int cogo_co_sched_push(cogo_co_sched_t* sched, cogo_co_t* co);
 
 // return the next coroutine to be run, and remove it from the queue
 cogo_co_t* cogo_co_sched_pop(cogo_co_sched_t* sched);
-
-// run the coroutine in stack top until yield or finished.
-cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* sched);
-
-// run the coroutines until all finished
-void cogo_co_run(cogo_co_t* co);
 
 // CO_START(cogo_co_t*): add a new coroutine to the scheduler.
 #define CO_START(CO)                                                                                    \
@@ -97,12 +91,13 @@ typedef struct co_msg {
 #define COGO_QUEUE_ELEMENT_T co_msg_t
 #define COGO_QUEUE_NEXT(MSG) ((MSG)->next)
 #include "cogo_queue_template_st.h"
+#define COGO_MQ_T COGO_QUEUE_T(co_msg_t)
 typedef struct co_chan {
   // all coroutines blocked by this channel
-  /**/ COGO_QUEUE_T(cogo_co_t) cq;
+  COGO_CQ_T cq;
 
   // message queue
-  /**/ COGO_QUEUE_T(co_msg_t) mq;
+  COGO_MQ_T mq;
 
   // current size
   ptrdiff_t size;
@@ -132,11 +127,15 @@ int cogo_chan_read(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg_next);
   } while (0)
 int cogo_chan_write(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg);
 
+// run the coroutine in stack top until yield or finished.
 #undef CO_SCHED_STEP
-#define CO_SCHED_STEP(SCHED) cogo_co_sched_step((cogo_co_sched_t*)SCHED)
+#define CO_SCHED_STEP(SCHED) cogo_co_sched_step((cogo_co_sched_t*)(SCHED))
+cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* sched);
 
+// run the coroutines until all finished
 #undef CO_RUN
-#define CO_RUN(CO) cogo_co_run((cogo_co_t*)CO)
+#define CO_RUN(CO) cogo_co_run((cogo_co_t*)(CO))
+void cogo_co_run(cogo_co_t* co);
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
@@ -149,4 +148,4 @@ int cogo_chan_write(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg);
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_COGO_CO_H_
+#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_CO_H_

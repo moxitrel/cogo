@@ -4,7 +4,7 @@
 #ifdef __GNUC__
 #define COGO_FALLTHROUGH __attribute__((fallthrough))
 #else
-#define COGO_FALLTHROUGH /* [[fallthrough]] */
+#define COGO_FALLTHROUGH /* fallthrough */
 #endif
 
 // run until yield
@@ -21,7 +21,7 @@ cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* sched) {
       }
       continue;
     }
-    switch (co_status(sched->super.stack_top)) {
+    switch (cogo_status(sched->super.stack_top)) {
       case CO_STATUS_FINI:  // return
         if (!cogo_await_return(sched->super.stack_top)) {
           // return from root

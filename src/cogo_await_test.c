@@ -41,29 +41,29 @@ static void test_step(void) {
   co1_t* const co1 = &main;
   co2_t* const co2 = &co1->co2;
   co3_t* const co3 = &co2->co3;
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co1));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co2));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co3));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, cogo_status(co1));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, cogo_status(co2));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, cogo_status(co3));
 
   // fc2 yield
   cogo_await_t* co = CO_SCHED_STEP(&sched);
   TEST_ASSERT_EQUAL_PTR(co2, co);
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co1));
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co2));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(co3));
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, cogo_status(co1));
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, cogo_status(co2));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, cogo_status(co3));
 
   // fc3 first yield
   co = CO_SCHED_STEP(&sched);
   TEST_ASSERT_EQUAL_PTR(co3, co);
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co1));
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co2));
-  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, co_status(co3));
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, cogo_status(co1));
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, cogo_status(co2));
+  TEST_ASSERT_GREATER_THAN_UINT(CO_STATUS_INIT, cogo_status(co3));
 
   // fc3 co_return
   co = CO_SCHED_STEP(&sched);
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(co1));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(co2));
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(co3));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, cogo_status(co1));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, cogo_status(co2));
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, cogo_status(co3));
 }
 
 static int fibonacci(int n) {
