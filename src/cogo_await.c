@@ -19,7 +19,7 @@ void cogo_await_call_check(cogo_await_t* const co_this, cogo_await_t* const call
   }
 
   // call stack push (resolve co_this->sched->stack_top != co_this)
-  callee->caller = co_this->sched->stack_top;
+  callee_root->caller = co_this->sched->stack_top;
   //callee->sched = co_this->sched->stack_top->sched;
   co_this->sched->stack_top = callee;
 }
