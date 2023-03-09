@@ -46,12 +46,6 @@ yield_end:;                     //
 extern "C" {
 #endif
 
-#ifdef __clang__
-#define COGO_WNO_GNU_LABEL_AS_VALUE(...) CX2_WNO(clang, "-Wgnu-label-as-value", __VA_ARGS__)
-#else
-#define COGO_WNO_GNU_LABEL_AS_VALUE(...) __VA_ARGS__
-#endif
-
 #ifdef assert
 #define COGO_ASSERT(...) assert(__VA_ARGS__)
 #else
@@ -86,19 +80,19 @@ static inline cogo_pc_t cogo_status(void const *const co) {
       /* HACK: no warn unused label */                                                               \
       goto cogo_return;                                                                              \
       /* HACK: avoid clang error - indirect goto in function with no address-of-label expressions */ \
-      COGO_PC = COGO_WNO_GNU_LABEL_AS_VALUE((uintptr_t)(&&cogo_enter));                              \
+      COGO_PC = (cogo_pc_t)(&&cogo_enter);                                                           \
     case CO_STATUS_FINI:                                                                             \
       goto cogo_exit;                                                                                \
     default:                                                                                         \
-      goto COGO_WNO_GNU_LABEL_AS_VALUE(*(void const *)COGO_PC);                                      \
+      goto *(void const *)COGO_PC;                                                                   \
   }                                                                                                  \
   cogo_enter
 
-#define CO_YIELD                                                                                  \
-  do {                                                                                            \
-    COGO_PC = COGO_WNO_GNU_LABEL_AS_VALUE((uintptr_t)(&&COGO_LABEL)); /* 1. save restore point */ \
-    goto cogo_exit;                                                   /* 2. return */             \
-  COGO_LABEL:;                                                        /* 3. restore point */      \
+#define CO_YIELD                                                     \
+  do {                                                               \
+    COGO_PC = (cogo_pc_t)(&&COGO_LABEL); /* 1. save restore point */ \
+    goto cogo_exit;                      /* 2. return */             \
+  COGO_LABEL:;                           /* 3. restore point */      \
   } while (0)
 
 #define CO_RETURN goto cogo_return /* fini coroutine */

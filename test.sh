@@ -17,6 +17,7 @@ function do_test {
 export CC="clang"
 export CFLAGS="-Oz -g3 \
     -Werror -Weverything \
+    -Wno-gnu-label-as-value \
     -Wno-declaration-after-statement \
     -Wno-extra-semi-stmt \
     -Wno-switch-enum \

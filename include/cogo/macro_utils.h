@@ -154,12 +154,6 @@ extern "C" {
 #define CX2_IF_NIL3_1(SK, FK)      SK
 #define CX2_IF_NIL3_0(SK, FK)      FK
 
-#define CX2_WNO(CC, W_OPTION, ...)                           \
-  _Pragma(CX2_TO_STRING(CC diagnostic push))                 \
-      _Pragma(CX2_TO_STRING(CC diagnostic ignored W_OPTION)) \
-          __VA_ARGS__                                        \
-          _Pragma(CX2_TO_STRING(CC diagnostic pop))
-
 #ifdef __cplusplus
 }
 #endif
