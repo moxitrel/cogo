@@ -46,16 +46,14 @@ exit:
 }
 
 int cogo_chan_read(cogo_co_t* const co_this, co_chan_t* const chan, co_msg_t* const msg_next) {
-#define SCHED co_this->super.sched
   COGO_ASSERT(co_this && chan && chan->cap >= 0 && chan->size > PTRDIFF_MIN && msg_next);
-
   const ptrdiff_t chan_size = chan->size--;
   if (chan_size <= 0) {
     COGO_MQ_PUSH(&chan->mq, msg_next);
     // sleep in background
-    COGO_CQ_PUSH(&chan->cq, co_this);  // append to blocking queue
-    SCHED->stack_top = NULL;           // remove from scheduler
-    return 1;                          // switch context
+    COGO_CQ_PUSH(&chan->cq, co_this);        // append to blocking queue
+    co_this->super.sched->stack_top = NULL;  // remove from scheduler
+    return 1;                                // switch context
   } else {
     msg_next->next = COGO_MQ_POP_NONEMPTY(&chan->mq);
     if (chan_size < chan->cap) {
@@ -63,22 +61,18 @@ int cogo_chan_read(cogo_co_t* const co_this, co_chan_t* const chan, co_msg_t* co
     }
     // wake up a writer if exists
     cogo_co_t* writer = COGO_CQ_POP_NONEMPTY(&chan->cq);
-    return cogo_co_sched_push((cogo_co_sched_t*)SCHED, writer);
+    return cogo_co_sched_push((cogo_co_sched_t*)co_this->super.sched, writer);
   }
-
-#undef SCHED
 }
 
 int cogo_chan_write(cogo_co_t* const co_this, co_chan_t* const chan, co_msg_t* const msg) {
-#define SCHED co_this->super.sched
   COGO_ASSERT(co_this && chan && chan->cap >= 0 && chan->size < PTRDIFF_MAX && msg);
-
   const ptrdiff_t chan_size = chan->size++;
   if (chan_size < 0) {
     COGO_MQ_POP_NONEMPTY(&chan->mq)->next = msg;
     // wake up a reader
     cogo_co_t* reader = COGO_CQ_POP_NONEMPTY(&chan->cq);
-    return cogo_co_sched_push((cogo_co_sched_t*)SCHED, reader);
+    return cogo_co_sched_push((cogo_co_sched_t*)co_this->super.sched, reader);
   } else {
     COGO_MQ_PUSH(&chan->mq, msg);
     if (chan_size < chan->cap) {
@@ -86,9 +80,7 @@ int cogo_chan_write(cogo_co_t* const co_this, co_chan_t* const chan, co_msg_t* c
     }
     // sleep in background
     COGO_CQ_PUSH(&chan->cq, co_this);
-    SCHED->stack_top = NULL;
+    co_this->super.sched->stack_top = NULL;
     return 1;
   }
-
-#undef SCHED
 }

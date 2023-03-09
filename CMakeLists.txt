@@ -7,7 +7,7 @@ include(CheckCCompilerFlag)
 add_library(cogo
     src/cogo_await.c
     src/cogo_co.c
-    src/cogo_co_st.c
+    src/cogo_st.c
 )
 target_include_directories(cogo PUBLIC include)
 target_compile_features(cogo PUBLIC c_std_99)
