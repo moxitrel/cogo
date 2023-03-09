@@ -26,7 +26,7 @@ CO_END:;
 
 CO_DECLARE(nat_gen, int value)
 {
-  nat_gen_t* const thiz = (nat_gen_t*)co_this;
+    nat_gen_t* const thiz = (nat_gen_t*)co_this;
 CO_BEGIN:
 
     for (thiz->value = 0; ; thiz->value++) {
@@ -39,7 +39,7 @@ CO_END:;
 void nat_gen_example(void)
 {
     nat_gen_t ng = CO_MAKE(nat_gen);
-    cogo_co_sched_t sched = CO_SCHED_MAKE(&ng);
+    CO_SCHED_T sched = CO_SCHED_MAKE(&ng);
 
     CO_SCHED_STEP(&sched);
     printf("ng.value: %d\n", ng.value);   // n.value: 0
@@ -60,6 +60,7 @@ void nat_gen_example(void)
 - CO_MAKE(NAME, ...) :: construct a coroutine
 - CO_RETURN :: Return with ending coroutine.
 - CO_SCHED_RUN(SCHED) :: loop running until finish all coroutines
+- CO_SCHED_T :: scheduler type
 - CO_START(CO) :: Add a coroutine to scheduler to run.
 - co_this :: point to coroutine object.
 - CO_YIELD :: Yield from coroutine.

@@ -139,7 +139,7 @@ CO_END:;
 
 void test_nat_gen(void) {
   nat_gen_t ng = CO_MAKE(nat_gen);
-  cogo_await_sched_t sched = CO_SCHED_MAKE(&ng);
+  CO_SCHED_T sched = CO_SCHED_MAKE(&ng);
 
   CO_SCHED_STEP(&sched);
   TEST_ASSERT_EQUAL_INT(0, ng.value);

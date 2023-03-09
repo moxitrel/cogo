@@ -10,6 +10,7 @@ CO_DECLARE    (NAME, ...)
 CO_DEFINE     (NAME)
 CO_MAKE       (NAME, ...)
 CO_AWAIT      (cogo_await_t*)
+CO_SCHED_T
 CO_SCHED_MAKE (cogo_co_t*)
 CO_SCHED_STEP (cogo_co_sched_t*)
 CO_SCHED_RUN  (cogo_co_sched_t*)
@@ -133,6 +134,9 @@ int cogo_chan_read(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg_next);
     }                                                                          \
   } while (0)
 int cogo_chan_write(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg);
+
+#undef CO_SCHED_T
+#define CO_SCHED_T cogo_co_sched_t
 
 #undef CO_SCHED_MAKE
 #define CO_SCHED_MAKE(CO) ((cogo_co_sched_t){.super = {.stack_top = (cogo_await_t*)(CO)}})

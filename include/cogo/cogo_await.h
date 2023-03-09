@@ -13,7 +13,8 @@ CO_MAKE   (NAME, ...)
 cogo_await_t                          : coroutine type
 cogo_await_sched_t                    : sheduler  type
 CO_AWAIT      (cogo_await_t*)         : call another coroutine.
-CO_SCHED_MAKE (cogo_await_t* co)      : construct a cogo_await_sched_t with co as stack top
+CO_SCHED_T                            : scheduler type
+CO_SCHED_MAKE (cogo_await_t* co)      : construct a CO_SCHED_T with co as stack top
 CO_SCHED_STEP (cogo_await_sched_t*)   : run the current coroutine until yield or finished, return the next coroutine to be run.
 CO_SCHED_RUN  (cogo_await_sched_t*)   : run the coroutines until all finished
 
@@ -70,6 +71,8 @@ static inline cogo_await_t* cogo_await_return(cogo_await_t* const co_this) {
   COGO_ASSERT(co_this && co_this->sched);
   return co_this->sched->stack_top = co_this->caller;
 }
+
+#define CO_SCHED_T           cogo_await_sched_t
 
 #define CO_SCHED_MAKE(CO)    ((cogo_await_sched_t){.stack_top = (cogo_await_t*)(CO)})
 
