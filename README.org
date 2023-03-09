@@ -24,31 +24,35 @@ CO_END:;
 #include <stdio.h>
 #include "cogo/cogo_co.h"
 
+// CO_DECLARE(NAME, ...): declare a coroutine
 // nat_gen: coroutine name
 // value: save return value
 CO_DECLARE(nat_gen, int value)
 {
-    // nat_gen_t: a type defined by CO_DECLARE(nat_gen, ...)
+    // nat_gen_t: the type defined by CO_DECLARE()
+    // co_this: void*, point to a struct contains coroutine arguments
     nat_gen_t* const thiz = (nat_gen_t*)co_this;
 
-// CO_BEGIN: mark coroutine begin
-CO_BEGIN:
+CO_BEGIN: // mark coroutine begin
 
+    // thiz->value: reference "value" declared in CO_DECLARE()
     for (thiz->value = 0; ; thiz->value++) {
-        // CO_YIELD: return (next time run from here)
-        CO_YIELD;
+        CO_YIELD; // return (next time run from here)
     }
 
-// CO_END: mark coroutine begin
-CO_END:;
+CO_END:; // mark coroutine end
 }
 
 void nat_gen_example(void)
 {
-    // CO_MAKE: construct a coroutine
+    // CO_MAKE(NAME, ...): make a coroutine instance declared by CO_DECLARE(NAME, ...)
     nat_gen_t ng = CO_MAKE(nat_gen);
+    // CO_SCHED_T: scheduler type
+    // CO_SCHED_MAKE(CO): make a scheduler instance run with coroutine instance CO
     CO_SCHED_T sched = CO_SCHED_MAKE(&ng);
 
+    // CO_SCHED_STEP(SCHED): run untils CO_YIELD (start at place last CO_YIELD)
+    // ng.value: reference coroutine argument outside
     CO_SCHED_STEP(&sched);
     printf("ng.value: %d\n", ng.value);   // ng.value: 0
 
