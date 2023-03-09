@@ -6,7 +6,6 @@ CO_END
 CO_YIELD
 CO_RETURN
 co_this
-cogo_status ()
 CO_DECLARE(NAME, ...)   : declare a coroutine.
 CO_DEFINE (NAME)        : define a declared coroutine which not defined.
 CO_MAKE   (NAME, ...)   : construct a coroutine

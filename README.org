@@ -5,8 +5,9 @@ A stackless coroutine library for C, implemented yield, await, concurrency and c
 #+BEGIN_SRC C
 #include "cogo/cogo_co.h"
 
-CO_DECLARE(coroutine_name, T var, ...)
+CO_DECLARE(coroutine_name, T arg, ...)
 {
+    coroutine_name_t* const thiz = (coroutine_name_t*)co_this;
 CO_BEGIN:
 
     //
@@ -35,9 +36,10 @@ CO_BEGIN:
 CO_END:;
 }
 
-int main()
+void nat_gen_example(void)
 {
     nat_gen_t ng = CO_MAKE(nat_gen);
+    cogo_co_sched_t sched = CO_SCHED_MAKE(&ng);
 
     CO_SCHED_STEP(&sched);
     printf("ng.value: %d\n", ng.value);   // n.value: 0
@@ -50,172 +52,17 @@ int main()
 }
 #+END_SRC
 
-*** Fibonacci number
-#+BEGIN_SRC C
-#include "cogo.h"
-#include <stdio.h>
-#include <stdlib.h>
-
-co_declare(Fibonacci, int n, int v, Fibonacci* fib_n1, Fibonacci* fib_n2)
-{
-co_begin:
-
-    if (co_this->n == 0) {          // f(0) = 0
-        co_this->v = 0;
-    } else if (co_this->n == 1) {   // f(1) = 1
-        co_this->v = 1;
-    } else {                        // f(n) = f(n-1) + f(n-2)
-        co_this->fib_n1 = malloc(sizeof(*co_this->fib_n1));
-        co_this->fib_n2 = malloc(sizeof(*co_this->fib_n2));
-
-        *co_this->fib_n1 = co_make(Fibonacci, n-1);
-        *co_this->fib_n2 = co_make(Fibonacci, n-2);
-        co_await(co_this->fib_n1);  // run f(n-1)
-        co_await(co_this->fib_n2);  // run f(n-2)
-        co_this->v = co_this->fib_n1->v + co_this->fib_n2->v;
-
-        free(co_this->fib_n1);
-        free(co_this->fib_n2);
-    }
-
-co_end:;
-}
-
-int main()
-{
-    Fibonacci fib = co_make(Fibonacci, 9);
-    CO_SCHED_RUN(&fib);
-    printf("%d\n", fib.v);  // 34
-}
-#+END_SRC
-
-*** Channel
-#+BEGIN_SRC C
-#include "cogo.h"
-#include <iostream>
-#include <time.h>
-
-// send a signal to <reader> when writer finished
-class writer_t : public co_t {
-    CHAN_T<0> &chan;
-    unsigned long i;
-
-    void operator()()
-    {
-        co_begin();
-
-        for (; i > 0; i--) {        // countdown
-            co_yield();
-        }
-        CHAN_WRITE(chan, this);  // send finish signal
-
-        co_end();
-    }
-
-public:
-    writer_t(CHAN_T<0> &chan, unsigned long i)
-        : chan(chan)
-        , i(i)
-    {}
-};
-
-
-// wait <writer>s finished
-class reader_t : public co_t {
-    CHAN_T<0> &chan;
-    writer_t   writers[2];
-    void      *msg;
-    time_t     t;
-
-    void operator()()
-    {
-        co_begin();
-
-        // create 2 new coroutines
-        CO_START(writers[0]);
-        CO_START(writers[1]);
-
-        // wait finish
-        CHAN_READ(chan, msg);    // receive finish signal
-        std::cout << msg << " finished: " << clock() * 1.0 / CLOCKS_PER_SEC << "s\n";
-        CHAN_READ(chan, msg);    // receive finish signal
-        std::cout << msg << " finished: " << clock() * 1.0 / CLOCKS_PER_SEC << "s\n";
-
-        co_end();
-    }
-
-public:
-    reader_t(CHAN_T<0> &&chan)
-        : chan(chan)
-        , writers{writer_t(chan, 1ul << 26), writer_t(chan, 1ul << 27)}
-    {}
-};
-
-int main()
-{
-    // 0x7ffeee071960 finished: 4.08375s
-    // 0x7ffeee0719a8 finished: 6.18752s
-    reader_t(CHAN_T<0>()).run();
-}
-#+END_SRC
-
-* Getting Started
-** Requirement
-- C99
-
-*** C
-#+BEGIN_SRC C
-#include "cogo.h"           // 1. include header
-
-typedef struct {            // 2. inherit co_t
-    co_t co;                // put co_t in first
-
-                            //
-    int value;              // declare local variables, return values of coroutine function
-                            //
-} nat_gen_t;
-
-void nat_gen(nat_gen_t *co) // 3. define coroutine function with the type "void (co_t *)"
-{
-    co_begin(co);           // 4. set Coroutine begin
-
-                            // 5. user code
-    for (co->value = 0; ; co->value++) {
-        co_yield(co);       // yield
-    }
-
-    co_end(co);             // 4. set coroutine end
-}
-                            // 6. define constructor, init co_t member with co_make()
-#define NAT_GEN()   ((nat_gen_t){.co = co_make(nat_gen),})
-
-
-int main(void)
-{
-    nat_gen_t ng = NAT_GEN();
-
-    nat_gen(&ng);           // ng.value = 0
-    nat_gen(&ng);           // ng.value = 1
-    nat_gen(&ng);           // ng.value = 2
-
-    return 0;
-}
-#+END_SRC
-
 * API
-*** C
-- co_begin (co_t *)         :: Mark coroutine begin.
-- co_end   (co_t *)         :: Mark coroutine end.
-- co_yield (co_t *)         :: Yield from coroutine.
-- CO_RETURN(co_t *)         :: Return with ending coroutine.
-- co_await (co_t *, co_t *) :: Await another coroutine to finish.
-- CO_START (co_t *, co_t *) :: Add a coroutine to scheduler to run.
-
-- CO_SCHED_RUN  (co_t *) :: loop running until finish all coroutines
-+ cogo_status(co_t *) :: Return the current running state of coroutine /obj/.
-  -  0: ready
-  - >0: running
-  - <0: stopped, coroutine is finished
+- CO_AWAIT (CO) :: call another coroutine and wait it to finish.
+- CO_BEGIN :: label coroutine begin.
+- CO_DECLARE(NAME, ...) :: define a coroutine named NAME
+- CO_END :: label coroutine end.
+- CO_MAKE(NAME, ...) :: construct a coroutine
+- CO_RETURN :: Return with ending coroutine.
+- CO_SCHED_RUN(SCHED) :: loop running until finish all coroutines
+- CO_START(CO) :: Add a coroutine to scheduler to run.
+- co_this :: point to coroutine object.
+- CO_YIELD :: Yield from coroutine.
 
 * See Also
 - [[https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html][Coroutines in C]]

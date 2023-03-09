@@ -126,6 +126,31 @@ static void test_run(void) {
   }
 }
 
+CO_DECLARE(nat_gen, int value) {
+  nat_gen_t* const thiz = (nat_gen_t*)co_this;
+CO_BEGIN:
+
+  for (thiz->value = 0;; thiz->value++) {
+    CO_YIELD;
+  }
+
+CO_END:;
+}
+
+void test_nat_gen(void) {
+  nat_gen_t ng = CO_MAKE(nat_gen);
+  cogo_await_sched_t sched = CO_SCHED_MAKE(&ng);
+
+  CO_SCHED_STEP(&sched);
+  TEST_ASSERT_EQUAL_INT(0, ng.value);
+
+  CO_SCHED_STEP(&sched);
+  TEST_ASSERT_EQUAL_INT(1, ng.value);
+
+  CO_SCHED_STEP(&sched);
+  TEST_ASSERT_EQUAL_INT(2, ng.value);
+}
+
 void setUp(void) {
 }
 
@@ -137,6 +162,7 @@ int main(void) {
 
   RUN_TEST(test_step);
   RUN_TEST(test_run);
+  RUN_TEST(test_nat_gen);
 
   return UNITY_END();
 }
