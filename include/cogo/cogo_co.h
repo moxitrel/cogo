@@ -10,8 +10,9 @@ CO_DECLARE    (NAME, ...)
 CO_DEFINE     (NAME)
 CO_MAKE       (NAME, ...)
 CO_AWAIT      (cogo_await_t*)
-CO_SCHED_STEP (cogo_co_t*)
-CO_RUN        (cogo_co_t*)
+CO_SCHED_MAKE (cogo_co_t*)
+CO_SCHED_STEP (cogo_co_sched_t*)
+CO_SCHED_RUN  (cogo_co_sched_t*)
 
 cogo_co_t                             : coroutine type
 cogo_co_sched_t                       : sheduler  type
@@ -133,15 +134,18 @@ int cogo_chan_read(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg_next);
   } while (0)
 int cogo_chan_write(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg);
 
+#undef CO_SCHED_MAKE
+#define CO_SCHED_MAKE(CO) ((cogo_co_sched_t){.super = {.stack_top = (cogo_await_t*)(CO)}})
+
 // run the coroutine in stack top until yield or finished.
 #undef CO_SCHED_STEP
 #define CO_SCHED_STEP(SCHED) cogo_co_sched_step((cogo_co_sched_t*)(SCHED))
 cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* sched);
 
 // run the coroutines until all finished
-#undef CO_RUN
-#define CO_RUN(CO) cogo_co_run((cogo_co_t*)(CO))
-void cogo_co_run(cogo_co_t* co);
+#undef CO_SCHED_RUN
+#define CO_SCHED_RUN(SCHED) cogo_co_sched_run(SCHED)
+void cogo_co_sched_run(cogo_co_sched_t* const sched);
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \

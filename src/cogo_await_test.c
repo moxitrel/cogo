@@ -121,7 +121,7 @@ static void test_run(void) {
   };
 
   for (size_t i = 0; i < sizeof(example) / sizeof(example[0]); i++) {
-    CO_RUN(&example[i].fib);
+    CO_SCHED_RUN(&CO_SCHED_MAKE(&example[i].fib));
     TEST_ASSERT_EQUAL_INT(example[i].fib.v, example[i].value);
   }
 }

@@ -3,49 +3,50 @@ A stackless coroutine library for C, implemented yield, await, concurrency and c
 
 * Overview
 #+BEGIN_SRC C
-#include "cogo.h"
+#include "cogo/cogo_co.h"
 
-co_declare(CoroutineName, T var, ...)
+CO_DECLARE(coroutine_name, T var, ...)
 {
-co_begin:
+CO_BEGIN:
 
     //
     // user code
     //
 
-co_end:;
+CO_END:;
 }
 #+END_SRC
 
 * Example
 *** Natural number generator
 #+BEGIN_SRC C
-#include "cogo.h"
 #include <stdio.h>
+#include "cogo/cogo_co.h"
 
-co_declare(Nat, int value)
+CO_DECLARE(nat_gen, int value)
 {
-co_begin:
+  nat_gen_t* const thiz = (nat_gen_t*)co_this;
+CO_BEGIN:
 
-    for (co_this->value = 0; ; co_this->value++) {
-        co_yield;
+    for (thiz->value = 0; ; thiz->value++) {
+        CO_YIELD;
     }
 
-co_end:;
+CO_END:;
 }
 
 int main()
 {
-    Nat n = co_make(Nat);
+    nat_gen_t ng = CO_MAKE(nat_gen);
 
-    CO_STEP(&n);
-    printf("n.value: %d\n", n.value);   // n.value: 0
+    CO_SCHED_STEP(&sched);
+    printf("ng.value: %d\n", ng.value);   // n.value: 0
 
-    CO_STEP(&n);
-    printf("n.value: %d\n", n.value);   // n.value: 1
+    CO_SCHED_STEP(&sched);
+    printf("ng.value: %d\n", ng.value);   // n.value: 1
 
-    CO_STEP(&n);
-    printf("n.value: %d\n", n.value);   // n.value: 2
+    CO_SCHED_STEP(&sched);
+    printf("ng.value: %d\n", ng.value);   // n.value: 2
 }
 #+END_SRC
 
@@ -83,7 +84,7 @@ co_end:;
 int main()
 {
     Fibonacci fib = co_make(Fibonacci, 9);
-    CO_RUN(&fib);
+    CO_SCHED_RUN(&fib);
     printf("%d\n", fib.v);  // 34
 }
 #+END_SRC
@@ -210,7 +211,7 @@ int main(void)
 - co_await (co_t *, co_t *) :: Await another coroutine to finish.
 - CO_START (co_t *, co_t *) :: Add a coroutine to scheduler to run.
 
-- CO_RUN  (co_t *) :: loop running until finish all coroutines
+- CO_SCHED_RUN  (co_t *) :: loop running until finish all coroutines
 + cogo_status(co_t *) :: Return the current running state of coroutine /obj/.
   -  0: ready
   - >0: running
