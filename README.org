@@ -24,31 +24,39 @@ CO_END:;
 #include <stdio.h>
 #include "cogo/cogo_co.h"
 
+// nat_gen: coroutine name
+// value: save return value
 CO_DECLARE(nat_gen, int value)
 {
+    // nat_gen_t: a type defined by CO_DECLARE(nat_gen, ...)
     nat_gen_t* const thiz = (nat_gen_t*)co_this;
+
+// CO_BEGIN: mark coroutine begin
 CO_BEGIN:
 
     for (thiz->value = 0; ; thiz->value++) {
+        // CO_YIELD: return (next time run from here)
         CO_YIELD;
     }
 
+// CO_END: mark coroutine begin
 CO_END:;
 }
 
 void nat_gen_example(void)
 {
+    // CO_MAKE: construct a coroutine
     nat_gen_t ng = CO_MAKE(nat_gen);
     CO_SCHED_T sched = CO_SCHED_MAKE(&ng);
 
     CO_SCHED_STEP(&sched);
-    printf("ng.value: %d\n", ng.value);   // n.value: 0
+    printf("ng.value: %d\n", ng.value);   // ng.value: 0
 
     CO_SCHED_STEP(&sched);
-    printf("ng.value: %d\n", ng.value);   // n.value: 1
+    printf("ng.value: %d\n", ng.value);   // ng.value: 1
 
     CO_SCHED_STEP(&sched);
-    printf("ng.value: %d\n", ng.value);   // n.value: 2
+    printf("ng.value: %d\n", ng.value);   // ng.value: 2
 }
 #+END_SRC
 
