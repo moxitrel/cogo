@@ -35,7 +35,7 @@ CO_END:;
 static void test_step(void) {
   co1_t main = CO_MAKE(co1, CO_MAKE(co2, CO_MAKE(co3)));
   cogo_await_sched_t sched = {
-      .stack_top = &main.super,
+      .call_top = &main.super,
   };
 
   co1_t* const co1 = &main;

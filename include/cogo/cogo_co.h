@@ -14,9 +14,6 @@ CO_SCHED_T
 CO_SCHED_MAKE (cogo_co_t*)
 CO_SCHED_STEP (cogo_co_sched_t*)
 CO_SCHED_RUN  (cogo_co_sched_t*)
-
-cogo_co_t                             : coroutine type
-cogo_co_sched_t                       : sheduler  type
 co_msg_t                              : channel message type
 co_chan_t                             : channel type
 CO_START      (cogo_co_t*)            : run a new coroutine concurrently.
@@ -24,6 +21,12 @@ CO_CHAN_MAKE  (size_t)                : return a channel with capacity size_t
 CO_CHAN_WRITE (co_chan_t*, co_msg_t*) : send a message to channel
 CO_CHAN_READ  (co_chan_t*, co_msg_t*) : receive a message from channel, the result stored in co_msg_t.next
 
+cogo_status(cogo_yield_t*)
+NAME_func
+cogo_await_t
+cogo_await_sched_t
+cogo_co_t                             : coroutine type
+cogo_co_sched_t                       : sheduler  type
 */
 #ifndef COGO_COGO_CO_H_
 #define COGO_COGO_CO_H_
@@ -139,7 +142,7 @@ int cogo_chan_write(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg);
 #define CO_SCHED_T cogo_co_sched_t
 
 #undef CO_SCHED_MAKE
-#define CO_SCHED_MAKE(CO) ((cogo_co_sched_t){.super = {.stack_top = (cogo_await_t*)(CO)}})
+#define CO_SCHED_MAKE(CO) ((cogo_co_sched_t){.super = {.call_top = (cogo_await_t*)(CO)}})
 
 // run the coroutine in stack top until yield or finished.
 #undef CO_SCHED_STEP

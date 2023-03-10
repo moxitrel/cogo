@@ -6,7 +6,8 @@ CO_END        : coroutine end label.
 CO_YIELD      : yield from coroutine.
 CO_RETURN     : return from coroutine.
 co_this       : point to coroutine object.
-cogo_status() : get the current running status.
+
+cogo_status(cogo_yield_t*) : get the current running status.
   >0: running
    0: inited
   -1: finished
@@ -48,8 +49,8 @@ void nat_func(nat_t* co_this)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
-#ifndef COGO_COGO_YIELD_CASE_H_
-#define COGO_COGO_YIELD_CASE_H_
+#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
+#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,4 +112,4 @@ static inline cogo_pc_t cogo_status(void const* const co) {
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_COGO_YIELD_CASE_H_
+#endif // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_

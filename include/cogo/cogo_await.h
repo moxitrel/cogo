@@ -9,18 +9,20 @@ co_this
 CO_DECLARE(NAME, ...)
 CO_DEFINE (NAME)
 CO_MAKE   (NAME, ...)
-
-cogo_await_t                          : coroutine type
-cogo_await_sched_t                    : sheduler  type
+NAME_t
 CO_AWAIT      (cogo_await_t*)         : call another coroutine.
 CO_SCHED_T                            : scheduler type
 CO_SCHED_MAKE (cogo_await_t* co)      : construct a CO_SCHED_T with co as stack top
 CO_SCHED_STEP (cogo_await_sched_t*)   : run the current coroutine until yield or finished, return the next coroutine to be run.
 CO_SCHED_RUN  (cogo_await_sched_t*)   : run the coroutines until all finished
 
+cogo_status(cogo_yield_t*)
+NAME_func
+cogo_await_t                          : coroutine type
+cogo_await_sched_t                    : sheduler  type
 */
-#ifndef COGO_COGO_AWAIT_H_
-#define COGO_COGO_AWAIT_H_
+#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_AWAIT_H_
+#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_AWAIT_H_
 
 #include "cogo_yield.h"
 
@@ -48,8 +50,8 @@ struct cogo_await {
 
 // cogo_await_t scheduler
 struct cogo_await_sched {
-  // current running coroutine
-  cogo_await_t* stack_top;
+  // the call stack top of current running coroutine
+  cogo_await_t* call_top;
 };
 
 // CO_AWAIT(cogo_await_t*): call another coroutine.
@@ -60,21 +62,21 @@ struct cogo_await_sched {
   } while (0)
 static inline void cogo_await_call_fast(cogo_await_t* const co_this, cogo_await_t* const callee) {
   COGO_ASSERT(co_this && co_this->sched && callee && !callee->caller && callee != co_this);
-  // call stack push (resolve co_this->sched->stack_top != co_this)
-  callee->caller = co_this->sched->stack_top;
-  //callee->sched = co_this->sched->stack_top->sched;
-  co_this->sched->stack_top = callee;
+  // call stack push (resolve co_this->sched->call_top != co_this)
+  callee->caller = co_this->sched->call_top;
+  //callee->sched = co_this->sched->call_top->sched;
+  co_this->sched->call_top = callee;
 }
 void cogo_await_call_check(cogo_await_t* co_this, cogo_await_t* callee);
 
-static inline cogo_await_t* cogo_await_return(cogo_await_t* const co_this) {
-  COGO_ASSERT(co_this && co_this->sched);
-  return co_this->sched->stack_top = co_this->caller;
+static inline cogo_await_t* cogo_await_return(cogo_await_t* const co) {
+  COGO_ASSERT(co && co->sched);
+  return co->sched->call_top = co->caller;
 }
 
 #define CO_SCHED_T           cogo_await_sched_t
 
-#define CO_SCHED_MAKE(CO)    ((cogo_await_sched_t){.stack_top = (cogo_await_t*)(CO)})
+#define CO_SCHED_MAKE(CO)    ((cogo_await_sched_t){.call_top = (cogo_await_t*)(CO)})
 
 // run the coroutine in stack top until yield or finished.
 #define CO_SCHED_STEP(SCHED) cogo_await_sched_step(SCHED)
@@ -82,12 +84,7 @@ cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* sched);
 
 // run the coroutines until all finished
 #define CO_SCHED_RUN(SCHED) cogo_await_sched_run(SCHED)
-static inline void cogo_await_sched_run(cogo_await_sched_t* const sched) {
-  COGO_ASSERT(sched);
-  while (CO_SCHED_STEP(sched)) {
-    // noop
-  }
-}
+void cogo_await_sched_run(cogo_await_sched_t* const sched);
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
@@ -100,4 +97,4 @@ static inline void cogo_await_sched_run(cogo_await_sched_t* const sched) {
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_COGO_AWAIT_H_
+#endif // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_AWAIT_H_

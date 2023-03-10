@@ -18,23 +18,22 @@ void cogo_await_call_check(cogo_await_t* const co_this, cogo_await_t* const call
     callee_root = callee_root->caller;
   }
 
-  // call stack push (resolve co_this->sched->stack_top != co_this)
-  callee_root->caller = co_this->sched->stack_top;
-  //callee->sched = co_this->sched->stack_top->sched;
-  co_this->sched->stack_top = callee;
+  // call stack push (resolve co_this->sched->call_top != co_this)
+  callee_root->caller = co_this->sched->call_top;
+  //callee->sched = co_this->sched->call_top->sched;
+  co_this->sched->call_top = callee;
 }
 
 // run until yield
 cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* const sched) {
-#define STACK_TOP sched->stack_top
-  COGO_ASSERT(sched && STACK_TOP);
-
+#define CALL_TOP sched->call_top
+  COGO_ASSERT(sched && CALL_TOP);
   for (;;) {
-    STACK_TOP->sched = sched;
-    STACK_TOP->func(STACK_TOP);
-    switch (cogo_status(STACK_TOP)) {
+    CALL_TOP->sched = sched;
+    CALL_TOP->func(CALL_TOP);
+    switch (cogo_status(CALL_TOP)) {
       case CO_STATUS_FINI:  // return
-        if (!cogo_await_return(STACK_TOP)) {
+        if (!cogo_await_return(CALL_TOP)) {
           // return from root
           goto exit;
         }
@@ -46,7 +45,21 @@ cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* const sched) {
     }
   }
 exit:
-  return STACK_TOP;
+  return CALL_TOP;
+#undef CALL_TOP
+}
 
-#undef STACK_TOP
+cogo_await_t* cogo_await_resume(cogo_await_t* const co) {
+  COGO_ASSERT(co);
+  cogo_await_sched_t sched = {
+      .call_top = co,
+  };
+  return cogo_await_sched_step(&sched);
+}
+
+void cogo_await_sched_run(cogo_await_sched_t* const sched) {
+  COGO_ASSERT(sched);
+  while (CO_SCHED_STEP(sched)) {
+    // noop
+  }
 }

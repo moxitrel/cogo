@@ -1,5 +1,11 @@
 * Introduction
-A stackless coroutine library for C, implemented yield, await, concurrency and channel.
+A stackless coroutine library written in pure C for embedded programming inspired by Protothreads, which implemented yield, await, concurrency and channel.
+
+* Advantages compared with other stackful coroutine libraries
+- better portability
+- unlimited recursion (avoid stack overflow) for coroutine
+
+* Difference compared with Protothreads
 
 * Overview
 #+BEGIN_SRC C
@@ -7,7 +13,6 @@ A stackless coroutine library for C, implemented yield, await, concurrency and c
 
 CO_DECLARE(coroutine_name, T arg, ...)
 {
-    coroutine_name_t* const thiz = (coroutine_name_t*)co_this;
 CO_BEGIN:
 
     //
@@ -29,34 +34,35 @@ CO_END:;
 // value: save return value
 CO_DECLARE(nat_gen, int value)
 {
-    // nat_gen_t: the type defined by CO_DECLARE()
-    // co_this: void*, point to a struct contains coroutine arguments
+    // nat_gen_t: a type defined by CO_DECLARE()
+    // co_this: point to a struct contains coroutine arguments
     nat_gen_t* const thiz = (nat_gen_t*)co_this;
 
 CO_BEGIN: // mark coroutine begin
 
     // thiz->value: reference "value" declared in CO_DECLARE()
     for (thiz->value = 0; ; thiz->value++) {
-        CO_YIELD; // return (next time run from here)
+        CO_YIELD; // return (next run start from here)
     }
 
-CO_END:; // mark coroutine end
+CO_END: // mark coroutine end
+    ;
 }
 
 void nat_gen_example(void)
 {
-    // CO_MAKE(NAME, ...): make a coroutine instance declared by CO_DECLARE(NAME, ...)
+    // CO_MAKE(NAME, ...): make a coroutine instance
     nat_gen_t ng = CO_MAKE(nat_gen);
     // CO_SCHED_T: scheduler type
     // CO_SCHED_MAKE(CO): make a scheduler instance run with coroutine instance CO
     CO_SCHED_T sched = CO_SCHED_MAKE(&ng);
 
-    // CO_SCHED_STEP(SCHED): run untils CO_YIELD (start at place last CO_YIELD)
-    // ng.value: reference coroutine argument outside
+    // CO_SCHED_STEP(SCHED): run until CO_YIELD (start at place last CO_YIELD)
+    // ng.value: reference coroutine argument
     CO_SCHED_STEP(&sched);
     printf("ng.value: %d\n", ng.value);   // ng.value: 0
 
-    CO_SCHED_STEP(&sched);
+    CO_SCHED_STEP(&sched); // continue run starting from last CO_YIELD
     printf("ng.value: %d\n", ng.value);   // ng.value: 1
 
     CO_SCHED_STEP(&sched);

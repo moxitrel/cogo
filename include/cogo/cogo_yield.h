@@ -8,8 +8,10 @@ CO_RETURN
 co_this
 CO_DECLARE(NAME, ...)   : declare a coroutine.
 CO_DEFINE (NAME)        : define a declared coroutine which not defined.
-CO_MAKE   (NAME, ...)   : construct a coroutine
+CO_MAKE   (NAME, ...)   : make a new coroutine
 NAME_t                  : coroutine type created by CO_DECLARE()
+
+cogo_status(cogo_yield_t*)
 NAME_func               : coroutine function created by CO_DECLARE()
 
 */
