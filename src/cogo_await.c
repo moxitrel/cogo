@@ -6,8 +6,9 @@
 #define COGO_FALLTHROUGH /* fallthrough */
 #endif
 
-void cogo_await_call_check(cogo_await_t* const co_this, cogo_await_t* const callee) {
+void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
   COGO_ASSERT(co_this && co_this->sched && callee);
+
   // check no loop in call chain
   for (cogo_await_t* co = co_this; co; co = co->caller) {
     COGO_ASSERT(callee != co);
@@ -31,9 +32,9 @@ cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* const sched) {
   for (;;) {
     CALL_TOP->sched = sched;
     CALL_TOP->func(CALL_TOP);
-    switch (cogo_status(CALL_TOP)) {
+    switch (co_status(CALL_TOP)) {
       case CO_STATUS_FINI:  // return
-        if (!cogo_await_return(CALL_TOP)) {
+        if (!(CALL_TOP = CALL_TOP->caller)) {
           // return from root
           goto exit;
         }
@@ -51,15 +52,14 @@ exit:
 
 cogo_await_t* cogo_await_resume(cogo_await_t* const co) {
   COGO_ASSERT(co);
-  cogo_await_sched_t sched = {
-      .call_top = co,
-  };
+  cogo_await_sched_t sched = {.call_top = co};
   return cogo_await_sched_step(&sched);
 }
 
-void cogo_await_sched_run(cogo_await_sched_t* const sched) {
-  COGO_ASSERT(sched);
-  while (CO_SCHED_STEP(sched)) {
+void cogo_await_run(cogo_await_t* const co_main) {
+  COGO_ASSERT(co_main);
+  cogo_await_sched_t sched = {.call_top = co_main};
+  while (cogo_await_sched_step(&sched)) {
     // noop
   }
 }

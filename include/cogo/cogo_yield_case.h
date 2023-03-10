@@ -1,13 +1,13 @@
 /* Use Duff's Device (Protothreads)
 
 * API
-CO_BEGIN      : coroutine begin label.
-CO_END        : coroutine end label.
-CO_YIELD      : yield from coroutine.
-CO_RETURN     : return from coroutine.
-co_this       : point to coroutine object.
+CO_BEGIN  : coroutine begin label.
+CO_END    : coroutine end label.
+CO_YIELD  : yield from coroutine.
+CO_RETURN : return from coroutine.
+co_this   : point to coroutine object.
 
-cogo_status(cogo_yield_t*) : get the current running status.
+co_status(cogo_yield_t*) : get the current running status.
   >0: running
    0: inited
   -1: finished
@@ -49,8 +49,8 @@ void nat_func(nat_t* co_this)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
-#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
-#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
+#ifndef COGO_COGO_YIELD_CASE_H_
+#define COGO_COGO_YIELD_CASE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,13 +79,13 @@ typedef struct cogo_yield {
 #define COGO_PC (((cogo_yield_t*)co_this)->pc)
 
 // get the current running state
-static inline cogo_pc_t cogo_status(void const* const co) {
+static inline cogo_pc_t co_status(void const* const co) {
   COGO_ASSERT(co);
   return ((cogo_yield_t const*)co)->pc;
 }
 
 #define CO_BEGIN                                          \
-  switch (cogo_status(co_this)) {                         \
+  switch (co_status(co_this)) {                           \
     default: /* invalid  pc */                            \
       COGO_ASSERT(((void)"pc isn't valid", 0));           \
       goto cogo_exit;                                     \
@@ -112,4 +112,4 @@ static inline cogo_pc_t cogo_status(void const* const co) {
 #ifdef __cplusplus
 }
 #endif
-#endif // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_YIELD_CASE_H_
+#endif  // COGO_COGO_YIELD_CASE_H_

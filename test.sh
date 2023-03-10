@@ -9,8 +9,9 @@ fi
 cd $(dirname $0)
 
 function do_test {
-    cmake -S . -B $BUILD_DIR -DCMAKE_C_COMPILER="$CC" -DCMAKE_C_FLAGS="$CFLAGS" &&
-        cmake --build $BUILD_DIR &&
+    rm -f $BUILD_DIR/CMakeCache.txt &&
+        cmake -S . -B $BUILD_DIR &&
+        cmake --build $BUILD_DIR --clean-first &&
         ctest --test-dir $BUILD_DIR --output-on-failure --schedule-random
 }
 

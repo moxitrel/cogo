@@ -11,9 +11,10 @@ cogo_co_t* cogo_co_sched_pop(cogo_co_sched_t* const sched) {
   return COGO_CQ_POP(&sched->q);
 }
 
-void cogo_co_sched_run(cogo_co_sched_t* const sched) {
-  COGO_ASSERT(sched);
-  while (CO_SCHED_STEP(sched)) {
+void cogo_co_run(cogo_co_t* co_main) {
+  COGO_ASSERT(co_main);
+  cogo_co_sched_t sched = {.super = {.call_top = &co_main->super}};
+  while (cogo_co_sched_step(&sched)) {
     // noop
   }
 }

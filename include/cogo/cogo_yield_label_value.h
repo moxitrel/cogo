@@ -68,13 +68,13 @@ typedef struct cogo_yield {
 #define COGO_PC (((cogo_yield_t *)co_this)->pc)
 
 // get the current running state
-static inline cogo_pc_t cogo_status(void const *const co) {
+static inline cogo_pc_t co_status(void const *const co) {
   COGO_ASSERT(co);
   return ((cogo_yield_t const *)co)->pc;
 }
 
 #define CO_BEGIN                                                                                     \
-  switch (cogo_status(co_this)) {                                                                    \
+  switch (co_status(co_this)) {                                                                      \
     case CO_STATUS_INIT:                                                                             \
       goto cogo_enter;                                                                               \
       /* HACK: no warn unused label */                                                               \

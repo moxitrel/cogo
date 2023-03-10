@@ -77,7 +77,7 @@ void nat_gen_example(void)
 - CO_END :: label coroutine end.
 - CO_MAKE(NAME, ...) :: construct a coroutine
 - CO_RETURN :: Return with ending coroutine.
-- CO_SCHED_RUN(SCHED) :: loop running until finish all coroutines
+- CO_RUN(SCHED) :: loop running until finish all coroutines
 - CO_SCHED_T :: scheduler type
 - CO_START(CO) :: Add a coroutine to scheduler to run.
 - co_this :: point to coroutine object.

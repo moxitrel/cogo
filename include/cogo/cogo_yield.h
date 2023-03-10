@@ -6,13 +6,13 @@ CO_END
 CO_YIELD
 CO_RETURN
 co_this
-CO_DECLARE(NAME, ...)   : declare a coroutine.
-CO_DEFINE (NAME)        : define a declared coroutine which not defined.
-CO_MAKE   (NAME, ...)   : make a new coroutine
-NAME_t                  : coroutine type created by CO_DECLARE()
+CO_DECLARE(NAME, ...){...}: declare a coroutine.
+CO_DEFINE(NAME){...}      : define a declared coroutine which not defined.
+CO_MAKE(NAME, ...)        : make a new coroutine
+NAME_t                    : coroutine type created by CO_DECLARE()
 
-cogo_status(cogo_yield_t*)
-NAME_func               : coroutine function created by CO_DECLARE()
+co_status(cogo_yield_t*)
+NAME_func                 : coroutine function created by CO_DECLARE()
 
 */
 #ifndef COGO_COGO_YIELD_H_

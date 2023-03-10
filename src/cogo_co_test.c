@@ -2,6 +2,28 @@
 #include <cogo/cogo_co.h>
 #include <unity.h>
 
+CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {
+  nat_t* const thiz = (nat_t*)co_this;
+CO_BEGIN:
+  for (thiz->v = 0;; thiz->v++) {
+    CO_YIELD;
+  }
+CO_END:;
+}
+
+void test_nat(void) {
+  nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" isn't explicitly inited
+
+  CO_RESUME(&n);
+  TEST_ASSERT_EQUAL_INT(0, n.v);
+
+  CO_RESUME(&n);
+  TEST_ASSERT_EQUAL_INT(1, n.v);
+
+  CO_RESUME(&n);
+  TEST_ASSERT_EQUAL_INT(2, n.v);
+}
+
 CO_DECLARE(recv, co_chan_t* chan, co_msg_t msg) {
   recv_t* const thiz = (recv_t*)co_this;
 CO_BEGIN:
@@ -27,7 +49,7 @@ CO_END:;
 static void test_chan(void) {
   co_chan_t chan = CO_CHAN_MAKE(0);
   main_t main = CO_MAKE(main, CO_MAKE(recv, &chan), CO_MAKE(send, &chan));
-  CO_SCHED_RUN(&CO_SCHED_MAKE(&main));
+  CO_RUN(&main);
   TEST_ASSERT_EQUAL_PTR(&main.send.msg, main.recv.msg.next);
 }
 
@@ -40,6 +62,7 @@ void tearDown(void) {
 int main(void) {
   UNITY_BEGIN();
 
+  RUN_TEST(test_nat);
   RUN_TEST(test_chan);
 
   return UNITY_END();
