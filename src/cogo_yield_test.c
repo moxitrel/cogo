@@ -13,21 +13,21 @@ CO_END:;
 
 static void test_yield(void) {
   yield_t co = CO_MAKE(/*NAME*/ yield, /*v*/ 0);
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(&co));  // init
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(&co.super));  // init
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
   yield_func(&co);
-  TEST_ASSERT_NOT_EQUAL_UINT(CO_STATUS_INIT, co_status(&co));  // running
-  TEST_ASSERT_NOT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co));
+  TEST_ASSERT_NOT_EQUAL_UINT(CO_STATUS_INIT, co_status(&co.super));  // running
+  TEST_ASSERT_NOT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co.super));
   TEST_ASSERT_EQUAL_INT(1, co.v);
 
   yield_func(&co);
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co));  // fini
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co.super));  // fini
   TEST_ASSERT_EQUAL_INT(2, co.v);
 
   // noop when coroutine end
   yield_func(&co);
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co));  // fini
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co.super));  // fini
   TEST_ASSERT_EQUAL_INT(2, co.v);
 }
 
@@ -42,16 +42,16 @@ CO_END:;
 
 static void test_return(void) {
   return0_t co = CO_MAKE(/*NAME*/ return0, /*v*/ 0);
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(&co));  // init
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_INIT, co_status(&co.super));  // init
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
   return0_func(&co);
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co));  // fini
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co.super));  // fini
   TEST_ASSERT_EQUAL_INT(1, co.v);
 
   // noop when coroutine end
   return0_func(&co);
-  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co));  // fini
+  TEST_ASSERT_EQUAL_UINT(CO_STATUS_FINI, co_status(&co.super));  // fini
   TEST_ASSERT_EQUAL_INT(1, co.v);
 }
 
@@ -68,7 +68,7 @@ CO_END:
 static void test_prologue(void) {
   prologue_t co = CO_MAKE(/*NAME*/ prologue, /*enter*/ 0, /*exit*/ 0);
 
-  while (co_status(&co) != CO_STATUS_FINI) {
+  while (co_status(&co.super) != CO_STATUS_FINI) {
     prologue_func(&co);
   }
 

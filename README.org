@@ -1,5 +1,5 @@
 * Introduction
-A stackless coroutine library written in pure C for embedded programming inspired by Protothreads, which implemented yield, await, concurrency and channel.
+An asymmetric stackless coroutine library written in pure C for embedded programming inspired by Protothreads, which implemented yield, await, concurrency and channel.
 
 * Advantages compared with other stackful coroutine libraries
 - better portability

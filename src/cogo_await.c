@@ -9,7 +9,7 @@
 void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
   COGO_ASSERT(co_this && co_this->sched && callee);
 
-  // check no loop in call chain
+  // no loop in call chain
   for (cogo_await_t* co = co_this; co; co = co->caller) {
     COGO_ASSERT(callee != co);
   }
@@ -32,7 +32,7 @@ cogo_await_t* cogo_await_sched_step(cogo_await_sched_t* const sched) {
   for (;;) {
     CALL_TOP->sched = sched;
     CALL_TOP->func(CALL_TOP);
-    switch (co_status(CALL_TOP)) {
+    switch (co_status(&CALL_TOP->super)) {
       case CO_STATUS_FINI:  // return
         if (!(CALL_TOP = CALL_TOP->caller)) {
           // return from root

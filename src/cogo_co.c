@@ -22,7 +22,7 @@ cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* const sched) {
       }
       continue;
     }
-    switch (co_status(CALL_TOP)) {
+    switch (co_status(&CALL_TOP->super)) {
       case CO_STATUS_FINI:  // return
         if (!(CALL_TOP = CALL_TOP->caller)) {
           // return from root

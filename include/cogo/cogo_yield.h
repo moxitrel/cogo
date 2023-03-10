@@ -20,9 +20,9 @@ NAME_func                 : coroutine function created by CO_DECLARE()
 
 #include "macro_utils.h"
 
-#if defined(COGO_YIELD_CASE)
+#if defined(COGO_USE_CASE)
 #include "cogo_yield_case.h"
-#elif defined(COGO_YIELD_LABEL_VALUE) || defined(__GNUC__)
+#elif defined(COGO_USE_LABEL_VALUE) || defined(__GNUC__)
 #include "cogo_yield_label_value.h"
 #else
 #include "cogo_yield_case.h"
@@ -80,4 +80,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif /* COGO_COGO_YIELD_H_ */
+#endif  // COGO_COGO_YIELD_H_

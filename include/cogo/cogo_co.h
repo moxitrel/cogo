@@ -42,7 +42,7 @@ typedef struct cogo_co {
   // inherit cogo_await_t
   cogo_await_t super;
 
-  // build coroutine queue
+  // build coroutine list
   struct cogo_co* next;
 } cogo_co_t;
 

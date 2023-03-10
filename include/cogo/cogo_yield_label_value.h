@@ -68,9 +68,9 @@ typedef struct cogo_yield {
 #define COGO_PC (((cogo_yield_t *)co_this)->pc)
 
 // get the current running state
-static inline cogo_pc_t co_status(void const *const co) {
+static inline cogo_pc_t co_status(cogo_yield_t const *const co) {
   COGO_ASSERT(co);
-  return ((cogo_yield_t const *)co)->pc;
+  return co->pc;
 }
 
 #define CO_BEGIN                                                                                     \
