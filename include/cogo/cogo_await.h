@@ -8,17 +8,18 @@ CO_RETURN
 co_this
 CO_DECLARE(NAME, ...){...}
 CO_DEFINE(NAME){...}
-CO_MAKE(NAME, ...)
 NAME_t
-CO_AWAIT(cogo_await_t*) : run another coroutine until finished
-CO_RESUME(cogo_await_t*): continue to run a suspended coroutine until yield or finished
-CO_RUN(cogo_await_t*)   : run the coroutine and other created coroutines until all finished
+CO_AWAIT(NAME, ...)         : run another coroutine until finished
+CO_SCHED_T                  : cogo_await_sched_t
+CO_SCHED_RESUME(CO_SCHED_T*): continue to run a suspended coroutine until yield or finished
+CO_SCHED_RUN(CO_SCHED_T*)   : run the coroutine and other created coroutines until all finished
 
 co_status(cogo_yield_t*)
 NAME_func
 cogo_await_t                      : coroutine type
 cogo_await_sched_t                : sheduler  type
 cogo_await_return(cogo_await_t*)  : update call stack top to caller
+CO_MAKE(NAME, ...)          : make a new coroutine
 */
 #ifndef COGO_COGO_AWAIT_H_
 #define COGO_COGO_AWAIT_H_

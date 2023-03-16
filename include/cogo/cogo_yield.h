@@ -6,12 +6,10 @@ CO_END
 CO_YIELD
 CO_RETURN
 co_this
+co_status(cogo_yield_t*)
 CO_DECLARE(NAME, ...){...}: declare a coroutine.
 CO_DEFINE(NAME){...}      : define a declared coroutine which not defined.
-CO_MAKE(NAME, ...)        : make a new coroutine
 NAME_t                    : coroutine type created by CO_DECLARE()
-
-co_status(cogo_yield_t*)
 NAME_func                 : coroutine function created by CO_DECLARE()
 
 */
@@ -43,17 +41,14 @@ extern "C" {
 //  } Point
 //
 #define COGO_COMMA_static ,
-// #define COGO_COMMA_extern ,
 #define COGO_REMOVE_LINKAGE_static
-// #define COGO_REMOVE_LINKAGE_extern
-#define COGO_ID(X)                X
 #define COGO_STRUCT(NAME, ...)    COGO_STRUCT1(CX2_COUNT(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
 #define COGO_STRUCT1(...)         COGO_STRUCT2(__VA_ARGS__)
 #define COGO_STRUCT2(N, ...)      COGO_STRUCT3_##N(__VA_ARGS__)
 #define COGO_STRUCT3_1(NAME, ...) /* NAME: Type */ \
   typedef struct NAME NAME##_t;                    \
   struct NAME {                                    \
-    CX2_MAP(;, COGO_ID, __VA_ARGS__);              \
+    CX2_MAP(;, CX2_IDENTITY, __VA_ARGS__);         \
   }
 #define COGO_STRUCT3_2(NAME, ...) /* NAME: static Type */                   \
   typedef struct COGO_REMOVE_LINKAGE_##NAME COGO_REMOVE_LINKAGE_##NAME##_t; \
@@ -61,8 +56,10 @@ extern "C" {
     CX2_MAP(;, COGO_ID, __VA_ARGS__);                                       \
   }
 
-#define COGO_DECLARE(NAME, BASE, ...)                                                                   \
-  CX2_IF_NIL(CX2_IDENTITY(__VA_ARGS__), COGO_STRUCT(NAME, BASE), COGO_STRUCT(NAME, BASE, __VA_ARGS__)); \
+#define COGO_DECLARE(NAME, BASE, ...)               \
+  CX2_IF_NIL(CX2_IDENTITY(__VA_ARGS__),             \
+             COGO_STRUCT(NAME, BASE),               \
+             COGO_STRUCT(NAME, BASE, __VA_ARGS__)); \
   CO_DEFINE(NAME)
 
 #define CO_DEFINE(NAME)    CO_DEFINE1(CX2_COUNT(COGO_COMMA_##NAME), NAME)
@@ -72,10 +69,7 @@ extern "C" {
 #define CO_DEFINE3_2(NAME) static void COGO_REMOVE_LINKAGE_##NAME##_func(void* const co_this)
 
 #define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_yield_t super, __VA_ARGS__)
-
-#define CO_MAKE(NAME, ...) \
-  ((NAME##_t){{0}, __VA_ARGS__})
+  COGO_DECLARE(NAME, cogo_yield_t super_yield, __VA_ARGS__)
 
 #ifdef __cplusplus
 }

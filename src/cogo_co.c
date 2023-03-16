@@ -23,13 +23,13 @@ cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* const sched) {
       continue;
     }
     switch (co_status(&CALL_TOP->super)) {
-      case CO_STATUS_FINI:  // return
+      case COGO_STATUS_END:  // return
         if (!(CALL_TOP = CALL_TOP->caller)) {
           // return from root
           goto exit_next;
         }
         COGO_FALLTHROUGH;
-      case CO_STATUS_INIT:  // await
+      case COGO_STATUS_BEGIN:  // await
         continue;
       default:  // yield
         cogo_co_sched_push(sched, (cogo_co_t*)CALL_TOP);

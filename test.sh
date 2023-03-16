@@ -23,9 +23,11 @@ function do_test {
 }
 
 export CC="clang"
+export CXX="clang++"
 export CFLAGS="-Oz -g3"
 do_test || exit $?
 
 export CC="gcc"
+export CXX="g++"
 export CFLAGS="-Os -g3 -fkeep-inline-functions"
 do_test || exit $?

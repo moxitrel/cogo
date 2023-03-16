@@ -5,14 +5,18 @@
 
 CO_DECLARE(/*NAME*/ await2) {
 CO_BEGIN:
+
   CO_YIELD;
+
 CO_END:;
 }
 
 CO_DECLARE(/*NAME*/ await1, await2_t* await2) {
   await1_t* const thiz = (await1_t*)co_this;
 CO_BEGIN:
+
   CO_AWAIT(thiz->await2);
+
 CO_END:;
 }
 
@@ -22,34 +26,36 @@ static void test_resume(void) {
   cogo_await_t* co = &await1.super;
 
   // init
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_INIT, co_status(&await1.super.super));
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_INIT, co_status(&await2.super.super));
+  TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_BEGIN, co_status(&await1.super.super));
+  TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_BEGIN, co_status(&await2.super.super));
 
   // await2 yield: stop when CO_YIELD, but not when CO_AWAIT or CO_RETURN (except root coroutine)
   co = CO_RESUME(co);
   TEST_ASSERT_EQUAL_PTR(&await2, co);
   TEST_ASSERT_EQUAL_PTR(&await1, await2.super.caller);
-  TEST_ASSERT_GREATER_THAN_UINT64(CO_STATUS_INIT, co_status(&co->super));
-  TEST_ASSERT_LESS_THAN_UINT64(CO_STATUS_FINI, co_status(&co->super));
+  TEST_ASSERT_GREATER_THAN_UINT64(COGO_STATUS_BEGIN, co_status(&co->super));
+  TEST_ASSERT_LESS_THAN_UINT64(COGO_STATUS_END, co_status(&co->super));
 
   // await1 fini: stop when root coroutine fini
   co = CO_RESUME(co);
   TEST_ASSERT_NULL(co);
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_FINI, co_status(&await2.super.super));
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_FINI, co_status(&await1.super.super));
+  TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, co_status(&await2.super.super));
+  TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, co_status(&await1.super.super));
 }
 
-CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {
+CO_DECLARE(/*NAME*/ nat, int v) {
   nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
+
   for (thiz->v = 0;; thiz->v++) {
     CO_YIELD;
   }
+
 CO_END:;
 }
 
 void test_nat(void) {
-  nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" isn't explicitly inited
+  nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" isn't explicitly initialized
 
   CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -72,32 +78,30 @@ static int fibonacci(int n) {
   }
 }
 
-CO_DECLARE(/*NAME*/ fibonacci, /*parameter*/ int n, /*return*/ int v, /*local variable*/ fibonacci_t* fib_n1, /*local variable*/ fibonacci_t* fib_n2) {
+CO_DECLARE(/*NAME*/ fibonacci, /*parameter*/ int n, /*return value*/ int v, /*local variable*/ fibonacci_t* fib_n1, /*local variable*/ fibonacci_t* fib_n2) {
   fibonacci_t* const thiz = (fibonacci_t*)co_this;
 CO_BEGIN:
   assert(thiz->n > 0);
+
   if (thiz->n == 1 || thiz->n == 2)  // f(1) = 1, f(2) = 1
   {
     thiz->v = 1;
-    CO_RETURN;
   } else {  // f(n) = f(n-1) + f(n-2)
     thiz->v = 0;
 
     thiz->fib_n1 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n1));
     TEST_ASSERT_NOT_NULL(thiz->fib_n1);
-    *thiz->fib_n1 = CO_MAKE(/*NAME*/ fibonacci, thiz->n - 1);
+    *thiz->fib_n1 = CO_MAKE(/*NAME*/ fibonacci, /*argument*/ thiz->n - 1);
     CO_AWAIT(thiz->fib_n1);  // eval f(n-1)
     thiz->v += thiz->fib_n1->v;
     free(thiz->fib_n1);
 
     thiz->fib_n2 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n2));
     TEST_ASSERT_NOT_NULL(thiz->fib_n2);
-    *thiz->fib_n2 = CO_MAKE(/*NAME*/ fibonacci, thiz->n - 2);
+    *thiz->fib_n2 = CO_MAKE(/*NAME*/ fibonacci, /*argument*/ thiz->n - 2);
     CO_AWAIT(thiz->fib_n2);  // eval f(n-2)
     thiz->v += thiz->fib_n2->v;
     free(thiz->fib_n2);
-
-    CO_RETURN;
   }
 
 CO_END:;

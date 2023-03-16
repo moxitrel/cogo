@@ -46,6 +46,7 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
 
     check_c_compiler_flag(-Werror _W_ERROR)
     check_c_compiler_flag(-Weverything _W_EVERYTHING)
+    check_c_compiler_flag(-Wno-gnu-empty-initializer _WNO_GNU_EMPTY_INITIALIZER)
     check_c_compiler_flag(-Wno-missing-prototypes _WNO_MISSING_PROTOTYPES)
     check_c_compiler_flag(-Wno-unreachable-code _WNO_UNREACHABLE_CODE)
     check_c_compiler_flag(-Wno-missing-declarations _WNO_MISSING_DECLARATIONS)
@@ -59,6 +60,7 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
 
         $<$<BOOL:${_W_ERROR}>:-Werror>
         $<$<BOOL:${_W_EVERYTHING}>:-Weverything>
+        $<$<BOOL:${_WNO_GNU_EMPTY_INITIALIZER}>:-Wno-gnu-empty-initializer>
         $<$<BOOL:${_W_ALL}>:-Wall>
         $<$<BOOL:${_W_EXTRA}>:-Wextra>
         $<$<BOOL:${_W_CONVERSION}>:-Wconversion>
