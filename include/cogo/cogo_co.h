@@ -11,7 +11,7 @@ CO_DEFINE(NAME){...}
 CO_MAKE(NAME, ...)
 NAME_t
 CO_AWAIT(cogo_await_t*)
-CO_RESUME(cogo_co_t*)
+CO_SCHED_RESUME(cogo_co_t*)
 CO_RUN(cogo_co_sched_t*)
 co_msg_t                            : channel message type
 co_chan_t                           : channel type
@@ -141,8 +141,8 @@ int cogo_chan_read(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg_next);
 int cogo_chan_write(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg);
 
 // continue to run a suspended coroutine until yield or finished
-#undef CO_RESUME
-#define CO_RESUME(CO) cogo_co_resume((cogo_co_t*)(CO))
+#undef CO_SCHED_RESUME
+#define CO_SCHED_RESUME(CO) cogo_co_resume((cogo_co_t*)(CO))
 cogo_co_t* cogo_co_resume(cogo_co_t* co);
 
 // run the coroutines until all finished

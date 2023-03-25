@@ -52,9 +52,9 @@ extern "C" {
 #define COGO_ASSERT(...) /*noop*/
 #endif
 
-typedef uintptr_t cogo_pc_t;
-#define COGO_PC_BEGIN ((cogo_pc_t)0)
-#define COGO_PC_END   ((cogo_pc_t)-1)
+typedef intptr_t cogo_pc_t;
+#define COGO_PC_BEGIN 0
+#define COGO_PC_END   (-1)
 
 // yield context
 typedef struct cogo_yield {
@@ -67,12 +67,12 @@ typedef struct cogo_yield {
 // cogo_yield_t.pc
 #define COGO_PC(COGO_YIELD_V) (((cogo_yield_t *)(COGO_YIELD_V))->pc)
 
+#define CO_STATUS_BEGIN       COGO_PC_BEGIN
+#define CO_STATUS_END         COGO_PC_END
 // get the current running state
-static inline cogo_pc_t co_status(cogo_yield_t const *const co) {
-#define COGO_STATUS_BEGIN COGO_PC_BEGIN
-#define COGO_STATUS_END   COGO_PC_END
+static inline cogo_pc_t co_status(void const *const co) {
   COGO_ASSERT(co);
-  return co->pc;
+  return ((cogo_yield_t const *)co)->pc;
 }
 
 #define COGO_BEGIN(COGO_YIELD_V)                                                                     \

@@ -1,12 +1,12 @@
 /*
 
 * API
+co_this
 CO_BEGIN
-CO_END
 CO_YIELD
 CO_RETURN
-co_this
-co_status(cogo_yield_t*)
+CO_END
+co_status()
 CO_DECLARE(NAME, ...){...}: declare a coroutine.
 CO_DEFINE(NAME){...}      : define a declared coroutine which not defined.
 NAME_t                    : coroutine type created by CO_DECLARE()
@@ -69,7 +69,7 @@ extern "C" {
 #define CO_DEFINE3_2(NAME) static void COGO_REMOVE_LINKAGE_##NAME##_func(void* const co_this)
 
 #define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_yield_t super_yield, __VA_ARGS__)
+  COGO_DECLARE(NAME, cogo_yield_t super, __VA_ARGS__)
 
 #ifdef __cplusplus
 }

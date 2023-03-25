@@ -14,13 +14,13 @@ CO_END:;
 void test_nat(void) {
   nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" isn't explicitly inited
 
-  CO_RESUME(&n);
+  CO_SCHED_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
 
-  CO_RESUME(&n);
+  CO_SCHED_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(1, n.v);
 
-  CO_RESUME(&n);
+  CO_SCHED_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(2, n.v);
 }
 

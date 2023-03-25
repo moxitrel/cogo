@@ -1,25 +1,26 @@
 /*
 
 * API
+co_this
 CO_BEGIN
-CO_END
 CO_YIELD
 CO_RETURN
-co_this
+CO_END
+co_status()
 CO_DECLARE(NAME, ...){...}
 CO_DEFINE(NAME){...}
 NAME_t
-CO_AWAIT(NAME, ...)         : run another coroutine until finished
-CO_SCHED_T                  : cogo_await_sched_t
-CO_SCHED_RESUME(CO_SCHED_T*): continue to run a suspended coroutine until yield or finished
-CO_SCHED_RUN(CO_SCHED_T*)   : run the coroutine and other created coroutines until all finished
-
-co_status(cogo_yield_t*)
 NAME_func
-cogo_await_t                      : coroutine type
-cogo_await_sched_t                : sheduler  type
-cogo_await_return(cogo_await_t*)  : update call stack top to caller
+cogo_await_t                : coroutine type
+cogo_await_sched_t          : sheduler  type
+CO_AWAIT()                  : run another coroutine until finished
+CO_SCHED_T                  : cogo_await_sched_t
+CO_SCHED_MAKE(cogo_await_t*): make an instance of CO_SCHED_T
+CO_SCHED_RESUME(CO_SCHED_T*): continue to run a suspended coroutine until yield or finished
+CO_RUN()                    : run the coroutine and other created coroutines until all finished
+
 CO_MAKE(NAME, ...)          : make a new coroutine
+
 */
 #ifndef COGO_COGO_AWAIT_H_
 #define COGO_COGO_AWAIT_H_
@@ -62,19 +63,21 @@ struct cogo_await_sched {
   } while (0)
 void cogo_await_call(cogo_await_t* co_this, cogo_await_t* callee);
 
+#define CO_SCHED_T             cogo_await_sched_t
+#define CO_SCHED_MAKE(MAIN)    ((CO_SCHED_T){.call_top = (cogo_await_t*)(MAIN)})
+
 // continue to run a suspended coroutine until yield or finished
-#define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))
-cogo_await_t* cogo_await_resume(cogo_await_t* co);
+#define CO_SCHED_RESUME(SCHED) cogo_await_sched_resume(SCHED)
+cogo_await_t* cogo_await_sched_resume(cogo_await_sched_t* sched);
 
 // run the coroutines until all finished
-#define CO_RUN(MAIN) cogo_await_run((cogo_await_t*)(MAIN))
-void cogo_await_run(cogo_await_t* co_main);
+#define CO_RUN(CO_MAIN) cogo_await_run((cogo_await_t*)(CO_MAIN))
+void cogo_await_run(cogo_await_t* const co_main);
 
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE(NAME, cogo_await_t super, __VA_ARGS__)
 
-#undef CO_MAKE
 #define CO_MAKE(NAME, ...) \
   ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
 

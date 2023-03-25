@@ -23,24 +23,24 @@ CO_END:;
 static void test_resume(void) {
   await2_t await2 = CO_MAKE(/*NAME*/ await2);
   await1_t await1 = CO_MAKE(/*NAME*/ await1, /*await2*/ &await2);
-  cogo_await_t* co = &await1.super;
+  CO_SCHED_T sched = CO_SCHED_MAKE(&await1);
 
   // init
-  TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_BEGIN, co_status(&await1.super.super));
-  TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_BEGIN, co_status(&await2.super.super));
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, co_status(&await1));
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, co_status(&await2));
 
   // await2 yield: stop when CO_YIELD, but not when CO_AWAIT or CO_RETURN (except root coroutine)
-  co = CO_RESUME(co);
-  TEST_ASSERT_EQUAL_PTR(&await2, co);
+  CO_SCHED_RESUME(&sched);
+  TEST_ASSERT_EQUAL_PTR(&await2, sched.call_top);
   TEST_ASSERT_EQUAL_PTR(&await1, await2.super.caller);
-  TEST_ASSERT_GREATER_THAN_UINT64(COGO_STATUS_BEGIN, co_status(&co->super));
-  TEST_ASSERT_LESS_THAN_UINT64(COGO_STATUS_END, co_status(&co->super));
+  TEST_ASSERT_GREATER_THAN_UINT64(CO_STATUS_BEGIN, co_status(&await1));
+  TEST_ASSERT_LESS_THAN_UINT64(CO_STATUS_END, co_status(&await1));
 
   // await1 fini: stop when root coroutine fini
-  co = CO_RESUME(co);
-  TEST_ASSERT_NULL(co);
-  TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, co_status(&await2.super.super));
-  TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, co_status(&await1.super.super));
+  CO_SCHED_RESUME(&sched);
+  TEST_ASSERT_NULL(sched.call_top);
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, co_status(&await2));
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, co_status(&await1));
 }
 
 CO_DECLARE(/*NAME*/ nat, int v) {
@@ -56,14 +56,15 @@ CO_END:;
 
 void test_nat(void) {
   nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" isn't explicitly initialized
+  CO_SCHED_T sched = CO_SCHED_MAKE(&n);
 
-  CO_RESUME(&n);
+  CO_SCHED_RESUME(&sched);
   TEST_ASSERT_EQUAL_INT(0, n.v);
 
-  CO_RESUME(&n);
+  CO_SCHED_RESUME(&sched);
   TEST_ASSERT_EQUAL_INT(1, n.v);
 
-  CO_RESUME(&n);
+  CO_SCHED_RESUME(&sched);
   TEST_ASSERT_EQUAL_INT(2, n.v);
 }
 
