@@ -17,9 +17,13 @@ void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
 #endif
 
   cogo_await_t* callee_root = callee;
+#ifdef COGO_USE_DEBUG
   while (callee_root->caller) {
     callee_root = callee_root->caller;
   }
+#else
+  COGO_ASSERT(!callee_root->caller);
+#endif
 
   // call stack push (resolve co_this->sched->call_top != co_this)
   callee_root->caller = co_this->sched->call_top;
@@ -39,16 +43,16 @@ cogo_await_t* cogo_await_sched_resume(cogo_await_sched_t* const sched) {
       case CO_STATUS_END:  // return
         if (!(CALL_TOP = CALL_TOP->caller)) {
           // return from root
-          goto cogo_resume_end;
+          goto exit;
         }
         COGO_FALLTHROUGH;
       case CO_STATUS_BEGIN:  // await
         continue;
       default:  // yield
-        goto cogo_resume_end;
+        goto exit;
     }
   }
-cogo_resume_end:
+exit:
   return CALL_TOP;
 
 #undef CALL_TOP

@@ -13,8 +13,8 @@ NAME_t                    : coroutine type created by CO_DECLARE()
 NAME_func                 : coroutine function created by CO_DECLARE()
 
 */
-#ifndef COGO_COGO_YIELD_H_
-#define COGO_COGO_YIELD_H_
+#ifndef COGO_YIELD_H_
+#define COGO_YIELD_H_
 
 #include "macro_utils.h"
 
@@ -74,4 +74,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_COGO_YIELD_H_
+#endif  // COGO_YIELD_H_

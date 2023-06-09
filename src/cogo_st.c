@@ -13,8 +13,8 @@ cogo_co_t* cogo_co_sched_pop(cogo_co_sched_t* const sched) {
 
 void cogo_co_run(cogo_co_t* co_main) {
   COGO_ASSERT(co_main);
-  cogo_co_sched_t sched = {.super = {.call_top = &co_main->super}};
-  while (cogo_co_sched_step(&sched)) {
+  cogo_co_sched_t sched = CO_SCHED_MAKE(co_main);
+  while (CO_SCHED_RESUME(&sched)) {
     // noop
   }
 }

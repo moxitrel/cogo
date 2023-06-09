@@ -8,9 +8,9 @@ typedef struct yield {
 } yield_t;
 
 void yield_func(yield_t *thiz) {
-  COGO_BEGIN(thiz) :
+  COGO_BEGIN(thiz) :;
 
-                     thiz->v++;
+  thiz->v++;
   COGO_YIELD(thiz);
   thiz->v++;
 

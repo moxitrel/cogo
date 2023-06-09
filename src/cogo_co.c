@@ -8,7 +8,7 @@
 #endif
 
 // run until yield
-cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* const sched) {
+cogo_co_t* cogo_co_sched_resume(cogo_co_sched_t* const sched) {
 #define CALL_TOP sched->super.call_top
   COGO_ASSERT(sched && CALL_TOP);
   for (;;) {
@@ -16,7 +16,7 @@ cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* const sched) {
     CALL_TOP->func(CALL_TOP);
     if (!CALL_TOP) {
       // blocked
-      if (!(CALL_TOP = &cogo_co_sched_pop(sched)->super)) {
+      if (!(CALL_TOP = (cogo_await_t*)cogo_co_sched_pop(sched))) {
         // no more active coroutines
         goto exit;
       }
@@ -37,16 +37,10 @@ cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* const sched) {
     }
   }
 exit_next:
-  CALL_TOP = &cogo_co_sched_pop(sched)->super;
+  CALL_TOP = (cogo_await_t*)cogo_co_sched_pop(sched);
 exit:
   return (cogo_co_t*)CALL_TOP;
 #undef CALL_TOP
-}
-
-cogo_co_t* cogo_co_resume(cogo_co_t* const co) {
-  COGO_ASSERT(co);
-  cogo_co_sched_t sched = {.super = {.call_top = &co->super}};
-  return cogo_co_sched_step(&sched);
 }
 
 int cogo_chan_read(cogo_co_t* const co_this, co_chan_t* const chan, co_msg_t* const msg_next) {

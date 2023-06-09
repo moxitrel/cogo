@@ -27,8 +27,8 @@ cogo_await_sched_t
 cogo_co_t                           : coroutine type
 cogo_co_sched_t                     : sheduler  type
 */
-#ifndef COGO_COGO_CO_H_
-#define COGO_COGO_CO_H_
+#ifndef COGO_CO_H_
+#define COGO_CO_H_
 
 #include <stddef.h>
 
@@ -74,9 +74,6 @@ int cogo_co_sched_push(cogo_co_sched_t* sched, cogo_co_t* co);
 
 // return the next coroutine to be run, and remove it from the queue
 cogo_co_t* cogo_co_sched_pop(cogo_co_sched_t* sched);
-
-// continue to run a suspended coroutine until yield or finished
-cogo_co_t* cogo_co_sched_step(cogo_co_sched_t* sched);
 
 // CO_START(cogo_co_t*): add a new coroutine to the scheduler.
 #define CO_START(CO)                                                                                    \
@@ -140,16 +137,6 @@ int cogo_chan_read(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg_next);
   } while (0)
 int cogo_chan_write(cogo_co_t* co_this, co_chan_t* chan, co_msg_t* msg);
 
-// continue to run a suspended coroutine until yield or finished
-#undef CO_SCHED_RESUME
-#define CO_SCHED_RESUME(CO) cogo_co_resume((cogo_co_t*)(CO))
-cogo_co_t* cogo_co_resume(cogo_co_t* co);
-
-// run the coroutines until all finished
-#undef CO_RUN
-#define CO_RUN(MAIN) cogo_co_run((cogo_co_t*)(MAIN))
-void cogo_co_run(cogo_co_t* co_main);
-
 #undef CO_DECLARE
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE(NAME, cogo_co_t super, __VA_ARGS__)
@@ -158,7 +145,23 @@ void cogo_co_run(cogo_co_t* co_main);
 #define CO_MAKE(NAME, ...) \
   ((NAME##_t){{.super = {.func = NAME##_func}}, __VA_ARGS__})
 
+#undef CO_SCHED_T
+#define CO_SCHED_T cogo_co_sched_t
+
+#undef CO_SCHED_MAKE
+#define CO_SCHED_MAKE(MAIN) ((cogo_co_sched_t){.super = {.call_top = (cogo_await_t*)(MAIN)}})
+
+// continue to run a suspended coroutine until yield or finished
+#undef CO_SCHED_RESUME
+#define CO_SCHED_RESUME(SCHED) cogo_co_sched_resume((cogo_co_sched_t*)(SCHED))
+cogo_co_t* cogo_co_sched_resume(cogo_co_sched_t* sched);
+
+// run the coroutines until all finished
+#undef CO_RUN
+#define CO_RUN(MAIN) cogo_co_run((cogo_co_t*)(MAIN))
+void cogo_co_run(cogo_co_t* co_main);
+
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_COGO_CO_H_
+#endif  // COGO_CO_H_

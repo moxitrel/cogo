@@ -35,8 +35,8 @@ yield_end:;                     //
 - Use GCC extension.
 
 */
-#ifndef COGO_COGO_YIELD_LABEL_VALUE_H_
-#define COGO_COGO_YIELD_LABEL_VALUE_H_
+#ifndef COGO_YIELD_LABEL_VALUE_H_
+#define COGO_YIELD_LABEL_VALUE_H_
 
 #include <stdint.h>
 
@@ -111,11 +111,11 @@ static inline cogo_pc_t co_status(void const *const co) {
 #define COGO_LABEL2(N)   cogo_yield_##N
 
 #define CO_BEGIN         COGO_BEGIN(co_this)
+#define CO_END           COGO_END(co_this)
 #define CO_YIELD         COGO_YIELD(co_this)
 #define CO_RETURN        COGO_RETURN(co_this)
-#define CO_END           COGO_END(co_this)
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* COGO_COGO_YIELD_LABEL_VALUE_H_ */
+#endif /* COGO_YIELD_LABEL_VALUE_H_ */

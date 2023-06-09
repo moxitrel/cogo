@@ -48,8 +48,8 @@ void nat_func(nat_t* co_this)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
-#ifndef COGO_COGO_YIELD_CASE_H_
-#define COGO_COGO_YIELD_CASE_H_
+#ifndef COGO_YIELD_CASE_H_
+#define COGO_YIELD_CASE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,11 +111,11 @@ static inline cogo_pc_t co_status(void const* const co) {
   cogo_end
 
 #define CO_BEGIN  COGO_BEGIN(co_this)
+#define CO_END    COGO_END(co_this)
 #define CO_YIELD  COGO_YIELD(co_this)
 #define CO_RETURN COGO_RETURN(co_this)
-#define CO_END    COGO_END(co_this)
 
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_COGO_YIELD_CASE_H_
+#endif  // COGO_YIELD_CASE_H_
