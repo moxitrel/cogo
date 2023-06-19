@@ -84,12 +84,9 @@ CO_END:
 }
 
 static void test_prologue(void) {
-  prologue_t co = {
-      .enter = 0,
-      .exit = 0,
-  };
+  prologue_t co = CO_MAKE(prologue, 0, 0);
 
-  while (co_status(&co) != CO_STATUS_END) {
+  while (co_status((cogo_yield_t *)&co) != CO_STATUS_END) {
     prologue_func(&co);
   }
 
@@ -103,7 +100,7 @@ static void test_prologue(void) {
   TEST_ASSERT_EQUAL_INT(4, co.exit);
 }
 
-CO_DECLARE(/*NAME*/ nat, int v) {
+CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {
   nat_t *const thiz = (nat_t *)co_this;
 CO_BEGIN:
 
@@ -115,7 +112,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = {};  // "v" isn't explicitly initialized
+  nat_t n = CO_MAKE(nat);  // "v" isn't explicitly initialized
 
   nat_func(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);

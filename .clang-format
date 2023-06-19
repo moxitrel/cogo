@@ -2,7 +2,6 @@
 BasedOnStyle: Google
 ---
 Language: Cpp
-Standard: Auto
 
 AlignConsecutiveMacros: AcrossEmptyLinesAndComments
 ColumnLimit: 0

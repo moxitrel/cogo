@@ -40,8 +40,6 @@ yield_end:;                     //
 
 #include <stdint.h>
 
-#include "macro_utils.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -70,9 +68,9 @@ typedef struct cogo_yield {
 #define CO_STATUS_BEGIN       COGO_PC_BEGIN
 #define CO_STATUS_END         COGO_PC_END
 // get the current running state
-static inline cogo_pc_t co_status(void const *const co) {
+static inline cogo_pc_t co_status(cogo_yield_t const *const co) {
   COGO_ASSERT(co);
-  return ((cogo_yield_t const *)co)->pc;
+  return co->pc;
 }
 
 #define COGO_BEGIN(COGO_YIELD_V)                                                                     \

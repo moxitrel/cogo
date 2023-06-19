@@ -7,10 +7,11 @@ CO_YIELD
 CO_RETURN
 CO_END
 co_status()
-CO_DECLARE(NAME, ...){...}: declare a coroutine.
-CO_DEFINE(NAME){...}      : define a declared coroutine which not defined.
-NAME_t                    : coroutine type created by CO_DECLARE()
-NAME_func                 : coroutine function created by CO_DECLARE()
+CO_DECLARE(NAME, ...){...}  : declare a coroutine.
+CO_DEFINE(NAME){...}        : define a declared coroutine which not defined.
+CO_MAKE(NAME, ...)          : make a new coroutine
+NAME_t                      : coroutine type created by CO_DECLARE()
+NAME_func                   : coroutine function created by CO_DECLARE()
 
 */
 #ifndef COGO_YIELD_H_
@@ -70,6 +71,9 @@ extern "C" {
 
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE(NAME, cogo_yield_t super, __VA_ARGS__)
+
+#define CO_MAKE(NAME, ...) \
+  ((NAME##_t){{0}, __VA_ARGS__})
 
 #ifdef __cplusplus
 }

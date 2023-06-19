@@ -18,8 +18,8 @@ add_library(cogo
 target_include_directories(cogo PUBLIC include)
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
-    $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
     $<$<BOOL:${COGO_USE_LABEL_VALUE}>:COGO_USE_LABEL_VALUE>
+    $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
 )
 check_c_compiler_flag(-Wc++-compat _W_CPP_COMPAT)
 check_c_compiler_flag(-Wall _W_ALL)
@@ -74,7 +74,7 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
         $<$<BOOL:${_WNO_UNUSED_FUNCTION}>:-Wno-unused-function>
     )
 
-    link_libraries(cogo)
+    link_libraries(cogo unity)
 
     # yield
     add_executable(test_yield src/cogo_yield_test.c)
