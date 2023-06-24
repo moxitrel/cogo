@@ -75,18 +75,18 @@ typedef struct cogo_yield {
 } cogo_yield_t;
 
 // cogo_yield_t.pc
-#define COGO_PC(COGO_YIELD_V) (((cogo_yield_t*)(COGO_YIELD_V))->pc)
+#define COGO_PC(COGO_YIELD) (((cogo_yield_t*)(COGO_YIELD))->pc)
 
-#define CO_STATUS_BEGIN       COGO_PC_BEGIN
-#define CO_STATUS_END         COGO_PC_END
+#define CO_STATUS_BEGIN     COGO_PC_BEGIN
+#define CO_STATUS_END       COGO_PC_END
 // get the current running state
 static inline cogo_pc_t co_status(cogo_yield_t const* const co) {
   COGO_ASSERT(co);
   return co->pc;
 }
 
-#define COGO_BEGIN(COGO_YIELD_V)                         \
-  switch (COGO_PC(COGO_YIELD_V)) {                       \
+#define COGO_BEGIN(COGO_YIELD)                           \
+  switch (COGO_PC(COGO_YIELD)) {                         \
     default: /* invalid  pc */                           \
       COGO_ASSERT(((void)"pc isn't valid", 0));          \
       goto cogo_end;                                     \
@@ -95,19 +95,19 @@ static inline cogo_pc_t co_status(cogo_yield_t const* const co) {
       goto cogo_end;                                     \
     case COGO_PC_BEGIN /* coroutine begin */
 
-#define COGO_YIELD(COGO_YIELD_V)                                                            \
-  do {                                                                                      \
-    /**/ COGO_PC(COGO_YIELD_V) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
-    /**/ goto cogo_end;                    /* 2. return */                                  \
-    case __LINE__:;                        /* 3. restore point */                           \
+#define COGO_YIELD(COGO_YIELD)                                                            \
+  do {                                                                                    \
+    /**/ COGO_PC(COGO_YIELD) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
+    /**/ goto cogo_end;                  /* 2. return */                                  \
+    case __LINE__:;                      /* 3. restore point */                           \
   } while (0)
 
-#define COGO_RETURN(COGO_YIELD_V) goto cogo_return /* end coroutine */
+#define COGO_RETURN(COGO_YIELD) goto cogo_return /* end coroutine */
 
-#define COGO_END(COGO_YIELD_V)              \
-  cogo_return:                              \
-  /**/ COGO_PC(COGO_YIELD_V) = COGO_PC_END; \
-  }                                         \
+#define COGO_END(COGO_YIELD)              \
+  cogo_return:                            \
+  /**/ COGO_PC(COGO_YIELD) = COGO_PC_END; \
+  }                                       \
   cogo_end
 
 #define CO_BEGIN  COGO_BEGIN(co_this)

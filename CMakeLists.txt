@@ -1,9 +1,13 @@
-cmake_minimum_required(VERSION 3.13)
-project(cogo)
+cmake_minimum_required(VERSION 3.23)
+project(cogo VERSION 1.0.0 LANGUAGES C)
 
+include(CPack)
 include(CTest)
-include(CheckCCompilerFlag)
+include(CMakePackageConfigHelpers)
 include(CMakeDependentOption)
+include(GNUInstallDirs)
+
+option(COGO_BUILD_TESTING "unit test" OFF)
 
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
     FALSE "NOT COGO_USE_LABEL_VALUE" FALSE)
@@ -15,35 +19,70 @@ add_library(cogo
     src/cogo_co.c
     src/cogo_st.c
 )
-target_include_directories(cogo PUBLIC include)
+target_include_directories(cogo PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
-    $<$<BOOL:${COGO_USE_LABEL_VALUE}>:COGO_USE_LABEL_VALUE>
     $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
-)
-check_c_compiler_flag(-Wc++-compat _W_CPP_COMPAT)
-check_c_compiler_flag(-Wall _W_ALL)
-check_c_compiler_flag(-Wextra _W_EXTRA)
-check_c_compiler_flag(-Wconversion _W_CONVERSION)
-check_c_compiler_flag(-fanalyzer _F_ANALYZER)
-target_compile_options(cogo PRIVATE
-    $<$<BOOL:${_W_CPP_COMPAT}>:-Wc++-compat>
-    $<$<BOOL:${_W_ALL}>:-Wall>
-    $<$<BOOL:${_W_EXTRA}>:-Wextra>
-    $<$<BOOL:${_W_CONVERSION}>:-Wconversion>
-    $<$<BOOL:${_F_ANALYZER}>:-fanalyzer>
+    $<$<AND:$<NOT:$<BOOL:${COGO_USE_CASE}>>,$<BOOL:${COGO_USE_LABEL_VALUE}>>:COGO_USE_LABEL_VALUE>
 )
 
-if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
+file(GLOB_RECURSE cogo_HEADERS FOLLOW_SYMLINKS CONFIGURE_DEPENDS
+  LIST_DIRECTORIES false
+  RELATIVE ${PROJECT_SOURCE_DIR}
+  include/*.h
+)
+target_sources(cogo INTERFACE FILE_SET HEADERS TYPE HEADERS
+  BASE_DIRS include
+  FILES ${cogo_HEADERS}
+)
+
+install(TARGETS cogo EXPORT cogo-targets
+  ARCHIVE
+  LIBRARY
+  FILE_SET HEADERS
+)
+
+export(EXPORT cogo-targets
+  FILE cogo-targets.cmake
+)
+install(EXPORT cogo-targets
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
+)
+
+configure_package_config_file(cogo-config.cmake.in cogo-config.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
+)
+write_basic_package_version_file(cogo-config-version.cmake
+  COMPATIBILITY SameMajorVersion
+)
+install(
+  FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/cogo-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/cogo-config-version.cmake
+  DESTINATION
+    ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
+)
+
+if(COGO_BUILD_TESTING OR (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)))
+    include(CheckCCompilerFlag)
     include(CMakePrintHelpers)
     include(cmake/unity.cmake)
 
     cmake_print_variables(COGO_USE_CASE COGO_USE_LABEL_VALUE)
 
+    check_c_compiler_flag(-Wc++-compat _W_CPP_COMPAT)
+    check_c_compiler_flag(-Wall _W_ALL)
+    check_c_compiler_flag(-Wextra _W_EXTRA)
+    check_c_compiler_flag(-Wconversion _W_CONVERSION)
+    check_c_compiler_flag(-fanalyzer _F_ANALYZER)
+    check_c_compiler_flag(-Wno-declaration-after-statement _WNO_DECLARATION_AFTER_STATEMENT)
+
     check_c_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments _WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENT)
     check_c_compiler_flag(-Wno-gnu-label-as-value _WNO_GNU_LABEL_AS_VALUE)
     check_c_compiler_flag(-Wno-padded _WNO_PADDED)
-
     check_c_compiler_flag(-Werror _W_ERROR)
     check_c_compiler_flag(-Weverything _W_EVERYTHING)
     check_c_compiler_flag(-Wno-gnu-empty-initializer _WNO_GNU_EMPTY_INITIALIZER)
@@ -53,6 +92,20 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     check_c_compiler_flag(-Wno-missing-field-initializers _WNO_MISSING_FIELD_INITIALIZERS)
     check_c_compiler_flag(-Wno-suggest-attribute _WNO_SUGGEST_ATTRIBUTE)
     check_c_compiler_flag(-Wno-unused-function _WNO_UNUSED_FUNCTION)
+
+    target_compile_options(cogo PRIVATE
+        $<$<BOOL:${_WNO_DECLARATION_AFTER_STATEMENT}>:-Wno-declaration-after-statement>
+        $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
+
+        $<$<BOOL:${_W_ERROR}>:-Werror>
+        $<$<BOOL:${_W_EVERYTHING}>:-Weverything>
+        $<$<BOOL:${_W_CPP_COMPAT}>:-Wc++-compat>
+        $<$<BOOL:${_W_ALL}>:-Wall>
+        $<$<BOOL:${_W_EXTRA}>:-Wextra>
+        $<$<BOOL:${_W_CONVERSION}>:-Wconversion>
+        $<$<BOOL:${_F_ANALYZER}>:-fanalyzer>
+    )
+
     add_compile_options(
         $<$<BOOL:${_WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENT}>:-Wno-gnu-zero-variadic-macro-arguments>
         $<$<BOOL:${_WNO_GNU_LABEL_AS_VALUE}>:-Wno-gnu-label-as-value>

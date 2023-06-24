@@ -1,5 +1,5 @@
-#ifndef COGO_MACRO_UTILS_H_
-#define COGO_MACRO_UTILS_H_
+#ifndef CX2_MACRO_UTILS_H_
+#define CX2_MACRO_UTILS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -157,4 +157,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_MACRO_UTILS_H_
+#endif  // CX2_MACRO_UTILS_H_

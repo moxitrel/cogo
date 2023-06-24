@@ -1,46 +1,46 @@
 #include <assert.h>
-#include <cogo/cogo_yield.h>
+#include <cogo/private/cogo_yield.h>
 #include <unity.h>
 
 typedef struct yield {
-  cogo_yield_t super;
   int v;
+  cogo_yield_t cogo_yield;
 } yield_t;
 
 void yield_func(yield_t *thiz) {
-  COGO_BEGIN(thiz) :;
+  COGO_BEGIN(&thiz->cogo_yield) :;
 
   thiz->v++;
-  COGO_YIELD(thiz);
+  COGO_YIELD(&thiz->cogo_yield);
   thiz->v++;
 
-  COGO_END(thiz) :;
+  COGO_END(&thiz->cogo_yield) :;
 }
 
 static void test_yield(void) {
   yield_t co = {
       .v = 0,
   };
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co));  // begin
+  TEST_ASSERT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co.cogo_yield));  // begin
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
   yield_func(&co);
-  TEST_ASSERT_NOT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co));  // running
-  TEST_ASSERT_NOT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co));
+  TEST_ASSERT_NOT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co.cogo_yield));  // running
+  TEST_ASSERT_NOT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));
   TEST_ASSERT_EQUAL_INT(1, co.v);
 
   yield_func(&co);
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co));  // end
+  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));  // end
   TEST_ASSERT_EQUAL_INT(2, co.v);
 
   // noop when coroutine end
   yield_func(&co);
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co));  // end
+  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));  // end
   TEST_ASSERT_EQUAL_INT(2, co.v);
 }
 
 typedef struct return1 {
-  cogo_yield_t super;
+  cogo_yield_t super;  // cogo_yield_t should be the first field
   int v;
 } return1_t;
 

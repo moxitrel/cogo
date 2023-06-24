@@ -21,7 +21,7 @@ cogo_await_sched_t    : sheduler  type
 #ifndef COGO_AWAIT_H_
 #define COGO_AWAIT_H_
 
-#include "cogo_yield.h"
+#include "private/cogo_yield.h"
 
 #ifdef __cplusplus
 extern "C" {
