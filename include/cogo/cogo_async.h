@@ -77,11 +77,11 @@ int cogo_async_sched_push(cogo_async_sched_t* sched, cogo_async_t* co);
 cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* sched);
 
 // CO_ASYNC(cogo_async_t*): start a new coroutine to run concurrently.
-#define CO_ASYNC(CO)                                                                                              \
-  do {                                                                                                            \
-    if (cogo_async_sched_push((cogo_async_sched_t*)((cogo_await_t*)co_this)->sched, (cogo_async_t*)(CO)) != 0) {  \
-      CO_YIELD;                                                                                                   \
-    }                                                                                                             \
+#define CO_ASYNC(CO)                                                                                             \
+  do {                                                                                                           \
+    if (cogo_async_sched_push((cogo_async_sched_t*)((cogo_await_t*)co_this)->sched, (cogo_async_t*)(CO)) != 0) { \
+      CO_YIELD;                                                                                                  \
+    }                                                                                                            \
   } while (0)
 
 // channel message
@@ -121,16 +121,16 @@ typedef struct co_chan {
 
 // CO_CHAN_READ(co_chan_t*, co_message_t*);
 // MSG_NEXT: the read message is MSG_NEXT->next
-#define CO_CHAN_READ(CHAN, MSG_NEXT)                                     \
-  do {                                                                      \
-    if (cogo_chan_read((cogo_async_t*)co_this, (CHAN), (MSG_NEXT)) != 0) {  \
-      CO_YIELD;                                                             \
-    }                                                                       \
+#define CO_CHAN_READ(CHAN, MSG_NEXT)                                       \
+  do {                                                                     \
+    if (cogo_chan_read((cogo_async_t*)co_this, (CHAN), (MSG_NEXT)) != 0) { \
+      CO_YIELD;                                                            \
+    }                                                                      \
   } while (0)
 int cogo_chan_read(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg_next);
 
 // CO_CHAN_WRITE(co_chan_t*, co_message_t*);
-#define CO_CHAN_WRITE(CHAN, MSG)                                                   \
+#define CO_CHAN_WRITE(CHAN, MSG)                                                      \
   do {                                                                                \
     if (cogo_chan_write((cogo_async_t*)co_this, (CHAN), (co_message_t*)(MSG)) != 0) { \
       CO_YIELD;                                                                       \

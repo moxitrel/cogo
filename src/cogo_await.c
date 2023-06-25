@@ -52,16 +52,6 @@ exit:
 #undef CALL_TOP
 }
 
-void cogo_await_run(cogo_await_t* const co) {
-  COGO_ASSERT(co);
-  cogo_await_sched_t sched = {
-      .call_top = co->entry ? co->entry : co,
-  };
-  while (cogo_await_sched_resume(&sched)) {
-    // noop
-  }
-}
-
 #ifdef COGO_USE_RESUME
 cogo_await_t* cogo_await_resume(cogo_await_t* const co) {
   COGO_ASSERT(co);
@@ -72,3 +62,13 @@ cogo_await_t* cogo_await_resume(cogo_await_t* const co) {
   return co->entry = cogo_await_sched_resume(&sched);
 }
 #endif
+
+void cogo_await_run(cogo_await_t* const co) {
+  COGO_ASSERT(co);
+  cogo_await_sched_t sched = {
+      .call_top = co->entry ? co->entry : co,
+  };
+  while (cogo_await_sched_resume(&sched)) {
+    // noop
+  }
+}

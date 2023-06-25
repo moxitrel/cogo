@@ -26,39 +26,41 @@ void test_nat(void) {
   TEST_ASSERT_EQUAL_INT(2, n.v);
 }
 
-CO_DECLARE(recv, co_channel_t* chan, co_message_t msg) {
+CO_DECLARE(recv, co_chan_t* chan, co_message_t msg) {
   recv_t* const thiz = (recv_t*)co_this;
 CO_BEGIN:
 
-  CO_CHANNEL_READ(thiz->chan, &thiz->msg);
+  CO_CHAN_READ(thiz->chan, &thiz->msg);
 
 CO_END:;
 }
 
-CO_DECLARE(send, co_channel_t* chan, co_message_t msg) {
+CO_DECLARE(send, co_chan_t* chan, co_message_t msg) {
   send_t* const thiz = (send_t*)co_this;
 CO_BEGIN:
 
-  CO_CHANNEL_WRITE(thiz->chan, &thiz->msg);
+  CO_CHAN_WRITE(thiz->chan, &thiz->msg);
 
 CO_END:;
 }
 
-CO_DECLARE(main, recv_t recv, send_t send) {
+CO_DECLARE(main, recv_t* recv, send_t* send) {
   main_t* const thiz = (main_t*)co_this;
 CO_BEGIN:
 
-  CO_ASYNC(&thiz->recv);
-  CO_ASYNC(&thiz->send);
+  CO_ASYNC(thiz->recv);
+  CO_ASYNC(thiz->send);
 
 CO_END:;
 }
 
 static void test_chan(void) {
-  co_channel_t chan = CO_CHANNEL_MAKE(0);
-  main_t main = CO_MAKE(main, CO_MAKE(recv, &chan), CO_MAKE(send, &chan));
-  CO_RUN(&main);
-  TEST_ASSERT_EQUAL_PTR(&main.send.msg, main.recv.msg.next);
+  co_chan_t chan = CO_CHAN_MAKE(0);
+  recv_t recv1 = CO_MAKE(recv, &chan);
+  send_t send1 = CO_MAKE(send, &chan);
+  main_t main1 = CO_MAKE(main, &recv1, &send1);
+  CO_RUN(&main1);
+  TEST_ASSERT_EQUAL_PTR(&send1.msg, recv1.msg.next);
 }
 
 void setUp(void) {

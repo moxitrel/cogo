@@ -17,9 +17,7 @@ cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc lable-as-v
 
 add_library(cogo
     src/cogo_await.c
-    src/cogo_async_chan.c
-    src/cogo_async_resume.c
-    src/cogo_async_sched_st.c
+    src/cogo_async.c
 )
 target_sources(cogo INTERFACE FILE_SET HEADERS TYPE HEADERS
   BASE_DIRS include
@@ -40,6 +38,7 @@ target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
     $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
     $<$<AND:$<NOT:$<BOOL:${COGO_USE_CASE}>>,$<BOOL:${COGO_USE_LABEL_VALUE}>>:COGO_USE_LABEL_VALUE>
+    $<$<BOOL:${COGO_USE_RESUME}>:COGO_USE_RESUME>
 )
 if(COGO_NO_WARNING)
   check_c_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments _WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENT)

@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <cogo/private/cogo_yield.h>
+#include <cogo/_private/cogo_yield.h>
 #include <unity.h>
 
 typedef struct yield {
