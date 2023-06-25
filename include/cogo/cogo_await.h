@@ -6,22 +6,24 @@ CO_BEGIN
 CO_YIELD
 CO_RETURN
 CO_END
+CO_AWAIT()            : run another coroutine until finished
+
 CO_DECLARE(NAME, ...){...}
 CO_DEFINE(NAME){...}
 CO_MAKE(NAME, ...)
 NAME_t
-CO_AWAIT()            : run another coroutine until finished
 CO_RESUME()           : continue to run a suspended coroutine until yield or finished
-CO_RUN()              : run the coroutine and other created coroutines until all finished
+CO_RUN()              : run the coroutine and all other created coroutines until finished
 
 co_status()
 cogo_await_t          : coroutine type
 cogo_await_sched_t    : sheduler  type
+
 */
 #ifndef COGO_AWAIT_H_
 #define COGO_AWAIT_H_
 
-#include "private/cogo_yield.h"
+#include "_private/cogo_yield.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +32,7 @@ extern "C" {
 typedef struct cogo_await cogo_await_t;
 typedef struct cogo_await_sched cogo_await_sched_t;
 
-// coroutine: support call stack, concurrency
+// implement call stack
 struct cogo_await {
   // inherit cogo_yield_t
   cogo_yield_t super;
@@ -42,10 +44,9 @@ struct cogo_await {
   cogo_await_t* caller;
 
   union {
-    // scheduler (in cogo_await_sched_resume())
     cogo_await_sched_t* sched;
 
-    // resume entry (outside cogo_await_sched_resume())
+    // resume entry
     cogo_await_t* entry;
   };
 };
@@ -72,12 +73,14 @@ void cogo_await_call(cogo_await_t* co_this, cogo_await_t* callee);
 #define CO_MAKE(NAME, ...) \
   ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
 
+#ifdef COGO_USE_RESUME
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))
 cogo_await_t* cogo_await_resume(cogo_await_t* co);
+#endif
 
 // run the coroutines until all finished
-#define CO_RUN(MAIN) cogo_await_run((cogo_await_t*)(MAIN))
+#define CO_RUN(CO) cogo_await_run((cogo_await_t*)(CO))
 void cogo_await_run(cogo_await_t* co_main);
 
 #ifdef __cplusplus

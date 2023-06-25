@@ -10,22 +10,22 @@ void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
   }
 #endif
 
-  cogo_await_t* callee_root = callee;
-#ifdef COGO_USE_AWAIT_RESUMED_COROUTINE
-  while (callee_root->caller) {
-    callee_root = callee_root->caller;
+  cogo_await_t* callee_head = callee;
+#ifdef COGO_USE_RESUME
+  while (callee_head->caller) {
+    callee_head = callee_head->caller;
   }
 #else
-  COGO_ASSERT(!callee_root->caller);
+  COGO_ASSERT(!callee_head->caller);
 #endif
 
   // call stack push (resolved co_this->sched->call_top != co_this)
-  callee_root->caller = co_this->sched->call_top;
-  //callee->sched = co_this->sched->call_top->sched;
+  callee_head->caller = co_this->sched->call_top;
   co_this->sched->call_top = callee;
 }
 
 // run until yield
+// NOTE: .entry is damaged after call
 static cogo_await_t* cogo_await_sched_resume(cogo_await_sched_t* const sched) {
 #define CALL_TOP (sched->call_top)
   COGO_ASSERT(sched && CALL_TOP);
@@ -52,21 +52,23 @@ exit:
 #undef CALL_TOP
 }
 
-void cogo_await_run(cogo_await_t* const co_main) {
-  COGO_ASSERT(co_main);
+void cogo_await_run(cogo_await_t* const co) {
+  COGO_ASSERT(co);
   cogo_await_sched_t sched = {
-      .call_top = co_main,
+      .call_top = co->entry ? co->entry : co,
   };
   while (cogo_await_sched_resume(&sched)) {
     // noop
   }
 }
 
-// should not mix use cogo_await_resume() with cogo_await_sched_resume()
+#ifdef COGO_USE_RESUME
 cogo_await_t* cogo_await_resume(cogo_await_t* const co) {
   COGO_ASSERT(co);
   cogo_await_sched_t sched = {
       .call_top = co->entry ? co->entry : co,
   };
+  // repaire .entry
   return co->entry = cogo_await_sched_resume(&sched);
 }
+#endif

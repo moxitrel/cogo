@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <cogo/cogo_co.h>
+#include <cogo/cogo_async.h>
 #include <unity.h>
 
 CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {
@@ -48,8 +48,8 @@ CO_DECLARE(main, recv_t recv, send_t send) {
   main_t* const thiz = (main_t*)co_this;
 CO_BEGIN:
 
-  CO_START(&thiz->recv);
-  CO_START(&thiz->send);
+  CO_ASYNC(&thiz->recv);
+  CO_ASYNC(&thiz->send);
 
 CO_END:;
 }

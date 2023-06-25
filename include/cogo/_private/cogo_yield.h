@@ -6,11 +6,13 @@ CO_BEGIN
 CO_YIELD
 CO_RETURN
 CO_END
+
 co_status()
 CO_DECLARE(NAME, ...){...}  : declare a coroutine.
 CO_DEFINE(NAME){...}        : define a declared coroutine which not defined.
 CO_MAKE(NAME, ...)          : make a new coroutine
 NAME_t                      : coroutine type created by CO_DECLARE()
+
 NAME_func                   : coroutine function created by CO_DECLARE()
 
 */
@@ -41,9 +43,9 @@ extern "C" {
 //      int z;
 //  } Point
 //
-#define COGO_COMMA_static ,
+#define COGO_ASYNCMMA_static ,
 #define COGO_REMOVE_LINKAGE_static
-#define COGO_STRUCT(NAME, ...)    COGO_STRUCT1(CX2_COUNT(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
+#define COGO_STRUCT(NAME, ...)    COGO_STRUCT1(CX2_COUNT(COGO_ASYNCMMA_##NAME), NAME, __VA_ARGS__)
 #define COGO_STRUCT1(...)         COGO_STRUCT2(__VA_ARGS__)
 #define COGO_STRUCT2(N, ...)      COGO_STRUCT3_##N(__VA_ARGS__)
 #define COGO_STRUCT3_1(NAME, ...) /* NAME: Type */ \
@@ -63,7 +65,7 @@ extern "C" {
              COGO_STRUCT(NAME, BASE, __VA_ARGS__)); \
   CO_DEFINE(NAME)
 
-#define CO_DEFINE(NAME)    CO_DEFINE1(CX2_COUNT(COGO_COMMA_##NAME), NAME)
+#define CO_DEFINE(NAME)    CO_DEFINE1(CX2_COUNT(COGO_ASYNCMMA_##NAME), NAME)
 #define CO_DEFINE1(...)    CO_DEFINE2(__VA_ARGS__)
 #define CO_DEFINE2(N, ...) CO_DEFINE3_##N(__VA_ARGS__)
 #define CO_DEFINE3_1(NAME) void NAME##_func(void* const co_this)

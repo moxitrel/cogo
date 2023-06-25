@@ -7,6 +7,7 @@ include(CMakePackageConfigHelpers)
 include(CMakeDependentOption)
 include(GNUInstallDirs)
 
+option(COGO_USE_RESUME "define CO_RESUME()" ON)
 option(COGO_BUILD_TESTING "unit test" OFF)
 
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
@@ -16,8 +17,20 @@ cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc lable-as-v
 
 add_library(cogo
     src/cogo_await.c
-    src/cogo_co.c
-    src/cogo_st.c
+    src/cogo_async_chan.c
+    src/cogo_async_resume.c
+    src/cogo_async_sched_st.c
+)
+target_sources(cogo INTERFACE FILE_SET HEADERS TYPE HEADERS
+  BASE_DIRS include
+  FILES
+    include/cogo/_private/cogo_queue_template.h
+    include/cogo/_private/cogo_yield_case.h
+    include/cogo/_private/cogo_yield_label_value.h
+    include/cogo/_private/cogo_yield.h
+    include/cogo/_private/macro_utils.h
+    include/cogo/cogo_await.h
+    include/cogo/cogo_async.h
 )
 target_include_directories(cogo PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -28,16 +41,16 @@ target_compile_definitions(cogo PUBLIC
     $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
     $<$<AND:$<NOT:$<BOOL:${COGO_USE_CASE}>>,$<BOOL:${COGO_USE_LABEL_VALUE}>>:COGO_USE_LABEL_VALUE>
 )
-
-file(GLOB_RECURSE cogo_HEADERS FOLLOW_SYMLINKS CONFIGURE_DEPENDS
-  LIST_DIRECTORIES false
-  RELATIVE ${PROJECT_SOURCE_DIR}
-  include/*.h
-)
-target_sources(cogo INTERFACE FILE_SET HEADERS TYPE HEADERS
-  BASE_DIRS include
-  FILES ${cogo_HEADERS}
-)
+if(COGO_NO_WARNING)
+  check_c_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments _WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENT)
+  check_c_compiler_flag(-Wno-gnu-label-as-value _WNO_GNU_LABEL_AS_VALUE)
+  check_c_compiler_flag(-Wno-padded _WNO_PADDED)
+  target_compile_options(cogo PUBLIC
+      $<$<BOOL:${_WNO_GNU_LABEL_AS_VALUE}>:-Wno-gnu-label-as-value>
+      $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
+      $<$<BOOL:${_WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENT}>:-Wno-gnu-zero-variadic-macro-arguments>
+  )
+endif()
 
 install(TARGETS cogo EXPORT cogo-targets
   ARCHIVE
@@ -52,7 +65,7 @@ install(EXPORT cogo-targets
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
 
-configure_package_config_file(cogo-config.cmake.in cogo-config.cmake
+configure_package_config_file(cmake/cogo-config.cmake.in cogo-config.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
 write_basic_package_version_file(cogo-config-version.cmake
@@ -74,17 +87,17 @@ if(COGO_BUILD_TESTING OR (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT
     cmake_print_variables(COGO_USE_CASE COGO_USE_LABEL_VALUE)
 
     check_c_compiler_flag(-Wc++-compat _W_CPP_COMPAT)
+    check_c_compiler_flag(-Weverything _W_EVERYTHING)
     check_c_compiler_flag(-Wall _W_ALL)
     check_c_compiler_flag(-Wextra _W_EXTRA)
     check_c_compiler_flag(-Wconversion _W_CONVERSION)
     check_c_compiler_flag(-fanalyzer _F_ANALYZER)
-    check_c_compiler_flag(-Wno-declaration-after-statement _WNO_DECLARATION_AFTER_STATEMENT)
+    check_c_compiler_flag(-Werror _W_ERROR)
 
+    check_c_compiler_flag(-Wno-padded _WNO_PADDED)
+    check_c_compiler_flag(-Wno-declaration-after-statement _WNO_DECLARATION_AFTER_STATEMENT)
     check_c_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments _WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENT)
     check_c_compiler_flag(-Wno-gnu-label-as-value _WNO_GNU_LABEL_AS_VALUE)
-    check_c_compiler_flag(-Wno-padded _WNO_PADDED)
-    check_c_compiler_flag(-Werror _W_ERROR)
-    check_c_compiler_flag(-Weverything _W_EVERYTHING)
     check_c_compiler_flag(-Wno-gnu-empty-initializer _WNO_GNU_EMPTY_INITIALIZER)
     check_c_compiler_flag(-Wno-missing-prototypes _WNO_MISSING_PROTOTYPES)
     check_c_compiler_flag(-Wno-unreachable-code _WNO_UNREACHABLE_CODE)
@@ -94,16 +107,16 @@ if(COGO_BUILD_TESTING OR (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT
     check_c_compiler_flag(-Wno-unused-function _WNO_UNUSED_FUNCTION)
 
     target_compile_options(cogo PRIVATE
-        $<$<BOOL:${_WNO_DECLARATION_AFTER_STATEMENT}>:-Wno-declaration-after-statement>
-        $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
-
-        $<$<BOOL:${_W_ERROR}>:-Werror>
-        $<$<BOOL:${_W_EVERYTHING}>:-Weverything>
         $<$<BOOL:${_W_CPP_COMPAT}>:-Wc++-compat>
+        $<$<BOOL:${_W_EVERYTHING}>:-Weverything>
         $<$<BOOL:${_W_ALL}>:-Wall>
         $<$<BOOL:${_W_EXTRA}>:-Wextra>
         $<$<BOOL:${_W_CONVERSION}>:-Wconversion>
         $<$<BOOL:${_F_ANALYZER}>:-fanalyzer>
+        $<$<BOOL:${_W_ERROR}>:-Werror>
+
+        $<$<BOOL:${_WNO_DECLARATION_AFTER_STATEMENT}>:-Wno-declaration-after-statement>
+        $<$<BOOL:${_WNO_PADDED}>:-Wno-padded>
     )
 
     add_compile_options(
@@ -137,7 +150,7 @@ if(COGO_BUILD_TESTING OR (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT
     add_executable(test_await src/cogo_await_test.c)
     add_test(NAME test_await COMMAND test_await)
 
-    # channel
-    add_executable(test_chan src/cogo_co_test.c)
-    add_test(NAME test_chan COMMAND test_chan)
+    # concurrency
+    add_executable(test_cc src/cogo_async_test.c)
+    add_test(NAME test_cc COMMAND test_cc)
 endif()

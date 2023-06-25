@@ -54,7 +54,7 @@ typedef intptr_t cogo_pc_t;
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
 
-// yield context
+// implement yield
 typedef struct cogo_yield {
   // start point where coroutine function continue to run after yield.
   //  0: inited
