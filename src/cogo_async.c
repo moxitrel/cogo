@@ -44,7 +44,6 @@ exit:
 cogo_async_t* cogo_async_resume(cogo_async_t* const co) {
 #define ENTRY (((cogo_await_t*)co)->entry)
   COGO_ASSERT(co);
-
   cogo_async_sched_t sched = {
       .super = {
           .call_top = ENTRY ? ENTRY : (cogo_await_t*)co,
@@ -52,7 +51,6 @@ cogo_async_t* cogo_async_resume(cogo_async_t* const co) {
   };
   // repaire .entry
   return (cogo_async_t*)(ENTRY = (cogo_await_t*)cogo_async_sched_resume(&sched));
-
 #undef ENTRY
 }
 #endif
@@ -61,7 +59,7 @@ int cogo_chan_read(cogo_async_t* const co_this, co_chan_t* const chan, co_messag
 #define SCHED (((cogo_await_t*)co_this)->sched)
   COGO_ASSERT(co_this && chan && chan->cap >= 0 && chan->size > PTRDIFF_MIN && msg_next);
 
-  const ptrdiff_t chan_size = chan->size--;
+  ptrdiff_t const chan_size = chan->size--;
   if (chan_size <= 0) {
     COGO_MQ_PUSH(&chan->mq, msg_next);
     // sleep in background
@@ -84,7 +82,7 @@ int cogo_chan_write(cogo_async_t* const co_this, co_chan_t* const chan, co_messa
 #define SCHED (((cogo_await_t*)co_this)->sched)
   COGO_ASSERT(co_this && chan && chan->cap >= 0 && chan->size < PTRDIFF_MAX && msg);
 
-  const ptrdiff_t chan_size = chan->size++;
+  ptrdiff_t const chan_size = chan->size++;
   if (chan_size < 0) {
     COGO_MQ_POP_NONEMPTY(&chan->mq)->next = msg;
     // wake up a reader
@@ -124,4 +122,19 @@ void cogo_async_run(cogo_async_t* co) {
   while (cogo_async_sched_resume(&sched)) {
     // noop
   }
+
+  /* mt
+  for (;;) {
+    if (!cogo_async_sched_resume(&sched)) {
+      pop_run_sched(&sched);    
+      n = steal_timeout(&sched);
+      if (n < 0) {
+        break;
+      } 
+      if (n == 0) {
+        idle();
+      }
+    }
+  }
+  */
 }

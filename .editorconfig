@@ -1,8 +1,0 @@
-# EditorConfig is awesome: https://EditorConfig.org
-
-[*.{c,cc,cpp,h,hh,hpp}]
-indent_style = space
-indent_size = 2
-charset = utf-8
-end_of_line = lf
-trim_trailing_whitespace = true

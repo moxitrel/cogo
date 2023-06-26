@@ -7,8 +7,9 @@ include(CMakePackageConfigHelpers)
 include(CMakeDependentOption)
 include(GNUInstallDirs)
 
-option(COGO_USE_RESUME "define CO_RESUME()" ON)
 option(COGO_BUILD_TESTING "unit test" OFF)
+option(COGO_USE_RESUME "CO_RESUME()" ON)
+option(COGO_MP_N "multithreaded scheduler" 1)
 
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
     FALSE "NOT COGO_USE_LABEL_VALUE" FALSE)
@@ -20,7 +21,8 @@ add_library(cogo
     src/cogo_async.c
 )
 target_sources(cogo INTERFACE FILE_SET HEADERS TYPE HEADERS
-  BASE_DIRS include
+  BASE_DIRS 
+    include
   FILES
     include/cogo/_private/cogo_queue_template.h
     include/cogo/_private/cogo_yield_case.h
@@ -39,6 +41,7 @@ target_compile_definitions(cogo PUBLIC
     $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
     $<$<AND:$<NOT:$<BOOL:${COGO_USE_CASE}>>,$<BOOL:${COGO_USE_LABEL_VALUE}>>:COGO_USE_LABEL_VALUE>
     $<$<BOOL:${COGO_USE_RESUME}>:COGO_USE_RESUME>
+    $<$<BOOL:${COGO_MP_N}>:COGO_MP_N=${COGO_MP_N}>
 )
 if(COGO_NO_WARNING)
   check_c_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments _WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENT)
