@@ -34,19 +34,31 @@ COGO_QUEUE_NEXT()   : return the next element
 typedef struct {
   COGO_QUEUE_ELEMENT_T* head;
   COGO_QUEUE_ELEMENT_T* tail;
+#if COGO_MP_N > 1
+  ptrdiff_t size;
+#endif
 } COGO_Q_T;
 
 static inline bool COGO_Q_IS_EMPTY(COGO_Q_T const* const q) {
   return q->head == NULL;
 }
 
+static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {
+  COGO_QUEUE_ELEMENT_T* node = q->head;
+  q->head = COGO_QUEUE_NEXT(q->head);
+#if COGO_MP_N > 1
+  --q->size;
+#endif
+  return node;
+}
+
 // dequeue, return NULL if empty
 static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP(COGO_Q_T* const q) {
-  COGO_QUEUE_ELEMENT_T* node = q->head;
-  if (!COGO_Q_IS_EMPTY(q)) {
-    q->head = COGO_QUEUE_NEXT(q->head);
+  if (COGO_Q_IS_EMPTY(q)) {
+    return NULL;
+  } else {
+    return COGO_Q_POP_NONEMPTY(q);
   }
-  return node;
 }
 
 // enqueue
@@ -58,12 +70,9 @@ static inline void COGO_Q_PUSH(COGO_Q_T* const q, COGO_QUEUE_ELEMENT_T* const no
   }
   q->tail = node;
   COGO_QUEUE_NEXT(node) = NULL;
-}
-
-static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {
-  COGO_QUEUE_ELEMENT_T* node = q->head;
-  q->head = COGO_QUEUE_NEXT(q->head);
-  return node;
+#if COGO_MP_N > 1
+  ++q->size;
+#endif
 }
 
 #undef COGO_Q_T
