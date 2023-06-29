@@ -43,22 +43,16 @@ static inline bool COGO_Q_IS_EMPTY(COGO_Q_T const* const q) {
   return q->head == NULL;
 }
 
-static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {
-  COGO_QUEUE_ELEMENT_T* node = q->head;
-  q->head = COGO_QUEUE_NEXT(q->head);
-#if COGO_MP_N > 1
-  --q->size;
-#endif
-  return node;
-}
-
 // dequeue, return NULL if empty
 static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP(COGO_Q_T* const q) {
-  if (COGO_Q_IS_EMPTY(q)) {
-    return NULL;
-  } else {
-    return COGO_Q_POP_NONEMPTY(q);
+  COGO_QUEUE_ELEMENT_T* node = q->head;
+  if (node) {
+    q->head = COGO_QUEUE_NEXT(q->head);
+#if COGO_MP_N > 1
+   --q->size;
+#endif
   }
+  return node;
 }
 
 // enqueue
@@ -73,6 +67,15 @@ static inline void COGO_Q_PUSH(COGO_Q_T* const q, COGO_QUEUE_ELEMENT_T* const no
 #if COGO_MP_N > 1
   ++q->size;
 #endif
+}
+
+static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {
+  COGO_QUEUE_ELEMENT_T* node = q->head;
+  q->head = COGO_QUEUE_NEXT(q->head);
+#if COGO_MP_N > 1
+  --q->size;
+#endif
+  return node;
 }
 
 #undef COGO_Q_T

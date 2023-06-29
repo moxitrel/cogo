@@ -125,14 +125,19 @@ void cogo_async_run(cogo_async_t* co) {
 
   /* mt
   for (;;) {
-    if (!cogo_async_sched_resume(&sched)) {
-      pop_run_sched(&sched);    
+    if (cogo_async_sched_resume(&sched)) {
+      if (has_sleeping_sched() && qsize > 1) {
+        wake_sched();
+      }
+    } else {
       n = steal_timeout(&sched);
       if (n < 0) {
         break;
       } 
       if (n == 0) {
-        idle();
+        pop_from_run_sched(&sched);    
+        push_to_sleep_sched(&sched);
+        sleep();
       }
     }
   }
