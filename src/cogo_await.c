@@ -10,17 +10,17 @@ void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
   }
 #endif
 
-  cogo_await_t* callee_head = callee;
+  cogo_await_t* callee_bottom = callee;
 #ifdef COGO_USE_RESUME
-  while (callee_head->caller) {
-    callee_head = callee_head->caller;
+  while (callee_bottom->caller) {
+    callee_bottom = callee_bottom->caller;
   }
 #else
-  COGO_ASSERT(!callee_head->caller);
+  COGO_ASSERT(!callee_bottom->caller);
 #endif
 
   // call stack push (resolved co_this->sched->call_top != co_this)
-  callee_head->caller = co_this->sched->call_top;
+  callee_bottom->caller = co_this->sched->call_top;
   co_this->sched->call_top = callee;
 }
 

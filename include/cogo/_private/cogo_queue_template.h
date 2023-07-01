@@ -34,7 +34,7 @@ COGO_QUEUE_NEXT()   : return the next element
 typedef struct {
   COGO_QUEUE_ELEMENT_T* head;
   COGO_QUEUE_ELEMENT_T* tail;
-#if COGO_MP_N > 1
+#if COGO_MP > 1
   ptrdiff_t size;
 #endif
 } COGO_Q_T;
@@ -48,8 +48,8 @@ static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP(COGO_Q_T* const q) {
   COGO_QUEUE_ELEMENT_T* node = q->head;
   if (node) {
     q->head = COGO_QUEUE_NEXT(q->head);
-#if COGO_MP_N > 1
-   --q->size;
+#if COGO_MP > 1
+    --q->size;
 #endif
   }
   return node;
@@ -64,7 +64,7 @@ static inline void COGO_Q_PUSH(COGO_Q_T* const q, COGO_QUEUE_ELEMENT_T* const no
   }
   q->tail = node;
   COGO_QUEUE_NEXT(node) = NULL;
-#if COGO_MP_N > 1
+#if COGO_MP > 1
   ++q->size;
 #endif
 }
@@ -72,7 +72,7 @@ static inline void COGO_Q_PUSH(COGO_Q_T* const q, COGO_QUEUE_ELEMENT_T* const no
 static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {
   COGO_QUEUE_ELEMENT_T* node = q->head;
   q->head = COGO_QUEUE_NEXT(q->head);
-#if COGO_MP_N > 1
+#if COGO_MP > 1
   --q->size;
 #endif
   return node;
