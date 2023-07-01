@@ -16,8 +16,8 @@ cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc lable-as-v
     FALSE "NOT COGO_USE_CASE" FALSE)
 
 add_library(cogo
-    src/cogo_await.c
     src/cogo_async.c
+    src/cogo_await.c
 )
 target_sources(cogo INTERFACE FILE_SET HEADERS TYPE HEADERS
   BASE_DIRS
@@ -28,8 +28,8 @@ target_sources(cogo INTERFACE FILE_SET HEADERS TYPE HEADERS
     include/cogo/_private/cogo_yield_label_value.h
     include/cogo/_private/cogo_yield.h
     include/cogo/_private/macro_utils.h
-    include/cogo/cogo_await.h
     include/cogo/cogo_async.h
+    include/cogo/cogo_await.h
 )
 target_include_directories(cogo PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
