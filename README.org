@@ -32,15 +32,15 @@ CO_END:;
 // CO_DECLARE(NAME, ...): declare a coroutine
 // nat_gen: coroutine name
 // value: save return value
-CO_DECLARE(nat_gen, int value)
+CO_DECLARE(nat_generator, int value)
 {
-    // nat_gen_t: a type defined by CO_DECLARE()
-    // co_this: point to a struct contains coroutine arguments
-    nat_gen_t* const thiz = (nat_gen_t*)co_this;
+    // nat_generator_t: defined by CO_DECLARE() with pattern "NAME_t"
+    // void* co_this: coroutine arguments
+    nat_generator_t* const thiz = (nat_generator*)co_this;
 
 CO_BEGIN: // mark coroutine begin
 
-    // thiz->value: reference "value" declared in CO_DECLARE()
+    // thiz->value: reference "value"
     for (thiz->value = 0; ; thiz->value++) {
         CO_YIELD; // return (next run start from here)
     }
@@ -49,39 +49,24 @@ CO_END: // mark coroutine end
     ;
 }
 
-void nat_gen_example(void)
+void nat_generator_example(void)
 {
-    // CO_MAKE(NAME, ...): make a coroutine instance
-    nat_gen_t ng = CO_MAKE(nat_gen);
-    // CO_SCHED_T: scheduler type
-    // CO_SCHED_MAKE(CO): make a scheduler instance run with coroutine instance CO
-    CO_SCHED_T sched = CO_SCHED_MAKE(&ng);
+    // make a coroutine instance
+    nat_generator_t ng = CO_MAKE(nat_generator, 0);
 
-    // CO_SCHED_STEP(SCHED): run until CO_YIELD (start at place last CO_YIELD)
+    // run coroutine until yield
+    CO_RESUME(&ng);
     // ng.value: reference coroutine argument
-    CO_SCHED_STEP(&sched);
     printf("ng.value: %d\n", ng.value);   // ng.value: 0
 
-    CO_SCHED_STEP(&sched); // continue run starting from last CO_YIELD
+    // continue to run starting from last CO_YIELD
+    CO_RESUME(&ng);
     printf("ng.value: %d\n", ng.value);   // ng.value: 1
 
-    CO_SCHED_STEP(&sched);
+    CO_RESUME(&ng);
     printf("ng.value: %d\n", ng.value);   // ng.value: 2
 }
 #+END_SRC
-
-* API
-- CO_AWAIT (CO) :: call another coroutine and wait it to finish.
-- CO_BEGIN :: label coroutine begin.
-- CO_DECLARE(NAME, ...) :: define a coroutine named NAME
-- CO_END :: label coroutine end.
-- CO_MAKE(NAME, ...) :: construct a coroutine
-- CO_RETURN :: Return with ending coroutine.
-- CO_RUN(SCHED) :: loop running until finish all coroutines
-- CO_SCHED_T :: scheduler type
-- CO_ASYNC(CO) :: Add a coroutine to scheduler to run.
-- co_this :: point to coroutine object.
-- CO_YIELD :: Yield from coroutine.
 
 * See Also
 - [[https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html][Coroutines in C]]
