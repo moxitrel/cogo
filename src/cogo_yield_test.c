@@ -40,7 +40,7 @@ static void test_yield(void) {
 }
 
 typedef struct return1 {
-  cogo_yield_t super;  // cogo_yield_t should be the first field
+  cogo_yield_t super;  // inherent cogo_yield_t
   int v;
 } return1_t;
 
@@ -90,7 +90,6 @@ static void test_prologue(void) {
     prologue_func(&co);
   }
 
-  // prologue and epilogue are always run even ended
   TEST_ASSERT_EQUAL_INT(3, co.enter);
   TEST_ASSERT_EQUAL_INT(3, co.exit);
 

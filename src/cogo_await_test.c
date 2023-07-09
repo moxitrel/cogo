@@ -28,7 +28,7 @@ static void test_resume(void) {
   TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, co_status((cogo_yield_t*)&await1));
   TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, co_status((cogo_yield_t*)&await2));
 
-  // await2 yield: stop when CO_YIELD, but not when CO_AWAIT or CO_RETURN (except root coroutine)
+  // await2 yield: stop when CO_YIELD, but not when CO_AWAIT or CO_RETURN
   TEST_ASSERT_NOT_NULL(CO_RESUME(&await1));
   TEST_ASSERT_GREATER_THAN_UINT64(CO_STATUS_BEGIN, co_status((cogo_yield_t*)&await1));
   TEST_ASSERT_LESS_THAN_UINT64(CO_STATUS_END, co_status((cogo_yield_t*)&await1));

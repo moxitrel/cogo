@@ -3,19 +3,20 @@
 * API
 co_this
 CO_BEGIN
+CO_END
 CO_YIELD
 CO_RETURN
-CO_END
 CO_AWAIT()            : run another coroutine until finished
+
+NAME_t
+CO_MAKE(NAME, ...)
+CO_RESUME()           : continue to run a suspended coroutine until yield or finished
 
 CO_DECLARE(NAME, ...){...}
 CO_DEFINE(NAME){...}
-CO_MAKE(NAME, ...)
-NAME_t
-CO_RESUME()           : continue to run a suspended coroutine until yield or finished
+co_status()
 CO_RUN()              : run the coroutine and all other created coroutines until finished
 
-co_status()
 cogo_await_t          : coroutine type
 cogo_await_sched_t    : sheduler  type
 
@@ -73,7 +74,7 @@ void cogo_await_call(cogo_await_t* co_this, cogo_await_t* callee);
 #define CO_MAKE(NAME, ...) \
   ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
 
-#ifdef COGO_USE_RESUME
+#ifndef COGO_NO_RESUME
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))
 cogo_await_t* cogo_await_resume(cogo_await_t* co);

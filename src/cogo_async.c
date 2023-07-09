@@ -40,7 +40,7 @@ exit:
 #undef CALL_TOP
 }
 
-#ifdef COGO_USE_RESUME
+#ifndef COGO_NO_RESUME
 cogo_async_t* cogo_async_resume(cogo_async_t* const co) {
 #define ENTRY (((cogo_await_t*)co)->entry)
   COGO_ASSERT(co);
@@ -133,9 +133,9 @@ void cogo_async_run(cogo_async_t* co) {
       n = steal_timeout(&sched);
       if (n < 0) {
         break;
-      } 
+      }
       if (n == 0) {
-        pop_from_run_sched(&sched);    
+        pop_from_run_sched(&sched);
         push_to_sleep_sched(&sched);
         sleep();
       }

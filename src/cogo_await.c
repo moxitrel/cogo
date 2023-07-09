@@ -3,7 +3,7 @@
 void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
   COGO_ASSERT(co_this && co_this->sched && callee);
 
-#ifdef COGO_USE_DEBUG
+#ifndef NDEBUG
   // no loop in call chain
   for (cogo_await_t* co = co_this; co; co = co->caller) {
     COGO_ASSERT(callee != co);
@@ -11,7 +11,7 @@ void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
 #endif
 
   cogo_await_t* callee_bottom = callee;
-#ifdef COGO_USE_RESUME
+#ifndef COGO_NO_RESUME
   while (callee_bottom->caller) {
     callee_bottom = callee_bottom->caller;
   }
@@ -52,7 +52,7 @@ exit:
 #undef CALL_TOP
 }
 
-#ifdef COGO_USE_RESUME
+#ifndef COGO_NO_RESUME
 cogo_await_t* cogo_await_resume(cogo_await_t* const co) {
   COGO_ASSERT(co);
   cogo_await_sched_t sched = {

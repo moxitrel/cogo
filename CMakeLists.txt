@@ -8,7 +8,7 @@ include(CMakeDependentOption)
 include(GNUInstallDirs)
 
 option(COGO_BUILD_TESTING "unit test" OFF)
-option(COGO_USE_RESUME "CO_RESUME()" ON)
+option(COGO_NO_RESUME "CO_RESUME()" OFF)
 
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
     FALSE "NOT COGO_USE_LABEL_VALUE" FALSE)
@@ -39,7 +39,7 @@ target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
     $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
     $<$<AND:$<NOT:$<BOOL:${COGO_USE_CASE}>>,$<BOOL:${COGO_USE_LABEL_VALUE}>>:COGO_USE_LABEL_VALUE>
-    $<$<BOOL:${COGO_USE_RESUME}>:COGO_USE_RESUME>
+    $<$<BOOL:${COGO_NO_RESUME}>:COGO_NO_RESUME>
     COGO_MP=1   # multithreaded scheduler
 )
 if(COGO_NO_WARNING)
@@ -85,7 +85,7 @@ if(COGO_BUILD_TESTING OR (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT
     include(CMakePrintHelpers)
     include(cmake/unity.cmake)
 
-    cmake_print_variables(COGO_USE_CASE COGO_USE_LABEL_VALUE)
+    cmake_print_variables(COGO_USE_CASE COGO_USE_LABEL_VALUE CMAKE_C_COMPILER)
 
     check_c_compiler_flag(-Wc++-compat _W_CPP_COMPAT)
     check_c_compiler_flag(-Weverything _W_EVERYTHING)
@@ -151,7 +151,7 @@ if(COGO_BUILD_TESTING OR (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT
     add_executable(test_await src/cogo_await_test.c)
     add_test(NAME test_await COMMAND test_await)
 
-    # concurrency
-    add_executable(test_cc src/cogo_async_test.c)
-    add_test(NAME test_cc COMMAND test_cc)
+    # async
+    add_executable(test_async src/cogo_async_test.c)
+    add_test(NAME test_async COMMAND test_async)
 endif()

@@ -154,7 +154,7 @@ int cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
 
 cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched);
 
-#ifdef COGO_USE_RESUME
+#ifndef COGO_NO_RESUME
 // continue to run a suspended coroutine until yield or finished
 #undef CO_RESUME
 #define CO_RESUME(CO) cogo_async_resume((cogo_async_t*)(CO))

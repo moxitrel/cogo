@@ -3,9 +3,9 @@
 * API
 co_this     : point to coroutine object.
 CO_BEGIN    : coroutine begin label.
+CO_END      : coroutine end label.
 CO_YIELD    : yield from coroutine.
 CO_RETURN   : return from coroutine.
-CO_END      : coroutine end label.
 
 co_status() : get the current running status.
   >0: running
@@ -80,6 +80,7 @@ typedef struct cogo_yield {
 
 #define CO_STATUS_BEGIN     COGO_PC_BEGIN
 #define CO_STATUS_END       COGO_PC_END
+
 // get the current running state
 static inline cogo_pc_t co_status(cogo_yield_t const* const co) {
   COGO_ASSERT(co);
@@ -103,7 +104,8 @@ static inline cogo_pc_t co_status(cogo_yield_t const* const co) {
     case __LINE__:;                      /* 3. restore point */                           \
   } while (0)
 
-#define COGO_RETURN(COGO_YIELD) goto cogo_return /* end coroutine */
+#define COGO_RETURN(COGO_YIELD) \
+  goto cogo_return /* end coroutine */
 
 #define COGO_END(COGO_YIELD)              \
   cogo_return:                            \

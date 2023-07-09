@@ -95,7 +95,8 @@ static inline cogo_pc_t co_status(cogo_yield_t const *const co) {
   COGO_LABEL:;                                         /* 3. restore point */      \
   } while (0)
 
-#define COGO_RETURN(COGO_YIELD_V) goto cogo_return /* end coroutine */
+#define COGO_RETURN(COGO_YIELD_V) \
+  goto cogo_return /* end coroutine */
 
 #define COGO_END(COGO_YIELD_V)              \
   cogo_return:                              \
