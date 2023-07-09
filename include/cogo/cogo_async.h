@@ -150,7 +150,7 @@ int cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
 
 #undef CO_MAKE
 #define CO_MAKE(NAME, ...) \
-  ((NAME##_t){{.super = {.func = NAME##_func}}, __VA_ARGS__})
+  ((NAME##_t){{.super = {.super = {.func = NAME##_func}}}, __VA_ARGS__})
 
 cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched);
 

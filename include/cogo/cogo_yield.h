@@ -9,24 +9,25 @@ CO_RETURN
 
 NAME_t                      : coroutine type created by CO_DECLARE()
 CO_MAKE(NAME, ...)          : make a new coroutine
+CO_RESUME()                 : continue to run a suspended coroutine until yield or finished
 
 CO_DECLARE(NAME, ...){...}  : declare a coroutine.
 CO_DEFINE(NAME){...}        : define a declared coroutine which not defined.
-NAME_func                   : coroutine function created by CO_DECLARE()
 co_status()
+CO_RUN()                    : run the coroutine and all other created coroutines until finished
 
 */
 #ifndef COGO_YIELD_H_
 #define COGO_YIELD_H_
 
-#include "macro_utils.h"
+#include "_private/macro_utils.h"
 
 #if defined(COGO_USE_CASE)
-#include "cogo_yield_case.h"
+#include "_private/cogo_yield_case.h"
 #elif defined(COGO_USE_LABEL_VALUE) || defined(__GNUC__)
-#include "cogo_yield_label_value.h"
+#include "_private/cogo_yield_label_value.h"
 #else
-#include "cogo_yield_case.h"
+#include "_private/cogo_yield_case.h"
 #endif
 
 #ifdef __cplusplus
@@ -75,7 +76,26 @@ extern "C" {
   COGO_DECLARE(NAME, cogo_yield_t super, __VA_ARGS__)
 
 #define CO_MAKE(NAME, ...) \
-  ((NAME##_t){{0}, __VA_ARGS__})
+  ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
+
+#ifndef COGO_NO_RESUME
+// continue to run a suspended coroutine until yield or finished
+#define CO_RESUME(CO) cogo_yield_resume((cogo_yield_t*)(CO))
+static inline cogo_yield_t* cogo_yield_resume(cogo_yield_t* co) {
+  COGO_ASSERT(co && co->func);
+  co->func(co);
+  return co_status(co) == CO_STATUS_END ? (cogo_yield_t*)0 : co;
+}
+#endif
+
+// run the coroutines until all finished
+#define CO_RUN(CO) cogo_yield_run((cogo_yield_t*)(CO))
+static inline void cogo_yield_run(cogo_yield_t* co) {
+  COGO_ASSERT(co && co->func);
+  while (co_status(co) != CO_STATUS_END) {
+    co->func(co);
+  }
+}
 
 #ifdef __cplusplus
 }

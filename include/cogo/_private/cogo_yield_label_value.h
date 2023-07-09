@@ -60,15 +60,18 @@ typedef struct cogo_yield {
   //  0: inited
   // -1: finished
   cogo_pc_t pc;
+
+  // the coroutine function
+  void (*func)(void* co_this);
 } cogo_yield_t;
 
 // cogo_yield_t.pc
-#define COGO_PC(COGO_YIELD_V) (((cogo_yield_t *)(COGO_YIELD_V))->pc)
+#define COGO_PC(COGO_YIELD_V) (((cogo_yield_t*)(COGO_YIELD_V))->pc)
 
 #define CO_STATUS_BEGIN       COGO_PC_BEGIN
 #define CO_STATUS_END         COGO_PC_END
 // get the current running state
-static inline cogo_pc_t co_status(cogo_yield_t const *const co) {
+static inline cogo_pc_t co_status(cogo_yield_t const* const co) {
   COGO_ASSERT(co);
   return co->pc;
 }
@@ -84,7 +87,7 @@ static inline cogo_pc_t co_status(cogo_yield_t const *const co) {
     case COGO_PC_END:                                                                                \
       goto cogo_end;                                                                                 \
     default:                                                                                         \
-      goto *(void const *)COGO_PC(COGO_YIELD_V);                                                     \
+      goto*(void const*)COGO_PC(COGO_YIELD_V);                                                       \
   }                                                                                                  \
   cogo_begin
 

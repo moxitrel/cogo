@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <cogo/_private/cogo_yield.h>
+#include <cogo/cogo_yield.h>
 #include <unity.h>
 
 typedef struct yield {
@@ -86,15 +86,12 @@ CO_END:
 static void test_prologue(void) {
   prologue_t co = CO_MAKE(prologue, 0, 0);
 
-  while (co_status((cogo_yield_t *)&co) != CO_STATUS_END) {
-    prologue_func(&co);
-  }
-
+  CO_RUN(&co);
   TEST_ASSERT_EQUAL_INT(3, co.enter);
   TEST_ASSERT_EQUAL_INT(3, co.exit);
 
   // prologue and epilogue are always run even ended
-  prologue_func(&co);
+  CO_RESUME(&co);
   TEST_ASSERT_EQUAL_INT(4, co.enter);
   TEST_ASSERT_EQUAL_INT(4, co.exit);
 }
@@ -113,13 +110,13 @@ CO_END:;
 static void test_nat(void) {
   nat_t n = CO_MAKE(nat);  // "v" isn't explicitly initialized
 
-  nat_func(&n);
+  CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
 
-  nat_func(&n);
+  CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(1, n.v);
 
-  nat_func(&n);
+  CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(2, n.v);
 }
 

@@ -32,7 +32,7 @@ static cogo_await_t* cogo_await_sched_resume(cogo_await_sched_t* const sched) {
 
   for (;;) {
     CALL_TOP->sched = sched;
-    CALL_TOP->func(CALL_TOP);
+    CALL_TOP->super.func(CALL_TOP);
     switch (co_status((cogo_yield_t*)CALL_TOP)) {
       case CO_STATUS_END:  // return
         if (!(CALL_TOP = CALL_TOP->caller)) {

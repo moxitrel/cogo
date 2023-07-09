@@ -9,7 +9,7 @@ cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
 
   for (;;) {
     CALL_TOP->sched = (cogo_await_sched_t*)sched;
-    CALL_TOP->func(CALL_TOP);
+    CALL_TOP->super.func(CALL_TOP);
     if (!CALL_TOP) {
       // blocked
       if (!(CALL_TOP = (cogo_await_t*)cogo_async_sched_pop(sched))) {

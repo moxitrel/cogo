@@ -73,6 +73,9 @@ typedef struct cogo_yield {
   //   0: inited
   //  -1: finished
   cogo_pc_t pc;
+
+  // the coroutine function
+  void (*func)(void* co_this);
 } cogo_yield_t;
 
 // cogo_yield_t.pc

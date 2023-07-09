@@ -26,10 +26,10 @@ target_sources(cogo INTERFACE FILE_SET HEADERS TYPE HEADERS
     include/cogo/_private/cogo_queue_template.h
     include/cogo/_private/cogo_yield_case.h
     include/cogo/_private/cogo_yield_label_value.h
-    include/cogo/_private/cogo_yield.h
     include/cogo/_private/macro_utils.h
     include/cogo/cogo_async.h
     include/cogo/cogo_await.h
+    include/cogo/cogo_yield.h
 )
 target_include_directories(cogo PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
