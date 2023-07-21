@@ -7,7 +7,6 @@ include(CMakePackageConfigHelpers)
 include(CMakeDependentOption)
 include(GNUInstallDirs)
 
-option(COGO_BUILD_TESTING "unit test" OFF)
 option(COGO_NO_RESUME "CO_RESUME()" OFF)
 
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
@@ -80,7 +79,7 @@ install(
     ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
 
-if(COGO_BUILD_TESTING OR (BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)))
+if(BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     include(CheckCCompilerFlag)
     include(CMakePrintHelpers)
     include(cmake/unity.cmake)
