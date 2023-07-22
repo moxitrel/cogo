@@ -13,7 +13,7 @@ CO_RESUME()                 : continue to run a suspended coroutine until yield 
 
 CO_DECLARE(NAME, ...){...}  : declare a coroutine.
 CO_DEFINE(NAME){...}        : define a declared coroutine which not defined.
-co_status()
+CO_STATUS()
 CO_RUN()                    : run the coroutine and all other created coroutines until finished
 
 */
@@ -78,21 +78,22 @@ extern "C" {
 #define CO_MAKE(NAME, ...) \
   ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
 
-#ifndef COGO_NO_RESUME
+#ifdef COGO_ENABLE_RESUME
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_yield_resume((cogo_yield_t*)(CO))
-static inline cogo_yield_t* cogo_yield_resume(cogo_yield_t* co) {
+static inline void cogo_yield_resume(cogo_yield_t* const co) {
   COGO_ASSERT(co && co->func);
-  co->func(co);
-  return co_status(co) == CO_STATUS_END ? (cogo_yield_t*)0 : co;
+  if (CO_STATUS(co) != CO_STATUS_END) {
+    co->func(co);
+  }
 }
 #endif
 
 // run the coroutines until all finished
 #define CO_RUN(CO) cogo_yield_run((cogo_yield_t*)(CO))
-static inline void cogo_yield_run(cogo_yield_t* co) {
+static inline void cogo_yield_run(cogo_yield_t* const co) {
   COGO_ASSERT(co && co->func);
-  while (co_status(co) != CO_STATUS_END) {
+  while (CO_STATUS(co) != CO_STATUS_END) {
     co->func(co);
   }
 }

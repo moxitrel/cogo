@@ -18,7 +18,7 @@ cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
       }
       continue;
     }
-    switch (co_status((cogo_yield_t*)CALL_TOP)) {
+    switch (CO_STATUS(CALL_TOP)) {
       case CO_STATUS_END:  // return
         if (!(CALL_TOP = CALL_TOP->caller)) {
           // return from root
@@ -40,8 +40,8 @@ exit:
 #undef CALL_TOP
 }
 
-#ifndef COGO_NO_RESUME
-cogo_async_t* cogo_async_resume(cogo_async_t* const co) {
+#ifdef COGO_ENABLE_RESUME
+void cogo_async_resume(cogo_async_t* const co) {
 #define ENTRY (((cogo_await_t*)co)->entry)
   COGO_ASSERT(co);
   cogo_async_sched_t sched = {

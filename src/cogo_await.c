@@ -11,7 +11,7 @@ void cogo_await_call(cogo_await_t* const co_this, cogo_await_t* const callee) {
 #endif
 
   cogo_await_t* callee_bottom = callee;
-#ifndef COGO_NO_RESUME
+#ifdef COGO_ENABLE_RESUME
   while (callee_bottom->caller) {
     callee_bottom = callee_bottom->caller;
   }
@@ -33,7 +33,7 @@ static cogo_await_t* cogo_await_sched_resume(cogo_await_sched_t* const sched) {
   for (;;) {
     CALL_TOP->sched = sched;
     CALL_TOP->super.func(CALL_TOP);
-    switch (co_status((cogo_yield_t*)CALL_TOP)) {
+    switch (CO_STATUS(CALL_TOP)) {
       case CO_STATUS_END:  // return
         if (!(CALL_TOP = CALL_TOP->caller)) {
           // return from root
@@ -52,14 +52,17 @@ exit:
 #undef CALL_TOP
 }
 
-#ifndef COGO_NO_RESUME
-cogo_await_t* cogo_await_resume(cogo_await_t* const co) {
+#ifdef COGO_ENABLE_RESUME
+void cogo_await_resume(cogo_await_t* const co) {
   COGO_ASSERT(co);
-  cogo_await_sched_t sched = {
-      .call_top = co->entry ? co->entry : co,
-  };
-  // repaire .entry
-  return co->entry = cogo_await_sched_resume(&sched);
+  if (CO_STATUS(co) != CO_STATUS_END) {
+    cogo_await_sched_t sched = {
+        .call_top = co->entry ? co->entry : co,
+    };
+    cogo_await_t* entry = cogo_await_sched_resume(&sched);
+    // repaire .entry
+    co->entry = entry ? entry : co;
+  }
 }
 #endif
 
@@ -71,4 +74,5 @@ void cogo_await_run(cogo_await_t* const co) {
   while (cogo_await_sched_resume(&sched)) {
     // noop
   }
+  co->entry = co;
 }

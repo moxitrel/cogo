@@ -1,18 +1,21 @@
 cmake_minimum_required(VERSION 3.23)
 project(cogo VERSION 1.0.0 LANGUAGES C)
 
-include(CPack)
-include(CTest)
 include(CMakePackageConfigHelpers)
 include(CMakeDependentOption)
+include(CTest)
+include(CPack)
 include(GNUInstallDirs)
 
-option(COGO_NO_RESUME "CO_RESUME()" OFF)
+option(COGO_ENABLE_RESUME "CO_RESUME()" ON)
 
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
     FALSE "NOT COGO_USE_LABEL_VALUE" FALSE)
 cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc lable-as-value extension"
     FALSE "NOT COGO_USE_CASE" FALSE)
+
+unset(_PackageName)
+set(_PackageName ${PROJECT_NAME})
 
 add_library(cogo
     src/cogo_async.c
@@ -37,9 +40,14 @@ target_include_directories(cogo PUBLIC
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
     $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
-    $<$<AND:$<NOT:$<BOOL:${COGO_USE_CASE}>>,$<BOOL:${COGO_USE_LABEL_VALUE}>>:COGO_USE_LABEL_VALUE>
-    $<$<BOOL:${COGO_NO_RESUME}>:COGO_NO_RESUME>
+    $<$<BOOL:${COGO_USE_LABEL_VALUE}>:COGO_USE_LABEL_VALUE>
+    $<$<BOOL:${COGO_ENABLE_RESUME}>:COGO_ENABLE_RESUME>
     COGO_MP=1   # multithreaded scheduler
+)
+install(TARGETS cogo EXPORT ${_PackageName}-targets
+  ARCHIVE
+  LIBRARY
+  FILE_SET HEADERS
 )
 if(COGO_NO_WARNING)
   check_c_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments _WNO_GNU_ZERO_VARIADIC_MACRO_ARGUMENT)
@@ -52,29 +60,26 @@ if(COGO_NO_WARNING)
   )
 endif()
 
-install(TARGETS cogo EXPORT cogo-targets
-  ARCHIVE
-  LIBRARY
-  FILE_SET HEADERS
+# ${PROJECT_BINARY_DIR}/${_PackageName}-targets.cmake
+export(EXPORT ${_PackageName}-targets
+  FILE ${_PackageName}-targets.cmake
 )
 
-export(EXPORT cogo-targets
-  FILE cogo-targets.cmake
-)
-install(EXPORT cogo-targets
+# ${CMAKE_INSTALL_LIBDIR}/cmake/cogo/${_PackageName}-targets.cmake
+install(EXPORT ${_PackageName}-targets
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
 
-configure_package_config_file(cmake/cogo-config.cmake.in cogo-config.cmake
+configure_package_config_file(cmake/${_packagename}-config.cmake.in ${_packagename}-config.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
-write_basic_package_version_file(cogo-config-version.cmake
+write_basic_package_version_file(${_packagename}-config-version.cmake
   COMPATIBILITY SameMajorVersion
 )
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/cogo-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/cogo-config-version.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${_packagename}-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${_packagename}-config-version.cmake
   DESTINATION
     ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )

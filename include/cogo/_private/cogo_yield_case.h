@@ -7,7 +7,7 @@ CO_END      : coroutine end label.
 CO_YIELD    : yield from coroutine.
 CO_RETURN   : return from coroutine.
 
-co_status() : get the current running status.
+CO_STATUS() : get the current running status.
   >0: running
    0: inited
   -1: finished
@@ -83,12 +83,8 @@ typedef struct cogo_yield {
 
 #define CO_STATUS_BEGIN     COGO_PC_BEGIN
 #define CO_STATUS_END       COGO_PC_END
-
 // get the current running state
-static inline cogo_pc_t co_status(cogo_yield_t const* const co) {
-  COGO_ASSERT(co);
-  return co->pc;
-}
+#define CO_STATUS(COGO_YIELD) ((cogo_pc_t)COGO_PC((cogo_yield_t*)(COGO_YIELD)))
 
 #define COGO_BEGIN(COGO_YIELD)                           \
   switch (COGO_PC(COGO_YIELD)) {                         \

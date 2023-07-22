@@ -25,18 +25,20 @@ static void test_resume(void) {
   await1_t await1 = CO_MAKE(/*NAME*/ await1, /*await2*/ &await2);
 
   // init
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, co_status((cogo_yield_t*)&await1));
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, co_status((cogo_yield_t*)&await2));
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&await1));
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&await2));
 
   // await2 yield: stop when CO_YIELD, but not when CO_AWAIT or CO_RETURN
-  TEST_ASSERT_NOT_NULL(CO_RESUME(&await1));
-  TEST_ASSERT_GREATER_THAN_UINT64(CO_STATUS_BEGIN, co_status((cogo_yield_t*)&await1));
-  TEST_ASSERT_LESS_THAN_UINT64(CO_STATUS_END, co_status((cogo_yield_t*)&await1));
+  CO_RESUME(&await1);
+  TEST_ASSERT_GREATER_THAN_INT64(CO_STATUS_BEGIN, CO_STATUS(&await2));
+  TEST_ASSERT_LESS_THAN_INT64(CO_STATUS_END, CO_STATUS(&await2));
+  TEST_ASSERT_GREATER_THAN_INT64(CO_STATUS_BEGIN, CO_STATUS(&await1));
+  TEST_ASSERT_LESS_THAN_INT64(CO_STATUS_END, CO_STATUS(&await1));
 
   // await1 fini: stop when root coroutine fini
-  TEST_ASSERT_NULL(CO_RESUME(&await1));
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, co_status((cogo_yield_t*)&await2));
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, co_status((cogo_yield_t*)&await1));
+  CO_RESUME(&await1);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&await2));
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&await1));
 }
 
 CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {

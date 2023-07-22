@@ -90,10 +90,9 @@ static void test_prologue(void) {
   TEST_ASSERT_EQUAL_INT(3, co.enter);
   TEST_ASSERT_EQUAL_INT(3, co.exit);
 
-  // prologue and epilogue are always run even ended
   CO_RESUME(&co);
-  TEST_ASSERT_EQUAL_INT(4, co.enter);
-  TEST_ASSERT_EQUAL_INT(4, co.exit);
+  TEST_ASSERT_EQUAL_INT(3, co.enter);
+  TEST_ASSERT_EQUAL_INT(3, co.exit);
 }
 
 CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {
@@ -108,7 +107,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = CO_MAKE(nat);  // "v" isn't explicitly initialized
+  nat_t n = CO_MAKE(nat);  // "v" is implicitly initialized to ZERO
 
   CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);

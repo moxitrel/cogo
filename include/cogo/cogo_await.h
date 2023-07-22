@@ -14,7 +14,7 @@ CO_RESUME()
 
 CO_DECLARE(NAME, ...){...}
 CO_DEFINE(NAME){...}
-co_status()
+CO_STATUS()
 CO_RUN()
 
 cogo_await_t          : coroutine type
@@ -71,11 +71,11 @@ void cogo_await_call(cogo_await_t* co_this, cogo_await_t* callee);
 #define CO_MAKE(NAME, ...) \
   ((NAME##_t){{.super = {.func = NAME##_func}}, __VA_ARGS__})
 
-#ifndef COGO_NO_RESUME
+#ifdef COGO_ENABLE_RESUME
 // continue to run a suspended coroutine until yield or finished
 #undef CO_RESUME
 #define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))
-cogo_await_t* cogo_await_resume(cogo_await_t* co);
+void cogo_await_resume(cogo_await_t* co);
 #endif
 
 // run the coroutines until all finished

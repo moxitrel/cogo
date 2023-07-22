@@ -21,7 +21,7 @@ CO_CHAN_MAKE()  : return a channel with capacity size_t
 CO_RESUME()
 CO_RUN()
 
-co_status()
+CO_STATUS()
 cogo_async_t               : coroutine type
 cogo_async_sched_t         : sheduler  type
 cogo_async_sched_resume()  : like CO_RESUME()
@@ -154,11 +154,11 @@ int cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
 
 cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched);
 
-#ifndef COGO_NO_RESUME
+#ifdef COGO_ENABLE_RESUME
 // continue to run a suspended coroutine until yield or finished
 #undef CO_RESUME
 #define CO_RESUME(CO) cogo_async_resume((cogo_async_t*)(CO))
-cogo_async_t* cogo_async_resume(cogo_async_t* co);
+void cogo_async_resume(cogo_async_t* co);
 #endif
 
 // run the coroutines until all finished
