@@ -7,14 +7,15 @@ CO_END
 CO_YIELD
 CO_RETURN
 
-NAME_t                      : coroutine type created by CO_DECLARE()
-CO_MAKE(NAME, ...)          : make a new coroutine
-CO_RESUME()                 : continue to run a suspended coroutine until yield or finished
-
-CO_DECLARE(NAME, ...){...}  : declare a coroutine.
-CO_DEFINE(NAME){...}        : define a declared coroutine which not defined.
+NAME_t                  : coroutine type created by CO_DECLARE()
+CO_MAKE(NAME, ...)      : make a new coroutine
+co_status_t
 CO_STATUS()
-CO_RUN()                    : run the coroutine and all other created coroutines until finished
+CO_RESUME()             : continue to run a suspended coroutine until yield or finished
+CO_RUN()                : run the coroutine and all other created coroutines until finished
+
+CO_DECLARE(NAME, ...){} : declare a coroutine.
+CO_DEFINE(NAME){}       : define a declared coroutine which not defined.
 
 */
 #ifndef COGO_YIELD_H_
@@ -57,7 +58,7 @@ extern "C" {
 #define COGO_STRUCT3_2(NAME, ...) /* NAME: static Type */                   \
   typedef struct COGO_REMOVE_LINKAGE_##NAME COGO_REMOVE_LINKAGE_##NAME##_t; \
   struct COGO_REMOVE_LINKAGE_##NAME {                                       \
-    CX0_MAP(;, COGO_ID, __VA_ARGS__);                                       \
+    CX0_MAP(;, CX0_IDENTITY, __VA_ARGS__);                                  \
   }
 
 #define COGO_DECLARE(NAME, BASE, ...)               \
@@ -78,25 +79,13 @@ extern "C" {
 #define CO_MAKE(NAME, ...) \
   ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
 
-#ifdef COGO_ENABLE_RESUME
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_yield_resume((cogo_yield_t*)(CO))
-static inline void cogo_yield_resume(cogo_yield_t* const co) {
-  COGO_ASSERT(co && co->func);
-  if (CO_STATUS(co) != CO_STATUS_END) {
-    co->func(co);
-  }
-}
-#endif
+co_status_t cogo_yield_resume(cogo_yield_t* co);
 
 // run the coroutines until all finished
 #define CO_RUN(CO) cogo_yield_run((cogo_yield_t*)(CO))
-static inline void cogo_yield_run(cogo_yield_t* const co) {
-  COGO_ASSERT(co && co->func);
-  while (CO_STATUS(co) != CO_STATUS_END) {
-    co->func(co);
-  }
-}
+void cogo_yield_run(cogo_yield_t* co);
 
 #ifdef __cplusplus
 }

@@ -1,10 +1,10 @@
 #ifndef CX0_MACRO_UTILS_H_
 #define CX0_MACRO_UTILS_H_
 
-#define CX0_IDENTITY(...) __VA_ARGS__
+#define CX0_IDENTITY(...)     __VA_ARGS__
 
-#define CX0_TO_STRING(...) CX0_TO_STRING1(__VA_ARGS__)
-#define CX0_TO_STRING1(...) #__VA_ARGS__
+#define CX0_TO_STRING(...)    CX0_TO_STRING1(__VA_ARGS__)
+#define CX0_TO_STRING1(...)   #__VA_ARGS__
 
 // Get the nth element of tuple.
 // e.g. CX0_GET_NONEMPTY(        , P0,P1,P2,P3,...)  -> P1 (bug, want P0)
@@ -35,25 +35,25 @@
     CX0_GET_NONEMPTY(CX0_IDENTITY VALUES),               \
     CX0_GET_NONEMPTY(, CX0_IDENTITY VALUES),             \
     CX0_GET_NONEMPTY(CX0_IDENTITY INDEX, CX0_IDENTITY VALUES))
-#define CX0_GET_01N(...) CX0_GET_01N1(__VA_ARGS__)
+#define CX0_GET_01N(...)          CX0_GET_01N1(__VA_ARGS__)
 #define CX0_GET_01N1(B1, B2, ...) CX0_GET_##B1##B2(__VA_ARGS__)
-#define CX0_GET_01(O, I, N) O
-#define CX0_GET_00(O, I, N) I
-#define CX0_GET_11(O, I, N) N
-#define CX0_HAS_COMMA(...) CX0_HAS_COMMA1(__VA_ARGS__, CX0_IDENTITY CX0_HAS_COMMA_VALUES)
-#define CX0_HAS_COMMA1(...) CX0_GET_NONEMPTY(__VA_ARGS__)
-#define CX0_COMMA(...) ,
-#define CX0_HAS_COMMA_VALUES (    \
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
+#define CX0_GET_01(O, I, N)       O
+#define CX0_GET_00(O, I, N)       I
+#define CX0_GET_11(O, I, N)       N
+#define CX0_HAS_COMMA(...)        CX0_HAS_COMMA1(__VA_ARGS__, CX0_IDENTITY CX0_HAS_COMMA_VALUES)
+#define CX0_HAS_COMMA1(...)       CX0_GET_NONEMPTY(__VA_ARGS__)
+#define CX0_COMMA(...)            ,
+#define CX0_HAS_COMMA_VALUES      ( \
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   \
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   \
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   \
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   \
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   \
     1, 1, 1, 1, 1, 1, 1, 1, 0, 0)
 
 // Count the number of arguments.
-#define CX0_COUNT(...) CX0_COUNT1(__VA_ARGS__)
-#define CX0_COUNT1(...) CX0_GET((__VA_ARGS__), CX0_COUNT_VALUES)
+#define CX0_COUNT(...)   CX0_COUNT1(__VA_ARGS__)
+#define CX0_COUNT1(...)  CX0_GET((__VA_ARGS__), CX0_COUNT_VALUES)
 #define CX0_COUNT_VALUES (                  \
     59, 58, 57, 56, 55, 54, 53, 52, 51, 50, \
     49, 48, 47, 46, 45, 44, 43, 42, 41, 40, \
@@ -63,8 +63,8 @@
     9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
 // Is arg list empty?
-#define CX0_IS_EMPTY(...) CX0_IS_EMPTY1(__VA_ARGS__)
-#define CX0_IS_EMPTY1(...) CX0_GET((__VA_ARGS__), CX0_IS_EMPTY_VALUES)
+#define CX0_IS_EMPTY(...)   CX0_IS_EMPTY1(__VA_ARGS__)
+#define CX0_IS_EMPTY1(...)  CX0_GET((__VA_ARGS__), CX0_IS_EMPTY_VALUES)
 #define CX0_IS_EMPTY_VALUES (     \
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
@@ -79,18 +79,18 @@
 //         CASE_GOTO(20);
 //         CASE_GOTO(30)
 #define CX0_MAP(SEP, F, ...) CX0_MAP1(CX0_COUNT(__VA_ARGS__), SEP, F, __VA_ARGS__)
-#define CX0_MAP1(...) CX0_MAP2(__VA_ARGS__)
-#define CX0_MAP2(N, ...) CX0_MAP_##N(__VA_ARGS__)
+#define CX0_MAP1(...)        CX0_MAP2(__VA_ARGS__)
+#define CX0_MAP2(N, ...)     CX0_MAP_##N(__VA_ARGS__)
 #define CX0_MAP_0(...)
-#define CX0_MAP_1(SEP, F, ...) F(__VA_ARGS__)
-#define CX0_MAP_2(SEP, F, X, ...) F(X) SEP CX0_MAP_1(SEP, F, __VA_ARGS__)
-#define CX0_MAP_3(SEP, F, X, ...) F(X) SEP CX0_MAP_2(SEP, F, __VA_ARGS__)
-#define CX0_MAP_4(SEP, F, X, ...) F(X) SEP CX0_MAP_3(SEP, F, __VA_ARGS__)
-#define CX0_MAP_5(SEP, F, X, ...) F(X) SEP CX0_MAP_4(SEP, F, __VA_ARGS__)
-#define CX0_MAP_6(SEP, F, X, ...) F(X) SEP CX0_MAP_5(SEP, F, __VA_ARGS__)
-#define CX0_MAP_7(SEP, F, X, ...) F(X) SEP CX0_MAP_6(SEP, F, __VA_ARGS__)
-#define CX0_MAP_8(SEP, F, X, ...) F(X) SEP CX0_MAP_7(SEP, F, __VA_ARGS__)
-#define CX0_MAP_9(SEP, F, X, ...) F(X) SEP CX0_MAP_8(SEP, F, __VA_ARGS__)
+#define CX0_MAP_1(SEP, F, ...)     F(__VA_ARGS__)
+#define CX0_MAP_2(SEP, F, X, ...)  F(X) SEP CX0_MAP_1(SEP, F, __VA_ARGS__)
+#define CX0_MAP_3(SEP, F, X, ...)  F(X) SEP CX0_MAP_2(SEP, F, __VA_ARGS__)
+#define CX0_MAP_4(SEP, F, X, ...)  F(X) SEP CX0_MAP_3(SEP, F, __VA_ARGS__)
+#define CX0_MAP_5(SEP, F, X, ...)  F(X) SEP CX0_MAP_4(SEP, F, __VA_ARGS__)
+#define CX0_MAP_6(SEP, F, X, ...)  F(X) SEP CX0_MAP_5(SEP, F, __VA_ARGS__)
+#define CX0_MAP_7(SEP, F, X, ...)  F(X) SEP CX0_MAP_6(SEP, F, __VA_ARGS__)
+#define CX0_MAP_8(SEP, F, X, ...)  F(X) SEP CX0_MAP_7(SEP, F, __VA_ARGS__)
+#define CX0_MAP_9(SEP, F, X, ...)  F(X) SEP CX0_MAP_8(SEP, F, __VA_ARGS__)
 #define CX0_MAP_10(SEP, F, X, ...) F(X) SEP CX0_MAP_9(SEP, F, __VA_ARGS__)
 #define CX0_MAP_11(SEP, F, X, ...) F(X) SEP CX0_MAP_10(SEP, F, __VA_ARGS__)
 #define CX0_MAP_12(SEP, F, X, ...) F(X) SEP CX0_MAP_11(SEP, F, __VA_ARGS__)
@@ -144,10 +144,10 @@
 #define CX0_MAP_60(SEP, F, X, ...) F(X) SEP CX0_MAP_59(SEP, F, __VA_ARGS__)
 
 // Expand to SK if ID defined as empty, i.e. "#define ID", else FK
-#define CX0_IF_NIL(ID, SK, FK) CX0_IF_NIL1(CX0_IS_EMPTY(ID), SK, FK)
-#define CX0_IF_NIL1(...) CX0_IF_NIL2(__VA_ARGS__)
-#define CX0_IF_NIL2(BOOL, SK, FK) CX0_IF_NIL3_##BOOL(SK, FK)
-#define CX0_IF_NIL3_1(SK, FK) SK
-#define CX0_IF_NIL3_0(SK, FK) FK
+#define CX0_IF_NIL(ID, SK, FK)     CX0_IF_NIL1(CX0_IS_EMPTY(ID), SK, FK)
+#define CX0_IF_NIL1(...)           CX0_IF_NIL2(__VA_ARGS__)
+#define CX0_IF_NIL2(BOOL, SK, FK)  CX0_IF_NIL3_##BOOL(SK, FK)
+#define CX0_IF_NIL3_1(SK, FK)      SK
+#define CX0_IF_NIL3_0(SK, FK)      FK
 
 #endif  // CX0_MACRO_UTILS_H_

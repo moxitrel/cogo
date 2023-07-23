@@ -13,7 +13,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-void test_nat(void) {
+static void test_nat(void) {
   nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" isn't explicitly initialized
 
   CO_RESUME(&n);

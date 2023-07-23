@@ -11,17 +11,19 @@ CO_ASYNC()      : run a new coroutine concurrently.
 CO_CHAN_WRITE() : send a message to channel
 CO_CHAN_READ()  : receive a message from channel, the result stored in co_message_t.next
 
-CO_DECLARE(NAME, ...){...}
-CO_DEFINE(NAME){...}
-CO_MAKE(NAME, ...)
 NAME_t
+CO_MAKE(NAME, ...)
 co_message_t    : channel message type
 co_chan_t       : channel type
 CO_CHAN_MAKE()  : return a channel with capacity size_t
+co_status_t
+CO_STATUS()
 CO_RESUME()
 CO_RUN()
 
-CO_STATUS()
+CO_DECLARE(NAME, ...){}
+CO_DEFINE(NAME){}
+
 cogo_async_t               : coroutine type
 cogo_async_sched_t         : sheduler  type
 cogo_async_sched_resume()  : like CO_RESUME()
@@ -30,6 +32,7 @@ cogo_async_sched_resume()  : like CO_RESUME()
 #ifndef COGO_ASYNC_H_
 #define COGO_ASYNC_H_
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #include "cogo_await.h"
@@ -43,11 +46,11 @@ typedef struct cogo_async_sched cogo_async_sched_t;
 
 // implement concurrency
 struct cogo_async {
-  // inherit cogo_await_t
+  // inherit cogo_await_t (with scheduler)
   cogo_await_t super;
 
   // build coroutine list
-  struct cogo_async* next;
+  cogo_async_t* next;
 };
 
 // COGO_QUEUE_T             (cogo_async_t)
@@ -65,8 +68,7 @@ struct cogo_async {
 #define COGO_CQ_POP          COGO_QUEUE_POP(cogo_async_t)
 #define COGO_CQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_async_t)
 struct cogo_async_sched {
-  // inherent cogo_await_sched_t
-  cogo_await_sched_t super;
+  cogo_async_t* top;
 
   // other coroutines to run concurrently
   COGO_CQ_T q;
@@ -76,18 +78,18 @@ struct cogo_async_sched {
 };
 
 // add coroutine to the concurrent queue
-// switch context if return non-zero
-int cogo_async_sched_push(cogo_async_sched_t* sched, cogo_async_t* co);
+// switch context if return true
+bool cogo_async_sched_push(cogo_async_sched_t* sched, cogo_async_t* co);
 
 // return the next coroutine to be run, and remove it from the queue
 cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* sched);
 
 // CO_ASYNC(cogo_async_t*): start a new coroutine to run concurrently.
-#define CO_ASYNC(CO)                                                                                             \
-  do {                                                                                                           \
-    if (cogo_async_sched_push((cogo_async_sched_t*)((cogo_await_t*)co_this)->sched, (cogo_async_t*)(CO)) != 0) { \
-      CO_YIELD;                                                                                                  \
-    }                                                                                                            \
+#define CO_ASYNC(CO)                                                                                              \
+  do {                                                                                                            \
+    if (cogo_async_sched_push((cogo_async_sched_t*)((cogo_async_t*)co_this)->super.sched, (cogo_async_t*)(CO))) { \
+      CO_YIELD;                                                                                                   \
+    }                                                                                                             \
   } while (0)
 
 // channel message
@@ -127,44 +129,50 @@ typedef struct co_chan {
 
 // CO_CHAN_READ(co_chan_t*, co_message_t*);
 // MSG_NEXT: the read message is MSG_NEXT->next
-#define CO_CHAN_READ(CHAN, MSG_NEXT)                                       \
-  do {                                                                     \
-    if (cogo_chan_read((cogo_async_t*)co_this, (CHAN), (MSG_NEXT)) != 0) { \
-      CO_YIELD;                                                            \
-    }                                                                      \
+#define CO_CHAN_READ(CHAN, MSG_NEXT)                                  \
+  do {                                                                \
+    if (cogo_chan_read((cogo_async_t*)co_this, (CHAN), (MSG_NEXT))) { \
+      CO_YIELD;                                                       \
+    }                                                                 \
   } while (0)
-int cogo_chan_read(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg_next);
+// switch context if return true
+bool cogo_chan_read(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg_next);
 
 // CO_CHAN_WRITE(co_chan_t*, co_message_t*);
-#define CO_CHAN_WRITE(CHAN, MSG)                                                      \
-  do {                                                                                \
-    if (cogo_chan_write((cogo_async_t*)co_this, (CHAN), (co_message_t*)(MSG)) != 0) { \
-      CO_YIELD;                                                                       \
-    }                                                                                 \
+#define CO_CHAN_WRITE(CHAN, MSG)                                                 \
+  do {                                                                           \
+    if (cogo_chan_write((cogo_async_t*)co_this, (CHAN), (co_message_t*)(MSG))) { \
+      CO_YIELD;                                                                  \
+    }                                                                            \
   } while (0)
-int cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
+// switch context if return true
+bool cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
 
 #undef CO_DECLARE
+#undef CO_MAKE
+#undef CO_RESUME
+#undef CO_RUN
+#undef CO_AWAIT
+
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE(NAME, cogo_async_t super, __VA_ARGS__)
 
-#undef CO_MAKE
 #define CO_MAKE(NAME, ...) \
   ((NAME##_t){{.super = {.super = {.func = NAME##_func}}}, __VA_ARGS__})
 
 cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched);
 
-#ifdef COGO_ENABLE_RESUME
-// continue to run a suspended coroutine until yield or finished
-#undef CO_RESUME
 #define CO_RESUME(CO) cogo_async_resume((cogo_async_t*)(CO))
-void cogo_async_resume(cogo_async_t* co);
-#endif
+co_status_t cogo_async_resume(cogo_async_t* co);
 
-// run the coroutines until all finished
-#undef CO_RUN
 #define CO_RUN(CO) cogo_async_run((cogo_async_t*)(CO))
 void cogo_async_run(cogo_async_t* co);
+
+#define CO_AWAIT(CALLEE)                                                                                                             \
+  do {                                                                                                                               \
+    ((cogo_async_sched_t*)((cogo_await_t*)co_this)->sched)->top = cogo_await_await((cogo_await_t*)co_this, (cogo_await_t*)(CALLEE)); \
+    CO_YIELD;                                                                                                                        \
+  } while (0)
 
 #ifdef __cplusplus
 }

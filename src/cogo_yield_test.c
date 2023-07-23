@@ -7,7 +7,7 @@ typedef struct yield {
   cogo_yield_t cogo_yield;
 } yield_t;
 
-void yield_func(yield_t *thiz) {
+static void yield_func(yield_t *thiz) {
   COGO_BEGIN(&thiz->cogo_yield) :;
 
   thiz->v++;
@@ -44,7 +44,7 @@ typedef struct return1 {
   int v;
 } return1_t;
 
-void return1_func(return1_t *co_this) {
+static void return1_func(return1_t *co_this) {
 CO_BEGIN:
 
   co_this->v++;

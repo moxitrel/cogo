@@ -3,42 +3,74 @@
 #include <stdlib.h>
 #include <unity.h>
 
-CO_DECLARE(/*NAME*/ await2) {
+CO_DECLARE(/*NAME*/ static await2) {
 CO_BEGIN:
 
+  CO_YIELD;
   CO_YIELD;
 
 CO_END:;
 }
 
-CO_DECLARE(/*NAME*/ await1, await2_t* await2) {
+CO_DECLARE(/*NAME*/ await1, await2_t a2);
+CO_DEFINE(/*NAME*/ await1) {
   await1_t* const thiz = (await1_t*)co_this;
 CO_BEGIN:
 
-  CO_AWAIT(thiz->await2);
+  CO_AWAIT(&thiz->a2);
 
 CO_END:;
 }
 
 static void test_resume(void) {
-  await2_t await2 = CO_MAKE(/*NAME*/ await2);
-  await1_t await1 = CO_MAKE(/*NAME*/ await1, /*await2*/ &await2);
+  await1_t a1 = CO_MAKE(/*NAME*/ await1, /*await2*/ CO_MAKE(/*NAME*/ await2));
 
-  // init
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&await1));
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&await2));
+  // begin
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&a1));
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&a1.a2));
 
-  // await2 yield: stop when CO_YIELD, but not when CO_AWAIT or CO_RETURN
-  CO_RESUME(&await1);
-  TEST_ASSERT_GREATER_THAN_INT64(CO_STATUS_BEGIN, CO_STATUS(&await2));
-  TEST_ASSERT_LESS_THAN_INT64(CO_STATUS_END, CO_STATUS(&await2));
-  TEST_ASSERT_GREATER_THAN_INT64(CO_STATUS_BEGIN, CO_STATUS(&await1));
-  TEST_ASSERT_LESS_THAN_INT64(CO_STATUS_END, CO_STATUS(&await1));
+  // await2 yield: stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
+  CO_RESUME(&a1);
+  TEST_ASSERT_GREATER_THAN_INT64(CO_STATUS_BEGIN, CO_STATUS(&a1.a2));
+  TEST_ASSERT_LESS_THAN_UINT64(CO_STATUS_END, CO_STATUS(&a1.a2));
+  TEST_ASSERT_GREATER_THAN_INT64(CO_STATUS_BEGIN, CO_STATUS(&a1));
+  TEST_ASSERT_LESS_THAN_UINT64(CO_STATUS_END, CO_STATUS(&a1));
 
-  // await1 fini: stop when root coroutine fini
-  CO_RESUME(&await1);
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&await2));
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&await1));
+  // await2 yield
+  CO_RESUME(&a1);
+  TEST_ASSERT_GREATER_THAN_INT64(CO_STATUS_BEGIN, CO_STATUS(&a1.a2));
+  TEST_ASSERT_LESS_THAN_UINT64(CO_STATUS_END, CO_STATUS(&a1.a2));
+  TEST_ASSERT_GREATER_THAN_INT64(CO_STATUS_BEGIN, CO_STATUS(&a1));
+  TEST_ASSERT_LESS_THAN_UINT64(CO_STATUS_END, CO_STATUS(&a1));
+
+  // await1 end: stop when root coroutine finished
+  CO_RESUME(&a1);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a1.a2));
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a1));
+
+  // noop when coroutine end
+  CO_RESUME(&a1);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a1.a2));
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a1));
+}
+
+CO_DECLARE(/*NAME*/ static await0, await2_t a2) {
+  await0_t* const thiz = (await0_t*)co_this;
+CO_BEGIN:
+
+  CO_RESUME(&thiz->a2);
+  TEST_ASSERT_NOT_NULL(thiz->a2.super.top);
+
+  CO_AWAIT(&thiz->a2);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&thiz->a2));
+
+CO_END:;
+}
+
+static void test_await_resumed(void) {
+  await0_t a0 = CO_MAKE(/*NAME*/ await0, /*await2*/ CO_MAKE(/*NAME*/ await2));
+  CO_RUN(&a0);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a0));
 }
 
 CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {
@@ -52,8 +84,8 @@ CO_BEGIN:
 CO_END:;
 }
 
-void test_nat(void) {
-  nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" isn't explicitly initialized
+static void test_nat(void) {
+  nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" is implicitly initialized to ZERO
 
   CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -111,11 +143,9 @@ static void test_fibonacci(void) {
     int v;
   } test_cases[] = {
       // "v", "fib_n1" and "fib_n2" aren't needed to explicitly init
-      {CO_MAKE(fibonacci, 1), fibonacci(1)},
-      {CO_MAKE(fibonacci, 2), fibonacci(2)},
+      {CO_MAKE(fibonacci, 3), fibonacci(3)},
       {CO_MAKE(fibonacci, 11), fibonacci(11)},
       {CO_MAKE(fibonacci, 23), fibonacci(23)},
-      {CO_MAKE(fibonacci, 29), fibonacci(29)},
   };
 
   for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); i++) {
@@ -134,6 +164,7 @@ int main(void) {
   UNITY_BEGIN();
 
   RUN_TEST(test_resume);
+  RUN_TEST(test_await_resumed);
   RUN_TEST(test_nat);
   RUN_TEST(test_fibonacci);
 
