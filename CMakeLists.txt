@@ -125,11 +125,6 @@ if(BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     check_c_compiler_flag(-Wno-unreachable-code _Wno_unreachable_code)
     check_c_compiler_flag(-Wno-missing-field-initializers _Wno_missing_field_initializers)
 
-    # check_c_compiler_flag(-Wno-gnu-empty-initializer _WNO_GNU_EMPTY_INITIALIZER)
-    # check_c_compiler_flag(-Wno-missing-declarations _Wno_missing_declarations)
-    # check_c_compiler_flag(-Wno-suggest-attribute _WNO_SUGGEST_ATTRIBUTE)
-    # check_c_compiler_flag(-Wno-unused-function _WNO_UNUSED_FUNCTION)
-
     target_compile_options(cogo PRIVATE
         $<$<BOOL:${_Werror}>:-Werror>
         $<$<BOOL:${_Weverything}>:-Weverything>
@@ -161,12 +156,6 @@ if(BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
         $<$<BOOL:${_Wno_missing_prototypes}>:-Wno-missing-prototypes>
         $<$<BOOL:${_Wno_missing_field_initializers}>:-Wno-missing-field-initializers>
         $<$<BOOL:${_Wno_unreachable_code}>:-Wno-unreachable-code>
-
-        # $<$<BOOL:${_WNO_GNU_EMPTY_INITIALIZER}>:-Wno-gnu-empty-initializer>
-        # $<$<BOOL:${_Wno_missing_declarations}>:-Wno-missing-declarations>
-        # $<$<BOOL:${_WNO_SUGGEST_ATTRIBUTE}>:-Wno-suggest-attribute=const>
-        # $<$<BOOL:${_WNO_SUGGEST_ATTRIBUTE}>:-Wno-suggest-attribute=pure>
-        # $<$<BOOL:${_WNO_UNUSED_FUNCTION}>:-Wno-unused-function>
     )
 
     link_libraries(cogo unity)

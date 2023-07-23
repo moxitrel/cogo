@@ -31,8 +31,8 @@ co_status_t cogo_await_resume(cogo_await_t* const co) {
       switch (CO_STATUS(top)) {
         case CO_STATUS_END:  // return
           top = top->caller;
-          if (!top) {
-            goto exit;  // end
+          if (!top) {  // end
+            goto exit;
           }
           continue;
         case CO_STATUS_BEGIN:  // await
@@ -49,7 +49,6 @@ co_status_t cogo_await_resume(cogo_await_t* const co) {
 
 void cogo_await_run(cogo_await_t* const co) {
   COGO_ASSERT(co);
-  while (CO_STATUS(co) != CO_STATUS_END) {
-    cogo_await_resume(co);
+  while (cogo_await_resume(co) != CO_STATUS_END) {
   }
 }

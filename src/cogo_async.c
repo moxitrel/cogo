@@ -3,11 +3,10 @@
 #include <stdbool.h>
 
 // run until yield
-// NOTE: .top is damaged after call
 cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
   COGO_ASSERT(sched && sched->top);
   for (;;) {
-    sched->top->super.sched = sched;
+    sched->top->super.sched = sched;  // NOTE: .top is damaged after set sched
     sched->top->super.super.func(sched->top);
     if (!sched->top) {  // blocked
       sched->top = cogo_async_sched_pop(sched);
@@ -19,7 +18,7 @@ cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
     switch (CO_STATUS(sched->top)) {
       case CO_STATUS_END:  // return
         sched->top = (cogo_async_t*)sched->top->super.caller;
-        if (!sched->top) {  // return from root
+        if (!sched->top) {  // end
           goto exit_next;
         }
         continue;
@@ -37,15 +36,15 @@ exit:
 }
 
 co_status_t cogo_async_resume(cogo_async_t* const co) {
-#define TOP (co->super.top)
   COGO_ASSERT(co);
-  cogo_async_sched_t sched = {
-      .top = (cogo_async_t*)TOP ? (cogo_async_t*)TOP : co,
-  };
-  // repaire .top
-  TOP = (cogo_await_t*)cogo_async_sched_resume(&sched);
+  if (CO_STATUS(co) != CO_STATUS_END) {
+    cogo_async_sched_t sched = {
+        .top = co->super.top ? /*resume*/ (cogo_async_t*)co->super.top : /*begin*/ co,
+    };
+    // repair co->super.top damaged by cogo_async_sched_resume()
+    co->super.top = (cogo_await_t*)cogo_async_sched_resume(&sched);
+  }
   return CO_STATUS(co);
-#undef TOP
 }
 
 bool cogo_chan_read(cogo_async_t* const co_this, co_chan_t* const chan, co_message_t* const msg_next) {
@@ -107,11 +106,13 @@ cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* const sched) {
 
 void cogo_async_run(cogo_async_t* co) {
   COGO_ASSERT(co);
-  cogo_async_sched_t sched = {
-      .top = co,
-  };
-  while (cogo_async_sched_resume(&sched)) {
-    // noop
+  if (CO_STATUS(co) != CO_STATUS_END) {
+    cogo_async_sched_t sched = {
+        .top = co->super.top ? (cogo_async_t*)co->super.top : co,
+    };
+    while (cogo_async_sched_resume(&sched)) {
+      // noop
+    }
   }
 
   /* mt
