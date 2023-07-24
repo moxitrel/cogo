@@ -40,7 +40,7 @@ static void test_yield(void) {
 }
 
 typedef struct return1 {
-  cogo_yield_t super;  // inherent cogo_yield_t
+  cogo_yield_t base;  // inherent cogo_yield_t
   int v;
 } return1_t;
 

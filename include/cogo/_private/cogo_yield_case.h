@@ -50,8 +50,8 @@ void nat_func(nat_t* co_this)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
-#ifndef COGO_YIELD_CASE_H_
-#define COGO_YIELD_CASE_H_
+#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_PRIVATE_COGO_YIELD_CASE_H_
+#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_PRIVATE_COGO_YIELD_CASE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,13 +83,13 @@ typedef struct cogo_yield {
 #define COGO_PC(CO) (((cogo_yield_t*)(CO))->pc)
 
 typedef cogo_pc_t co_status_t;
-#define CO_STATUS_BEGIN       COGO_PC_BEGIN
-#define CO_STATUS_END         COGO_PC_END
+#define CO_STATUS_BEGIN COGO_PC_BEGIN
+#define CO_STATUS_END   COGO_PC_END
 // get the current running state
-#define CO_STATUS(CO) ((co_status_t)COGO_PC((cogo_yield_t*)(CO)))
+#define CO_STATUS(CO)   ((co_status_t)COGO_PC((cogo_yield_t*)(CO)))
 
-#define COGO_BEGIN(CO)                           \
-  switch (COGO_PC(CO)) {                         \
+#define COGO_BEGIN(CO)                                   \
+  switch (COGO_PC(CO)) {                                 \
     default: /* invalid  pc */                           \
       COGO_ASSERT(((void)"pc isn't valid", 0));          \
       goto cogo_end;                                     \
@@ -99,19 +99,19 @@ typedef cogo_pc_t co_status_t;
     case COGO_PC_BEGIN /* coroutine begin */
 
 #define COGO_YIELD(CO)                                                            \
-  do {                                                                                    \
+  do {                                                                            \
     /**/ COGO_PC(CO) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
-    /**/ goto cogo_end;                  /* 2. return */                                  \
-    case __LINE__:;                      /* 3. restore point */                           \
+    /**/ goto cogo_end;          /* 2. return */                                  \
+    case __LINE__:;              /* 3. restore point */                           \
   } while (0)
 
 #define COGO_RETURN(CO) \
   goto cogo_return /* end coroutine */
 
 #define COGO_END(CO)              \
-  cogo_return:                            \
+  cogo_return:                    \
   /**/ COGO_PC(CO) = COGO_PC_END; \
-  }                                       \
+  }                               \
   cogo_end
 
 #define CO_BEGIN  COGO_BEGIN(co_this)
@@ -122,4 +122,4 @@ typedef cogo_pc_t co_status_t;
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_YIELD_CASE_H_
+#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_PRIVATE_COGO_YIELD_CASE_H_

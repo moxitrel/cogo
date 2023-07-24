@@ -76,7 +76,7 @@ extern "C" {
 #define CO_DEFINE3_2(NAME) static void COGO_REMOVE_LINKAGE_##NAME##_func(void* const co_this)
 
 #define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_yield_t super, __VA_ARGS__)
+  COGO_DECLARE(NAME, cogo_yield_t base, __VA_ARGS__)
 
 #define CO_MAKE(NAME, ...) \
   ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})

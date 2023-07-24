@@ -36,7 +36,7 @@ typedef struct cogo_await_sched cogo_await_sched_t;
 // implement call stack
 struct cogo_await {
   // inherit cogo_yield_t
-  cogo_yield_t super;
+  cogo_yield_t base;
 
   // build call stack
   cogo_await_t* caller;
@@ -56,10 +56,10 @@ struct cogo_await_sched {
 };
 
 // CO_AWAIT(cogo_await_t*): call another coroutine.
-#define CO_AWAIT(CO)                                                                               \
-  do {                                                                                                 \
+#define CO_AWAIT(CO)                                               \
+  do {                                                             \
     cogo_await_await((cogo_await_t*)co_this, (cogo_await_t*)(CO)); \
-    CO_YIELD;                                                                                          \
+    CO_YIELD;                                                      \
   } while (0)
 void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
 
@@ -69,10 +69,10 @@ void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
 #undef CO_RUN
 
 #define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_await_t super, __VA_ARGS__)
+  COGO_DECLARE(NAME, cogo_await_t base, __VA_ARGS__)
 
 #define CO_MAKE(NAME, ...) \
-  ((NAME##_t){{.super = {.func = NAME##_func}}, __VA_ARGS__})
+  ((NAME##_t){{.base = {.func = NAME##_func}}, __VA_ARGS__})
 
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))

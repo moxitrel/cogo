@@ -59,7 +59,7 @@ CO_DECLARE(/*NAME*/ static await0, await2_t a2) {
 CO_BEGIN:
 
   CO_RESUME(&thiz->a2);
-  TEST_ASSERT_NOT_NULL(thiz->a2.super.top);
+  TEST_ASSERT_NOT_NULL(thiz->a2.base.sched->top);
 
   CO_AWAIT(&thiz->a2);
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&thiz->a2));
