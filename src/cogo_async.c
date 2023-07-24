@@ -6,7 +6,7 @@
 cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
   COGO_ASSERT(sched && sched->top);
   for (;;) {
-    sched->top->super.sched = sched;  // NOTE: .top is damaged after set sched
+    sched->top->super.sched = sched;
     sched->top->super.super.func(sched->top);
     if (!sched->top) {  // blocked
       sched->top = cogo_async_sched_pop(sched);
@@ -39,10 +39,9 @@ co_status_t cogo_async_resume(cogo_async_t* const co) {
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
     cogo_async_sched_t sched = {
-        .top = co->super.top ? /*resume*/ (cogo_async_t*)co->super.top : /*begin*/ co,
+        .top = co->super.resume ?  (cogo_async_t*)co->super.resume :  co, // resume
     };
-    // repair co->super.top damaged by cogo_async_sched_resume()
-    co->super.top = (cogo_await_t*)cogo_async_sched_resume(&sched);
+    co->super.resume = (cogo_await_t*)cogo_async_sched_resume(&sched);  // save resume point
   }
   return CO_STATUS(co);
 }
@@ -108,10 +107,9 @@ void cogo_async_run(cogo_async_t* co) {
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
     cogo_async_sched_t sched = {
-        .top = co->super.top ? (cogo_async_t*)co->super.top : co,
+        .top = co->super.resume ?  (cogo_async_t*)co->super.resume :  co,
     };
     while (cogo_async_sched_resume(&sched)) {
-      // noop
     }
   }
 
@@ -124,7 +122,7 @@ void cogo_async_run(cogo_async_t* co) {
     } else {
       n = steal_timeout(&sched);
       if (n < 0) {
-        break;
+        error;
       }
       if (n == 0) {
         pop_from_run_sched(&sched);

@@ -80,16 +80,16 @@ typedef struct cogo_yield {
 } cogo_yield_t;
 
 // cogo_yield_t.pc
-#define COGO_PC(COGO_YIELD) (((cogo_yield_t*)(COGO_YIELD))->pc)
+#define COGO_PC(CO) (((cogo_yield_t*)(CO))->pc)
 
 typedef cogo_pc_t co_status_t;
 #define CO_STATUS_BEGIN       COGO_PC_BEGIN
 #define CO_STATUS_END         COGO_PC_END
 // get the current running state
-#define CO_STATUS(COGO_YIELD) ((co_status_t)COGO_PC((cogo_yield_t*)(COGO_YIELD)))
+#define CO_STATUS(CO) ((co_status_t)COGO_PC((cogo_yield_t*)(CO)))
 
-#define COGO_BEGIN(COGO_YIELD)                           \
-  switch (COGO_PC(COGO_YIELD)) {                         \
+#define COGO_BEGIN(CO)                           \
+  switch (COGO_PC(CO)) {                         \
     default: /* invalid  pc */                           \
       COGO_ASSERT(((void)"pc isn't valid", 0));          \
       goto cogo_end;                                     \
@@ -98,19 +98,19 @@ typedef cogo_pc_t co_status_t;
       goto cogo_end;                                     \
     case COGO_PC_BEGIN /* coroutine begin */
 
-#define COGO_YIELD(COGO_YIELD)                                                            \
+#define COGO_YIELD(CO)                                                            \
   do {                                                                                    \
-    /**/ COGO_PC(COGO_YIELD) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
+    /**/ COGO_PC(CO) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
     /**/ goto cogo_end;                  /* 2. return */                                  \
     case __LINE__:;                      /* 3. restore point */                           \
   } while (0)
 
-#define COGO_RETURN(COGO_YIELD) \
+#define COGO_RETURN(CO) \
   goto cogo_return /* end coroutine */
 
-#define COGO_END(COGO_YIELD)              \
+#define COGO_END(CO)              \
   cogo_return:                            \
-  /**/ COGO_PC(COGO_YIELD) = COGO_PC_END; \
+  /**/ COGO_PC(CO) = COGO_PC_END; \
   }                                       \
   cogo_end
 

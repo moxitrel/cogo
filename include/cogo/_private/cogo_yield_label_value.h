@@ -66,42 +66,42 @@ typedef struct cogo_yield {
 } cogo_yield_t;
 
 // cogo_yield_t.pc
-#define COGO_PC(COGO_YIELD) (((cogo_yield_t*)(COGO_YIELD))->pc)
+#define COGO_PC(CO) (((cogo_yield_t*)(CO))->pc)
 
 typedef cogo_pc_t co_status_t;
 #define CO_STATUS_BEGIN       COGO_PC_BEGIN
 #define CO_STATUS_END         COGO_PC_END
 // get the current running state
-#define CO_STATUS(COGO_YIELD) ((co_status_t)COGO_PC((cogo_yield_t*)(COGO_YIELD)))
+#define CO_STATUS(CO) ((co_status_t)COGO_PC((cogo_yield_t*)(CO)))
 
-#define COGO_BEGIN(COGO_YIELD)                                                                       \
-  switch (COGO_PC(COGO_YIELD)) {                                                                     \
+#define COGO_BEGIN(CO)                                                                       \
+  switch (COGO_PC(CO)) {                                                                     \
     case COGO_PC_BEGIN:                                                                              \
       goto cogo_begin;                                                                               \
       /* HACK: no warn unused label */                                                               \
       goto cogo_return;                                                                              \
       /* HACK: avoid clang error - indirect goto in function with no address-of-label expressions */ \
-      COGO_PC(COGO_YIELD) = (cogo_pc_t)(&&cogo_begin);                                               \
+      COGO_PC(CO) = (cogo_pc_t)(&&cogo_begin);                                               \
     case COGO_PC_END:                                                                                \
       goto cogo_end;                                                                                 \
     default:                                                                                         \
-      goto*(void const*)COGO_PC(COGO_YIELD);                                                         \
+      goto *(void*)COGO_PC(CO);                                                         \
   }                                                                                                  \
   cogo_begin
 
-#define COGO_YIELD(COGO_YIELD)                                                   \
+#define COGO_YIELD(CO)                                                   \
   do {                                                                           \
-    COGO_PC(COGO_YIELD) = (cogo_pc_t)(&&COGO_LABEL); /* 1. save restore point */ \
+    COGO_PC(CO) = (cogo_pc_t)(&&COGO_LABEL); /* 1. save restore point */ \
     goto cogo_end;                                   /* 2. return */             \
   COGO_LABEL:;                                       /* 3. restore point */      \
   } while (0)
 
-#define COGO_RETURN(COGO_YIELD) \
+#define COGO_RETURN(CO) \
   goto cogo_return /* end coroutine */
 
-#define COGO_END(COGO_YIELD)              \
+#define COGO_END(CO)              \
   cogo_return:                            \
-  /**/ COGO_PC(COGO_YIELD) = COGO_PC_END; \
+  /**/ COGO_PC(CO) = COGO_PC_END; \
   cogo_end
 
 // Make goto label.

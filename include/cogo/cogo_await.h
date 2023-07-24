@@ -30,30 +30,38 @@ cogo_await_t          : coroutine type
 extern "C" {
 #endif
 
+typedef struct cogo_await cogo_await_t;
+typedef struct cogo_await_sched cogo_await_sched_t;
+
 // implement call stack
-typedef struct cogo_await {
+struct cogo_await {
   // inherit cogo_yield_t
   cogo_yield_t super;
 
   // build call stack
-  struct cogo_await* caller;
+  cogo_await_t* caller;
 
   union {
-    // call stack top / resume point
-    struct cogo_await* top;
+    // associated scheduler
+    cogo_await_sched_t* sched;
 
-    // not used by cogo_await, declared for cogo_async
-    void* sched;
+    // resume point
+    cogo_await_t* resume;
   };
-} cogo_await_t;
+};
+
+struct cogo_await_sched {
+  // call stack top
+  cogo_await_t* top;
+};
 
 // CO_AWAIT(cogo_await_t*): call another coroutine.
-#define CO_AWAIT(CALLEE)                                                                               \
+#define CO_AWAIT(CO)                                                                               \
   do {                                                                                                 \
-    ((cogo_await_t*)co_this)->top = cogo_await_await((cogo_await_t*)co_this, (cogo_await_t*)(CALLEE)); \
+    cogo_await_await((cogo_await_t*)co_this, (cogo_await_t*)(CO)); \
     CO_YIELD;                                                                                          \
   } while (0)
-cogo_await_t* cogo_await_await(cogo_await_t* thiz, cogo_await_t* callee);
+void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
 
 #undef CO_DECLARE
 #undef CO_MAKE

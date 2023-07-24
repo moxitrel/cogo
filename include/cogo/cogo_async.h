@@ -25,7 +25,7 @@ CO_DECLARE(NAME, ...){}
 CO_DEFINE(NAME){}
 
 cogo_async_t               : coroutine type
-cogo_async_sched_t         : sheduler  type
+cogo_async_sched_t         : scheduler type
 cogo_async_sched_resume()  : like CO_RESUME()
 
 */
@@ -152,7 +152,6 @@ bool cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
 #undef CO_MAKE
 #undef CO_RESUME
 #undef CO_RUN
-#undef CO_AWAIT
 
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE(NAME, cogo_async_t super, __VA_ARGS__)
@@ -167,12 +166,6 @@ co_status_t cogo_async_resume(cogo_async_t* co);
 
 #define CO_RUN(CO) cogo_async_run((cogo_async_t*)(CO))
 void cogo_async_run(cogo_async_t* co);
-
-#define CO_AWAIT(CALLEE)                                                                                                             \
-  do {                                                                                                                               \
-    ((cogo_async_sched_t*)((cogo_await_t*)co_this)->sched)->top = cogo_await_await((cogo_await_t*)co_this, (cogo_await_t*)(CALLEE)); \
-    CO_YIELD;                                                                                                                        \
-  } while (0)
 
 #ifdef __cplusplus
 }

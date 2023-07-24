@@ -23,9 +23,11 @@ CO_DEFINE(NAME){}       : define a declared coroutine which not defined.
 
 #include "_private/macro_utils.h"
 
-#if defined(COGO_USE_CASE)
+#if defined(COGO_USE_LABEL_VALUE)
+#include "_private/cogo_yield_label_value.h"
+#elif defined(COGO_USE_CASE)
 #include "_private/cogo_yield_case.h"
-#elif defined(COGO_USE_LABEL_VALUE) || defined(__GNUC__)
+#elif defined(__GNUC__)
 #include "_private/cogo_yield_label_value.h"
 #else
 #include "_private/cogo_yield_case.h"

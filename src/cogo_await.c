@@ -1,37 +1,34 @@
 #include <cogo/cogo_await.h>
 
-// return the next coroutine to be run
-// should be invoked through CO_WAIT()
-cogo_await_t* cogo_await_await(cogo_await_t* const thiz, cogo_await_t* const callee) {
-  COGO_ASSERT(thiz && callee);
+void cogo_await_await(cogo_await_t* const thiz, cogo_await_t* const co) {
+  COGO_ASSERT(thiz && thiz->sched && co);
 
 #ifndef NDEBUG
   // no loop in call chain
-  for (cogo_await_t const* co = thiz; co; co = co->caller) {
-    COGO_ASSERT(callee != co);
+  for (cogo_await_t const* node = thiz; node; node = node->caller) {
+    COGO_ASSERT(co != node);
   }
 #endif
 
   // call stack push
-  callee->caller = thiz;  // WARN: stack damaged if cogo_await_await() is invoked directly more than once
-  // cogo_async: thiz->sched->top = callee->top;
-  // cogo_await: thiz->top = callee->top;
-  return callee->top ? /*resume*/ callee->top : /*begin*/ callee;
+  co->caller = thiz->sched->top;  // ".top == thiz" in normal case
+  thiz->sched->top = co->resume ?  co->resume : co;
 }
 
 // run until yield
 co_status_t cogo_await_resume(cogo_await_t* const co) {
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
-    cogo_await_t* top = co->top ? /*resume*/ co->top : /*begin*/ co;
+    cogo_await_sched_t sched = {
+        .top = co->resume ?  co->resume :  co;  // resume
+    };
     for (;;) {
-      top->top = top;
-      top->super.func(top);
-      top = top->top;
-      switch (CO_STATUS(top)) {
+      sched.top->sched = &sched;
+      sched.top->super.func(sched.top);
+      switch (CO_STATUS(sched.top)) {
         case CO_STATUS_END:  // return
-          top = top->caller;
-          if (!top) {  // end
+          sched.top = sched.top->caller;
+          if (!sched.top) {  // end
             goto exit;
           }
           continue;
@@ -42,7 +39,7 @@ co_status_t cogo_await_resume(cogo_await_t* const co) {
       }
     }
   exit:
-    co->top = top;  // save resume point
+    co->resume = sched.top;  // save resume point
   }
   return CO_STATUS(co);
 }
