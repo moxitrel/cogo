@@ -8,7 +8,7 @@ cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
   COGO_ASSERT(sched && TOP);
   for (;;) {
     TOP->sched = &sched->base;
-    TOP->base.func(sched->base.top);
+    TOP->base.func(TOP);
     if (!TOP) {  // blocked
       TOP = &cogo_async_sched_pop(sched)->base;
       if (!TOP) {  // no more active coroutines

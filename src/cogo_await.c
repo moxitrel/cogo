@@ -17,18 +17,19 @@ void cogo_await_await(cogo_await_t* const thiz, cogo_await_t* const co) {
 
 // run until yield
 co_status_t cogo_await_resume(cogo_await_t* const co) {
+#define TOP (sched.top)
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
     cogo_await_sched_t sched = {
         .top = co->resume ? co->resume : co,  // resume
     };
     for (;;) {
-      sched.top->sched = &sched;
-      sched.top->base.func(sched.top);
-      switch (CO_STATUS(sched.top)) {
+      TOP->sched = &sched;
+      TOP->base.func(TOP);
+      switch (CO_STATUS(TOP)) {
         case CO_STATUS_END:  // return
-          sched.top = sched.top->caller;
-          if (!sched.top) {  // end
+          TOP = TOP->caller;
+          if (!TOP) {  // end
             goto exit;
           }
           continue;
@@ -39,9 +40,10 @@ co_status_t cogo_await_resume(cogo_await_t* const co) {
       }
     }
   exit:
-    co->resume = sched.top;  // save resume point
+    co->resume = TOP;  // save resume point
   }
   return CO_STATUS(co);
+#undef TOP
 }
 
 void cogo_await_run(cogo_await_t* const co) {
