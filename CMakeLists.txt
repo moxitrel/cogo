@@ -9,18 +9,16 @@ include(CPack)
 include(GNUInstallDirs)
 
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
-    FALSE "NOT COGO_USE_LABEL_VALUE" FALSE)
+    FALSE "NOT COGO_USE_LABEL_VALUE" FALSE
+)
 cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc lable-as-value extension"
-    FALSE "NOT COGO_USE_CASE" FALSE)
+    FALSE "NOT COGO_USE_CASE" FALSE
+)
 
-unset(_Package)
-unset(_PackageTargets)
-unset(_PackageConfig)
-unset(_PackageConfigVersion)
-set(_Package ${PROJECT_NAME})
-set(_PackageTargets ${_Package}-targets)
-set(_PackageConfig ${_Package}-config)
-set(_PackageConfigVersion ${_Package}-config-version)
+set(packageName ${PROJECT_NAME})
+set(packageTargets ${packageName}-targets)
+set(packageConfig ${packageName}-config)
+set(packageConfigVersion ${packageName}-config-version)
 
 add_library(cogo)
 target_sources(cogo PRIVATE
@@ -73,39 +71,30 @@ target_compile_options(cogo PRIVATE
   $<$<BOOL:${_Wcast_align_strict}>:-Wcast-align=strict>
   $<$<BOOL:${_fanalyzer}>:-fanalyzer>
 )
-install(TARGETS cogo EXPORT ${_PackageTargets}
+install(TARGETS cogo EXPORT ${packageTargets}
   ARCHIVE
   LIBRARY
   FILE_SET HEADERS
 )
 
-# ${PROJECT_BINARY_DIR}/${_PackageTargets}.cmake
-export(EXPORT ${_PackageTargets}
-  FILE ${_PackageTargets}.cmake
+export(EXPORT ${packageTargets}
 )
-
-# ${CMAKE_INSTALL_LIBDIR}/cmake/cogo/${_PackageTargets}.cmake
-install(EXPORT ${_PackageTargets}
+install(EXPORT ${packageTargets}
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
-configure_package_config_file(cmake/${_PackageConfig}.cmake.in ${_PackageConfig}.cmake
+configure_package_config_file(cmake/${packageConfig}.cmake.in ${packageConfig}.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
-write_basic_package_version_file(${_PackageConfigVersion}.cmake
+write_basic_package_version_file(${packageConfigVersion}.cmake
   COMPATIBILITY SameMajorVersion
 )
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${_PackageConfig}.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/${_PackageConfigVersion}.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${packageConfig}.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${packageConfigVersion}.cmake
   DESTINATION
     ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
-
-unset(_Package)
-unset(_PackageTargets)
-unset(_PackageConfig)
-unset(_PackageConfigVersion)
 
 if(BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     include(CMakePrintHelpers)
@@ -124,6 +113,7 @@ if(BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     check_c_compiler_flag(-Wno-missing-prototypes _Wno_missing_prototypes)
     check_c_compiler_flag(-Wno-unreachable-code _Wno_unreachable_code)
     check_c_compiler_flag(-Wno-missing-field-initializers _Wno_missing_field_initializers)
+    check_c_compiler_flag(-Wno-unsafe-buffer-usage _Wno_unsafe_buffer_usage)
 
     target_compile_options(cogo PRIVATE
         $<$<BOOL:${_Werror}>:-Werror>
@@ -156,6 +146,7 @@ if(BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
         $<$<BOOL:${_Wno_missing_prototypes}>:-Wno-missing-prototypes>
         $<$<BOOL:${_Wno_missing_field_initializers}>:-Wno-missing-field-initializers>
         $<$<BOOL:${_Wno_unreachable_code}>:-Wno-unreachable-code>
+        $<$<BOOL:${_Wno_unsafe_buffer_usage}>:-Wno-unsafe-buffer-usage>
     )
 
     link_libraries(cogo unity)

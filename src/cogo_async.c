@@ -61,10 +61,10 @@ bool cogo_chan_read(cogo_async_t* const thiz, co_chan_t* const chan, co_message_
     return true;                    // switch context
   } else {
     msg_next->next = COGO_MQ_POP_NONEMPTY(&chan->mq);
-    if (chan_size < chan->cap) {
+    if (chan_size <= chan->cap) {
       return false;
     }
-    // wake up a writer if exists
+    // wake up a writer
     return cogo_async_sched_push((cogo_async_sched_t*)thiz->base.sched, COGO_CQ_POP_NONEMPTY(&chan->cq));
   }
 }
@@ -114,18 +114,10 @@ void cogo_async_run(cogo_async_t* co) {
   /* mt
   for (;;) {
     if (cogo_async_sched_resume(&sched)) {
-      if (has_sleeping_sched() && qsize > 1) {
-        wake_sched();
-      }
+      wait.wake
     } else {
-      n = steal_timeout(&sched);
-      if (n < 0) {
-        error;
-      }
-      if (n == 0) {
-        pop_from_run_sched(&sched);
-        push_to_sleep_sched(&sched);
-        sleep();
+      if (steal_coroutine() == 0) {
+        wait.sleep
       }
     }
   }

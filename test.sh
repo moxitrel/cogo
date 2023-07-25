@@ -10,7 +10,7 @@ REPO_ROOT=$(dirname $0)
 
 for CC in clang gcc; do
     for YIELD_TYPE in COGO_USE_CASE COGO_USE_LABEL_VALUE; do
-        export CC="${CC}" CFLAGS="-Os -g3"
+        export CC="${CC}"
 
         cmake -S $REPO_ROOT -B $BUILD_DIR -D${YIELD_TYPE}=TRUE --fresh &&
         cmake --build $BUILD_DIR --clean-first -j &&

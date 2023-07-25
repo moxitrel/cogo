@@ -70,7 +70,7 @@ struct cogo_async {
 struct cogo_async_sched {
   cogo_await_sched_t base;
 
-  // other coroutines to run concurrently
+  // other coroutines running concurrently
   COGO_CQ_T q;
 
   // global:
@@ -119,6 +119,8 @@ typedef struct co_chan {
   COGO_MQ_T mq;
 
   // current size
+  // < 0  : some readers blocked
+  // > cap: some writers blocked
   ptrdiff_t size;
 
   // max size
