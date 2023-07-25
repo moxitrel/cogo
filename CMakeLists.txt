@@ -15,10 +15,10 @@ cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc lable-as-v
     FALSE "NOT COGO_USE_CASE" FALSE
 )
 
-set(packageName ${PROJECT_NAME})
-set(packageTargets ${packageName}-targets)
-set(packageConfig ${packageName}-config)
-set(packageConfigVersion ${packageName}-config-version)
+set(_packageName ${PROJECT_NAME})
+set(_packageTargets ${_packageName}-targets)
+set(_packageConfig ${_packageName}-config)
+set(_packageConfigVersion ${_packageName}-config-version)
 
 add_library(cogo)
 target_sources(cogo PRIVATE
@@ -71,27 +71,27 @@ target_compile_options(cogo PRIVATE
   $<$<BOOL:${_Wcast_align_strict}>:-Wcast-align=strict>
   $<$<BOOL:${_fanalyzer}>:-fanalyzer>
 )
-install(TARGETS cogo EXPORT ${packageTargets}
+install(TARGETS cogo EXPORT ${_packageTargets}
   ARCHIVE
   LIBRARY
   FILE_SET HEADERS
 )
 
-export(EXPORT ${packageTargets}
-)
-install(EXPORT ${packageTargets}
+export(EXPORT ${_packageTargets})
+
+install(EXPORT ${_packageTargets}
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
-configure_package_config_file(cmake/${packageConfig}.cmake.in ${packageConfig}.cmake
+configure_package_config_file(cmake/${_packageConfig}.cmake.in ${_packageConfig}.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
-write_basic_package_version_file(${packageConfigVersion}.cmake
+write_basic_package_version_file(${_packageConfigVersion}.cmake
   COMPATIBILITY SameMajorVersion
 )
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${packageConfig}.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/${packageConfigVersion}.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${_packageConfig}.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${_packageConfigVersion}.cmake
   DESTINATION
     ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
