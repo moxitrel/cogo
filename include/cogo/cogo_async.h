@@ -64,6 +64,7 @@ struct cogo_async {
 #define COGO_QUEUE_NEXT(CO)  ((CO)->next)
 #include "_private/cogo_queue_template.h"
 #define COGO_CQ_T            COGO_QUEUE_T(cogo_async_t)
+#define COGO_CQ_IS_EMPTY     COGO_QUEUE_IS_EMPTY(cogo_async_t)
 #define COGO_CQ_PUSH         COGO_QUEUE_PUSH(cogo_async_t)
 #define COGO_CQ_POP          COGO_QUEUE_POP(cogo_async_t)
 #define COGO_CQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_async_t)

@@ -88,7 +88,6 @@ cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* const sched) {
   return COGO_CQ_POP(&sched->q);
 }
 
-// FIXME: not support multi-coroutine (sched.q is dropped when return)
 co_status_t cogo_async_resume(cogo_async_t* const co) {
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
@@ -97,7 +96,10 @@ co_status_t cogo_async_resume(cogo_async_t* const co) {
             .top = co->base.top ? co->base.top : &co->base,
         },
     };
-    co->base.top = (cogo_await_t*)cogo_async_sched_resume(&sched);  // save resume point
+    // save resume point
+    co->base.top = (cogo_await_t*)cogo_async_sched_resume(&sched);
+    // FIXME: not support multi-coroutine (sched.q is dropped when return)
+    COGO_ASSERT(COGO_CQ_IS_EMPTY(&sched.q));
   }
   return CO_STATUS(co);
 }
