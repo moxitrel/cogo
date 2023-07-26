@@ -11,14 +11,14 @@ include(GNUInstallDirs)
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
     FALSE "NOT COGO_USE_LABEL_VALUE" FALSE
 )
-cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc lable-as-value extension"
+cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc extension of label value "
     FALSE "NOT COGO_USE_CASE" FALSE
 )
 
-set(_packageName ${PROJECT_NAME})
-set(_packageTargets ${_packageName}-targets)
-set(_packageConfig ${_packageName}-config)
-set(_packageConfigVersion ${_packageName}-config-version)
+set(_Package ${PROJECT_NAME})
+set(_PackageTargets ${_Package}-targets)
+set(_PackageConfig ${_Package}-config)
+set(_PackageConfigVersion ${_Package}-config-version)
 
 add_library(cogo)
 target_sources(cogo PRIVATE
@@ -71,29 +71,29 @@ target_compile_options(cogo PRIVATE
   $<$<BOOL:${_Wcast_align_strict}>:-Wcast-align=strict>
   $<$<BOOL:${_fanalyzer}>:-fanalyzer>
 )
-install(TARGETS cogo EXPORT ${_packageTargets}
+install(TARGETS cogo EXPORT ${_PackageTargets}
   ARCHIVE
   LIBRARY
   FILE_SET HEADERS
 )
 
-export(EXPORT ${_packageTargets})
+export(EXPORT ${_PackageTargets})
 
-install(EXPORT ${_packageTargets}
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
+install(EXPORT ${_PackageTargets}
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${_Package}
 )
-configure_package_config_file(cmake/${_packageConfig}.cmake.in ${_packageConfig}.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
+configure_package_config_file(cmake/${_PackageConfig}.cmake.in ${_PackageConfig}.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${_Package}
 )
-write_basic_package_version_file(${_packageConfigVersion}.cmake
+write_basic_package_version_file(${_PackageConfigVersion}.cmake
   COMPATIBILITY SameMajorVersion
 )
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${_packageConfig}.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/${_packageConfigVersion}.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${_PackageConfig}.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${_PackageConfigVersion}.cmake
   DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
+    ${CMAKE_INSTALL_LIBDIR}/cmake/${_Package}
 )
 
 if(BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))

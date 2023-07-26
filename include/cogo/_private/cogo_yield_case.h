@@ -50,8 +50,8 @@ void nat_func(nat_t* co_this)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
-#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_PRIVATE_COGO_YIELD_CASE_H_
-#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_PRIVATE_COGO_YIELD_CASE_H_
+#ifndef COGO_YIELD_CASE_H_
+#define COGO_YIELD_CASE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -122,4 +122,4 @@ typedef cogo_pc_t co_status_t;
 #ifdef __cplusplus
 }
 #endif
-#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_PRIVATE_COGO_YIELD_CASE_H_
+#endif  // COGO_YIELD_CASE_H_
