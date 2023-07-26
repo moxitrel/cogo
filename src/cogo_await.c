@@ -11,8 +11,8 @@ void cogo_await_await(cogo_await_t* const thiz, cogo_await_t* const co) {
 #endif
 
   // call stack push
-  co->caller = thiz->sched->top;  // ".top == thiz" in normal case
-  thiz->sched->top = co->resume ? co->resume : co;
+  co->caller = thiz->sched->top;
+  thiz->sched->top = co->top ? co->top : co;
 }
 
 // run until yield
@@ -21,7 +21,7 @@ co_status_t cogo_await_resume(cogo_await_t* const co) {
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
     cogo_await_sched_t sched = {
-        .top = co->resume ? co->resume : co,  // resume
+        .top = co->top ? co->top : co,  // resume
     };
     for (;;) {
       TOP->sched = &sched;
@@ -40,7 +40,7 @@ co_status_t cogo_await_resume(cogo_await_t* const co) {
       }
     }
   exit:
-    co->resume = TOP;  // save resume point
+    co->top = TOP;  // save resume point
   }
   return CO_STATUS(co);
 #undef TOP

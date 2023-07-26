@@ -46,7 +46,7 @@ struct cogo_await {
     cogo_await_sched_t* sched;
 
     // resume point
-    cogo_await_t* resume;
+    cogo_await_t* top;
   };
 };
 

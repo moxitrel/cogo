@@ -37,28 +37,6 @@ exit:
 #undef TOP
 }
 
-co_status_t cogo_async_resume(cogo_async_t* const co) {
-  COGO_ASSERT(co);
-  if (CO_STATUS(co) != CO_STATUS_END) {
-    cogo_async_sched_t sched = {
-        .base = {
-            .top = &co->base,
-        },
-    };
-    if (co->base.resume) {  // resume
-      sched.base.top = co->base.resume;
-      sched.q.head = ((cogo_async_t*)co->base.resume)->next;
-      if (sched.q.head) {
-        for (sched.q.tail = sched.q.head; sched.q.tail->next; sched.q.tail = sched.q.tail->next) {
-        }
-      }
-    }
-    co->base.resume = (cogo_await_t*)cogo_async_sched_resume(&sched);  // save resume point
-    ((cogo_async_t*)co->base.resume)->next = sched.q.head;
-  }
-  return CO_STATUS(co);
-}
-
 bool cogo_chan_read(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t* const msg_next) {
   COGO_ASSERT(thiz && chan && chan->cap >= 0 && chan->size > PTRDIFF_MIN && msg_next);
   ptrdiff_t const chan_size = chan->size--;
@@ -110,12 +88,26 @@ cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* const sched) {
   return COGO_CQ_POP(&sched->q);
 }
 
-void cogo_async_run(cogo_async_t* co) {
+// FIXME: not support multi-coroutine (sched.q is dropped when return)
+co_status_t cogo_async_resume(cogo_async_t* const co) {
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
     cogo_async_sched_t sched = {
         .base = {
-            .top = co->base.resume ? co->base.resume : &co->base,  // resume
+            .top = co->base.top ? co->base.top : &co->base,
+        },
+    };
+    co->base.top = (cogo_await_t*)cogo_async_sched_resume(&sched);  // save resume point
+  }
+  return CO_STATUS(co);
+}
+
+void cogo_async_run(cogo_async_t* const co) {
+  COGO_ASSERT(co);
+  if (CO_STATUS(co) != CO_STATUS_END) {
+    cogo_async_sched_t sched = {
+        .base = {
+            .top = co->base.top ? co->base.top : &co->base,  // resume
         },
     };
     while (cogo_async_sched_resume(&sched)) {
