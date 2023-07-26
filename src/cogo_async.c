@@ -98,7 +98,7 @@ co_status_t cogo_async_resume(cogo_async_t* const co) {
     };
     // save resume point
     co->base.top = (cogo_await_t*)cogo_async_sched_resume(&sched);
-    // FIXME: not support multi-coroutine (sched.q is dropped when return)
+    // FIXME: no support for multi-coroutine (sched.q is dropped)
     COGO_ASSERT(COGO_CQ_IS_EMPTY(&sched.q));
   }
   return CO_STATUS(co);
