@@ -1,9 +1,9 @@
 #include <cogo/cogo_yield.h>
 
 co_status_t cogo_yield_resume(cogo_yield_t* const co) {
-  COGO_ASSERT(co && co->func);
+  COGO_ASSERT(co && co->resume);
   if (CO_STATUS(co) != CO_STATUS_END) {
-    co->func(co);
+    co->resume(co);
   }
   return CO_STATUS(co);
 }

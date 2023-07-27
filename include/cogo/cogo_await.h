@@ -72,7 +72,7 @@ void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
   COGO_DECLARE(NAME, cogo_await_t base, __VA_ARGS__)
 
 #define CO_MAKE(NAME, ...) \
-  ((NAME##_t){{.base = {.func = NAME##_func}}, __VA_ARGS__})
+  ((NAME##_t){{.base = {.resume = NAME##_resume}}, __VA_ARGS__})
 
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))

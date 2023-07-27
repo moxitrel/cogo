@@ -7,7 +7,7 @@ typedef struct yield {
   cogo_yield_t cogo_yield;
 } yield_t;
 
-static void yield_func(yield_t* thiz) {
+static void yield_resume(yield_t* thiz) {
   COGO_BEGIN(&thiz->cogo_yield) :;
 
   thiz->v++;
@@ -24,17 +24,17 @@ static void test_yield(void) {
   TEST_ASSERT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co.cogo_yield));  // begin
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
-  yield_func(&co);
+  yield_resume(&co);
   TEST_ASSERT_NOT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co.cogo_yield));  // running
   TEST_ASSERT_NOT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));
   TEST_ASSERT_EQUAL_INT(1, co.v);
 
-  yield_func(&co);
+  yield_resume(&co);
   TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));  // end
   TEST_ASSERT_EQUAL_INT(2, co.v);
 
   // noop when coroutine end
-  yield_func(&co);
+  yield_resume(&co);
   TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));  // end
   TEST_ASSERT_EQUAL_INT(2, co.v);
 }
@@ -44,29 +44,32 @@ typedef struct return1 {
   int v;
 } return1_t;
 
-static void return1_func(return1_t* co_this) {
+static void return1_resume(void* co_this) {
 CO_BEGIN:
 
-  co_this->v++;
+  ((return1_t*)co_this)->v++;
   CO_RETURN;
-  co_this->v++;
+  ((return1_t*)co_this)->v++;
 
 CO_END:;
 }
 
 static void test_return(void) {
   return1_t co = {
+      .base = {
+          .resume = return1_resume,
+      },
       .v = 0,
   };
   TEST_ASSERT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
-  return1_func(&co);
+  CO_RESUME(&co);
   TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co));  // end
   TEST_ASSERT_EQUAL_INT(1, co.v);
 
   // noop when coroutine end
-  return1_func(&co);
+  CO_RESUME(&co);
   TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co));  // end
   TEST_ASSERT_EQUAL_INT(1, co.v);
 }

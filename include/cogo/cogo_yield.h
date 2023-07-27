@@ -72,14 +72,14 @@ extern "C" {
 #define CO_DEFINE(NAME)    CO_DEFINE1(CX0_COUNT(COGO_COMMA_##NAME), NAME)
 #define CO_DEFINE1(...)    CO_DEFINE2(__VA_ARGS__)
 #define CO_DEFINE2(N, ...) CO_DEFINE3_##N(__VA_ARGS__)
-#define CO_DEFINE3_1(NAME) void NAME##_func(void* const co_this)
-#define CO_DEFINE3_2(NAME) static void COGO_REMOVE_LINKAGE_##NAME##_func(void* const co_this)
+#define CO_DEFINE3_1(NAME) void NAME##_resume(void* const co_this)
+#define CO_DEFINE3_2(NAME) static void COGO_REMOVE_LINKAGE_##NAME##_resume(void* const co_this)
 
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE(NAME, cogo_yield_t base, __VA_ARGS__)
 
 #define CO_MAKE(NAME, ...) \
-  ((NAME##_t){{.func = NAME##_func}, __VA_ARGS__})
+  ((NAME##_t){{.resume = NAME##_resume}, __VA_ARGS__})
 
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_yield_resume((cogo_yield_t*)(CO))

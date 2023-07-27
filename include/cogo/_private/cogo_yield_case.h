@@ -76,7 +76,7 @@ typedef struct cogo_yield {
   cogo_pc_t pc;
 
   // the coroutine function
-  void (*func)(void* co_this);
+  void (*resume)(void* co_this);
 } cogo_yield_t;
 
 // cogo_yield_t.pc
