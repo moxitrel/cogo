@@ -7,7 +7,7 @@ typedef struct yield {
   cogo_yield_t cogo_yield;
 } yield_t;
 
-static void yield_func(yield_t *thiz) {
+static void yield_func(yield_t* thiz) {
   COGO_BEGIN(&thiz->cogo_yield) :;
 
   thiz->v++;
@@ -44,7 +44,7 @@ typedef struct return1 {
   int v;
 } return1_t;
 
-static void return1_func(return1_t *co_this) {
+static void return1_func(return1_t* co_this) {
 CO_BEGIN:
 
   co_this->v++;
@@ -72,7 +72,7 @@ static void test_return(void) {
 }
 
 CO_DECLARE(/*NAME*/ prologue, int enter, int exit) {
-  prologue_t *const thiz = (prologue_t *)co_this;
+  prologue_t* const thiz = (prologue_t*)co_this;
   thiz->enter++;
 CO_BEGIN:
 
@@ -96,7 +96,7 @@ static void test_prologue(void) {
 }
 
 CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {
-  nat_t *const thiz = (nat_t *)co_this;
+  nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
 
   for (thiz->v = 0;; thiz->v++) {

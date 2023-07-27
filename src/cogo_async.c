@@ -118,7 +118,7 @@ void cogo_async_run(cogo_async_t* const co) {
 
   /* mt
   for (;;) {
-    if (cogo_async_sched_resume(&sched)) {
+    if (resume(&sched)) {
       wait.wake
     } else {
       if (steal_coroutine() == 0) {

@@ -1,5 +1,6 @@
 #include <cogo/cogo_await.h>
 
+// should be invoked through CO_AWAIT()
 void cogo_await_await(cogo_await_t* const thiz, cogo_await_t* const co) {
   COGO_ASSERT(thiz && thiz->sched && co);
 
@@ -11,7 +12,8 @@ void cogo_await_await(cogo_await_t* const thiz, cogo_await_t* const co) {
 #endif
 
   // call stack push
-  co->caller = thiz->sched->top;
+  co->caller = thiz;
+  // continue from resume point
   thiz->sched->top = co->top ? co->top : co;
 }
 
@@ -21,7 +23,7 @@ co_status_t cogo_await_resume(cogo_await_t* const co) {
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
     cogo_await_sched_t sched = {
-        .top = co->top ? co->top : co,  // resume
+        .top = co->top ? co->top : co,  // resume or begin
     };
     for (;;) {
       TOP->sched = &sched;
