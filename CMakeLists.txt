@@ -1,24 +1,27 @@
 cmake_minimum_required(VERSION 3.23)
-project(cogo VERSION 1.0.0 LANGUAGES C)
+project(cogo VERSION 1.0.0
+  HOMEPAGE_URL "https://github.com/moxitrel/cogo"
+  LANGUAGES C
+)
 
 include(CheckCCompilerFlag)
 include(CMakePackageConfigHelpers)
 include(CMakeDependentOption)
 include(CTest)
-include(CPack)
 include(GNUInstallDirs)
+include(cmake/cogoCPack.cmake)
 
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
-    FALSE "NOT COGO_USE_LABEL_VALUE" FALSE
+    OFF "NOT COGO_USE_LABEL_VALUE" OFF
 )
 cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc extension of label value "
-    FALSE "NOT COGO_USE_CASE" FALSE
+    OFF "NOT COGO_USE_CASE" OFF
 )
 
-set(_Package ${PROJECT_NAME})
-set(_PackageTargets ${_Package}-targets)
-set(_PackageConfig ${_Package}-config)
-set(_PackageConfigVersion ${_Package}-config-version)
+set(package_name ${PROJECT_NAME})
+set(package_targets ${package_name}Targets)
+set(_package_config ${package_name}Config)
+set(_package_config_version ${package_name}ConfigVersion)
 
 add_library(cogo)
 target_sources(cogo PRIVATE
@@ -71,29 +74,37 @@ target_compile_options(cogo PRIVATE
   $<$<BOOL:${_Wcast_align_strict}>:-Wcast-align=strict>
   $<$<BOOL:${_fanalyzer}>:-fanalyzer>
 )
-install(TARGETS cogo EXPORT ${_PackageTargets}
+install(TARGETS cogo EXPORT ${package_targets}
   ARCHIVE
   LIBRARY
   FILE_SET HEADERS
 )
 
-export(EXPORT ${_PackageTargets})
+export(EXPORT ${package_targets})
 
-install(EXPORT ${_PackageTargets}
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${_Package}
+install(EXPORT ${package_targets}
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
 )
-configure_package_config_file(cmake/${_PackageConfig}.cmake.in ${_PackageConfig}.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${_Package}
+configure_package_config_file(cmake/${_package_config}.cmake.in ${_package_config}.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
 )
-write_basic_package_version_file(${_PackageConfigVersion}.cmake
+write_basic_package_version_file(${_package_config_version}.cmake
   COMPATIBILITY SameMajorVersion
 )
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${_PackageConfig}.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/${_PackageConfigVersion}.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${_package_config}.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${_package_config_version}.cmake
   DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/cmake/${_Package}
+    ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
+)
+
+configure_file(cmake/${package_name}.pc.in ${package_name}.pc @ONLY)
+install(
+  FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc
+  DESTINATION
+    ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
 if(BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))

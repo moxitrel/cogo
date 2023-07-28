@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+
+Name: @package_name@
+Description: Asymmetric stackless coroutine library.
+URL: @PROJECT_HOMEPAGE_URL@
+Version: @CMAKE_PROJECT_VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -l@package_name@
