@@ -6,4 +6,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - run: sudo apt-get -y install cmake ninja gcc clang
-      - run: ./test.sh $(mktemp -d)
+      - run: scripts/test.sh $(mktemp -d)
