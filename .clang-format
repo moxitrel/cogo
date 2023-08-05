@@ -5,5 +5,5 @@ Language: Cpp
 
 AlignConsecutiveMacros: AcrossEmptyLinesAndComments
 ColumnLimit: 0
-ReflowComments:  false
+ReflowComments: false
 ---

@@ -12,10 +12,10 @@ include(GNUInstallDirs)
 include(cmake/cogoCPack.cmake)
 
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
-    OFF "NOT COGO_USE_LABEL_VALUE" OFF
+  OFF "NOT COGO_USE_LABEL_VALUE" OFF
 )
 cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc extension of label value "
-    OFF "NOT COGO_USE_CASE" OFF
+  OFF "NOT COGO_USE_CASE" OFF
 )
 
 set(package_name ${PROJECT_NAME})
@@ -23,34 +23,33 @@ set(package_targets ${package_name}Targets)
 set(_package_config ${package_name}Config)
 set(_package_config_version ${package_name}ConfigVersion)
 
-add_library(cogo)
-target_sources(cogo PRIVATE
+add_library(cogo
   src/cogo_async.c
   src/cogo_await.c
   src/cogo_yield.c
 )
 target_sources(cogo INTERFACE
   FILE_SET HEADERS
-    TYPE HEADERS
-    BASE_DIRS include
-    FILES
-      include/cogo/_private/cogo_queue_template.h
-      include/cogo/_private/cogo_yield_case.h
-      include/cogo/_private/cogo_yield_label_value.h
-      include/cogo/_private/macro_utils.h
-      include/cogo/cogo_async.h
-      include/cogo/cogo_await.h
-      include/cogo/cogo_yield.h
+  TYPE HEADERS
+  BASE_DIRS include
+  FILES
+  include/cogo/_internal/cogo_queue_template.h
+  include/cogo/_internal/cogo_yield_case.h
+  include/cogo/_internal/cogo_yield_label_value.h
+  include/cogo/_internal/macro_utils.h
+  include/cogo/cogo_async.h
+  include/cogo/cogo_await.h
+  include/cogo/cogo_yield.h
 )
 target_include_directories(cogo PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
-    $<$<BOOL:${COGO_USE_LABEL_VALUE}>:COGO_USE_LABEL_VALUE>
-    $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
-    COGO_MP=1   # multithreaded scheduler
+  $<$<BOOL:${COGO_USE_LABEL_VALUE}>:COGO_USE_LABEL_VALUE>
+  $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
+  COGO_MP=1 # multithreaded scheduler
 )
 check_c_compiler_flag(-Wc++-compat _Wcpp_compat)
 check_c_compiler_flag(-Wpedantic _Wpedantic)
@@ -93,84 +92,84 @@ write_basic_package_version_file(${_package_config_version}.cmake
 )
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${_package_config}.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/${_package_config_version}.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/${_package_config}.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/${_package_config_version}.cmake
   DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
+  ${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}
 )
 
 configure_file(cmake/${package_name}.pc.in ${package_name}.pc @ONLY)
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc
+  ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc
   DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+  ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-if(BUILD_TESTING AND (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
-    include(CMakePrintHelpers)
-    include(cmake/unity.cmake)
+if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
+  include(CMakePrintHelpers)
+  include(cmake/unity.cmake)
 
-    cmake_print_variables(COGO_USE_CASE COGO_USE_LABEL_VALUE CMAKE_C_COMPILER)
+  cmake_print_variables(COGO_USE_CASE COGO_USE_LABEL_VALUE CMAKE_C_COMPILER)
 
-    check_c_compiler_flag(-Weverything _Weverything)
-    check_c_compiler_flag(-Werror _Werror)
+  check_c_compiler_flag(-Weverything _Weverything)
+  check_c_compiler_flag(-Werror _Werror)
 
-    check_c_compiler_flag(-Wno-padded _Wno_padded)
-    check_c_compiler_flag(-Wno-declaration-after-statement _Wno_declaration_after_statement)
-    check_c_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments _Wno_gnu_zero_variadic_macro_arguments)
-    check_c_compiler_flag(-Wno-gnu-label-as-value _Wno_gnu_label_as_value)
+  check_c_compiler_flag(-Wno-padded _Wno_padded)
+  check_c_compiler_flag(-Wno-declaration-after-statement _Wno_declaration_after_statement)
+  check_c_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments _Wno_gnu_zero_variadic_macro_arguments)
+  check_c_compiler_flag(-Wno-gnu-label-as-value _Wno_gnu_label_as_value)
 
-    check_c_compiler_flag(-Wno-missing-prototypes _Wno_missing_prototypes)
-    check_c_compiler_flag(-Wno-unreachable-code _Wno_unreachable_code)
-    check_c_compiler_flag(-Wno-missing-field-initializers _Wno_missing_field_initializers)
-    check_c_compiler_flag(-Wno-unsafe-buffer-usage _Wno_unsafe_buffer_usage)
+  check_c_compiler_flag(-Wno-missing-prototypes _Wno_missing_prototypes)
+  check_c_compiler_flag(-Wno-unreachable-code _Wno_unreachable_code)
+  check_c_compiler_flag(-Wno-missing-field-initializers _Wno_missing_field_initializers)
+  check_c_compiler_flag(-Wno-unsafe-buffer-usage _Wno_unsafe_buffer_usage)
 
-    target_compile_options(cogo PRIVATE
-        $<$<BOOL:${_Werror}>:-Werror>
-        $<$<BOOL:${_Weverything}>:-Weverything>
+  target_compile_options(cogo PRIVATE
+    $<$<BOOL:${_Werror}>:-Werror>
+    $<$<BOOL:${_Weverything}>:-Weverything>
 
-        $<$<BOOL:${_Wno_padded}>:-Wno-padded>
-        $<$<BOOL:${_Wno_declaration_after_statement}>:-Wno-declaration-after-statement>
-    )
+    $<$<BOOL:${_Wno_padded}>:-Wno-padded>
+    $<$<BOOL:${_Wno_declaration_after_statement}>:-Wno-declaration-after-statement>
+  )
 
-    add_compile_options(
-        $<$<BOOL:${_Werror}>:-Werror>
-        $<$<BOOL:${_Weverything}>:-Weverything>
+  add_compile_options(
+    $<$<BOOL:${_Werror}>:-Werror>
+    $<$<BOOL:${_Weverything}>:-Weverything>
 
-        $<$<BOOL:${_Wcpp_compat}>:-Wc++-compat>
-        # $<$<BOOL:${_Wpedantic}>:-Wpedantic>
-        $<$<BOOL:${_Wall}>:-Wall>
-        $<$<BOOL:${_Wextra}>:-Wextra>
-        $<$<BOOL:${_Wconversion}>:-Wconversion>
-        $<$<BOOL:${_Wsign_conversion}>:-Wsign-conversion>
-        $<$<BOOL:${_Warith_conversion}>:-Warith-conversion>
-        $<$<BOOL:${_Wcast_qual}>:-Wcast-qual>
-        $<$<BOOL:${_Wcast_align_strict}>:-Wcast-align=strict>
-        $<$<BOOL:${_fanalyzer}>:-fanalyzer>
+    # $<$<BOOL:${_Wpedantic}>:-Wpedantic>
+    $<$<BOOL:${_Wcpp_compat}>:-Wc++-compat>
+    $<$<BOOL:${_Wall}>:-Wall>
+    $<$<BOOL:${_Wextra}>:-Wextra>
+    $<$<BOOL:${_Wconversion}>:-Wconversion>
+    $<$<BOOL:${_Wsign_conversion}>:-Wsign-conversion>
+    $<$<BOOL:${_Warith_conversion}>:-Warith-conversion>
+    $<$<BOOL:${_Wcast_qual}>:-Wcast-qual>
+    $<$<BOOL:${_Wcast_align_strict}>:-Wcast-align=strict>
+    $<$<BOOL:${_fanalyzer}>:-fanalyzer>
 
-        $<$<BOOL:${_Wno_padded}>:-Wno-padded>
-        $<$<BOOL:${_Wno_declaration_after_statement}>:-Wno-declaration-after-statement>
-        $<$<BOOL:${_Wno_gnu_zero_variadic_macro_arguments}>:-Wno-gnu-zero-variadic-macro-arguments>
-        $<$<BOOL:${_Wno_gnu_label_as_value}>:-Wno-gnu-label-as-value>
+    $<$<BOOL:${_Wno_padded}>:-Wno-padded>
+    $<$<BOOL:${_Wno_declaration_after_statement}>:-Wno-declaration-after-statement>
+    $<$<BOOL:${_Wno_gnu_zero_variadic_macro_arguments}>:-Wno-gnu-zero-variadic-macro-arguments>
+    $<$<BOOL:${_Wno_gnu_label_as_value}>:-Wno-gnu-label-as-value>
 
-        $<$<BOOL:${_Wno_missing_prototypes}>:-Wno-missing-prototypes>
-        $<$<BOOL:${_Wno_missing_field_initializers}>:-Wno-missing-field-initializers>
-        $<$<BOOL:${_Wno_unreachable_code}>:-Wno-unreachable-code>
-        $<$<BOOL:${_Wno_unsafe_buffer_usage}>:-Wno-unsafe-buffer-usage>
-    )
+    $<$<BOOL:${_Wno_missing_prototypes}>:-Wno-missing-prototypes>
+    $<$<BOOL:${_Wno_missing_field_initializers}>:-Wno-missing-field-initializers>
+    $<$<BOOL:${_Wno_unreachable_code}>:-Wno-unreachable-code>
+    $<$<BOOL:${_Wno_unsafe_buffer_usage}>:-Wno-unsafe-buffer-usage>
+  )
 
-    link_libraries(cogo unity)
+  link_libraries(cogo unity)
 
-    # yield
-    add_executable(test_yield src/cogo_yield_test.c)
-    add_test(NAME test_yield COMMAND test_yield)
+  # yield
+  add_executable(test_yield src/cogo_yield_test.c)
+  add_test(NAME test_yield COMMAND test_yield)
 
-    # await
-    add_executable(test_await src/cogo_await_test.c)
-    add_test(NAME test_await COMMAND test_await)
+  # await
+  add_executable(test_await src/cogo_await_test.c)
+  add_test(NAME test_await COMMAND test_await)
 
-    # async
-    add_executable(test_async src/cogo_async_test.c)
-    add_test(NAME test_async COMMAND test_async)
+  # async
+  add_executable(test_async src/cogo_async_test.c)
+  add_test(NAME test_async COMMAND test_async)
 endif()
