@@ -5,5 +5,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.3.0
-      - run: sudo apt-get -y install cmake ninja gcc clang
+      - run: sudo apt-get -y install cmake make gcc clang
       - run: scripts/test.sh $(mktemp -d)
