@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ROOT=$(dirname $0)/..
+ROOT=$(dirname "$0")/..
 
 if [ -n "$1" ]; then
     BUILD_DIR="$1"
