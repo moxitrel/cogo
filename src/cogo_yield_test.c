@@ -35,16 +35,11 @@ static void test_yield(void) {
 
   // noop when coroutine end
   yield_resume(&co);
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));  // end
+  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));
   TEST_ASSERT_EQUAL_INT(2, co.v);
 }
 
-typedef struct return1 {
-  cogo_yield_t base;  // inherent cogo_yield_t
-  int v;
-} return1_t;
-
-static void return1_resume(void* co_this) {
+CO_DECLARE(/*NAME*/ return1, int v) {
 CO_BEGIN:
 
   ((return1_t*)co_this)->v++;
@@ -55,12 +50,7 @@ CO_END:;
 }
 
 static void test_return(void) {
-  return1_t co = {
-      .base = {
-          .resume = return1_resume,
-      },
-      .v = 0,
-  };
+  return1_t co = CO_MAKE(/*NAME*/ return1, /*v*/ 0);
   TEST_ASSERT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
@@ -70,7 +60,7 @@ static void test_return(void) {
 
   // noop when coroutine end
   CO_RESUME(&co);
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co));  // end
+  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co));
   TEST_ASSERT_EQUAL_INT(1, co.v);
 }
 
@@ -87,7 +77,7 @@ CO_END:
 }
 
 static void test_prologue(void) {
-  prologue_t co = CO_MAKE(prologue, 0, 0);
+  prologue_t co = CO_MAKE(/*NAME*/ prologue, /*enter*/ 0, /*exit*/ 0);
 
   CO_RUN(&co);
   TEST_ASSERT_EQUAL_INT(3, co.enter);
