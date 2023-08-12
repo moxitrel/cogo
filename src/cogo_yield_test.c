@@ -21,21 +21,21 @@ static void test_yield(void) {
   yield_t co = {
       .v = 0,
   };
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co.cogo_yield));  // begin
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, CO_STATUS(&co.cogo_yield));  // begin
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
   yield_resume(&co);
-  TEST_ASSERT_NOT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co.cogo_yield));  // running
-  TEST_ASSERT_NOT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));
+  TEST_ASSERT_NOT_EQUAL_UINT64(CO_STATUS_BEGIN, CO_STATUS(&co.cogo_yield));  // running
+  TEST_ASSERT_NOT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co.cogo_yield));
   TEST_ASSERT_EQUAL_INT(1, co.v);
 
   yield_resume(&co);
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));  // end
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co.cogo_yield));  // end
   TEST_ASSERT_EQUAL_INT(2, co.v);
 
   // noop when coroutine end
   yield_resume(&co);
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co.cogo_yield));
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co.cogo_yield));
   TEST_ASSERT_EQUAL_INT(2, co.v);
 }
 
@@ -51,16 +51,16 @@ CO_END:;
 
 static void test_return(void) {
   return1_t co = CO_MAKE(/*NAME*/ return1, /*v*/ 0);
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_BEGIN, COGO_PC(&co));  // begin
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
   CO_RESUME(&co);
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co));  // end
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co));  // end
   TEST_ASSERT_EQUAL_INT(1, co.v);
 
   // noop when coroutine end
   CO_RESUME(&co);
-  TEST_ASSERT_EQUAL_UINT64(COGO_PC_END, COGO_PC(&co));
+  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co));
   TEST_ASSERT_EQUAL_INT(1, co.v);
 }
 
