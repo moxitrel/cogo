@@ -100,10 +100,8 @@ install(
 
 configure_file(cmake/${package_name}.pc.in ${package_name}.pc @ONLY)
 install(
-  FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc
-  DESTINATION
-  ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
 if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
