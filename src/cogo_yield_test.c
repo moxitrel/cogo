@@ -2,41 +2,35 @@
 #include <cogo/cogo_yield.h>
 #include <unity.h>
 
-typedef struct yield {
-  int v;
-  cogo_yield_t cogo_yield;
-} yield_t;
+static void yield_resume(cogo_yield_t* const co, int* const v) {
+  COGO_BEGIN(co) :;
 
-static void yield_resume(yield_t* thiz) {
-  COGO_BEGIN(&thiz->cogo_yield) :;
+  (*v)++;
+  COGO_YIELD(co);
+  (*v)++;
 
-  thiz->v++;
-  COGO_YIELD(&thiz->cogo_yield);
-  thiz->v++;
-
-  COGO_END(&thiz->cogo_yield) :;
+  COGO_END(co) :;
 }
 
 static void test_yield(void) {
-  yield_t co = {
-      .v = 0,
-  };
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, CO_STATUS(&co.cogo_yield));  // begin
-  TEST_ASSERT_EQUAL_INT(0, co.v);
+  cogo_yield_t co = {};
+  int v = 0;
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
+  TEST_ASSERT_EQUAL_INT(0, v);
 
-  yield_resume(&co);
-  TEST_ASSERT_NOT_EQUAL_UINT64(CO_STATUS_BEGIN, CO_STATUS(&co.cogo_yield));  // running
-  TEST_ASSERT_NOT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co.cogo_yield));
-  TEST_ASSERT_EQUAL_INT(1, co.v);
+  yield_resume(&co, &v);
+  TEST_ASSERT_NOT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // running
+  TEST_ASSERT_NOT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
+  TEST_ASSERT_EQUAL_INT(1, v);
 
-  yield_resume(&co);
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co.cogo_yield));  // end
-  TEST_ASSERT_EQUAL_INT(2, co.v);
+  yield_resume(&co, &v);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));  // end
+  TEST_ASSERT_EQUAL_INT(2, v);
 
   // noop when coroutine end
-  yield_resume(&co);
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co.cogo_yield));
-  TEST_ASSERT_EQUAL_INT(2, co.v);
+  yield_resume(&co, &v);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
+  TEST_ASSERT_EQUAL_INT(2, v);
 }
 
 CO_DECLARE(/*NAME*/ return1, int v) {
@@ -51,16 +45,16 @@ CO_END:;
 
 static void test_return(void) {
   return1_t co = CO_MAKE(/*NAME*/ return1, /*v*/ 0);
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, co.v);
 
   CO_RESUME(&co);
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co));  // end
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));  // end
   TEST_ASSERT_EQUAL_INT(1, co.v);
 
   // noop when coroutine end
   CO_RESUME(&co);
-  TEST_ASSERT_EQUAL_UINT64(CO_STATUS_END, CO_STATUS(&co));
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
   TEST_ASSERT_EQUAL_INT(1, co.v);
 }
 

@@ -122,6 +122,7 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
   check_c_compiler_flag(-Wno-unreachable-code _Wno_unreachable_code)
   check_c_compiler_flag(-Wno-missing-field-initializers _Wno_missing_field_initializers)
   check_c_compiler_flag(-Wno-unsafe-buffer-usage _Wno_unsafe_buffer_usage)
+  check_c_compiler_flag(-Wno-gnu-empty-initializer _Wno_gnu_empty_initializer)
 
   target_compile_options(cogo PRIVATE
     $<$<BOOL:${_Werror}>:-Werror>
@@ -155,6 +156,7 @@ if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
     $<$<BOOL:${_Wno_missing_field_initializers}>:-Wno-missing-field-initializers>
     $<$<BOOL:${_Wno_unreachable_code}>:-Wno-unreachable-code>
     $<$<BOOL:${_Wno_unsafe_buffer_usage}>:-Wno-unsafe-buffer-usage>
+    $<$<BOOL:${_Wno_gnu_empty_initializer}>:-Wno-gnu-empty-initializer>
   )
 
   link_libraries(cogo unity)
