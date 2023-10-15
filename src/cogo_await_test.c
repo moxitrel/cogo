@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unity.h>
 
-CO_DECLARE(/*NAME*/ static await2) {
+CO_DECLARE(static /*NAME*/ await2) {
 CO_BEGIN:
 
   CO_YIELD;
@@ -54,7 +54,7 @@ static void test_resume(void) {
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a1));
 }
 
-CO_DECLARE(/*NAME*/ static await0, await2_t a2) {
+CO_DECLARE(static /*NAME*/ await0, await2_t a2) {
   await0_t* const thiz = (await0_t*)co_this;
 CO_BEGIN:
 
@@ -113,8 +113,7 @@ CO_DECLARE(/*NAME*/ fibonacci, /*parameter*/ int n, /*return value*/ int v, /*lo
 CO_BEGIN:
   assert(thiz->n > 0);
 
-  if (thiz->n == 1 || thiz->n == 2)  // f(1) = 1, f(2) = 1
-  {
+  if (thiz->n == 1 || thiz->n == 2) {  // f(1) = 1, f(2) = 1
     thiz->v = 1;
   } else {  // f(n) = f(n-1) + f(n-2)
     thiz->v = 0;

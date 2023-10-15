@@ -58,7 +58,7 @@ static void test_return(void) {
   TEST_ASSERT_EQUAL_INT(1, co.v);
 }
 
-CO_DECLARE(/*NAME*/ prologue, int enter, int exit) {
+CO_DECLARE(static /*NAME*/ prologue, int enter, int exit) {
   prologue_t* const thiz = (prologue_t*)co_this;
   thiz->enter++;
 CO_BEGIN:

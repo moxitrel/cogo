@@ -63,9 +63,9 @@ extern "C" {
 #define COGO_ASSERT(...) /*noop*/
 #endif
 
-typedef int cogo_pc_t;
-#define COGO_PC_BEGIN 0
-#define COGO_PC_END   (-1)
+typedef int co_status_t;
+#define CO_STATUS_BEGIN 0
+#define CO_STATUS_END   (-1)
 
 // implement yield
 typedef struct cogo_yield {
@@ -73,30 +73,27 @@ typedef struct cogo_yield {
   //  >0: running
   //   0: inited
   //  -1: finished
-  cogo_pc_t pc;
+  co_status_t pc;
 
   // the coroutine function
   void (*resume)(void* co_this);
 } cogo_yield_t;
 
 // cogo_yield_t.pc
-#define COGO_PC(CO) (((cogo_yield_t*)(CO))->pc)
+#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
 
-typedef cogo_pc_t co_status_t;
-#define CO_STATUS_BEGIN COGO_PC_BEGIN
-#define CO_STATUS_END   COGO_PC_END
-// get the current running state
-#define CO_STATUS(CO)   ((co_status_t)COGO_PC(CO))
+// get the current running state (rvalue)
+#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))
 
 #define COGO_BEGIN(CO)                                                \
-  switch (COGO_PC(CO)) {                                              \
-    default: /* invalid  pc */                                        \
+  switch (CO_STATUS(CO)) {                                            \
+    default: /* invalid pc */                                         \
       COGO_ASSERT(((void)"pc isn't valid", 0));                       \
       goto cogo_end;                                                  \
       goto cogo_return; /* HACK: eliminate warning of unused label */ \
-    case COGO_PC_END:   /* coroutine end */                           \
+    case CO_STATUS_END: /* coroutine end */                           \
       goto cogo_end;                                                  \
-    case COGO_PC_BEGIN /* coroutine begin */
+    case CO_STATUS_BEGIN /* coroutine begin */
 
 #define COGO_YIELD(CO)                                                            \
   do {                                                                            \
@@ -108,10 +105,10 @@ typedef cogo_pc_t co_status_t;
 #define COGO_RETURN(CO) \
   goto cogo_return /* end coroutine */
 
-#define COGO_END(CO)              \
-  cogo_return:                    \
-  /**/ COGO_PC(CO) = COGO_PC_END; \
-  }                               \
+#define COGO_END(CO)                \
+  cogo_return:                      \
+  /**/ COGO_PC(CO) = CO_STATUS_END; \
+  }                                 \
   cogo_end
 
 #define CO_BEGIN  COGO_BEGIN(co_this)
