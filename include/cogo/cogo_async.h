@@ -41,17 +41,14 @@ cogo_async_sched_resume()  : like CO_RESUME()
 extern "C" {
 #endif
 
-typedef struct cogo_async cogo_async_t;
-typedef struct cogo_async_sched cogo_async_sched_t;
-
 // implement concurrency
-struct cogo_async {
+typedef struct cogo_async {
   // inherit cogo_await_t (with scheduler)
   cogo_await_t base;
 
   // build coroutine list
-  cogo_async_t* next;
-};
+  struct cogo_async* next;
+} cogo_async_t;
 
 // COGO_QUEUE_T             (cogo_async_t)
 // COGO_QUEUE_IS_EMPTY      (cogo_async_t) (const COGO_QUEUE_T(cogo_async_t)*)
@@ -68,7 +65,7 @@ struct cogo_async {
 #define COGO_CQ_PUSH         COGO_QUEUE_PUSH(cogo_async_t)
 #define COGO_CQ_POP          COGO_QUEUE_POP(cogo_async_t)
 #define COGO_CQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_async_t)
-struct cogo_async_sched {
+typedef struct cogo_async_sched {
   cogo_await_sched_t base;
 
   // other coroutines running concurrently
@@ -76,7 +73,7 @@ struct cogo_async_sched {
 
   // global:
   //  cogo_async_sched_t* run; // running schedulers (idles not in list)
-};
+} cogo_async_sched_t;
 
 // add coroutine to the concurrent queue
 // switch context if return true

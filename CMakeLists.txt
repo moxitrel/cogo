@@ -11,6 +11,8 @@ include(CTest)
 include(GNUInstallDirs)
 include(cmake/cogoCPack.cmake)
 
+option(COGO_BUILD_TESTING "build tests" OFF)
+
 cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
   OFF "NOT COGO_USE_LABEL_VALUE" OFF
 )
@@ -104,11 +106,12 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-if(BUILD_TESTING AND(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
-  include(CMakePrintHelpers)
+if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TESTING))
   include(cmake/unity.cmake)
 
-  cmake_print_variables(COGO_USE_CASE COGO_USE_LABEL_VALUE CMAKE_C_COMPILER)
+  message(STATUS "COGO_USE_CASE       : ${COGO_USE_CASE}")
+  message(STATUS "COGO_USE_LABEL_VALUE: ${COGO_USE_LABEL_VALUE}")
+  message(STATUS "CMAKE_C_COMPILER    : ${CMAKE_C_COMPILER}")
 
   check_c_compiler_flag(-Weverything _Weverything)
   check_c_compiler_flag(-Werror _Werror)

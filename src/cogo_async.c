@@ -106,14 +106,7 @@ co_status_t cogo_async_resume(cogo_async_t* const co) {
 
 void cogo_async_run(cogo_async_t* const co) {
   COGO_ASSERT(co);
-  if (CO_STATUS(co) != CO_STATUS_END) {
-    cogo_async_sched_t sched = {
-        .base = {
-            .top = co->base.top ? co->base.top : &co->base,  // resume
-        },
-    };
-    while (cogo_async_sched_resume(&sched)) {
-    }
+  while (cogo_async_resume(co) != CO_STATUS_END) {
   }
 
   /* mt
