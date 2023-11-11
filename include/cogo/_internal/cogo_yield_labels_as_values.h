@@ -35,8 +35,8 @@ yield_end:;                     //
 - Use GCC extension.
 
 */
-#ifndef COGO_YIELD_LABEL_VALUE_H_
-#define COGO_YIELD_LABEL_VALUE_H_
+#ifndef COGO_YIELD_LABELS_AS_VALUES_H_
+#define COGO_YIELD_LABELS_AS_VALUES_H_
 
 #include <stdint.h>
 
@@ -114,4 +114,4 @@ typedef struct cogo_yield {
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_YIELD_LABEL_VALUE_H_
+#endif  // COGO_YIELD_LABELS_AS_VALUES_H_

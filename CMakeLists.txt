@@ -13,11 +13,11 @@ include(cmake/cogoCPack.cmake)
 
 option(COGO_BUILD_TESTING "build tests" OFF)
 
-cmake_dependent_option(COGO_USE_CASE "implement yield with switch case"
-  OFF "NOT COGO_USE_LABEL_VALUE" OFF
+cmake_dependent_option(COGO_USE_SWITCH "implement yield with switch case"
+  OFF "NOT COGO_USE_LABELS_AS_VALUES" OFF
 )
-cmake_dependent_option(COGO_USE_LABEL_VALUE "implement yield with gcc extension of label value "
-  OFF "NOT COGO_USE_CASE" OFF
+cmake_dependent_option(COGO_USE_LABELS_AS_VALUES "implement yield with gcc extension of label value "
+  OFF "NOT COGO_USE_SWITCH" OFF
 )
 
 set(package_name ${PROJECT_NAME})
@@ -36,8 +36,8 @@ target_sources(cogo INTERFACE
   BASE_DIRS include
   FILES
   include/cogo/_internal/cogo_queue_template.h
-  include/cogo/_internal/cogo_yield_case.h
-  include/cogo/_internal/cogo_yield_label_value.h
+  include/cogo/_internal/cogo_yield_labels_as_values.h
+  include/cogo/_internal/cogo_yield_switch.h
   include/cogo/_internal/macro_utils.h
   include/cogo/cogo_async.h
   include/cogo/cogo_await.h
@@ -49,8 +49,8 @@ target_include_directories(cogo PUBLIC
 )
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
-  $<$<BOOL:${COGO_USE_LABEL_VALUE}>:COGO_USE_LABEL_VALUE>
-  $<$<BOOL:${COGO_USE_CASE}>:COGO_USE_CASE>
+  $<$<BOOL:${COGO_USE_LABELS_AS_VALUES}>:COGO_USE_LABELS_AS_VALUES>
+  $<$<BOOL:${COGO_USE_SWITCH}>:COGO_USE_SWITCH>
   COGO_MP=1 # multithreaded scheduler
 )
 check_c_compiler_flag(-Wc++-compat _Wcpp_compat)
@@ -109,9 +109,9 @@ install(
 if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TESTING))
   include(cmake/unity.cmake)
 
-  message(STATUS "COGO_USE_CASE       : ${COGO_USE_CASE}")
-  message(STATUS "COGO_USE_LABEL_VALUE: ${COGO_USE_LABEL_VALUE}")
-  message(STATUS "CMAKE_C_COMPILER    : ${CMAKE_C_COMPILER}")
+  message(STATUS "COGO_USE_SWITCH          : ${COGO_USE_SWITCH}")
+  message(STATUS "COGO_USE_LABELS_AS_VALUES: ${COGO_USE_LABELS_AS_VALUES}")
+  message(STATUS "CMAKE_C_COMPILER         : ${CMAKE_C_COMPILER}")
 
   check_c_compiler_flag(-Weverything _Weverything)
   check_c_compiler_flag(-Werror _Werror)

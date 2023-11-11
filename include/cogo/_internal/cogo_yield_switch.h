@@ -50,8 +50,8 @@ void nat_func(nat_t* co_this)
 - Protothreads      (http://dunkels.com/adam/pt/expansion.html)
 
 */
-#ifndef COGO_YIELD_CASE_H_
-#define COGO_YIELD_CASE_H_
+#ifndef COGO_YIELD_SWITCH_H_
+#define COGO_YIELD_SWITCH_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,8 +82,8 @@ typedef struct cogo_yield {
 // cogo_yield_t.pc
 #define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
 
-// get the current running state
-#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))  // return rvalue
+// get the current running state (rvalue)
+#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))
 
 #define COGO_BEGIN(CO)                                                \
   switch (CO_STATUS(CO)) {                                            \
@@ -119,4 +119,4 @@ typedef struct cogo_yield {
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_YIELD_CASE_H_
+#endif  // COGO_YIELD_SWITCH_H_

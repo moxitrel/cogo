@@ -4,7 +4,7 @@ ROOT=$(dirname "$0")/..
 
 BUILD_DIR="$ROOT/build"
 for cc in clang gcc; do
-  for YIELD_TYPE in COGO_USE_CASE COGO_USE_LABEL_VALUE; do
+  for YIELD_TYPE in COGO_USE_SWITCH COGO_USE_LABELS_AS_VALUES; do
     export CC="$cc"
 
     cmake -S $ROOT -B $BUILD_DIR -D${YIELD_TYPE}=TRUE -DCMAKE_BUILD_TYPE=MinSizeRel --fresh &&

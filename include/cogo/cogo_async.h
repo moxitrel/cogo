@@ -72,7 +72,7 @@ typedef struct cogo_async_sched {
   COGO_CQ_T q;
 
   // global:
-  //  cogo_async_sched_t* run; // running schedulers (idles not in list)
+  //  struct cogo_async_sched* run; // running schedulers (idles not in list)
 } cogo_async_sched_t;
 
 // add coroutine to the concurrent queue

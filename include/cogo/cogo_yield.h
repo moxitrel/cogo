@@ -23,14 +23,14 @@ CO_DEFINE(NAME){}       : define a declared coroutine which not defined.
 
 #include "_internal/macro_utils.h"
 
-#if defined(COGO_USE_LABEL_VALUE)
-#include "_internal/cogo_yield_label_value.h"
-#elif defined(COGO_USE_CASE)
-#include "_internal/cogo_yield_case.h"
+#if defined(COGO_USE_LABELS_AS_VALUES)
+#include "_internal/cogo_yield_labels_as_values.h"
+#elif defined(COGO_USE_SWITCH)
+#include "_internal/cogo_yield_switch.h"
 #elif defined(__GNUC__)
-#include "_internal/cogo_yield_label_value.h"
+#include "_internal/cogo_yield_labels_as_values.h"
 #else
-#include "_internal/cogo_yield_case.h"
+#include "_internal/cogo_yield_switch.h"
 #endif
 
 #ifdef __cplusplus

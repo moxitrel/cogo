@@ -2,40 +2,39 @@
 #include <limits.h>
 #include <stdbool.h>
 
-// run until yield, return the next coroutine will be run
-cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
-#define TOP (sched->base.top)
-  COGO_ASSERT(sched && TOP);
-  for (;;) {
-    TOP->sched = &sched->base;
-    TOP->base.resume(TOP);
-    if (!TOP) {  // blocked
-      TOP = (cogo_await_t*)cogo_async_sched_pop(sched);
-      if (!TOP) {  // no more active coroutines
-        goto exit;
-      }
-      continue;
-    }
-    switch (CO_STATUS(TOP)) {
-      case CO_STATUS_END:  // return
-        TOP = TOP->caller;
-        if (!TOP) {  // end
-          goto exit_next;
-        }
-        continue;
-      case CO_STATUS_BEGIN:  // await
-        continue;
-      default:  // yield
-        cogo_async_sched_push(sched, (cogo_async_t*)TOP);
-        goto exit_next;
-    }
-  }
-exit_next:
-  TOP = &cogo_async_sched_pop(sched)->base;
-exit:
-  return (cogo_async_t*)TOP;
-#undef TOP
-}
+// cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
+// #define TOP (sched->base.top)
+//   COGO_ASSERT(sched && TOP);
+//   for (;;) {
+//     TOP->sched = &sched->base;
+//     TOP->base.resume(TOP);
+//     if (!TOP) {  // blocked
+//       TOP = (cogo_await_t*)cogo_async_sched_pop(sched);
+//       if (!TOP) {  // no more active coroutines
+//         goto exit;
+//       }
+//       continue;
+//     }
+//     switch (CO_STATUS(TOP)) {
+//       case CO_STATUS_END:  // return
+//         TOP = TOP->caller;
+//         if (!TOP) {  // end
+//           goto exit_next;
+//         }
+//         continue;
+//       case CO_STATUS_BEGIN:  // await
+//         continue;
+//       default:  // yield
+//         cogo_async_sched_push(sched, (cogo_async_t*)TOP);
+//         goto exit_next;
+//     }
+//   }
+// exit_next:
+//   TOP = &cogo_async_sched_pop(sched)->base;
+// exit:
+//   return (cogo_async_t*)TOP;
+// #undef TOP
+// }
 
 bool cogo_chan_read(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t* const msg_next) {
   COGO_ASSERT(thiz && chan && chan->cap >= 0 && chan->size > PTRDIFF_MIN && msg_next);
@@ -88,7 +87,9 @@ cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* const sched) {
   return COGO_CQ_POP(&sched->q);
 }
 
+// run until yield, return the next coroutine will be run
 co_status_t cogo_async_resume(cogo_async_t* const co) {
+#define TOP (sched.base.top)
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
     cogo_async_sched_t sched = {
@@ -96,12 +97,40 @@ co_status_t cogo_async_resume(cogo_async_t* const co) {
             .top = co->base.top ? co->base.top : &co->base,
         },
     };
+    for (;;) {
+      TOP->sched = &sched.base;
+      TOP->base.resume(TOP);
+      if (!TOP) {  // blocked
+        TOP = (cogo_await_t*)cogo_async_sched_pop(&sched);
+        if (!TOP) {  // no more active coroutines
+          goto exit;
+        }
+        continue;
+      }
+      switch (CO_STATUS(TOP)) {
+        case CO_STATUS_END:  // return
+          TOP = TOP->caller;
+          if (!TOP) {  // end
+            goto exit_next;
+          }
+          continue;
+        case CO_STATUS_BEGIN:  // await
+          continue;
+        default:  // yield
+          cogo_async_sched_push(&sched, (cogo_async_t*)TOP);
+          goto exit_next;
+      }
+    }
+  exit_next:
+    TOP = &cogo_async_sched_pop(&sched)->base;
+  exit:
     // save resume point
-    co->base.top = (cogo_await_t*)cogo_async_sched_resume(&sched);
-    // FIXME: no support for multi-coroutine (sched.q is dropped)
+    co->base.top = TOP;
+    // FIXME: no support for multi-coroutine (sched.q is dropped because sched is a temporary variable)
     COGO_ASSERT(COGO_CQ_IS_EMPTY(&sched.q));
   }
   return CO_STATUS(co);
+#undef TOP
 }
 
 void cogo_async_run(cogo_async_t* const co) {

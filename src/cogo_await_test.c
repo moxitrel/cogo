@@ -119,17 +119,18 @@ CO_BEGIN:
     thiz->v = 0;
 
     thiz->fib_n1 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n1));
-    TEST_ASSERT_NOT_NULL(thiz->fib_n1);
-    *thiz->fib_n1 = CO_MAKE(/*NAME*/ fibonacci, /*argument*/ thiz->n - 1);
-    CO_AWAIT(thiz->fib_n1);  // eval f(n-1)
-    thiz->v += thiz->fib_n1->v;
-    free(thiz->fib_n1);
-
     thiz->fib_n2 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n2));
-    TEST_ASSERT_NOT_NULL(thiz->fib_n2);
+    assert(thiz->fib_n1);
+    assert(thiz->fib_n2);
+
+    *thiz->fib_n1 = CO_MAKE(/*NAME*/ fibonacci, /*argument*/ thiz->n - 1);
     *thiz->fib_n2 = CO_MAKE(/*NAME*/ fibonacci, /*argument*/ thiz->n - 2);
+    CO_AWAIT(thiz->fib_n1);  // eval f(n-1)
     CO_AWAIT(thiz->fib_n2);  // eval f(n-2)
+    thiz->v += thiz->fib_n1->v;
     thiz->v += thiz->fib_n2->v;
+
+    free(thiz->fib_n1);
     free(thiz->fib_n2);
   }
 
