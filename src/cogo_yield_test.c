@@ -3,13 +3,13 @@
 #include <unity.h>
 
 static void yield_resume(cogo_yield_t* const co, int* const v) {
-  COGO_BEGIN(co) :;
+  CO_BEGIN_F(co);
 
   (*v)++;
-  COGO_YIELD(co);
+  CO_YIELD_F(co);
   (*v)++;
 
-  COGO_END(co) :;
+  CO_END_F(co);
 }
 
 static void test_yield(void) {
@@ -33,53 +33,64 @@ static void test_yield(void) {
   TEST_ASSERT_EQUAL_INT(2, v);
 }
 
-CO_DECLARE(/*NAME*/ return1, int v) {
-CO_BEGIN:
+static void return_resume(cogo_yield_t* const co, int* const v) {
+  CO_BEGIN_F(co);
 
-  ((return1_t*)co_this)->v++;
-  CO_RETURN;
-  ((return1_t*)co_this)->v++;
+  (*v)++;
+  CO_RETURN_F(co);
+  (*v)++;
 
-CO_END:;
+  CO_END_F(co);
 }
 
 static void test_return(void) {
-  return1_t co = CO_MAKE(/*NAME*/ return1, /*v*/ 0);
+  cogo_yield_t co = {};
+  int v = 0;
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
-  TEST_ASSERT_EQUAL_INT(0, co.v);
+  TEST_ASSERT_EQUAL_INT(0, v);
 
-  CO_RESUME(&co);
+  return_resume(&co, &v);
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));  // end
-  TEST_ASSERT_EQUAL_INT(1, co.v);
+  TEST_ASSERT_EQUAL_INT(1, v);
 
   // noop when coroutine end
-  CO_RESUME(&co);
+  return_resume(&co, &v);
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
-  TEST_ASSERT_EQUAL_INT(1, co.v);
+  TEST_ASSERT_EQUAL_INT(1, v);
 }
 
-CO_DECLARE(static /*NAME*/ prologue, int enter, int exit) {
-  prologue_t* const thiz = (prologue_t*)co_this;
-  thiz->enter++;
-CO_BEGIN:
+typedef struct prologue {
+  cogo_yield_t co;
+  int enter;
+  int exit;
+} prologue_t;
 
-  CO_YIELD;
-  CO_YIELD;
+static void prologue_resume(prologue_t* const prologue) {
+  prologue->enter++;
+  CO_BEGIN_F(&prologue->co);
 
-CO_END:
-  thiz->exit++;
+  CO_YIELD_F(&prologue->co);
+  CO_YIELD_F(&prologue->co);
+
+  CO_END_F(&prologue->co);
+  prologue->exit++;
 }
 
 static void test_prologue(void) {
-  prologue_t co = CO_MAKE(/*NAME*/ prologue, /*enter*/ 0, /*exit*/ 0);
+  prologue_t prologue = {
+      .enter = 0,
+      .exit = 0,
+  };
 
-  CO_RUN(&co);
-  TEST_ASSERT_EQUAL_INT(3, co.enter);
-  TEST_ASSERT_EQUAL_INT(3, co.exit);
+  while (CO_STATUS(&prologue.co) != CO_STATUS_END) {
+    prologue_resume(&prologue);
+  }
+  TEST_ASSERT_EQUAL_INT(3, prologue.enter);
+  TEST_ASSERT_EQUAL_INT(3, prologue.exit);
 
-  CO_RESUME(&co);
-  TEST_ASSERT_EQUAL_INT(3, co.enter);
-  TEST_ASSERT_EQUAL_INT(3, co.exit);
+  prologue_resume(&prologue);
+  TEST_ASSERT_EQUAL_INT(4, prologue.enter);
+  TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
 
 CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {

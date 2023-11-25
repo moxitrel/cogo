@@ -120,8 +120,9 @@ CO_BEGIN:
 
     thiz->fib_n1 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n1));
     thiz->fib_n2 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n2));
-    assert(thiz->fib_n1);
-    assert(thiz->fib_n2);
+    if (!thiz->fib_n1 || !thiz->fib_n2) {
+      abort();
+    }
 
     *thiz->fib_n1 = CO_MAKE(/*NAME*/ fibonacci, /*argument*/ thiz->n - 1);
     *thiz->fib_n2 = CO_MAKE(/*NAME*/ fibonacci, /*argument*/ thiz->n - 2);

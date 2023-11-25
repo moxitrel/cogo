@@ -85,14 +85,14 @@ typedef struct cogo_yield {
 // get the current running state (rvalue)
 #define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))
 
-#define COGO_BEGIN(CO)                                                \
-  switch (CO_STATUS(CO)) {                                            \
-    default: /* invalid pc */                                         \
-      COGO_ASSERT(((void)"pc isn't valid", 0));                       \
-      goto cogo_end;                                                  \
-      goto cogo_return; /* HACK: eliminate warning of unused label */ \
-    case CO_STATUS_END: /* coroutine end */                           \
-      goto cogo_end;                                                  \
+#define COGO_BEGIN(CO)                                          \
+  switch (CO_STATUS(CO)) {                                      \
+    default: /* invalid pc */                                   \
+      COGO_ASSERT(((void)"pc isn't valid", 0));                 \
+      goto cogo_end;                                            \
+      goto cogo_return; /* eliminate warning of unused label */ \
+    case CO_STATUS_END: /* coroutine end */                     \
+      goto cogo_end;                                            \
     case CO_STATUS_BEGIN /* coroutine begin */
 
 #define COGO_YIELD(CO)                                                            \
@@ -111,10 +111,15 @@ typedef struct cogo_yield {
   }                                 \
   cogo_end
 
-#define CO_BEGIN  COGO_BEGIN(co_this)
-#define CO_END    COGO_END(co_this)
-#define CO_YIELD  COGO_YIELD(co_this)
-#define CO_RETURN COGO_RETURN(co_this)
+#define CO_BEGIN        COGO_BEGIN(co_this)
+#define CO_END          COGO_END(co_this)
+#define CO_YIELD        COGO_YIELD(co_this)
+#define CO_RETURN       COGO_RETURN(co_this)
+
+#define CO_BEGIN_F(CO)  COGO_BEGIN(CO) :
+#define CO_END_F(CO)    COGO_END(CO) :
+#define CO_YIELD_F(CO)  COGO_YIELD(CO)
+#define CO_RETURN_F(CO) COGO_RETURN(CO)
 
 #ifdef __cplusplus
 }

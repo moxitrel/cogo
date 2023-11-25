@@ -71,18 +71,18 @@ typedef struct cogo_yield {
 // get the current running state
 #define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))  // return rvalue
 
-#define COGO_BEGIN(CO)                                                                                  \
-  switch (CO_STATUS(CO)) {                                                                              \
-    case CO_STATUS_BEGIN:                                                                               \
-      goto cogo_begin;                                                                                  \
-      goto cogo_return; /* HACK: eliminate warning of unused label */                                   \
-      /* HACK: eliminate clang error: indirect goto in function with no address-of-label expressions */ \
-      COGO_PC(CO) = (co_status_t)(&&cogo_begin);                                                        \
-    case CO_STATUS_END:                                                                                 \
-      goto cogo_end;                                                                                    \
-    default:                                                                                            \
-      goto*(void*)COGO_PC(CO);                                                                          \
-  }                                                                                                     \
+#define COGO_BEGIN(CO)                                                                            \
+  switch (CO_STATUS(CO)) {                                                                        \
+    case CO_STATUS_BEGIN:                                                                         \
+      goto cogo_begin;                                                                            \
+      goto cogo_return; /* eliminate warning of unused label */                                   \
+      /* eliminate clang error: indirect goto in function with no address-of-label expressions */ \
+      COGO_PC(CO) = (co_status_t)(&&cogo_begin);                                                  \
+    case CO_STATUS_END:                                                                           \
+      goto cogo_end;                                                                              \
+    default:                                                                                      \
+      goto*(void*)COGO_PC(CO);                                                                    \
+  }                                                                                               \
   cogo_begin
 
 #define COGO_YIELD(CO)                                                     \
@@ -110,6 +110,11 @@ typedef struct cogo_yield {
 #define CO_END           COGO_END(co_this)
 #define CO_YIELD         COGO_YIELD(co_this)
 #define CO_RETURN        COGO_RETURN(co_this)
+
+#define CO_BEGIN_F(CO)   COGO_BEGIN(CO) :
+#define CO_END_F(CO)     COGO_END(CO) :
+#define CO_YIELD_F(CO)   COGO_YIELD(CO)
+#define CO_RETURN_F(CO)  COGO_RETURN(CO)
 
 #ifdef __cplusplus
 }
