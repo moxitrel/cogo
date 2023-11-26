@@ -79,7 +79,7 @@ typedef struct cogo_yield {
   void (*resume)(void* co_this);
 } cogo_yield_t;
 
-// cogo_yield_t.pc
+// cogo_yield_t.pc (lvalue)
 #define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
 
 // get the current running state (rvalue)

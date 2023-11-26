@@ -69,7 +69,7 @@ typedef struct cogo_yield {
 #define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
 
 // get the current running state
-#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))  // return rvalue
+#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))
 
 #define COGO_BEGIN(CO)                                                                            \
   switch (CO_STATUS(CO)) {                                                                        \
