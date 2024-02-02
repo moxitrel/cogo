@@ -7,11 +7,11 @@ CO_END      : coroutine end label.
 CO_YIELD    : yield from coroutine.
 CO_RETURN   : return from coroutine.
 
-co_status_t : type of CO_STATUS().
-CO_STATUS() : get the current running status.
-  CO_STATUS_BEGIN: inited
-  CO_STATUS_END  : finished
-  >0             : running
+co_status_t     : type of CO_STATUS().
+CO_STATUS(THIZ) : get the current running status.
+  CO_STATUS_BEGIN : inited
+  CO_STATUS_END   : finished
+  >0              : running
 
 * Example
 void nat_func(nat_t* co_this)

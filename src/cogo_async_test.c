@@ -14,7 +14,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" isn't explicitly initialized
+  nat_t n = CO_INITIALIZER(&n, /*NAME*/ nat);  // "v" isn't explicitly initialized
 
   CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -56,11 +56,11 @@ CO_END:;
 
 static void test_chan(void) {
   co_chan_t chan = CO_CHAN_MAKE(0);
-  recv_t recv1 = CO_MAKE(recv, &chan);
-  send_t send1 = CO_MAKE(send, &chan);
-  main_t main1 = CO_MAKE(main, &recv1, &send1);
-  CO_RUN(&main1);
-  TEST_ASSERT_EQUAL_PTR(&send1.msg, recv1.msg.next);
+  recv_t r1 = CO_INITIALIZER(&r1, recv, &chan);
+  send_t s1 = CO_INITIALIZER(&s1, send, &chan);
+  main_t m1 = CO_INITIALIZER(&m1, main, &r1, &s1);
+  CO_RUN(&m1);
+  TEST_ASSERT_EQUAL_PTR(&s1.msg, r1.msg.next);
 }
 
 void setUp(void) {

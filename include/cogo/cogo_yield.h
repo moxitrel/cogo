@@ -8,14 +8,14 @@ CO_YIELD
 CO_RETURN
 
 NAME_t                  : coroutine type created by CO_DECLARE()
-CO_MAKE(NAME, ...)      : make a new coroutine
+CO_INITIALIZER(THIZ, NAME, ...): make a new coroutine
 co_status_t
-CO_STATUS()
-CO_RESUME()             : continue to run a suspended coroutine until yield or finished
-CO_RUN()                : run the coroutine and all other created coroutines until finished
+CO_STATUS(THIZ)
+CO_RESUME(THIZ)         : continue to run a suspended coroutine until yield or finished
+CO_RUN   (THIZ)         : run the coroutine and all other created coroutines until finished
 
 CO_DECLARE(NAME, ...){} : declare a coroutine.
-CO_DEFINE(NAME){}       : define a declared coroutine which not defined.
+CO_DEFINE (NAME)     {} : define a declared coroutine which not defined.
 
 */
 #ifndef COGO_YIELD_H_
@@ -78,7 +78,7 @@ extern "C" {
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE(NAME, cogo_yield_t base, __VA_ARGS__)
 
-#define CO_MAKE(NAME, ...) \
+#define CO_INITIALIZER(THIZ, NAME, ...) \
   ((NAME##_t){{.resume = NAME##_resume}, __VA_ARGS__})
 
 // continue to run a suspended coroutine until yield or finished

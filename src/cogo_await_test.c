@@ -23,7 +23,8 @@ CO_END:;
 }
 
 static void test_resume(void) {
-  await1_t a1 = CO_MAKE(/*NAME*/ await1, /*await2*/ CO_MAKE(/*NAME*/ await2));
+  await2_t a2 = CO_INITIALIZER(&a2, /*NAME*/ await2);
+  await1_t a1 = CO_INITIALIZER(&a1, /*NAME*/ await1, /*await2*/ a2);
 
   // begin
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&a1));
@@ -68,7 +69,8 @@ CO_END:;
 }
 
 static void test_await_resumed(void) {
-  await0_t a0 = CO_MAKE(/*NAME*/ await0, /*await2*/ CO_MAKE(/*NAME*/ await2));
+  await2_t a2 = CO_INITIALIZER(&a2, /*NAME*/ await2);
+  await0_t a0 = CO_INITIALIZER(&a0, /*NAME*/ await0, /*await2*/ a2);
   CO_RUN(&a0);
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a0));
 }
@@ -85,7 +87,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = CO_MAKE(/*NAME*/ nat);  // "v" is implicitly initialized to ZERO
+  nat_t n = CO_INITIALIZER(&n, /*NAME*/ nat);  // "v" is implicitly initialized to ZERO
 
   CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -117,15 +119,13 @@ CO_BEGIN:
     thiz->v = 1;
   } else {  // f(n) = f(n-1) + f(n-2)
     thiz->v = 0;
-
     thiz->fib_n1 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n1));
     thiz->fib_n2 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n2));
-    if (!thiz->fib_n1 || !thiz->fib_n2) {
-      abort();
-    }
+    assert(thiz->fib_n1);
+    assert(thiz->fib_n2);
 
-    *thiz->fib_n1 = CO_MAKE(/*NAME*/ fibonacci, /*argument*/ thiz->n - 1);
-    *thiz->fib_n2 = CO_MAKE(/*NAME*/ fibonacci, /*argument*/ thiz->n - 2);
+    *thiz->fib_n1 = CO_INITIALIZER(thiz->fib_n1, /*NAME*/ fibonacci, /*argument*/ thiz->n - 1);
+    *thiz->fib_n2 = CO_INITIALIZER(thiz->fib_n2, /*NAME*/ fibonacci, /*argument*/ thiz->n - 2);
     CO_AWAIT(thiz->fib_n1);  // eval f(n-1)
     CO_AWAIT(thiz->fib_n2);  // eval f(n-2)
     thiz->v += thiz->fib_n1->v;
@@ -139,14 +139,18 @@ CO_END:;
 }
 
 static void test_fibonacci(void) {
+  // "v", "fib_n1" and "fib_n2" aren't explicitly inited
+  fibonacci_t f03 = CO_INITIALIZER(&f03, fibonacci, 3);
+  fibonacci_t f11 = CO_INITIALIZER(&f11, fibonacci, 11);
+  fibonacci_t f23 = CO_INITIALIZER(&f23, fibonacci, 23);
+
   struct {
     fibonacci_t fib;
     int v;
   } test_cases[] = {
-      // "v", "fib_n1" and "fib_n2" aren't needed to explicitly init
-      {CO_MAKE(fibonacci, 3), fibonacci(3)},
-      {CO_MAKE(fibonacci, 11), fibonacci(11)},
-      {CO_MAKE(fibonacci, 23), fibonacci(23)},
+      {f03, fibonacci(3)},
+      {f11, fibonacci(11)},
+      {f23, fibonacci(23)},
   };
 
   for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); i++) {

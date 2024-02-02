@@ -2,7 +2,7 @@
 #include <cogo/cogo_yield.h>
 #include <unity.h>
 
-static void yield_resume(cogo_yield_t* const co, int* const v) {
+static void func_yield(cogo_yield_t* co, int* v) {
   CO_BEGIN_F(co);
 
   (*v)++;
@@ -18,22 +18,22 @@ static void test_yield(void) {
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, v);
 
-  yield_resume(&co, &v);
+  func_yield(&co, &v);
   TEST_ASSERT_NOT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // running
   TEST_ASSERT_NOT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
   TEST_ASSERT_EQUAL_INT(1, v);
 
-  yield_resume(&co, &v);
+  func_yield(&co, &v);
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));  // end
   TEST_ASSERT_EQUAL_INT(2, v);
 
   // noop when coroutine end
-  yield_resume(&co, &v);
+  func_yield(&co, &v);
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
   TEST_ASSERT_EQUAL_INT(2, v);
 }
 
-static void return_resume(cogo_yield_t* const co, int* const v) {
+static void func_return(cogo_yield_t* co, int* v) {
   CO_BEGIN_F(co);
 
   (*v)++;
@@ -49,12 +49,12 @@ static void test_return(void) {
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, v);
 
-  return_resume(&co, &v);
+  func_return(&co, &v);
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));  // end
   TEST_ASSERT_EQUAL_INT(1, v);
 
   // noop when coroutine end
-  return_resume(&co, &v);
+  func_return(&co, &v);
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
   TEST_ASSERT_EQUAL_INT(1, v);
 }
@@ -65,7 +65,7 @@ typedef struct prologue {
   int exit;
 } prologue_t;
 
-static void prologue_resume(prologue_t* const prologue) {
+static void func_prologue(prologue_t* prologue) {
   prologue->enter++;
   CO_BEGIN_F(&prologue->co);
 
@@ -83,12 +83,12 @@ static void test_prologue(void) {
   };
 
   while (CO_STATUS(&prologue.co) != CO_STATUS_END) {
-    prologue_resume(&prologue);
+    func_prologue(&prologue);
   }
   TEST_ASSERT_EQUAL_INT(3, prologue.enter);
   TEST_ASSERT_EQUAL_INT(3, prologue.exit);
 
-  prologue_resume(&prologue);
+  func_prologue(&prologue);
   TEST_ASSERT_EQUAL_INT(4, prologue.enter);
   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
@@ -105,7 +105,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = CO_MAKE(nat);  // "v" is implicitly initialized to ZERO
+  nat_t n = CO_INITIALIZER(&n, nat);  // "v" is implicitly initialized to ZERO
 
   CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);

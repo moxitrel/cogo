@@ -94,7 +94,7 @@ co_status_t cogo_async_resume(cogo_async_t* const co) {
   if (CO_STATUS(co) != CO_STATUS_END) {
     cogo_async_sched_t sched = {
         .base = {
-            .top = co->base.top ? co->base.top : &co->base,
+            .top = co->base.top,
         },
     };
     for (;;) {
