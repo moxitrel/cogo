@@ -8,7 +8,7 @@ CO_YIELD    : yield from coroutine.
 CO_RETURN   : return from coroutine.
 
 co_status_t     : type of CO_STATUS().
-CO_STATUS(THIZ) : get the current running status.
+CO_STATUS(CO) : get the current running status.
   CO_STATUS_BEGIN : inited
   CO_STATUS_END   : finished
   >0              : running

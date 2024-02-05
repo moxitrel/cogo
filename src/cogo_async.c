@@ -9,7 +9,7 @@
 //     TOP->sched = &sched->base;
 //     TOP->base.resume(TOP);
 //     if (!TOP) {  // blocked
-//       TOP = (cogo_await_t*)cogo_async_sched_pop(sched);
+//       TOP = &cogo_async_sched_pop(sched)->base;
 //       if (!TOP) {  // no more active coroutines
 //         goto exit;
 //       }
@@ -101,7 +101,7 @@ co_status_t cogo_async_resume(cogo_async_t* const co) {
       TOP->sched = &sched.base;
       TOP->base.resume(TOP);
       if (!TOP) {  // blocked
-        TOP = (cogo_await_t*)cogo_async_sched_pop(&sched);
+        TOP = &cogo_async_sched_pop(&sched)->base;
         if (!TOP) {  // no more active coroutines
           goto exit;
         }
@@ -122,7 +122,7 @@ co_status_t cogo_async_resume(cogo_async_t* const co) {
       }
     }
   exit_next:
-    TOP = &cogo_async_sched_pop(&sched)->base;
+    TOP = (cogo_await_t*)cogo_async_sched_pop(&sched);
   exit:
     // save resume point
     co->base.top = TOP;

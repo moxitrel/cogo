@@ -13,4 +13,3 @@ void cogo_yield_run(cogo_yield_t* const co) {
   while (cogo_yield_resume(co) != CO_STATUS_END) {
   }
 }
-  

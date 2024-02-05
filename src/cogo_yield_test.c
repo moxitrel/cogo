@@ -93,7 +93,7 @@ static void test_prologue(void) {
   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
 
-CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {
+CO_DECLARE(/*TYPE*/ nat_t, /*return*/ int v) {
   nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
 
@@ -105,7 +105,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = CO_INITIALIZER(&n, nat);  // "v" is implicitly initialized to ZERO
+  nat_t n = CO_INITIALIZER(&n, /*TYPE*/ nat_t);  // "v" is implicitly initialized to ZERO
 
   CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);

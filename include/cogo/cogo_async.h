@@ -6,23 +6,23 @@ CO_BEGIN
 CO_YIELD
 CO_RETURN
 CO_END
-CO_AWAIT(THIZ)
-CO_ASYNC(THIZ)  : run a new coroutine concurrently.
+CO_AWAIT(CO)
+CO_ASYNC(CO)  : run a new coroutine concurrently.
 CO_CHAN_WRITE() : send a message to channel
 CO_CHAN_READ()  : receive a message from channel, the result stored in co_message_t.next
 
 NAME_t
-CO_INITIALIZER(THIZ, NAME, ...)
+CO_INITIALIZER(CO, TYPE, ...)
 co_message_t    : channel message type
 co_chan_t       : channel type
 CO_CHAN_MAKE()  : return a channel with capacity size_t
 co_status_t
-CO_STATUS(THIZ)
-CO_RESUME(THIZ)
-CO_RUN   (THIZ)
+CO_STATUS(CO)
+CO_RESUME(CO)
+CO_RUN   (CO)
 
-CO_DECLARE(NAME, ...){}
-CO_DEFINE (NAME)     {}
+CO_DECLARE(TYPE, ...){}
+CO_DEFINE (TYPE)     {}
 
 cogo_async_t               : coroutine type
 cogo_async_sched_t         : scheduler type
@@ -152,11 +152,11 @@ bool cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
 #undef CO_RESUME
 #undef CO_RUN
 
-#define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_async_t base, __VA_ARGS__)
+#define CO_DECLARE(TYPE, ...) \
+  COGO_DECLARE(TYPE, cogo_async_t base, __VA_ARGS__)
 
-#define CO_INITIALIZER(THIZ, NAME, ...) \
-  ((NAME##_t){{.base = {.base = {.resume = NAME##_resume}, .top=(THIZ)}}, __VA_ARGS__})
+#define CO_INITIALIZER(CO, TYPE, ...) \
+  ((TYPE){{.base = {.base = {.resume = TYPE##_resume}, .top = (cogo_await_t*)(CO)}}, __VA_ARGS__})
 
 #define CO_RESUME(CO) cogo_async_resume((cogo_async_t*)(CO))
 co_status_t cogo_async_resume(cogo_async_t* co);

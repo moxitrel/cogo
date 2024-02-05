@@ -8,14 +8,14 @@ CO_YIELD
 CO_RETURN
 
 NAME_t                  : coroutine type created by CO_DECLARE()
-CO_INITIALIZER(THIZ, NAME, ...): make a new coroutine
+CO_INITIALIZER(CO, TYPE, ...): make a new coroutine
 co_status_t
-CO_STATUS(THIZ)
-CO_RESUME(THIZ)         : continue to run a suspended coroutine until yield or finished
-CO_RUN   (THIZ)         : run the coroutine and all other created coroutines until finished
+CO_STATUS(CO)
+CO_RESUME(CO)         : continue to run a suspended coroutine until yield or finished
+CO_RUN   (CO)         : run the coroutine and all other created coroutines until finished
 
-CO_DECLARE(NAME, ...){} : declare a coroutine.
-CO_DEFINE (NAME)     {} : define a declared coroutine which not defined.
+CO_DECLARE(TYPE, ...){} : declare a coroutine.
+CO_DEFINE (TYPE)     {} : define a declared coroutine which not defined.
 
 */
 #ifndef COGO_YIELD_H_
@@ -49,37 +49,37 @@ extern "C" {
 //
 #define COGO_COMMA_static ,
 #define COGO_REMOVE_LINKAGE_static
-#define COGO_STRUCT(NAME, ...)    COGO_STRUCT1(CX0_COUNT(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
+#define COGO_STRUCT(TYPE, ...)    COGO_STRUCT1(CX0_COUNT(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
 #define COGO_STRUCT1(...)         COGO_STRUCT2(__VA_ARGS__)
 #define COGO_STRUCT2(N, ...)      COGO_STRUCT3_##N(__VA_ARGS__)
-#define COGO_STRUCT3_1(NAME, ...) /* NAME: Type */ \
-  typedef struct NAME NAME##_t;                    \
-  struct NAME {                                    \
-    CX0_MAP(;, CX0_IDENTITY, __VA_ARGS__);         \
+#define COGO_STRUCT3_1(TYPE, ...) /* TYPE: name_t */ \
+  typedef struct TYPE TYPE;                          \
+  struct TYPE {                                      \
+    CX0_MAP(;, CX0_IDENTITY, __VA_ARGS__);           \
   }
-#define COGO_STRUCT3_2(NAME, ...) /* NAME: static Type */                   \
-  typedef struct COGO_REMOVE_LINKAGE_##NAME COGO_REMOVE_LINKAGE_##NAME##_t; \
-  struct COGO_REMOVE_LINKAGE_##NAME {                                       \
-    CX0_MAP(;, CX0_IDENTITY, __VA_ARGS__);                                  \
+#define COGO_STRUCT3_2(TYPE, ...) /* TYPE: static name_t */             \
+  typedef struct COGO_REMOVE_LINKAGE_##TYPE COGO_REMOVE_LINKAGE_##TYPE; \
+  struct COGO_REMOVE_LINKAGE_##TYPE {                                   \
+    CX0_MAP(;, CX0_IDENTITY, __VA_ARGS__);                              \
   }
 
-#define COGO_DECLARE(NAME, BASE, ...)               \
+#define COGO_DECLARE(TYPE, BASE, ...)               \
   CX0_IF_NIL(CX0_IDENTITY(__VA_ARGS__),             \
-             COGO_STRUCT(NAME, BASE),               \
-             COGO_STRUCT(NAME, BASE, __VA_ARGS__)); \
-  CO_DEFINE(NAME)
+             COGO_STRUCT(TYPE, BASE),               \
+             COGO_STRUCT(TYPE, BASE, __VA_ARGS__)); \
+  CO_DEFINE(TYPE)
 
-#define CO_DEFINE(NAME)    CO_DEFINE1(CX0_COUNT(COGO_COMMA_##NAME), NAME)
+#define CO_DEFINE(TYPE)    CO_DEFINE1(CX0_COUNT(COGO_COMMA_##TYPE), TYPE)
 #define CO_DEFINE1(...)    CO_DEFINE2(__VA_ARGS__)
 #define CO_DEFINE2(N, ...) CO_DEFINE3_##N(__VA_ARGS__)
-#define CO_DEFINE3_1(NAME) void NAME##_resume(void* const co_this)
-#define CO_DEFINE3_2(NAME) static void COGO_REMOVE_LINKAGE_##NAME##_resume(void* const co_this)
+#define CO_DEFINE3_1(TYPE) void TYPE##_resume(void* const co_this)
+#define CO_DEFINE3_2(TYPE) static void COGO_REMOVE_LINKAGE_##TYPE##_resume(void* const co_this)
 
-#define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_yield_t base, __VA_ARGS__)
+#define CO_DECLARE(TYPE, ...) \
+  COGO_DECLARE(TYPE, cogo_yield_t base, __VA_ARGS__)
 
-#define CO_INITIALIZER(THIZ, NAME, ...) \
-  ((NAME##_t){{.resume = NAME##_resume}, __VA_ARGS__})
+#define CO_INITIALIZER(CO, TYPE, ...) \
+  ((TYPE){{.resume = TYPE##_resume}, __VA_ARGS__})
 
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_yield_resume((cogo_yield_t*)(CO))
