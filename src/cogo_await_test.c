@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unity.h>
 
-CO_DECLARE(static /*TYPE*/ await2_t) {
+CO_DECLARE(/*TYPE*/ static await2_t) {
 CO_BEGIN:
 
   CO_YIELD;
@@ -55,7 +55,7 @@ static void test_resume(void) {
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a1));
 }
 
-CO_DECLARE(static /*TYPE*/ await0_t, await2_t* a2) {
+CO_DECLARE(/*TYPE*/ static await0_t, await2_t* a2) {
   await0_t* const thiz = (await0_t*)co_this;
 CO_BEGIN:
 

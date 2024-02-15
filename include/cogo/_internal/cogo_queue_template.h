@@ -41,7 +41,7 @@ typedef struct {
 } COGO_Q_T;
 
 static inline bool COGO_Q_IS_EMPTY(COGO_Q_T const* const q) {
-  return q->head == NULL;
+  return !q->head;
 }
 
 static inline COGO_QUEUE_ELEMENT_T* COGO_Q_TOP(COGO_Q_T const* const q) {
@@ -74,8 +74,9 @@ static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {
   return node;
 }
 
-#undef COGO_Q_T
-#undef COGO_Q_IS_EMPTY
-#undef COGO_Q_POP
-#undef COGO_Q_PUSH
 #undef COGO_Q_POP_NONEMPTY
+#undef COGO_Q_PUSH
+#undef COGO_Q_POP
+#undef COGO_Q_TOP
+#undef COGO_Q_IS_EMPTY
+#undef COGO_Q_T

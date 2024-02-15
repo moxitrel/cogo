@@ -2,39 +2,39 @@
 #include <limits.h>
 #include <stdbool.h>
 
-// cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
-// #define TOP (sched->base.top)
-//   COGO_ASSERT(sched && TOP);
-//   for (;;) {
-//     TOP->sched = &sched->base;
-//     TOP->base.resume(TOP);
-//     if (!TOP) {  // blocked
-//       TOP = &cogo_async_sched_pop(sched)->base;
-//       if (!TOP) {  // no more active coroutines
-//         goto exit;
-//       }
-//       continue;
-//     }
-//     switch (CO_STATUS(TOP)) {
-//       case CO_STATUS_END:  // return
-//         TOP = TOP->caller;
-//         if (!TOP) {  // end
-//           goto exit_next;
-//         }
-//         continue;
-//       case CO_STATUS_BEGIN:  // await
-//         continue;
-//       default:  // yield
-//         cogo_async_sched_push(sched, (cogo_async_t*)TOP);
-//         goto exit_next;
-//     }
-//   }
-// exit_next:
-//   TOP = &cogo_async_sched_pop(sched)->base;
-// exit:
-//   return (cogo_async_t*)TOP;
-// #undef TOP
-// }
+static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
+#define TOP (sched->base.top)
+  COGO_ASSERT(sched && TOP);
+  for (;;) {
+    TOP->sched = (cogo_await_sched_t*)sched;
+    ((cogo_yield_t*)TOP)->resume(TOP);
+    if (!TOP) {  // blocked
+      TOP = (cogo_await_t*)cogo_async_sched_pop(sched);
+      if (!TOP) {  // no more active coroutines
+        goto exit;
+      }
+    } else {
+      switch (CO_STATUS(TOP)) {
+        case CO_STATUS_END:  // return
+          TOP = TOP->caller;
+          if (!TOP) {  // end
+            goto exit_next;
+          }
+          continue;
+        case CO_STATUS_BEGIN:  // await
+          continue;
+        default:  // yield
+          cogo_async_sched_push(sched, (cogo_async_t*)TOP);
+          goto exit_next;
+      }
+    }
+  }
+exit_next:
+  TOP = (cogo_await_t*)cogo_async_sched_pop(sched);
+exit:
+  return (cogo_async_t*)TOP;
+#undef TOP
+}
 
 bool cogo_chan_read(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t* const msg_next) {
   COGO_ASSERT(thiz && chan && chan->cap >= 0 && chan->size > PTRDIFF_MIN && msg_next);
@@ -89,53 +89,39 @@ cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* const sched) {
 
 // run until yield, return the next coroutine will be run
 co_status_t cogo_async_resume(cogo_async_t* const co) {
-#define TOP (sched.base.top)
   COGO_ASSERT(co);
   if (CO_STATUS(co) != CO_STATUS_END) {
     cogo_async_sched_t sched = {
         .base = {
             .top = co->base.top,
         },
+        .q = {
+            .head = co->next,
+            .tail = co->next,
+        },
     };
-    for (;;) {
-      TOP->sched = &sched.base;
-      TOP->base.resume(TOP);
-      if (!TOP) {  // blocked
-        TOP = &cogo_async_sched_pop(&sched)->base;
-        if (!TOP) {  // no more active coroutines
-          goto exit;
-        }
-        continue;
-      }
-      switch (CO_STATUS(TOP)) {
-        case CO_STATUS_END:  // return
-          TOP = TOP->caller;
-          if (!TOP) {  // end
-            goto exit_next;
-          }
-          continue;
-        case CO_STATUS_BEGIN:  // await
-          continue;
-        default:  // yield
-          cogo_async_sched_push(&sched, (cogo_async_t*)TOP);
-          goto exit_next;
-      }
+    while (sched.q.tail && sched.q.tail->next) {
+      sched.q.tail = sched.q.tail->next;
     }
-  exit_next:
-    TOP = (cogo_await_t*)cogo_async_sched_pop(&sched);
-  exit:
+
     // save resume point
-    co->base.top = TOP;
-    // FIXME: no support for multi-coroutine (sched.q is dropped because sched is a temporary variable)
-    COGO_ASSERT(COGO_CQ_IS_EMPTY(&sched.q));
+    co->base.top = (cogo_await_t*)cogo_async_sched_resume(&sched);
+    // save q
+    if (co->base.top) {
+      ((cogo_async_t*)co->base.top)->next = sched.q.head;
+    }
   }
   return CO_STATUS(co);
-#undef TOP
 }
 
 void cogo_async_run(cogo_async_t* const co) {
   COGO_ASSERT(co);
-  while (cogo_async_resume(co) != CO_STATUS_END) {
+  cogo_async_sched_t sched = {
+      .base = {
+          .top = (cogo_await_t*)co,
+      },
+  };
+  while (cogo_async_sched_resume(&sched)) {
   }
 
   /* mt
