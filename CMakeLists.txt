@@ -28,7 +28,6 @@ set(_package_config_version ${package_name}ConfigVersion)
 add_library(cogo
   src/cogo_async.c
   src/cogo_await.c
-  src/cogo_yield.c
 )
 target_sources(cogo INTERFACE
   FILE_SET HEADERS

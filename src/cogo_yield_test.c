@@ -3,13 +3,13 @@
 #include <unity.h>
 
 static void func_yield(cogo_yield_t* co, int* v) {
-  CO_BEGIN_F(co);
+  COGO_BEGIN(co) :;
 
   (*v)++;
-  CO_YIELD_F(co);
+  COGO_YIELD(co);
   (*v)++;
 
-  CO_END_F(co);
+  COGO_END(co) :;
 }
 
 static void test_yield(void) {
@@ -34,13 +34,13 @@ static void test_yield(void) {
 }
 
 static void func_return(cogo_yield_t* co, int* v) {
-  CO_BEGIN_F(co);
+  COGO_BEGIN(co) :;
 
   (*v)++;
-  CO_RETURN_F(co);
+  COGO_RETURN(co);
   (*v)++;
 
-  CO_END_F(co);
+  COGO_END(co) :;
 }
 
 static void test_return(void) {
@@ -60,19 +60,19 @@ static void test_return(void) {
 }
 
 typedef struct prologue {
-  cogo_yield_t co;
   int enter;
   int exit;
+  cogo_yield_t co;
 } prologue_t;
 
 static void func_prologue(prologue_t* prologue) {
   prologue->enter++;
-  CO_BEGIN_F(&prologue->co);
+  COGO_BEGIN(&prologue->co) :;
 
-  CO_YIELD_F(&prologue->co);
-  CO_YIELD_F(&prologue->co);
+  COGO_YIELD(&prologue->co);
+  COGO_YIELD(&prologue->co);
 
-  CO_END_F(&prologue->co);
+  COGO_END(&prologue->co) :;
   prologue->exit++;
 }
 
@@ -93,7 +93,8 @@ static void test_prologue(void) {
   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
 
-CO_DECLARE(/*TYPE*/ nat_t, /*return*/ int v) {
+CO_DECLARE(/*COROUTINE NAME*/ nat_t, /*param*/ int v);
+CO_DEFINE(/*COROUTINE NAME*/ nat_t) {
   nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
 
@@ -105,15 +106,15 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = CO_INITIALIZER(&n, /*TYPE*/ nat_t);  // "v" is implicitly initialized to ZERO
+  nat_t n = {};
 
-  CO_RESUME(&n);
+  nat_t_resume(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
 
-  CO_RESUME(&n);
+  nat_t_resume(&n);
   TEST_ASSERT_EQUAL_INT(1, n.v);
 
-  CO_RESUME(&n);
+  nat_t_resume(&n);
   TEST_ASSERT_EQUAL_INT(2, n.v);
 }
 

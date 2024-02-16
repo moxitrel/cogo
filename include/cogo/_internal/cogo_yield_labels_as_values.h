@@ -60,9 +60,6 @@ typedef struct cogo_yield {
   //  0: inited
   // -1: finished
   co_status_t pc;
-
-  // the coroutine function
-  void (*resume)(void* co_this);
 } cogo_yield_t;
 
 // cogo_yield_t.pc
@@ -72,7 +69,7 @@ typedef struct cogo_yield {
 #define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))
 
 #define COGO_BEGIN(CO)                                                                            \
-  switch (CO_STATUS(CO)) {                                                                        \
+  switch (COGO_PC(CO)) {                                                                          \
     case CO_STATUS_BEGIN:                                                                         \
       goto cogo_begin;                                                                            \
       goto cogo_return; /* eliminate warning of unused label */                                   \
@@ -110,11 +107,6 @@ typedef struct cogo_yield {
 #define CO_END           COGO_END(co_this)
 #define CO_YIELD         COGO_YIELD(co_this)
 #define CO_RETURN        COGO_RETURN(co_this)
-
-#define CO_BEGIN_F(CO)   COGO_BEGIN(CO) :
-#define CO_END_F(CO)     COGO_END(CO) :
-#define CO_YIELD_F(CO)   COGO_YIELD(CO)
-#define CO_RETURN_F(CO)  COGO_RETURN(CO)
 
 #ifdef __cplusplus
 }

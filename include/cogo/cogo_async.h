@@ -7,12 +7,11 @@ CO_YIELD
 CO_RETURN
 CO_END
 CO_AWAIT(CO)
-CO_ASYNC(CO)  : run a new coroutine concurrently.
+CO_ASYNC(CO)    : run a new coroutine concurrently.
 CO_CHAN_WRITE() : send a message to channel
 CO_CHAN_READ()  : receive a message from channel, the result stored in co_message_t.next
 
-NAME_t
-CO_INITIALIZER(CO, TYPE, ...)
+CO_INITER(CO, TYPE, ...)
 co_message_t    : channel message type
 co_chan_t       : channel type
 CO_CHAN_MAKE()  : return a channel with capacity size_t
@@ -148,19 +147,18 @@ bool cogo_chan_read(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg_ne
 bool cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
 
 #undef CO_DECLARE
-#undef CO_INITIALIZER
-#undef CO_RESUME
-#undef CO_RUN
-
 #define CO_DECLARE(TYPE, ...) \
   COGO_DECLARE(TYPE, cogo_async_t base, __VA_ARGS__)
 
-#define CO_INITIALIZER(CO, TYPE, ...) \
-  ((TYPE){{.base = {.base = {.resume = TYPE##_resume}, .top = (cogo_await_t*)(CO)}}, __VA_ARGS__})
+#undef CO_INITER
+#define CO_INITER(CO, TYPE, ...) \
+  ((TYPE){{.base = {.resume = TYPE##_resume, .top = (cogo_await_t*)(CO)}}, __VA_ARGS__})
 
+#undef CO_RESUME
 #define CO_RESUME(CO) cogo_async_resume((cogo_async_t*)(CO))
 co_status_t cogo_async_resume(cogo_async_t* co);
 
+#undef CO_RUN
 #define CO_RUN(CO) cogo_async_run((cogo_async_t*)(CO))
 void cogo_async_run(cogo_async_t* co);
 

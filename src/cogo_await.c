@@ -25,7 +25,7 @@ co_status_t cogo_await_resume(cogo_await_t* const co) {
     };
     for (;;) {
       TOP->sched = &sched;
-      ((cogo_yield_t*)TOP)->resume(TOP);
+      TOP->resume(TOP);
       switch (CO_STATUS(TOP)) {
         case CO_STATUS_END:  // return
           TOP = TOP->caller;
