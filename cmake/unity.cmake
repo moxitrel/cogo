@@ -1,4 +1,4 @@
-include_guard(DIRECTORY)
+include_guard(GLOBAL)
 include(FetchContent)
 include(FindPackageMessage)
 

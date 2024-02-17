@@ -4,6 +4,6 @@ jobs:
   unit-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4
       - run: sudo apt-get -y install cmake make gcc clang valgrind
       - run: scripts/test.sh $(mktemp -d)

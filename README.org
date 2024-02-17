@@ -26,45 +26,33 @@ CO_END:;
 * Example
 *** Natural number generator
 #+BEGIN_SRC C
+#include "cogo/cogo.h"
 #include <stdio.h>
-#include "cogo/cogo_async.h"
 
-// CO_DECLARE(NAME, ...): declare a coroutine
-// nat_gen: coroutine name
-// value: save return value
-CO_DECLARE(nat_generator, int value)
+CO_DECLARE(nat_t, int n)
 {
-    // nat_generator_t: defined by CO_DECLARE() with pattern "NAME_t"
-    // void* co_this: coroutine arguments
-    nat_generator_t* const thiz = (nat_generator*)co_this;
+  nat_t* thiz = (nat_t*)co_this;
+CO_BEGIN:
 
-CO_BEGIN: // mark coroutine begin
+  for (thiz->n = 0;; thiz->n++) {
+    CO_YIELD;  // return (next call start from here)
+  }
 
-    // thiz->value: reference "value"
-    for (thiz->value = 0; ; thiz->value++) {
-        CO_YIELD; // return (next run start from here)
-    }
-
-CO_END: // mark coroutine end
-    ;
+CO_END:;
 }
 
-void nat_generator_example(void)
+void nat_t_example(void)
 {
-    // make a coroutine instance
-    nat_generator_t ng = CO_INITIALIZER(&ng, nat_generator, 0);
+  nat_t ng = CO_INIT(&ng, nat_t, /*n*/ 0);
 
-    // run coroutine until yield
-    CO_RESUME(&ng);
-    // ng.value: reference coroutine argument
-    printf("ng.value: %d\n", ng.value);   // ng.value: 0
+  CO_RESUME(&ng);
+  printf("ng.n: %d\n", ng.n);  // ng.n: 0
 
-    // continue to run starting from last CO_YIELD
-    CO_RESUME(&ng);
-    printf("ng.value: %d\n", ng.value);   // ng.value: 1
+  CO_RESUME(&ng);
+  printf("ng.n: %d\n", ng.n);  // ng.n: 1
 
-    CO_RESUME(&ng);
-    printf("ng.value: %d\n", ng.value);   // ng.value: 2
+  CO_RESUME(&ng);
+  printf("ng.n: %d\n", ng.n);  // ng.n: 2
 }
 #+END_SRC
 
