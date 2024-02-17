@@ -26,9 +26,10 @@ CO_END:;
 * Example
 *** Natural number generator
 #+BEGIN_SRC C
-#include "cogo/cogo.h"
 #include <stdio.h>
+#include "cogo/cogo.h"
 
+// Define generator.
 CO_DECLARE(nat_t, int n)
 {
   nat_t* thiz = (nat_t*)co_this;
@@ -41,7 +42,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-void nat_t_example(void)
+void example(void)
 {
   nat_t ng = CO_INIT(&ng, nat_t, /*n*/ 0);
 

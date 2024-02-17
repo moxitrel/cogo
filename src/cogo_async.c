@@ -19,7 +19,7 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
 #define TOP (sched->base_await.top)
   COGO_ASSERT(sched && TOP);
   for (;;) {
-    TOP->sched = (cogo_await_sched_t*)sched;
+    TOP->sched = &sched->base_await;
     TOP->resume(TOP);
     if (!TOP) {  // blocked
       goto on_blocked;
@@ -35,13 +35,13 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
           continue;
         default:  // yield, async
           cogo_async_sched_push(sched, (cogo_async_t*)TOP);
-          TOP = (cogo_await_t*)cogo_async_sched_pop(sched);
+          TOP = &cogo_async_sched_pop(sched)->base_await;
           goto exit;
       }
     }
   on_blocked:
   on_end:
-    TOP = (cogo_await_t*)cogo_async_sched_pop(sched);
+    TOP = &cogo_async_sched_pop(sched)->base_await;
     if (!TOP) {  // no more active coroutines
       goto exit;
     }
@@ -104,7 +104,7 @@ cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* const sched) {
 
 // run until yield, return the next coroutine will be run
 co_status_t cogo_async_resume(cogo_async_t* const co) {
-#define TOP (((cogo_await_t*)co)->top)
+#define TOP (co->base_await.top)
   COGO_ASSERT(co);
   if (co->base_await.top) {
     cogo_async_sched_t sched = {
@@ -123,7 +123,7 @@ co_status_t cogo_async_resume(cogo_async_t* const co) {
     }
 
     // save resume point
-    TOP = (cogo_await_t*)cogo_async_sched_resume(&sched);
+    TOP = &cogo_async_sched_resume(&sched)->base_await;
     // save q
     if (TOP) {
       ((cogo_async_t*)TOP)->next = sched.q.head;
@@ -137,7 +137,7 @@ void cogo_async_run(cogo_async_t* const co) {
   COGO_ASSERT(co);
   cogo_async_sched_t sched = {
       .base_await = {
-          .top = (cogo_await_t*)co,
+          .top = &co->base_await,
       },
   };
   while (cogo_async_sched_step(&sched)) {
