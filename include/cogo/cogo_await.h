@@ -8,7 +8,7 @@ CO_YIELD
 CO_RETURN
 CO_AWAIT(CO)  : run another coroutine until finished
 
-CO_INITER(CO, TYPE, ...)
+CO_INIT  (CO, TYPE, ...)
 co_status_t
 CO_STATUS(CO)
 CO_RESUME(CO)
@@ -35,7 +35,7 @@ typedef struct cogo_await_sched cogo_await_sched_t;
 // implement call stack
 struct cogo_await {
   // inherit cogo_yield_t
-  cogo_yield_t base;
+  cogo_yield_t base_yield;
 
   // the coroutine function
   void (*resume)(void* co_this);
@@ -61,15 +61,16 @@ struct cogo_await_sched {
 #define CO_AWAIT(CO)                                               \
   do {                                                             \
     cogo_await_await((cogo_await_t*)co_this, (cogo_await_t*)(CO)); \
-    CO_YIELD;                                                      \
+    CO_YIELD_BY_AWAIT;                                             \
   } while (0)
 void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
+#define CO_YIELD_BY_AWAIT CO_YIELD;
 
 #undef CO_DECLARE
 #define CO_DECLARE(TYPE, ...) \
-  COGO_DECLARE(TYPE, cogo_await_t base, __VA_ARGS__)
+  COGO_DECLARE(TYPE, cogo_await_t base_await, __VA_ARGS__)
 
-#define CO_INITER(CO, TYPE, ...) \
+#define CO_INIT(CO, TYPE, ...) \
   ((TYPE){{.resume = TYPE##_resume, .top = (cogo_await_t*)(CO)}, __VA_ARGS__})
 
 // continue to run a suspended coroutine until yield or finished

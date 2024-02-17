@@ -7,7 +7,7 @@ CO_END
 CO_YIELD
 CO_RETURN
 
-CO_INITER(CO, TYPE, ...): make a new coroutine
+CO_INIT(CO, TYPE, ...): make a new coroutine
 co_status_t
 CO_STATUS(CO)
 
@@ -73,7 +73,7 @@ extern "C" {
 #define CO_DEFINE3_2(TYPE) static void COGO_REMOVE_LINKAGE_##TYPE##_resume(void* const co_this)
 
 #define CO_DECLARE(TYPE, ...) \
-  COGO_DECLARE(TYPE, cogo_yield_t base, __VA_ARGS__)
+  COGO_DECLARE(TYPE, cogo_yield_t base_yield, __VA_ARGS__)
 
 #ifdef __cplusplus
 }

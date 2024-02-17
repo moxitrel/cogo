@@ -52,7 +52,7 @@ CO_END: // mark coroutine end
 void nat_generator_example(void)
 {
     // make a coroutine instance
-    nat_generator_t ng = CO_INITER(&ng, nat_generator, 0);
+    nat_generator_t ng = CO_INITIALIZER(&ng, nat_generator, 0);
 
     // run coroutine until yield
     CO_RESUME(&ng);

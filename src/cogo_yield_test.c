@@ -93,8 +93,7 @@ static void test_prologue(void) {
   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
 
-CO_DECLARE(/*COROUTINE NAME*/ nat_t, /*param*/ int v);
-CO_DEFINE(/*COROUTINE NAME*/ nat_t) {
+CO_DECLARE(/*COROUTINE NAME*/ nat_t, /*param*/ int v) {
   nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
 
