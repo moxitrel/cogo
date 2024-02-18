@@ -16,7 +16,7 @@ CO_DECLARE(coroutine_name, T parameter, ...)
 CO_BEGIN:
 
     //
-    // user code
+    // User codes.
     //
 
 CO_END:;
@@ -42,6 +42,7 @@ CO_BEGIN:
 CO_END:;
 }
 
+// Usage.
 void example(void)
 {
   nat_t ng = CO_INIT(&ng, nat_t, /*n*/ 0);
