@@ -2,7 +2,7 @@
 #include <cogo/cogo_async.h>
 #include <unity.h>
 
-CO_DECLARE(/*TYPE*/ nat_t, /*return*/ int v) {
+CO_DECLARE(/*FUNC*/ nat, /*return*/ int v) {
   nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
 
@@ -14,7 +14,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = CO_INIT(&n, /*TYPE*/ nat_t);  // "v" isn't explicitly initialized
+  nat_t n = CO_INIT(/*FUNC*/ nat, /*this*/ &n);  // "v" isn't explicitly initialized
 
   CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -26,8 +26,8 @@ static void test_nat(void) {
   TEST_ASSERT_EQUAL_INT(2, n.v);
 }
 
-CO_DECLARE(recv_t, co_chan_t* chan, co_message_t msg) {
-  recv_t* const thiz = (recv_t*)co_this;
+CO_DECLARE(consume, co_chan_t* chan, co_message_t msg) {
+  consume_t* const thiz = (consume_t*)co_this;
 CO_BEGIN:
 
   CO_CHAN_READ(thiz->chan, &thiz->msg);
@@ -35,8 +35,8 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(send_t, co_chan_t* chan, co_message_t msg) {
-  send_t* const thiz = (send_t*)co_this;
+CO_DECLARE(product, co_chan_t* chan, co_message_t msg) {
+  product_t* const thiz = (product_t*)co_this;
 CO_BEGIN:
 
   CO_CHAN_WRITE(thiz->chan, &thiz->msg);
@@ -44,23 +44,23 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(main_t, recv_t* recv, send_t* send) {
-  main_t* const thiz = (main_t*)co_this;
+CO_DECLARE(entry, consume_t* r, product_t* w) {
+  entry_t* const thiz = (entry_t*)co_this;
 CO_BEGIN:
 
-  CO_ASYNC(thiz->recv);
-  CO_ASYNC(thiz->send);
+  CO_ASYNC(thiz->r);
+  CO_ASYNC(thiz->w);
 
 CO_END:;
 }
 
 static void test_chan(void) {
-  co_chan_t chan = CO_CHAN_MAKE(0);
-  recv_t r1 = CO_INIT(&r1, recv_t, &chan);
-  send_t s1 = CO_INIT(&s1, send_t, &chan);
-  main_t m1 = CO_INIT(&m1, main_t, &r1, &s1);
-  CO_RUN(&m1);
-  TEST_ASSERT_EQUAL_PTR(&s1.msg, r1.msg.next);
+  co_chan_t c = CO_CHAN_MAKE(0);
+  consume_t r = CO_INIT(/*FUNC*/ consume, /*this*/ &r, .chan = &c);
+  product_t w = CO_INIT(/*FUNC*/ product, /*this*/ &w, .chan = &c);
+  entry_t m = CO_INIT(/*FUNC*/ entry, /*this*/ &m, .w = &w, .r = &r);
+  CO_RUN(&m);
+  TEST_ASSERT_EQUAL_PTR(&w.msg, r.msg.next);
 }
 
 void setUp(void) {

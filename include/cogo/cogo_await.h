@@ -8,14 +8,14 @@ CO_YIELD
 CO_RETURN
 CO_AWAIT(CO)  : run another coroutine until finished
 
-CO_INIT  (CO, TYPE, ...)
+CO_INIT  (CO, FUNC, ...)
 co_status_t
 CO_STATUS(CO)
 CO_RESUME(CO)
 CO_RUN   (CO)
 
-CO_DECLARE(TYPE, ...){}
-CO_DEFINE (TYPE)     {}
+CO_DECLARE(FUNC, ...){}
+CO_DEFINE (FUNC)     {}
 
 cogo_await_t          : coroutine type
 
@@ -67,11 +67,11 @@ void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
 #define CO_YIELD_BY_AWAIT CO_YIELD;
 
 #undef CO_DECLARE
-#define CO_DECLARE(TYPE, ...) \
-  COGO_DECLARE(TYPE, cogo_await_t base_await, __VA_ARGS__)
+#define CO_DECLARE(FUNC, ...) \
+  COGO_DECLARE(FUNC, cogo_await_t base_await, __VA_ARGS__)
 
-#define CO_INIT(CO, TYPE, ...) \
-  ((TYPE){{.resume = TYPE##_resume, .top = (cogo_await_t*)(CO)}, __VA_ARGS__})
+#define CO_INIT(FUNC, THIZ, ...) \
+  ((FUNC##_t){{.resume = FUNC, .top = (cogo_await_t*)(THIZ)}, __VA_ARGS__})
 
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))

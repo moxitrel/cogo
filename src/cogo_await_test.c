@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unity.h>
 
-CO_DECLARE(static /*TYPE NAME*/ await2_t) {
+CO_DECLARE(/*FUNC NAME*/ await2) {
 CO_BEGIN:
 
   CO_YIELD;
@@ -12,8 +12,8 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(/*TYPE NAME*/ await1_t, /*param1*/ await2_t* a2);
-CO_DEFINE(/*TYPE NAME*/ await1_t) {
+CO_DECLARE(/*FUNC NAME*/ await1, /*param1*/ await2_t* a2);
+CO_DEFINE(/*FUNC NAME*/ await1) {
   await1_t* const thiz = (await1_t*)co_this;
 CO_BEGIN:
 
@@ -23,8 +23,8 @@ CO_END:;
 }
 
 static void test_resume(void) {
-  await2_t a2 = CO_INIT(&a2, /*TYPE NAME*/ await2_t);
-  await1_t a1 = CO_INIT(&a1, /*TYPE NAME*/ await1_t, /*param1*/ &a2);
+  await2_t a2 = CO_INIT(/*FUNC NAME*/ await2, /*this*/ &a2);
+  await1_t a1 = CO_INIT(/*FUNC NAME*/ await1, /*this*/ &a1, /*param1*/ &a2);
 
   // begin
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&a1));
@@ -55,7 +55,7 @@ static void test_resume(void) {
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a1));
 }
 
-CO_DECLARE(/*TYPE NAME*/ static await0_t, await2_t a2) {
+CO_DECLARE(/*FUNC NAME*/ static await0, /*param1*/ await2_t a2) {
   await0_t* const thiz = (await0_t*)co_this;
 CO_BEGIN:
 
@@ -69,12 +69,12 @@ CO_END:;
 }
 
 static void test_await_resumed(void) {
-  await0_t a0 = CO_INIT(&a0, await0_t, CO_INIT(&a0.a2, await2_t));
+  await0_t a0 = CO_INIT(/*FUNC NAME*/ await0, /*this*/ &a0, /*param1*/ CO_INIT(/*FUNC NAME*/ await2, /*this*/ &a0.a2));
   CO_RUN(&a0);
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&a0));
 }
 
-CO_DECLARE(/*TYPE NAME*/ nat_t, /*return*/ int v) {
+CO_DECLARE(/*FUNC NAME*/ nat, /*return*/ int v) {
   nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
 
@@ -86,7 +86,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = CO_INIT(&n, /*TYPE NAME*/ nat_t);  // "v" is implicitly initialized to ZERO
+  nat_t n = CO_INIT(/*FUNC NAME*/ nat, /*this*/ &n);  // "v" is implicitly initialized to 0
 
   CO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -98,19 +98,19 @@ static void test_nat(void) {
   TEST_ASSERT_EQUAL_INT(2, n.v);
 }
 
-static int fibonacci(int n) {
+static int fib(int n) {
   assert(n > 0);
   switch (n) {
     case 1:
     case 2:
       return 1;
     default:
-      return fibonacci(n - 1) + fibonacci(n - 2);
+      return fib(n - 1) + fib(n - 2);
   }
 }
 
-CO_DECLARE(/*TYPE NAME*/ fibonacci_t, /*parameter*/ int n, /*return value*/ int v, /*local variable*/ fibonacci_t* fib_n1, /*local variable*/ fibonacci_t* fib_n2) {
-  fibonacci_t* const thiz = (fibonacci_t*)co_this;
+CO_DECLARE(/*FUNC NAME*/ fib2, /*param1*/ int n, /*return*/ int v, /*local*/ fib2_t* fib_n1, /*local*/ fib2_t* fib_n2) {
+  fib2_t* const thiz = (fib2_t*)co_this;
 CO_BEGIN:
   assert(thiz->n > 0);
 
@@ -118,13 +118,13 @@ CO_BEGIN:
     thiz->v = 1;
   } else {  // f(n) = f(n-1) + f(n-2)
     thiz->v = 0;
-    thiz->fib_n1 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n1));
-    thiz->fib_n2 = (fibonacci_t*)malloc(sizeof(*thiz->fib_n2));
+    thiz->fib_n1 = (fib2_t*)malloc(sizeof(*thiz->fib_n1));
+    thiz->fib_n2 = (fib2_t*)malloc(sizeof(*thiz->fib_n2));
     assert(thiz->fib_n1);
     assert(thiz->fib_n2);
 
-    *thiz->fib_n1 = CO_INIT(thiz->fib_n1, /*TYPE NAME*/ fibonacci_t, /*argument*/ thiz->n - 1);
-    *thiz->fib_n2 = CO_INIT(thiz->fib_n2, /*TYPE NAME*/ fibonacci_t, /*argument*/ thiz->n - 2);
+    *thiz->fib_n1 = CO_INIT(/*FUNC NAME*/ fib2, /*this*/ thiz->fib_n1, /*param1*/ thiz->n - 1);
+    *thiz->fib_n2 = CO_INIT(/*FUNC NAME*/ fib2, /*this*/ thiz->fib_n2, /*param1*/ thiz->n - 2);
     CO_AWAIT(thiz->fib_n1);  // eval f(n-1)
     CO_AWAIT(thiz->fib_n2);  // eval f(n-2)
     thiz->v += thiz->fib_n1->v;
@@ -137,19 +137,19 @@ CO_BEGIN:
 CO_END:;
 }
 
-static void test_fibonacci(void) {
-  // "v", "fib_n1" and "fib_n2" aren't explicitly inited
-  fibonacci_t f03 = CO_INIT(&f03, fibonacci_t, 3);
-  fibonacci_t f11 = CO_INIT(&f11, fibonacci_t, 11);
-  fibonacci_t f23 = CO_INIT(&f23, fibonacci_t, 23);
+static void test_fib2(void) {
+  // "v", "fib_n1" and "fib_n2" are implicitly initialized to 0
+  fib2_t f03 = CO_INIT(/*FUNC NAME*/ fib2, /*this*/ &f03, /*param1*/ 3);
+  fib2_t f11 = CO_INIT(/*FUNC NAME*/ fib2, /*this*/ &f11, /*param1*/ 11);
+  fib2_t f23 = CO_INIT(/*FUNC NAME*/ fib2, /*this*/ &f23, /*param1*/ 23);
 
   struct {
-    fibonacci_t* fib;
+    fib2_t* fib;
     int v;
   } test_cases[] = {
-      {&f03, fibonacci(3)},
-      {&f11, fibonacci(11)},
-      {&f23, fibonacci(23)},
+      {&f03, fib(3)},
+      {&f11, fib(11)},
+      {&f23, fib(23)},
   };
 
   for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); i++) {
@@ -170,7 +170,7 @@ int main(void) {
   RUN_TEST(test_resume);
   RUN_TEST(test_await_resumed);
   RUN_TEST(test_nat);
-  RUN_TEST(test_fibonacci);
+  RUN_TEST(test_fib2);
 
   return UNITY_END();
 }

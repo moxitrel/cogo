@@ -7,12 +7,11 @@ CO_END
 CO_YIELD
 CO_RETURN
 
-CO_INIT(CO, TYPE, ...): make a new coroutine
 co_status_t
 CO_STATUS(CO)
 
-CO_DECLARE(TYPE, ...){} : declare a coroutine.
-CO_DEFINE (TYPE)     {} : define a declared coroutine which not defined.
+CO_DECLARE(FUNC, ...){} : declare a coroutine.
+CO_DEFINE (FUNC)     {} : define a declared coroutine which not defined.
 
 */
 #ifndef COGO_YIELD_H_
@@ -60,20 +59,20 @@ extern "C" {
     CX0_MAP(;, CX0_IDENTITY, __VA_ARGS__);                              \
   }
 
-#define COGO_DECLARE(TYPE, BASE, ...)               \
-  CX0_IF_NIL(CX0_IDENTITY(__VA_ARGS__),             \
-             COGO_STRUCT(TYPE, BASE),               \
-             COGO_STRUCT(TYPE, BASE, __VA_ARGS__)); \
-  CO_DEFINE(TYPE)
+#define COGO_DECLARE(FUNC, BASE, ...)                   \
+  CX0_IF_NIL(CX0_IDENTITY(__VA_ARGS__),                 \
+             COGO_STRUCT(FUNC##_t, BASE),               \
+             COGO_STRUCT(FUNC##_t, BASE, __VA_ARGS__)); \
+  CO_DEFINE(FUNC)
 
-#define CO_DEFINE(TYPE)    CO_DEFINE1(CX0_COUNT(COGO_COMMA_##TYPE), TYPE)
+#define CO_DEFINE(FUNC)    CO_DEFINE1(CX0_COUNT(COGO_COMMA_##FUNC), FUNC)
 #define CO_DEFINE1(...)    CO_DEFINE2(__VA_ARGS__)
 #define CO_DEFINE2(N, ...) CO_DEFINE3_##N(__VA_ARGS__)
-#define CO_DEFINE3_1(TYPE) void TYPE##_resume(void* const co_this)
-#define CO_DEFINE3_2(TYPE) static void COGO_REMOVE_LINKAGE_##TYPE##_resume(void* const co_this)
+#define CO_DEFINE3_1(FUNC) void FUNC(void* const co_this)
+#define CO_DEFINE3_2(FUNC) static void COGO_REMOVE_LINKAGE_##FUNC(void* const co_this)
 
-#define CO_DECLARE(TYPE, ...) \
-  COGO_DECLARE(TYPE, cogo_yield_t base_yield, __VA_ARGS__)
+#define CO_DECLARE(FUNC, ...) \
+  COGO_DECLARE(FUNC, cogo_yield_t base_yield, __VA_ARGS__)
 
 #ifdef __cplusplus
 }
