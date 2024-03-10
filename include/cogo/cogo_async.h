@@ -6,22 +6,22 @@ CO_BEGIN
 CO_YIELD
 CO_RETURN
 CO_END
-CO_AWAIT(CO)
-CO_ASYNC(CO)    : run a new coroutine concurrently.
-CO_CHAN_WRITE(CHAN, MSG)      : send a message to channel
-CO_CHAN_READ (CHAN, MSG_NEXT) : receive a message from channel, the result stored in co_message_t.next
+CO_AWAIT      (CO)
+CO_ASYNC      (CO)              : run a new coroutine concurrently.
+CO_CHAN_WRITE (CHAN, MSG)       : send a message to channel
+CO_CHAN_READ  (CHAN, MSG_NEXT)  : receive a message from channel, the result stored in co_message_t.next
 
-CO_INIT  (CO, FUNC, ...)
-co_message_t    : channel message type
-co_chan_t       : channel type
-CO_CHAN_MAKE(N) : return a channel with capacity size_t
+CO_INIT       (CO, FUNC, ...)
+co_message_t      : channel message type
+co_chan_t         : channel type
+CO_CHAN_MAKE  (N) : return a channel with capacity size_t
 co_status_t
-CO_STATUS(CO)
-CO_RESUME(CO)
-CO_RUN   (CO)
+CO_STATUS     (CO)
+CO_RESUME     (CO)
+CO_RUN        (CO)
 
-CO_DECLARE(FUNC, ...){}
-CO_DEFINE (FUNC)     {}
+CO_DECLARE    (FUNC, ...){}
+CO_DEFINE     (FUNC)     {}
 
 cogo_async_t               : coroutine type
 cogo_async_sched_t         : scheduler type
@@ -154,7 +154,7 @@ bool cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
   COGO_DECLARE(FUNC, cogo_async_t base_async, __VA_ARGS__)
 
 #undef CO_INIT
-#define CO_INIT(FUNC, THIZ, ...) \
+#define CO_INIT(THIZ, FUNC, ...) \
   ((FUNC##_t){{.base_await = {.resume = FUNC, .top = (cogo_await_t*)(THIZ)}}, __VA_ARGS__})
 
 #undef CO_RESUME

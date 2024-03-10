@@ -30,7 +30,7 @@ CO_END:;
 #include "cogo/cogo.h"
 
 // Define generator.
-CO_DECLARE(nat_t, int n)
+CO_DECLARE(nat, int n)
 {
   nat_t* thiz = (nat_t*)co_this;
 CO_BEGIN:
@@ -45,7 +45,7 @@ CO_END:;
 // Usage.
 void example(void)
 {
-  nat_t ng = CO_INIT(&ng, nat_t, /*n*/ 0);
+  nat_t ng = CO_INIT(&ng, nat, /*n*/ 0);
 
   CO_RESUME(&ng);
   printf("ng.n: %d\n", ng.n);  // ng.n: 0

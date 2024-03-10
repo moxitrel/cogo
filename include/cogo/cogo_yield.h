@@ -8,7 +8,7 @@ CO_YIELD
 CO_RETURN
 
 co_status_t
-CO_STATUS(CO)
+CO_STATUS (CO)
 
 CO_DECLARE(FUNC, ...){} : declare a coroutine.
 CO_DEFINE (FUNC)     {} : define a declared coroutine which not defined.
