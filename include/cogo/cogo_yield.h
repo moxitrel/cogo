@@ -17,16 +17,16 @@ CO_DEFINE (FUNC)     {} : define a declared coroutine which not defined.
 #ifndef COGO_YIELD_H_
 #define COGO_YIELD_H_
 
-#include "_internal/macro_utils.h"
+#include "private/macro_utils.h"
 
 #if defined(COGO_USE_LABELS_AS_VALUES)
-#include "_internal/cogo_yield_labels_as_values.h"
+#include "private/cogo_yield_labels_as_values.h"
 #elif defined(COGO_USE_SWITCH)
-#include "_internal/cogo_yield_switch.h"
+#include "private/cogo_yield_switch.h"
 #elif defined(__GNUC__)
-#include "_internal/cogo_yield_labels_as_values.h"
+#include "private/cogo_yield_labels_as_values.h"
 #else
-#include "_internal/cogo_yield_switch.h"
+#include "private/cogo_yield_switch.h"
 #endif
 
 #ifdef __cplusplus

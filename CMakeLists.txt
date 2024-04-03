@@ -34,10 +34,10 @@ target_sources(cogo INTERFACE
   TYPE HEADERS
   BASE_DIRS include
   FILES
-  include/cogo/_internal/cogo_queue_template.h
-  include/cogo/_internal/cogo_yield_labels_as_values.h
-  include/cogo/_internal/cogo_yield_switch.h
-  include/cogo/_internal/macro_utils.h
+  include/cogo/private/cogo_queue_template.h
+  include/cogo/private/cogo_yield_labels_as_values.h
+  include/cogo/private/cogo_yield_switch.h
+  include/cogo/private/macro_utils.h
   include/cogo/cogo_async.h
   include/cogo/cogo_await.h
   include/cogo/cogo_yield.h

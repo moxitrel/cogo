@@ -57,7 +57,7 @@ typedef struct cogo_async {
 #undef COGO_QUEUE_NEXT
 #define COGO_QUEUE_ELEMENT_T cogo_async_t
 #define COGO_QUEUE_NEXT(CO)  ((CO)->next)
-#include "_internal/cogo_queue_template.h"
+#include "private/cogo_queue_template.h"
 #define COGO_CQ_T            COGO_QUEUE_T(cogo_async_t)
 #define COGO_CQ_IS_EMPTY     COGO_QUEUE_IS_EMPTY(cogo_async_t)
 #define COGO_CQ_PUSH         COGO_QUEUE_PUSH(cogo_async_t)
@@ -103,7 +103,7 @@ typedef struct co_message {
 #undef COGO_QUEUE_NEXT
 #define COGO_QUEUE_ELEMENT_T co_message_t
 #define COGO_QUEUE_NEXT(MSG) ((MSG)->next)
-#include "_internal/cogo_queue_template.h"
+#include "private/cogo_queue_template.h"
 #define COGO_MQ_T            COGO_QUEUE_T(co_message_t)
 #define COGO_MQ_PUSH         COGO_QUEUE_PUSH(co_message_t)
 #define COGO_MQ_POP          COGO_QUEUE_POP(co_message_t)
