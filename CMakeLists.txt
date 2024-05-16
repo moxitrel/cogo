@@ -79,6 +79,7 @@ install(TARGETS cogo EXPORT ${package_targets}
   LIBRARY
   FILE_SET HEADERS
 )
+add_library(cogo::cogo ALIAS cogo)
 
 export(EXPORT ${package_targets})
 
