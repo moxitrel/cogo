@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# project root
-cd $(dirname "$0")/.. || exit
+# Project root
+cd $(dirname $0)/.. || exit
 
 find include src -type f \( \
   -iname '*.c' -or \
