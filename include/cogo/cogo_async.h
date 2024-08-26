@@ -1,4 +1,4 @@
-/*
+/** @file
 
 * API
 co_this
@@ -126,9 +126,33 @@ typedef struct co_chan {
 
 #define CO_CHAN_MAKE(N) ((co_chan_t){.cap = (N)})
 
-// CO_CHAN_READ(co_chan_t*, co_message_t*);
-// MSG_NEXT: the read message is MSG_NEXT->next
-#define CO_CHAN_READ(CHAN, MSG_NEXT)                                                             \
+/** Receive a message from channel.
+ If there's no message in channel, block until one arrived.
+
+ @param[in] CHAN the channel where to receive message.
+ @param[out] MSG_NEXT the address of received message is stored in MSG_NEXT->next.
+
+ @pre This macro can only be called in the coroutine function, i.e. between CO_BEGIN and CO_END, or COGO_BEGIN() and COGO_END().
+ @pre CHAN != NULL && MSG_NEXT != NULL
+ @post At the time of read success, the size of channel is decreased by 1.
+ @post MSG_NEXT->next != NULL
+
+ @par Example
+ @code
+CO_DECLARE(coro, co_chan_t* chan, co_message_t msg) {
+  coro_t* thiz = (coro_t*)co_this;
+  co_chan_t* chan = thiz->chan;
+  co_message_t* msg = &thiz->msg;
+CO_BEGIN:
+
+  CO_CHAN_READ(chan, msg);
+  T* obj = (T*)msg->next;
+
+CO_END:;
+}
+ @endcode
+*/
+#define CO_CHAN_READ(/* co_chan_t* */ CHAN, /* co_message_t* */ MSG_NEXT)                        \
   do {                                                                                           \
     if (cogo_chan_read((cogo_async_t*)co_this, (co_chan_t*)(CHAN), (co_message_t*)(MSG_NEXT))) { \
       CO_YIELD_BY_CHAN_READ;                                                                     \
@@ -138,8 +162,15 @@ typedef struct co_chan {
 bool cogo_chan_read(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg_next);
 #define CO_YIELD_BY_CHAN_READ CO_YIELD;
 
-// CO_CHAN_WRITE(co_chan_t*, co_message_t*);
-#define CO_CHAN_WRITE(CHAN, MSG)                                                             \
+/** Send a message through channel.
+ If channel is full, block until available.
+ @param[in] CHAN the channel where to send message.
+ @param[out] MSG the message to send.
+ @pre This macro can only be called in the coroutine function, i.e. between CO_BEGIN and CO_END, or COGO_BEGIN() and COGO_END()
+ @pre CHAN != NULL && MSG != NULL
+ @post At the time of writing success, the size of channel is increased by 1.
+*/
+#define CO_CHAN_WRITE(/* co_chan_t* */ CHAN, /* co_message_t* */ MSG)                        \
   do {                                                                                       \
     if (cogo_chan_write((cogo_async_t*)co_this, (co_chan_t*)(CHAN), (co_message_t*)(MSG))) { \
       CO_YIELD_BY_CHAN_WRITE;                                                                \
