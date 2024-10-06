@@ -30,13 +30,13 @@ target_sources(cogo INTERFACE
   TYPE HEADERS
   BASE_DIRS include
   FILES
-  include/cogo/private/cogo_queue_template.h
-  include/cogo/private/cogo_yield_labels_as_values.h
-  include/cogo/private/cogo_yield_switch.h
-  include/cogo/private/macro_utils.h
-  include/cogo/cogo_async.h
-  include/cogo/cogo_await.h
-  include/cogo/cogo_yield.h
+    include/cogo/private/cogo_queue_template.h
+    include/cogo/private/cogo_yield_labels_as_values.h
+    include/cogo/private/cogo_yield_switch.h
+    include/cogo/private/macro_utils.h
+    include/cogo/cogo_async.h
+    include/cogo/cogo_await.h
+    include/cogo/cogo_yield.h
 )
 target_include_directories(cogo PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -90,10 +90,10 @@ write_basic_package_version_file(cogoConfigVersion.cmake
 )
 install(
   FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/cogoConfig.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/cogoConfigVersion.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/cogoConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/cogoConfigVersion.cmake
   DESTINATION
-  ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
+    ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
 
 configure_file(cmake/cogo.pc.in cogo.pc @ONLY)
