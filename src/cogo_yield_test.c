@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <cogo/cogo_yield.h>
+#include <string.h>
 #include <unity.h>
 
 static void func_yield(cogo_yield_t* co, int* v) {
@@ -13,7 +14,9 @@ static void func_yield(cogo_yield_t* co, int* v) {
 }
 
 static void test_yield(void) {
-  cogo_yield_t co = {};
+  cogo_yield_t co;
+  memset(&co, 0, sizeof(co));
+
   int v = 0;
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, v);
@@ -44,7 +47,9 @@ static void func_return(cogo_yield_t* co, int* v) {
 }
 
 static void test_return(void) {
-  cogo_yield_t co = {};
+  cogo_yield_t co;
+  memset(&co, 0, sizeof(co));
+
   int v = 0;
   TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, v);
@@ -105,7 +110,8 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = {};
+  nat_t n;
+  memset(&n, 0, sizeof(n));
 
   nat(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);

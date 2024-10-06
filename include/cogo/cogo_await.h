@@ -20,8 +20,8 @@ CO_DEFINE (FUNC)     {}
 cogo_await_t    : coroutine type
 
 */
-#ifndef COGO_AWAIT_H_
-#define COGO_AWAIT_H_
+#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_AWAIT_H_
+#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_AWAIT_H_
 
 #include "cogo_yield.h"
 
@@ -84,4 +84,4 @@ void cogo_await_run(cogo_await_t* co);
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_AWAIT_H_
+#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_AWAIT_H_
