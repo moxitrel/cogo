@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.23)
 project(cogo
   VERSION 1.0.0
-  DESCRIPTION "Asymmetric stackless coroutine library."
+  DESCRIPTION "Asymmetric stackless coroutine library for C."
   HOMEPAGE_URL "https://github.com/moxitrel/cogo"
   LANGUAGES C
 )
-include(CheckCCompilerFlag)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 include(cmake/cogoCPack.cmake)
@@ -17,7 +16,7 @@ option(COGO_NO_LABELS_AS_VALUES "Don't use GCC extension of label value to imple
   OFF
 )
 
-file(GLOB_RECURSE _cogo_headers FOLLOW_SYMLINKS CONFIGURE_DEPENDS
+file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS
   include/*.h
 )
 
@@ -28,7 +27,7 @@ add_library(cogo
 target_sources(cogo INTERFACE
   FILE_SET HEADERS
   BASE_DIRS include
-  FILES ${_cogo_headers}
+  FILES ${cogo_PUBLIC_HEADER}
 )
 target_include_directories(cogo PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -45,9 +44,6 @@ install(TARGETS cogo EXPORT cogoTargets
 )
 
 export(EXPORT cogoTargets)
-install(EXPORT cogoTargets
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
-)
 configure_package_config_file(cmake/cogoConfig.cmake.in cogoConfig.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
@@ -55,6 +51,9 @@ write_basic_package_version_file(cogoConfigVersion.cmake
   COMPATIBILITY SameMajorVersion
 )
 export(PACKAGE cogo)
+install(EXPORT cogoTargets
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
+)
 install(
   FILES
     ${PROJECT_BINARY_DIR}/cogoConfig.cmake
@@ -62,7 +61,6 @@ install(
   DESTINATION
     ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
-
 configure_file(cmake/cogo.pc.in cogo.pc @ONLY)
 install(
   FILES ${PROJECT_BINARY_DIR}/cogo.pc
@@ -72,6 +70,7 @@ install(
 include(CTest)
 
 if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TESTING))
+  include(CheckCCompilerFlag)
   include(cmake/unity.cmake)
 
   message(STATUS "COGO_NO_LABELS_AS_VALUES : ${COGO_NO_LABELS_AS_VALUES}")
