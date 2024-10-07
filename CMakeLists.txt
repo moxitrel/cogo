@@ -44,6 +44,7 @@ install(TARGETS cogo EXPORT cogoTargets
   FILE_SET HEADERS
 )
 
+export(EXPORT cogoTargets)
 install(EXPORT cogoTargets
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
@@ -53,6 +54,7 @@ configure_package_config_file(cmake/cogoConfig.cmake.in cogoConfig.cmake
 write_basic_package_version_file(cogoConfigVersion.cmake
   COMPATIBILITY SameMajorVersion
 )
+export(PACKAGE cogo)
 install(
   FILES
     ${PROJECT_BINARY_DIR}/cogoConfig.cmake
@@ -66,8 +68,6 @@ install(
   FILES ${PROJECT_BINARY_DIR}/cogo.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
-
-export(EXPORT cogoTargets)
 
 include(CTest)
 
