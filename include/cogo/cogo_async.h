@@ -134,7 +134,7 @@ typedef struct co_chan {
 
  @pre This macro can only be called in the coroutine function, i.e. between CO_BEGIN and CO_END, or COGO_BEGIN() and COGO_END().
  @pre CHAN != NULL && MSG_NEXT != NULL
- @post At the time of read success, the size of channel is decreased by 1.
+ @post At the time of read success (and before any other messages written by other coroutines), the size of channel is decreased by 1.
  @post MSG_NEXT->next != NULL
 
  @par Example
@@ -162,13 +162,13 @@ CO_END:;
 bool cogo_chan_read(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg_next);
 #define CO_YIELD_BY_CHAN_READ CO_YIELD;
 
-/** Send a message through channel.
- If channel is full, block until available.
+/** Send a message through channel. If channel is full, block until available.
  @param[in] CHAN the channel where to send message.
  @param[out] MSG the message to send.
  @pre This macro can only be called in the coroutine function, i.e. between CO_BEGIN and CO_END, or COGO_BEGIN() and COGO_END()
  @pre CHAN != NULL && MSG != NULL
- @post At the time of writing success, the size of channel is increased by 1.
+ @post At the time of writing success (and before any message has been read by other coroutines), the size of channel is increased by 1.
+ @invariant the MSG body is not modified.
 */
 #define CO_CHAN_WRITE(/* co_chan_t* */ CHAN, /* co_message_t* */ MSG)                        \
   do {                                                                                       \
