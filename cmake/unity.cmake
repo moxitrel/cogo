@@ -41,7 +41,7 @@ endif()
 FetchContent_Declare(unity # case-insensitive
   GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity.git
   GIT_TAG v2.6.0
-  GIT_SHALLOW TRUE # git clone --depth 1
+  GIT_SHALLOW Y # git clone --depth 1
 )
 
 # Exclude from `cmake -install`
