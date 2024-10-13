@@ -1,4 +1,29 @@
-/* Labels as Values (GCC Extension)
+/*
+MIT License
+
+Copyright (c) 2018-2024 Moxi Color
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+* Labels as Values (GCC Extension)
 
 * Example
 void nat_func(nat_t* co_this)
@@ -35,8 +60,8 @@ yield_end:;                     //
 - Use GCC extension.
 
 */
-#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_PRIVATE_COGO_YIELD_LABELS_AS_VALUES_H_
-#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_PRIVATE_COGO_YIELD_LABELS_AS_VALUES_H_
+#ifndef COGO_YIELD_LABELS_AS_VALUES_H_
+#define COGO_YIELD_LABELS_AS_VALUES_H_
 
 #include <stdint.h>
 
@@ -44,37 +69,28 @@ yield_end:;                     //
 extern "C" {
 #endif
 
-#ifdef assert
-#define COGO_ASSERT(...) assert(__VA_ARGS__)
-#else
-#define COGO_ASSERT(...) /*noop*/
-#endif
-
-typedef intptr_t co_status_t;
 #define CO_STATUS_BEGIN 0
 #define CO_STATUS_END   (-1)
 
 // implement yield
 typedef struct cogo_yield {
-  // start point where coroutine function continue to run after yield.
+  // Start point (address) where coroutine function continue to run after yield.
   //  0: inited
   // -1: finished
-  co_status_t pc;
+  intptr_t pc;
 } cogo_yield_t;
 
 // cogo_yield_t.pc
-#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
-
-// get the current running state
-#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))
+#define COGO_PC(CO) (((cogo_yield_t*)(CO))->pc)
 
 #define COGO_BEGIN(CO)                                                                            \
   switch (COGO_PC(CO)) {                                                                          \
     case CO_STATUS_BEGIN:                                                                         \
       goto cogo_begin;                                                                            \
-      goto cogo_return; /* eliminate warning of unused label */                                   \
+      /* eliminate warning of unused label */                                                     \
+      goto cogo_return;                                                                           \
       /* eliminate clang error: indirect goto in function with no address-of-label expressions */ \
-      COGO_PC(CO) = (co_status_t)(&&cogo_begin);                                                  \
+      COGO_PC(CO) = (intptr_t)(&&cogo_begin);                                                     \
     case CO_STATUS_END:                                                                           \
       goto cogo_end;                                                                              \
     default:                                                                                      \
@@ -82,18 +98,18 @@ typedef struct cogo_yield {
   }                                                                                               \
   cogo_begin
 
-#define COGO_YIELD(CO)                                                     \
-  do {                                                                     \
-    COGO_PC(CO) = (co_status_t)(&&COGO_LABEL); /* 1. save restore point */ \
-    goto cogo_end;                             /* 2. return */             \
-  COGO_LABEL:;                                 /* 3. restore point */      \
+#define COGO_YIELD(CO)                                                  \
+  do {                                                                  \
+    COGO_PC(CO) = (intptr_t)(&&COGO_LABEL); /* 1. save restore point */ \
+    goto cogo_end;                          /* 2. return */             \
+  COGO_LABEL:;                              /* 3. restore point */      \
   } while (0)
 
 #define COGO_RETURN(CO) \
   goto cogo_return /* end coroutine */
 
 #define COGO_END(CO)                \
-  cogo_return:                      \
+  cogo_return:;                     \
   /**/ COGO_PC(CO) = CO_STATUS_END; \
   cogo_end
 
@@ -103,12 +119,10 @@ typedef struct cogo_yield {
 #define COGO_LABEL1(...) COGO_LABEL2(__VA_ARGS__)
 #define COGO_LABEL2(N)   cogo_yield_##N
 
-#define CO_BEGIN         COGO_BEGIN(co_this)
-#define CO_END           COGO_END(co_this)
-#define CO_YIELD         COGO_YIELD(co_this)
-#define CO_RETURN        COGO_RETURN(co_this)
+typedef intptr_t co_status_t;
+#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))
 
 #ifdef __cplusplus
 }
 #endif
-#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_PRIVATE_COGO_YIELD_LABELS_AS_VALUES_H_
+#endif  // COGO_YIELD_LABELS_AS_VALUES_H_

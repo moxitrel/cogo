@@ -186,7 +186,7 @@ bool cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
 
 #undef CO_INIT
 #define CO_INIT(THIZ, FUNC, ...) \
-  ((FUNC##_t){{.base_await = {.resume = FUNC, .top = (cogo_await_t*)(THIZ)}}, __VA_ARGS__})
+  ((FUNC##_t){{.base_await = {.resume = FUNC##_resume, .top = (cogo_await_t*)(THIZ)}}, __VA_ARGS__})
 
 #undef CO_RESUME
 #define CO_RESUME(CO) cogo_async_resume((cogo_async_t*)(CO))

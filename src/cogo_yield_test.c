@@ -98,7 +98,7 @@ static void test_prologue(void) {
   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
 
-CO_DECLARE(/*FUNC NAME*/ nat, /*param1*/ int v) {
+CO_DECLARE(/*func*/ nat, /*param*/ int v) {
   nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
 
@@ -113,13 +113,13 @@ static void test_nat(void) {
   nat_t n;
   memset(&n, 0, sizeof(n));
 
-  nat(&n);
+  nat_resume(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
 
-  nat(&n);
+  nat_resume(&n);
   TEST_ASSERT_EQUAL_INT(1, n.v);
 
-  nat(&n);
+  nat_resume(&n);
   TEST_ASSERT_EQUAL_INT(2, n.v);
 }
 

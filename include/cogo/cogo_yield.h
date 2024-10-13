@@ -1,17 +1,19 @@
 /*
 
 * API
-co_this
-CO_BEGIN
-CO_END
-CO_YIELD
-CO_RETURN
+co_this     : void*, point to coroutine object.
+CO_BEGIN    : coroutine begin label.
+CO_END      : coroutine end label.
+CO_YIELD    : yield from coroutine.
+CO_RETURN   : return from coroutine.
 
 co_status_t
-CO_STATUS (CO)
+CO_STATUS(CO)
 
 CO_DECLARE(FUNC, ...){} : declare a coroutine.
-CO_DEFINE (FUNC)     {} : define a declared coroutine which not defined.
+  FUNC_t                : the declared coroutine type.
+  FUNC_resume           : the declared coroutine function.
+CO_DEFINE (FUNC)     {} : define a declared coroutine which is not defined.
 
 */
 #ifndef COGO_YIELD_H_
@@ -34,43 +36,60 @@ extern "C" {
 // COGO_STRUCT(Type, T1 field1, ...): define a struct named <Type>
 //
 // * Example
-// COGO_STRUCT(Point, int x, int y, int z) will be expanded into
-//  typedef struct {
+// COGO_STRUCT(point, int x, int y, int z) will be expanded to
+//  typedef struct point {
 //      int x;
 //      int y;
 //      int z;
-//  } Point
+//  } point_t
 //
 #define COGO_COMMA_static ,
 #define COGO_REMOVE_LINKAGE_static
-#define COGO_STRUCT(TYPE, ...)    COGO_STRUCT1(CX0_COUNT(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
+#define COGO_STRUCT(TYPE, ...)    COGO_STRUCT1(ET_COUNT(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
 #define COGO_STRUCT1(...)         COGO_STRUCT2(__VA_ARGS__)
 #define COGO_STRUCT2(N, ...)      COGO_STRUCT3_##N(__VA_ARGS__)
-#define COGO_STRUCT3_1(TYPE, ...) /* TYPE: name_t */ \
-  typedef struct TYPE TYPE;                          \
-  struct TYPE {                                      \
-    CX0_MAP(;, CX0_IDENTITY, __VA_ARGS__);           \
+#define COGO_STRUCT3_1(TYPE, ...) /* TYPE: name */ \
+  typedef struct TYPE TYPE##_t;                    \
+  struct TYPE {                                    \
+    ET_MAP(;, ET_IDENTITY, __VA_ARGS__);           \
   }
-#define COGO_STRUCT3_2(TYPE, ...) /* TYPE: static name_t */             \
-  typedef struct COGO_REMOVE_LINKAGE_##TYPE COGO_REMOVE_LINKAGE_##TYPE; \
-  struct COGO_REMOVE_LINKAGE_##TYPE {                                   \
-    CX0_MAP(;, CX0_IDENTITY, __VA_ARGS__);                              \
+#define COGO_STRUCT3_2(TYPE, ...) /* TYPE: static name */                   \
+  typedef struct COGO_REMOVE_LINKAGE_##TYPE COGO_REMOVE_LINKAGE_##TYPE##_t; \
+  struct COGO_REMOVE_LINKAGE_##TYPE {                                       \
+    ET_MAP(;, ET_IDENTITY, __VA_ARGS__);                                    \
   }
 
-#define COGO_DECLARE(FUNC, BASE, ...)                   \
-  CX0_IF_NIL(CX0_IDENTITY(__VA_ARGS__),                 \
-             COGO_STRUCT(FUNC##_t, BASE),               \
-             COGO_STRUCT(FUNC##_t, BASE, __VA_ARGS__)); \
+#define COGO_DECLARE(FUNC, BASE, ...)              \
+  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),              \
+            COGO_STRUCT(FUNC, BASE),               \
+            COGO_STRUCT(FUNC, BASE, __VA_ARGS__)); \
   CO_DEFINE(FUNC)
 
-#define CO_DEFINE(FUNC)    CO_DEFINE1(CX0_COUNT(COGO_COMMA_##FUNC), FUNC)
+#define CO_DEFINE(FUNC)    CO_DEFINE1(ET_COUNT(COGO_COMMA_##FUNC), FUNC)
 #define CO_DEFINE1(...)    CO_DEFINE2(__VA_ARGS__)
 #define CO_DEFINE2(N, ...) CO_DEFINE3_##N(__VA_ARGS__)
-#define CO_DEFINE3_1(FUNC) void FUNC(void* const co_this)
-#define CO_DEFINE3_2(FUNC) static void COGO_REMOVE_LINKAGE_##FUNC(void* const co_this)
+#define CO_DEFINE3_1(FUNC) void FUNC##_resume(void* const co_this)
+#define CO_DEFINE3_2(FUNC) static void COGO_REMOVE_LINKAGE_##FUNC##_resume(void* const co_this)
 
+// typedef struct FUNC FUNC_t;
+// struct FUNC {
+//  cogo_yield_t base_yield;
+//  ...
+// }
+// void FUNC_resume(void* const co_this)
 #define CO_DECLARE(FUNC, ...) \
   COGO_DECLARE(FUNC, cogo_yield_t base_yield, __VA_ARGS__)
+
+#define CO_BEGIN  COGO_BEGIN(co_this)
+#define CO_END    COGO_END(co_this)
+#define CO_YIELD  COGO_YIELD(co_this)
+#define CO_RETURN COGO_RETURN(co_this)
+
+#ifdef assert
+#define COGO_ASSERT(...) assert(__VA_ARGS__)
+#else
+#define COGO_ASSERT(...) /*noop*/
+#endif
 
 #ifdef __cplusplus
 }

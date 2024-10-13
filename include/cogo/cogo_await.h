@@ -20,8 +20,8 @@ CO_DEFINE (FUNC)     {}
 cogo_await_t    : coroutine type
 
 */
-#ifndef SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_AWAIT_H_
-#define SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_AWAIT_H_
+#ifndef COGO_AWAIT_H_
+#define COGO_AWAIT_H_
 
 #include "cogo_yield.h"
 
@@ -71,7 +71,7 @@ void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
   COGO_DECLARE(FUNC, cogo_await_t base_await, __VA_ARGS__)
 
 #define CO_INIT(THIZ, FUNC, ...) \
-  ((FUNC##_t){{.resume = FUNC, .top = (cogo_await_t*)(THIZ)}, __VA_ARGS__})
+  ((FUNC##_t){{.resume = FUNC##_resume, .top = (cogo_await_t*)(THIZ)}, __VA_ARGS__})
 
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))
@@ -84,4 +84,4 @@ void cogo_await_run(cogo_await_t* co);
 #ifdef __cplusplus
 }
 #endif
-#endif  // SRC_GITHUB_COM_MOXITREL_COGO_INCLUDE_COGO_COGO_AWAIT_H_
+#endif  // COGO_AWAIT_H_

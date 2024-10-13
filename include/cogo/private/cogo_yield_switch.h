@@ -1,17 +1,41 @@
-/* Use Duff's Device (Protothreads)
+/*
+MIT License
+
+Copyright (c) 2018-2024 Moxi Color
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+* Use Duff's Device (Protothreads)
 
 * API
-co_this     : point to coroutine object.
-CO_BEGIN    : coroutine begin label.
-CO_END      : coroutine end label.
-CO_YIELD    : yield from coroutine.
-CO_RETURN   : return from coroutine.
 
-co_status_t     : type of CO_STATUS().
-CO_STATUS(CO) : get the current running status.
+COGO_BEGIN()    : coroutine begin.
+COGO_END()      : coroutine end.
+COGO_YIELD()    : yield from coroutine.
+COGO_RETURN()   : return from coroutine.
+
+co_status_t       : type of CO_STATUS().
+CO_STATUS()       : get the current running status.
   CO_STATUS_BEGIN : inited
   CO_STATUS_END   : finished
-  >0              : running
 
 * Example
 void nat_func(nat_t* co_this)
@@ -57,35 +81,24 @@ void nat_func(nat_t* co_this)
 extern "C" {
 #endif
 
-#ifdef assert
-#define COGO_ASSERT(...) assert(__VA_ARGS__)
-#else
-#define COGO_ASSERT(...) /*noop*/
-#endif
-
-typedef int co_status_t;
 #define CO_STATUS_BEGIN 0
 #define CO_STATUS_END   (-1)
 
 // implement yield
 typedef struct cogo_yield {
-  // start point where coroutine function continue to run after yield.
+  // Start point (source line) where function continues to run after yield.
   //  >0: running
   //   0: inited
   //  -1: finished
-  co_status_t pc;
+  int pc;
 } cogo_yield_t;
 
 // cogo_yield_t.pc (lvalue)
-#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
-
-// get the current running state (rvalue)
-#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))
+#define COGO_PC(CO) (((cogo_yield_t*)(CO))->pc)
 
 #define COGO_BEGIN(CO)                                          \
   switch (COGO_PC(CO)) {                                        \
     default: /* invalid pc */                                   \
-      COGO_ASSERT(((void)"pc isn't valid", 0));                 \
       goto cogo_end;                                            \
       goto cogo_return; /* eliminate warning of unused label */ \
     case CO_STATUS_END: /* coroutine end */                     \
@@ -103,15 +116,13 @@ typedef struct cogo_yield {
   goto cogo_return /* end coroutine */
 
 #define COGO_END(CO)                \
-  cogo_return:                      \
+  cogo_return:;                     \
   /**/ COGO_PC(CO) = CO_STATUS_END; \
   }                                 \
   cogo_end
 
-#define CO_BEGIN  COGO_BEGIN(co_this)
-#define CO_END    COGO_END(co_this)
-#define CO_YIELD  COGO_YIELD(co_this)
-#define CO_RETURN COGO_RETURN(co_this)
+typedef int co_status_t;
+#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))  // current running status (as rvalue)
 
 #ifdef __cplusplus
 }
