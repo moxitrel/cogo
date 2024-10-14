@@ -81,18 +81,17 @@ void nat_func(nat_t* co_this)
 extern "C" {
 #endif
 
-#define CO_STATUS_BEGIN 0
-#define CO_STATUS_END   (-1)
-
 // implement yield
 typedef struct cogo_yield {
-  // Start point (source line) where function continues to run after yield.
+  // Start point (__LINE__) where function continues to run after yield.
   //  >0: running
   //   0: inited
   //  -1: finished
   int pc;
 } cogo_yield_t;
 
+#define COGO_PC_BEGIN 0
+#define COGO_PC_END   (-1)
 // cogo_yield_t.pc (lvalue)
 #define COGO_PC(CO) (((cogo_yield_t*)(CO))->pc)
 
@@ -101,9 +100,9 @@ typedef struct cogo_yield {
     default: /* invalid pc */                                   \
       goto cogo_end;                                            \
       goto cogo_return; /* eliminate warning of unused label */ \
-    case CO_STATUS_END: /* coroutine end */                     \
+    case COGO_PC_END: /* coroutine end */                     \
       goto cogo_end;                                            \
-    case CO_STATUS_BEGIN /* coroutine begin */
+    case COGO_PC_BEGIN /* coroutine begin */
 
 #define COGO_YIELD(CO)                                                            \
   do {                                                                            \
@@ -117,11 +116,13 @@ typedef struct cogo_yield {
 
 #define COGO_END(CO)                \
   cogo_return:;                     \
-  /**/ COGO_PC(CO) = CO_STATUS_END; \
+  /**/ COGO_PC(CO) = COGO_PC_END; \
   }                                 \
   cogo_end
 
 typedef int co_status_t;
+#define CO_STATUS_BEGIN COGO_PC_BEGIN
+#define CO_STATUS_END   COGO_PC_END
 #define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))  // current running status (as rvalue)
 
 #ifdef __cplusplus

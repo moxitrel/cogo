@@ -75,7 +75,7 @@ extern "C" {
 // struct FUNC {
 //  cogo_yield_t base_yield;
 //  ...
-// }
+// };
 // void FUNC_resume(void* const co_this)
 #define CO_DECLARE(FUNC, ...) \
   COGO_DECLARE(FUNC, cogo_yield_t base_yield, __VA_ARGS__)
