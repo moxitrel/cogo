@@ -100,14 +100,14 @@ typedef struct cogo_yield {
 // cogo_yield_t.pc (lvalue)
 #define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
 
-#define COGO_BEGIN(CO)                                                              \
-  switch (COGO_PC(CO)) {                                                            \
-    default: /* invalid pc */                                                       \
-      COGO_ON_EPC(((cogo_yield_t const* const)(CO)), __FILE__, ((int)COGO_PC(CO))); \
-      goto cogo_end;                                                                \
-      goto cogo_return; /* eliminate warning of unused label */                     \
-    case COGO_PC_END:   /* coroutine end */                                         \
-      goto cogo_end;                                                                \
+#define COGO_BEGIN(CO)                                                                          \
+  switch (COGO_PC(CO)) {                                                                        \
+    default: /* invalid pc */                                                                   \
+      COGO_ON_EPC(__FILE__, __LINE__, __func__, ((void const* const)(CO)), ((int)COGO_PC(CO))); \
+      goto cogo_end;                                                                            \
+      goto cogo_return; /* eliminate warning of unused label */                                 \
+    case COGO_PC_END:   /* coroutine end */                                                     \
+      goto cogo_end;                                                                            \
     case COGO_PC_BEGIN /* coroutine begin */
 
 #define COGO_YIELD(CO)                                                            \
