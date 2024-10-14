@@ -81,6 +81,11 @@ void nat_func(nat_t* co_this)
 extern "C" {
 #endif
 
+// Invalid pc handler
+#ifndef COGO_ON_EPC
+#define COGO_ON_EPC(...) /*noop*/
+#endif
+
 // implement yield
 typedef struct cogo_yield {
   // Start point (__LINE__) where function continues to run after yield.
@@ -93,15 +98,16 @@ typedef struct cogo_yield {
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
 // cogo_yield_t.pc (lvalue)
-#define COGO_PC(CO) (((cogo_yield_t*)(CO))->pc)
+#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
 
-#define COGO_BEGIN(CO)                                          \
-  switch (COGO_PC(CO)) {                                        \
-    default: /* invalid pc */                                   \
-      goto cogo_end;                                            \
-      goto cogo_return; /* eliminate warning of unused label */ \
-    case COGO_PC_END: /* coroutine end */                     \
-      goto cogo_end;                                            \
+#define COGO_BEGIN(CO)                                                              \
+  switch (COGO_PC(CO)) {                                                            \
+    default: /* invalid pc */                                                       \
+      COGO_ON_EPC(((cogo_yield_t const* const)(CO)), __FILE__, ((int)COGO_PC(CO))); \
+      goto cogo_end;                                                                \
+      goto cogo_return; /* eliminate warning of unused label */                     \
+    case COGO_PC_END:   /* coroutine end */                                         \
+      goto cogo_end;                                                                \
     case COGO_PC_BEGIN /* coroutine begin */
 
 #define COGO_YIELD(CO)                                                            \
@@ -114,16 +120,16 @@ typedef struct cogo_yield {
 #define COGO_RETURN(CO) \
   goto cogo_return /* end coroutine */
 
-#define COGO_END(CO)                \
-  cogo_return:;                     \
+#define COGO_END(CO)              \
+  cogo_return:                    \
   /**/ COGO_PC(CO) = COGO_PC_END; \
-  }                                 \
+  }                               \
   cogo_end
 
 typedef int co_status_t;
 #define CO_STATUS_BEGIN COGO_PC_BEGIN
 #define CO_STATUS_END   COGO_PC_END
-#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))  // current running status (as rvalue)
+#define CO_STATUS(CO)   ((co_status_t)COGO_PC(CO))  // current running status (as rvalue)
 
 #ifdef __cplusplus
 }
