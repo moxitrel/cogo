@@ -83,7 +83,7 @@ extern "C" {
 
 // Invalid pc handler
 #ifndef COGO_ON_EPC
-#define COGO_ON_EPC(...) /*noop*/
+#define COGO_ON_EPC(FILE, LINE, FUNC, CO, PC) /*noop*/
 #endif
 
 // implement yield
