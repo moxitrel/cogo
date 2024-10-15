@@ -80,22 +80,27 @@ void nat_func(nat_t* co_this)
 extern "C" {
 #endif
 
-// Invoked when COGO_YIELD() is called. Shouldn't modify coroutine attributes, e.g. pc.
+// Invoked when coroutine start. Undefined behave if coroutine attributes is changed, e.g. pc.
+#ifndef COGO_ON_BEGIN
+#define COGO_ON_BEGIN(CO) /*noop*/
+#endif
+
+// Invoked when COGO_YIELD() is called. Undefined behave if coroutine attributes is changed, e.g. pc.
 #ifndef COGO_ON_YIELD
 #define COGO_ON_YIELD(CO, PC) /*noop*/
 #endif
 
-// Invoked when COGO_RETURN() is called. Shouldn't modify coroutine attributes, e.g. pc.
+// Invoked when COGO_RETURN() is called. Undefined behave if coroutine attributes is changed, e.g. pc.
 #ifndef COGO_ON_RETURN
 #define COGO_ON_RETURN(CO) /*noop*/
 #endif
 
-// Invoked when coroutine finished. Shouldn't modify coroutine attributes, e.g. pc.
+// Invoked when coroutine finished. SUndefined behave if coroutine attributes is changed, e.g. pc.
 #ifndef COGO_ON_END
 #define COGO_ON_END(CO) /*noop*/
 #endif
 
-// Invoked when pc isn't valid. Shouldn't modify coroutine attributes, e.g. pc.
+// Invoked when pc isn't valid. Undefined behave if coroutine attributes is changed, e.g. pc.
 #ifndef COGO_ON_EPC
 #define COGO_ON_EPC(CO, PC) /*noop*/
 #endif
@@ -115,30 +120,33 @@ typedef struct cogo_yield {
 #define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
 
 // CO should has no side effects if COGO_ON_EPC(),  COGO_ON_END() or COGO_ON_BEGIN() is defined.
-#define COGO_BEGIN(CO)                                            \
-  switch (COGO_PC(CO)) {                                          \
-    default: /* invalid pc */                                     \
-      COGO_ON_EPC(((void const* const)(CO)), ((int)COGO_PC(CO))); \
-      goto cogo_end;                                              \
-      goto cogo_return; /* eliminate warning of unused label */   \
-    case COGO_PC_END:   /* coroutine end */                       \
-      COGO_ON_END(((void const* const)(CO)));                     \
-      goto cogo_end;                                              \
-    case COGO_PC_BEGIN /* coroutine begin */
+#define COGO_BEGIN(CO)                                                                      \
+  switch (COGO_PC(CO)) {                                                                    \
+    default: /* invalid pc */                                                               \
+      COGO_ON_EPC(((void const* const)(CO)), ((int)COGO_PC(CO)));                           \
+      goto cogo_end;                                                                        \
+      goto cogo_return; /* redundant statement: to eliminate the warning of unused label */ \
+      goto cogo_begin;  /* redundant statement: to eliminate the warning of unused label */ \
+    case COGO_PC_END:   /* coroutine end */                                                 \
+      COGO_ON_END(((void const* const)(CO)));                                               \
+      goto cogo_end;                                                                        \
+    case COGO_PC_BEGIN: /* coroutine begin */                                               \
+      COGO_ON_BEGIN(((void const* const)(CO)));                                             \
+      cogo_begin
 
 // CO should has no side effects if COGO_ON_YIELD() is defined.
-#define COGO_YIELD(CO)                                                            \
-  do {                                                                            \
-    /**/ COGO_ON_YIELD(((void const* const)(CO)), __LINE__);                      \
-    /**/ COGO_PC(CO) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
-    /**/ goto cogo_end;          /* 2. return */                                  \
-    case __LINE__:;              /* 3. restore point */                           \
+#define COGO_YIELD(CO)                                                       \
+  do {                                                                       \
+    COGO_ON_YIELD(((void const* const)(CO)), __LINE__);                      \
+    COGO_PC(CO) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
+    goto cogo_end;          /* 2. return */                                  \
+    case __LINE__:;         /* 3. restore point */                           \
   } while (0)
 
-#define COGO_RETURN(CO)                             \
-  do {                                              \
-    /**/ COGO_ON_RETURN(((void const* const)(CO))); \
-    /**/ goto cogo_return; /* end coroutine */      \
+#define COGO_RETURN(CO)                        \
+  do {                                         \
+    COGO_ON_RETURN(((void const* const)(CO))); \
+    goto cogo_return; /* end coroutine */      \
   } while (0)
 
 #define COGO_END(CO)              \
