@@ -19,8 +19,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-*/
-/* Use Duff's Device (Protothreads)
+
+---
+
+* Use Duff's Device (Protothreads)
 
 * API
 
@@ -78,9 +80,24 @@ void nat_func(nat_t* co_this)
 extern "C" {
 #endif
 
-// Invalid pc handler
+// Invoked when COGO_YIELD() is called. Shouldn't modify coroutine attributes, e.g. pc.
+#ifndef COGO_ON_YIELD
+#define COGO_ON_YIELD(CO, PC) /*noop*/
+#endif
+
+// Invoked when COGO_RETURN() is called. Shouldn't modify coroutine attributes, e.g. pc.
+#ifndef COGO_ON_RETURN
+#define COGO_ON_RETURN(CO) /*noop*/
+#endif
+
+// Invoked when coroutine finished. Shouldn't modify coroutine attributes, e.g. pc.
+#ifndef COGO_ON_END
+#define COGO_ON_END(CO) /*noop*/
+#endif
+
+// Invoked when pc isn't valid. Shouldn't modify coroutine attributes, e.g. pc.
 #ifndef COGO_ON_EPC
-#define COGO_ON_EPC(FILE, LINE, FUNC, CO, PC) /*noop*/
+#define COGO_ON_EPC(CO, PC) /*noop*/
 #endif
 
 // implement yield
@@ -97,25 +114,32 @@ typedef struct cogo_yield {
 // cogo_yield_t.pc (lvalue)
 #define COGO_PC(CO)   (((cogo_yield_t*)(CO))->pc)
 
-#define COGO_BEGIN(CO)                                                                          \
-  switch (COGO_PC(CO)) {                                                                        \
-    default: /* invalid pc */                                                                   \
-      COGO_ON_EPC(__FILE__, __LINE__, __func__, ((void const* const)(CO)), ((int)COGO_PC(CO))); \
-      goto cogo_end;                                                                            \
-      goto cogo_return; /* eliminate warning of unused label */                                 \
-    case COGO_PC_END:   /* coroutine end */                                                     \
-      goto cogo_end;                                                                            \
+// CO should has no side effects if COGO_ON_EPC(),  COGO_ON_END() or COGO_ON_BEGIN() is defined.
+#define COGO_BEGIN(CO)                                            \
+  switch (COGO_PC(CO)) {                                          \
+    default: /* invalid pc */                                     \
+      COGO_ON_EPC(((void const* const)(CO)), ((int)COGO_PC(CO))); \
+      goto cogo_end;                                              \
+      goto cogo_return; /* eliminate warning of unused label */   \
+    case COGO_PC_END:   /* coroutine end */                       \
+      COGO_ON_END(((void const* const)(CO)));                     \
+      goto cogo_end;                                              \
     case COGO_PC_BEGIN /* coroutine begin */
 
+// CO should has no side effects if COGO_ON_YIELD() is defined.
 #define COGO_YIELD(CO)                                                            \
   do {                                                                            \
+    /**/ COGO_ON_YIELD(((void const* const)(CO)), __LINE__);                      \
     /**/ COGO_PC(CO) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
     /**/ goto cogo_end;          /* 2. return */                                  \
     case __LINE__:;              /* 3. restore point */                           \
   } while (0)
 
-#define COGO_RETURN(CO) \
-  goto cogo_return /* end coroutine */
+#define COGO_RETURN(CO)                             \
+  do {                                              \
+    /**/ COGO_ON_RETURN(((void const* const)(CO))); \
+    /**/ goto cogo_return; /* end coroutine */      \
+  } while (0)
 
 #define COGO_END(CO)              \
   cogo_return:                    \
