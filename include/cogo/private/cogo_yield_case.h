@@ -1,24 +1,7 @@
-/* MIT License
+/* Copyright (c) 2018-2024 Moxi Color
 
-Copyright (c) 2018-2024 Moxi Color
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Use of this source code is governed by a MIT-style license
+that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
 ---
 
@@ -99,62 +82,63 @@ typedef struct cogo_yield {
 #define COGO_BEGIN(CO)                                                                      \
   switch (COGO_PC(CO)) {                                                                    \
     default: /* invalid pc */                                                               \
-      COGO_ON_EPC(((void const*)(CO)), ((cogo_pc_t)COGO_PC(CO))); /* pass as rvalue to prevent from tampering by user */                          \
+      /* pass as rvalue to prevent value from tampered by user */                           \
+      COGO_ON_EPC(((void const*)(CO)), ((cogo_pc_t)COGO_PC(CO)));                           \
       goto cogo_end;                                                                        \
       goto cogo_return; /* redundant statement: to eliminate the warning of unused label */ \
       goto cogo_begin;  /* redundant statement: to eliminate the warning of unused label */ \
     case COGO_PC_END:   /* coroutine end */                                                 \
       goto cogo_end;                                                                        \
     case COGO_PC_BEGIN: /* coroutine begin */                                               \
-      COGO_ON_BEGIN(((void const*)(CO)));                                             \
-    cogo_begin /* coroutine begin label */
+      COGO_ON_BEGIN(((void const*)(CO)));                                                   \
+      cogo_begin /* coroutine begin label */
 
 // CO should has no side effects if COGO_ON_YIELD() is defined.
 #define COGO_YIELD(CO)                                                       \
   do {                                                                       \
-    /**/ COGO_ON_YIELD(((void const*)(CO)), __LINE__);                      \
-    /**/ COGO_PC(CO) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
-    /**/ goto cogo_end;          /* 2. return */                                  \
+    COGO_ON_YIELD(((void const*)(CO)), __LINE__);                            \
+    COGO_PC(CO) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
+    goto cogo_end;          /* 2. return */                                  \
     case __LINE__:;         /* 3. restore point */                           \
   } while (0)
 
-#define COGO_RETURN(CO)                        \
-  do {                                         \
-    COGO_ON_RETURN(((void const*)(CO))); \
-    goto cogo_return; /* end coroutine */      \
+#define COGO_RETURN(CO)                   \
+  do {                                    \
+    COGO_ON_RETURN(((void const*)(CO)));  \
+    goto cogo_return; /* end coroutine */ \
   } while (0)
 
 // CO should has no side effects if COGO_ON_END() is defined.
-#define COGO_END(CO)              \
-  cogo_return:                    \
-  /**/ COGO_ON_END(((void const*)(CO))); \
-  /**/ COGO_PC(CO) = COGO_PC_END; \
-  }                               \
+#define COGO_END(CO)                \
+  cogo_return:                      \
+  COGO_ON_END(((void const*)(CO))); \
+  COGO_PC(CO) = COGO_PC_END;        \
+  }                                 \
   cogo_end
 
 // Invoked when pc isn't valid.
 #ifndef COGO_ON_EPC
-#define COGO_ON_EPC(CO, PC) // noop
+#define COGO_ON_EPC(CO, PC)  // noop
 #endif
 
 // Invoked when COGO_YIELD() is called.
 #ifndef COGO_ON_YIELD
-#define COGO_ON_YIELD(CO, NEXT_PC) // noop
+#define COGO_ON_YIELD(CO, NEXT_PC)  // noop
 #endif
 
 // Invoked when coroutine begin (enter for the first time).
 #ifndef COGO_ON_BEGIN
-#define COGO_ON_BEGIN(CO) // noop
+#define COGO_ON_BEGIN(CO)  // noop
 #endif
 
 // Invoked when coroutine end (finished).
 #ifndef COGO_ON_END
-#define COGO_ON_END(CO) // noop
+#define COGO_ON_END(CO)  // noop
 #endif
 
 // Invoked when COGO_RETURN() is called.
 #ifndef COGO_ON_RETURN
-#define COGO_ON_RETURN(CO) // noop
+#define COGO_ON_RETURN(CO)  // noop
 #endif
 
 typedef cogo_pc_t co_status_t;

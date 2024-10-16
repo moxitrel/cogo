@@ -109,7 +109,7 @@ typedef struct cogo_yield {
   goto cogo_return /* end coroutine */
 
 #define COGO_END(CO)                \
-  cogo_return:                     \
+  cogo_return:                      \
   /**/ COGO_PC(CO) = CO_STATUS_END; \
   cogo_end
 
