@@ -23,7 +23,7 @@ static void test_yield(void) {
 
   func_yield(&co, &v);
   TEST_ASSERT_NOT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // running
-  TEST_ASSERT_NOT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
+  TEST_ASSERT_NOT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));  // running
   TEST_ASSERT_EQUAL_INT(1, v);
 
   func_yield(&co, &v);

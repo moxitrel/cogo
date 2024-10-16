@@ -60,8 +60,8 @@ yield_end:;                     //
 - Use GCC extension.
 
 */
-#ifndef COGO_YIELD_LABELS_AS_VALUES_H_
-#define COGO_YIELD_LABELS_AS_VALUES_H_
+#ifndef COGO_YIELD_GOTO_H_
+#define COGO_YIELD_GOTO_H_
 
 #include <stdint.h>
 
@@ -109,7 +109,7 @@ typedef struct cogo_yield {
   goto cogo_return /* end coroutine */
 
 #define COGO_END(CO)                \
-  cogo_return:;                     \
+  cogo_return:                     \
   /**/ COGO_PC(CO) = CO_STATUS_END; \
   cogo_end
 
@@ -125,4 +125,4 @@ typedef intptr_t co_status_t;
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_YIELD_LABELS_AS_VALUES_H_
+#endif  // COGO_YIELD_GOTO_H_

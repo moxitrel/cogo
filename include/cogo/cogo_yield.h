@@ -22,11 +22,11 @@ CO_DEFINE (FUNC)     {} : define a declared coroutine which is not defined.
 #include "private/macro_utils.h"
 
 #if defined(COGO_NO_LABELS_AS_VALUES)
-#include "private/cogo_yield_switch.h"
+#include "private/cogo_yield_case.h"
 #elif defined(__GNUC__)
-#include "private/cogo_yield_labels_as_values.h"
+#include "private/cogo_yield_goto.h"
 #else
-#include "private/cogo_yield_switch.h"
+#include "private/cogo_yield_case.h"
 #endif
 
 #ifdef __cplusplus
