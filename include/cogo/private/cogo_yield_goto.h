@@ -1,25 +1,7 @@
-/*
-MIT License
+/* Copyright (c) 2018-2024 Moxi Color
 
-Copyright (c) 2018-2024 Moxi Color
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Use of this source code is governed by a MIT-style license
+that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
 ---
 
@@ -69,48 +51,55 @@ yield_end:;                     //
 extern "C" {
 #endif
 
-#define CO_STATUS_BEGIN 0
-#define CO_STATUS_END   (-1)
+typedef intptr_t cogo_pc_t;
 
 // implement yield
 typedef struct cogo_yield {
-  // Start point (address) where coroutine function continue to run after yield.
+  // Label address where coroutine function continue to run after yield.
   //  0: inited
   // -1: finished
-  intptr_t pc;
+  cogo_pc_t private_pc;
 } cogo_yield_t;
 
-// cogo_yield_t.pc
-#define COGO_PC(CO) (((cogo_yield_t*)(CO))->pc)
+#define COGO_PC_BEGIN 0
+#define COGO_PC_END   (-1)
+#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->private_pc)
 
 #define COGO_BEGIN(CO)                                                                            \
   switch (COGO_PC(CO)) {                                                                          \
-    case CO_STATUS_BEGIN:                                                                         \
+    case COGO_PC_BEGIN:                                                                           \
+      COGO_ON_BEGIN(((void const*)(CO)));                                                         \
       goto cogo_begin;                                                                            \
       /* eliminate warning of unused label */                                                     \
       goto cogo_return;                                                                           \
       /* eliminate clang error: indirect goto in function with no address-of-label expressions */ \
-      COGO_PC(CO) = (intptr_t)(&&cogo_begin);                                                     \
-    case CO_STATUS_END:                                                                           \
+      COGO_PC(CO) = (cogo_pc_t)(&&cogo_begin);                                                    \
+    case COGO_PC_END:                                                                             \
       goto cogo_end;                                                                              \
     default:                                                                                      \
-      goto*(void*)COGO_PC(CO);                                                                    \
+      goto*(void const*)COGO_PC(CO);                                                              \
   }                                                                                               \
   cogo_begin
 
-#define COGO_YIELD(CO)                                                  \
-  do {                                                                  \
-    COGO_PC(CO) = (intptr_t)(&&COGO_LABEL); /* 1. save restore point */ \
-    goto cogo_end;                          /* 2. return */             \
-  COGO_LABEL:;                              /* 3. restore point */      \
+#define COGO_YIELD(CO)                                                   \
+  do {                                                                   \
+    COGO_ON_YIELD(((void const*)(CO)), __LINE__);                        \
+    COGO_PC(CO) = (cogo_pc_t)(&&COGO_LABEL); /* 1. save restore point */ \
+    goto cogo_end;                           /* 2. return */             \
+  COGO_LABEL:                                /* 3. restore point */      \
+    COGO_ON_RESUME(((void const*)(CO)), __LINE__);                       \
   } while (0)
 
-#define COGO_RETURN(CO) \
-  goto cogo_return /* end coroutine */
+#define COGO_RETURN(CO)                  \
+  do {                                   \
+    COGO_ON_RETURN(((void const*)(CO))); \
+    goto cogo_return;                    \
+  } while (0)
 
 #define COGO_END(CO)                \
   cogo_return:                      \
-  /**/ COGO_PC(CO) = CO_STATUS_END; \
+  COGO_ON_END(((void const*)(CO))); \
+  COGO_PC(CO) = COGO_PC_END;        \
   cogo_end
 
 // Make goto label.
@@ -119,8 +108,35 @@ typedef struct cogo_yield {
 #define COGO_LABEL1(...) COGO_LABEL2(__VA_ARGS__)
 #define COGO_LABEL2(N)   cogo_yield_##N
 
-typedef intptr_t co_status_t;
-#define CO_STATUS(CO) ((co_status_t)COGO_PC(CO))
+// Invoked when coroutine begin (enter for the first time).
+#ifndef COGO_ON_BEGIN
+#define COGO_ON_BEGIN(CO)
+#endif
+
+// Invoked when COGO_YIELD() is called.
+#ifndef COGO_ON_YIELD
+#define COGO_ON_YIELD(CO, NEXT_PC)
+#endif
+
+// Invoked when coroutine resumed (continue to run).
+#ifndef COGO_ON_RESUME
+#define COGO_ON_RESUME(CO, PC)
+#endif
+
+// Invoked when COGO_RETURN() is called.
+#ifndef COGO_ON_RETURN
+#define COGO_ON_RETURN(CO)
+#endif
+
+// Invoked when coroutine end (finished).
+#ifndef COGO_ON_END
+#define COGO_ON_END(CO)
+#endif
+
+typedef cogo_pc_t co_status_t;
+#define CO_STATUS_BEGIN COGO_PC_BEGIN
+#define CO_STATUS_END   COGO_PC_END
+#define CO_STATUS(CO)   ((co_status_t)COGO_PC(CO))
 
 #ifdef __cplusplus
 }
