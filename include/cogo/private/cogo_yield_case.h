@@ -134,7 +134,7 @@ typedef struct cogo_yield {
 
 // Invoked when coroutine resumed (continue to run).
 #ifndef COGO_ON_RESUME
-#define COGO_ON_RESUME(CO, NEXT_PC)  // noop
+#define COGO_ON_RESUME(CO, PC)  // noop
 #endif
 
 // Invoked when COGO_RETURN() is called.
