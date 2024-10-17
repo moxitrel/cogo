@@ -99,7 +99,8 @@ typedef struct cogo_yield {
     COGO_ON_YIELD(((void const*)(CO)), __LINE__);                            \
     COGO_PC(CO) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
     goto cogo_end;          /* 2. return */                                  \
-    case __LINE__:;         /* 3. restore point */                           \
+    case __LINE__:          /* 3. restore point */                           \
+      COGO_ON_RESUME(((void const*)(CO)), __LINE__);                         \
   } while (0)
 
 #define COGO_RETURN(CO)                   \
@@ -121,24 +122,29 @@ typedef struct cogo_yield {
 #define COGO_ON_EPC(CO, PC)  // noop
 #endif
 
-// Invoked when COGO_YIELD() is called.
-#ifndef COGO_ON_YIELD
-#define COGO_ON_YIELD(CO, NEXT_PC)  // noop
-#endif
-
 // Invoked when coroutine begin (enter for the first time).
 #ifndef COGO_ON_BEGIN
 #define COGO_ON_BEGIN(CO)  // noop
 #endif
 
-// Invoked when coroutine end (finished).
-#ifndef COGO_ON_END
-#define COGO_ON_END(CO)  // noop
+// Invoked when COGO_YIELD() is called.
+#ifndef COGO_ON_YIELD
+#define COGO_ON_YIELD(CO, NEXT_PC)  // noop
+#endif
+
+// Invoked when coroutine resumed (continue to run).
+#ifndef COGO_ON_RESUME
+#define COGO_ON_RESUME(CO, NEXT_PC)  // noop
 #endif
 
 // Invoked when COGO_RETURN() is called.
 #ifndef COGO_ON_RETURN
 #define COGO_ON_RETURN(CO)  // noop
+#endif
+
+// Invoked when coroutine end (finished).
+#ifndef COGO_ON_END
+#define COGO_ON_END(CO)  // noop
 #endif
 
 typedef cogo_pc_t co_status_t;
