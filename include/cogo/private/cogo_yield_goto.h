@@ -133,11 +133,6 @@ typedef struct cogo_yield {
 #define COGO_ON_END(CO)
 #endif
 
-typedef cogo_pc_t co_status_t;
-#define CO_STATUS_BEGIN COGO_PC_BEGIN
-#define CO_STATUS_END   COGO_PC_END
-#define CO_STATUS(CO)   ((co_status_t)COGO_PC(CO))
-
 #ifdef __cplusplus
 }
 #endif

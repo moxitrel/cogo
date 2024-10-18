@@ -7,8 +7,10 @@ CO_END      : coroutine end label.
 CO_YIELD    : yield from coroutine.
 CO_RETURN   : return from coroutine.
 
-co_status_t
-CO_STATUS(CO)
+co_status_t       : type of CO_STATUS().
+CO_STATUS()       : get the current running status.
+  CO_STATUS_BEGIN : inited
+  CO_STATUS_END   : finished
 
 CO_DECLARE(FUNC, ...){} : declare a coroutine.
   FUNC_t                : the declared coroutine type.
@@ -84,6 +86,11 @@ extern "C" {
 #define CO_END    COGO_END(co_this)
 #define CO_YIELD  COGO_YIELD(co_this)
 #define CO_RETURN COGO_RETURN(co_this)
+
+typedef cogo_pc_t co_status_t;
+#define CO_STATUS_BEGIN COGO_PC_BEGIN
+#define CO_STATUS_END   COGO_PC_END
+#define CO_STATUS(CO)   ((co_status_t)COGO_PC(CO))  // get as rvalue
 
 #ifdef assert
 #define COGO_ASSERT(...) assert(__VA_ARGS__)

@@ -14,11 +14,6 @@ COGO_END()      : coroutine end.
 COGO_YIELD()    : yield from coroutine.
 COGO_RETURN()   : return from coroutine.
 
-co_status_t       : type of CO_STATUS().
-CO_STATUS()       : get the current running status.
-  CO_STATUS_BEGIN : inited
-  CO_STATUS_END   : finished
-
 * Example
 void nat_func(nat_t* co_this)
 {
@@ -146,11 +141,6 @@ typedef struct cogo_yield {
 #ifndef COGO_ON_END
 #define COGO_ON_END(CO)  // noop
 #endif
-
-typedef cogo_pc_t co_status_t;
-#define CO_STATUS_BEGIN COGO_PC_BEGIN
-#define CO_STATUS_END   COGO_PC_END
-#define CO_STATUS(CO)   ((co_status_t)COGO_PC(CO))  // get as rvalue
 
 #ifdef __cplusplus
 }
