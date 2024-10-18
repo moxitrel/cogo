@@ -7,11 +7,6 @@ that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
 * Use Duff's Device (Protothreads)
 
-* API
-
-COGO_YIELD()    : yield from coroutine.
-COGO_RETURN()   : return from coroutine.
-
 * Example
 void nat_func(nat_t* co_this)
 {
@@ -66,16 +61,18 @@ typedef struct cogo_yield {
   cogo_pc_t private_pc;
 } cogo_yield_t;
 
-#define COGO_PC_BEGIN 0
-#define COGO_PC_END   (-1)
-#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->private_pc) // get as lvalue
+#define COGO_PC_BEGIN                 0
+#define COGO_PC_END                   (-1)
+#define COGO_PC(/*cogo_yield_t**/ CO) (((cogo_yield_t*)(CO))->private_pc)  // get as lvalue
 
-/// Mark coroutine begin. 
-/// There must be a corresponding COGO_END() in the same function,
-/// and there should be only one COGO_BEGIN() and COGO_END() in a function.
-/// @param CO The value of @ref CO should point to an object which inherit from cogo_yield_t. 
-/// May cause undefined behavior if the expression of @ref CO has side effects (e.g. e++, e -= v).
-#define COGO_BEGIN(CO)                                                                      \
+/// Mark coroutine begin.
+/// There must be a corresponding @ref COGO_END after in the same function.
+/// And there should be only one COGO_BEGIN and COGO_END in a function.
+/// (i.e. COGO_BEGIN and COGO_END turns a function to a coroutine.)
+/// @param CO The value of CO should point to an object which inherit from cogo_yield_t.
+/// It must not be nullptr.
+/// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+#define COGO_BEGIN(/*cogo_yield_t* const*/ CO)                                              \
   switch (COGO_PC(CO)) {                                                                    \
     default: /* invalid pc */                                                               \
       /* pass as rvalue to prevent value from tampered by user */                           \
@@ -89,12 +86,12 @@ typedef struct cogo_yield {
       COGO_ON_BEGIN(((void const*)(CO)));                                                   \
       cogo_begin /* coroutine begin label */
 
-/// Mark coroutine end. 
-/// There must be a corresponding COGO_BEGIN() in the same function,
-/// and there should be only one COGO_BEGIN() and COGO_END() in a function.
-/// @param CO The value of @ref CO should point to an object which inherit from cogo_yield_t. 
-/// May cause undefined behavior if the expression of @ref CO has side effects (e.g. e++, e -= v).
-#define COGO_YIELD(CO)                                                       \
+/// Coroutine will jump to COGO_END, and the next run will start from here.
+/// @param CO The value of CO should point to an object which inherit from cogo_yield_t.
+/// And the object referenced by CO must be the same one as passed to COGO_BEGIN and COGO_END.
+/// It must not be nullptr.
+/// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+#define COGO_YIELD(/*cogo_yield_t* const*/ CO)                               \
   do {                                                                       \
     COGO_ON_YIELD(((void const*)(CO)), __LINE__);                            \
     COGO_PC(CO) = __LINE__; /* 1. save the restore point (case __LINE__:) */ \
@@ -103,18 +100,31 @@ typedef struct cogo_yield {
       COGO_ON_RESUME(((void const*)(CO)), __LINE__);                         \
   } while (0)
 
-#define COGO_RETURN(CO)                   \
-  do {                                    \
-    COGO_ON_RETURN(((void const*)(CO)));  \
-    goto cogo_return; /* end coroutine */ \
+/// Coroutine will jump to COGO_END, and mark as ended.
+/// Coroutine body (between COGO_BEGIN and COGO_END) will be skiped at the next run.
+/// @param CO The value of CO should point to an object which inherit from cogo_yield_t.
+/// And the object referenced by CO must be the same one as passed to COGO_BEGIN and COGO_END.
+/// It must not be nullptr.
+/// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+#define COGO_RETURN(/*cogo_yield_t* const*/ CO) \
+  do {                                          \
+    COGO_ON_RETURN(((void const*)(CO)));        \
+    goto cogo_return; /* end coroutine */       \
   } while (0)
 
-// CO should has no side effects if COGO_ON_END() is defined.
-#define COGO_END(CO)                \
-  cogo_return:                      \
-  COGO_ON_END(((void const*)(CO))); \
-  COGO_PC(CO) = COGO_PC_END;        \
-  }                                 \
+/// Mark coroutine end.
+/// There must be a corresponding @ref COGO_BEGIN before in the same function.
+/// And there should be only one COGO_BEGIN and COGO_END in a function.
+/// (i.e. COGO_BEGIN and COGO_END turns a function to a coroutine.)
+/// @param CO The value of CO should point to an object which inherit from cogo_yield_t.
+/// And the object referenced by CO must be the same one as passed to COGO_BEGIN.
+/// It must not be nullptr.
+/// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+#define COGO_END(/*cogo_yield_t* const*/ CO) \
+  cogo_return:                               \
+  COGO_ON_END(((void const*)(CO)));          \
+  COGO_PC(CO) = COGO_PC_END;                 \
+  }                                          \
   cogo_end
 
 // Invoked when pc isn't valid.

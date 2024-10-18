@@ -12,7 +12,7 @@ include(cmake/cogoCPack.cmake)
 option(COGO_BUILD_TESTING "Build tests."
   OFF
 )
-option(COGO_NO_LABELS_AS_VALUES "Don't use GCC extension (label value) to implement CO_YIELD."
+option(COGO_NO_LABELS_AS_VALUES "Don't use GCC extension (computed goto) to implement CO_YIELD."
   OFF
 )
 

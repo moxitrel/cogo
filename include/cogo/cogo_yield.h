@@ -46,9 +46,7 @@ extern "C" {
 //  } point_t
 //
 #define COGO_COMMA_static ,
-#define COGO_COMMA_extern ,
 #define COGO_BLANK_static
-#define COGO_BLANK_extern
 #define COGO_STRUCT(TYPE, ...)    COGO_STRUCT1(ET_COUNT(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
 #define COGO_STRUCT1(...)         COGO_STRUCT2(__VA_ARGS__)
 #define COGO_STRUCT2(N, ...)      COGO_STRUCT3_##N(__VA_ARGS__)
@@ -57,10 +55,10 @@ extern "C" {
   struct TYPE {                                    \
     ET_MAP(;, ET_IDENTITY, __VA_ARGS__);           \
   }
-#define COGO_STRUCT3_2(TYPE, ...) /* TYPE: static name */                   \
+#define COGO_STRUCT3_2(TYPE, ...) /* TYPE: static name */ \
   typedef struct COGO_BLANK_##TYPE COGO_BLANK_##TYPE##_t; \
-  struct COGO_BLANK_##TYPE {                                       \
-    ET_MAP(;, ET_IDENTITY, __VA_ARGS__);                                    \
+  struct COGO_BLANK_##TYPE {                              \
+    ET_MAP(;, ET_IDENTITY, __VA_ARGS__);                  \
   }
 
 #define COGO_DECLARE(FUNC, BASE, ...)              \
