@@ -46,7 +46,9 @@ extern "C" {
 //  } point_t
 //
 #define COGO_COMMA_static ,
-#define COGO_REMOVE_LINKAGE_static
+#define COGO_COMMA_extern ,
+#define COGO_BLANK_static
+#define COGO_BLANK_extern
 #define COGO_STRUCT(TYPE, ...)    COGO_STRUCT1(ET_COUNT(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
 #define COGO_STRUCT1(...)         COGO_STRUCT2(__VA_ARGS__)
 #define COGO_STRUCT2(N, ...)      COGO_STRUCT3_##N(__VA_ARGS__)
@@ -56,8 +58,8 @@ extern "C" {
     ET_MAP(;, ET_IDENTITY, __VA_ARGS__);           \
   }
 #define COGO_STRUCT3_2(TYPE, ...) /* TYPE: static name */                   \
-  typedef struct COGO_REMOVE_LINKAGE_##TYPE COGO_REMOVE_LINKAGE_##TYPE##_t; \
-  struct COGO_REMOVE_LINKAGE_##TYPE {                                       \
+  typedef struct COGO_BLANK_##TYPE COGO_BLANK_##TYPE##_t; \
+  struct COGO_BLANK_##TYPE {                                       \
     ET_MAP(;, ET_IDENTITY, __VA_ARGS__);                                    \
   }
 
@@ -71,7 +73,7 @@ extern "C" {
 #define CO_DEFINE1(...)    CO_DEFINE2(__VA_ARGS__)
 #define CO_DEFINE2(N, ...) CO_DEFINE3_##N(__VA_ARGS__)
 #define CO_DEFINE3_1(FUNC) void FUNC##_resume(void* const co_this)
-#define CO_DEFINE3_2(FUNC) static void COGO_REMOVE_LINKAGE_##FUNC##_resume(void* const co_this)
+#define CO_DEFINE3_2(FUNC) static void COGO_BLANK_##FUNC##_resume(void* const co_this)
 
 // typedef struct FUNC FUNC_t;
 // struct FUNC {

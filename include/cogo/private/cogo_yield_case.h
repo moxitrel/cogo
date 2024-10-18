@@ -9,8 +9,6 @@ that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
 * API
 
-COGO_BEGIN()    : coroutine begin.
-COGO_END()      : coroutine end.
 COGO_YIELD()    : yield from coroutine.
 COGO_RETURN()   : return from coroutine.
 
@@ -70,10 +68,13 @@ typedef struct cogo_yield {
 
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
-// cogo_yield_t.private_pc (lvalue)
-#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->private_pc)
+#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->private_pc) // get as lvalue
 
-// CO should has no side effects if COGO_ON_EPC(),  COGO_ON_END() or COGO_ON_BEGIN() is defined.
+/// Mark coroutine begin. 
+/// There must be a corresponding COGO_END() in the same function,
+/// and there should be only one COGO_BEGIN() and COGO_END() in a function.
+/// @param CO The value of @ref CO should point to an object which inherit from cogo_yield_t. 
+/// May cause undefined behavior if the expression of @ref CO has side effects (e.g. e++, e -= v).
 #define COGO_BEGIN(CO)                                                                      \
   switch (COGO_PC(CO)) {                                                                    \
     default: /* invalid pc */                                                               \
@@ -88,7 +89,11 @@ typedef struct cogo_yield {
       COGO_ON_BEGIN(((void const*)(CO)));                                                   \
       cogo_begin /* coroutine begin label */
 
-// CO should has no side effects if COGO_ON_YIELD() is defined.
+/// Mark coroutine end. 
+/// There must be a corresponding COGO_BEGIN() in the same function,
+/// and there should be only one COGO_BEGIN() and COGO_END() in a function.
+/// @param CO The value of @ref CO should point to an object which inherit from cogo_yield_t. 
+/// May cause undefined behavior if the expression of @ref CO has side effects (e.g. e++, e -= v).
 #define COGO_YIELD(CO)                                                       \
   do {                                                                       \
     COGO_ON_YIELD(((void const*)(CO)), __LINE__);                            \
