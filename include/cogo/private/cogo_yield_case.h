@@ -63,17 +63,17 @@ typedef struct cogo_yield {
 #define COGO_PC(/*cogo_yield_t* const*/ CO) (((cogo_yield_t*)(CO))->private_pc)  // Get pc as lvalue.
 
 /// Coroutine begin label.
-/// - There must be a corresponding `COGO_END` after `COGO_BEGIN`.
+/// - There must be a `COGO_END` after `COGO_BEGIN`.
 /// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
-/// - `COGO_ON_BEGIN` is called if the coroutine runs the first time.
+/// - `COGO_ON_BEGIN` is called if it's defined and the coroutine runs the first time.
 ///
 /// @param CO Coroutine object.
 /// - The value of `CO` should point to an object which inherit from `cogo_yield_t`.
-/// - It must not be `NULL`.
+/// - It must not be `nullptr`.
 /// - The expression of `CO` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
 ///
 /// @exception
-/// - `COGO_ON_EPC` is called if the resume point is an invalid value.
+/// - `COGO_ON_EPC` is called if it's defined and the resume point is an invalid value.
 ///
 /// @par Example
 /// @code
