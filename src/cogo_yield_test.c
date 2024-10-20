@@ -18,21 +18,21 @@ static void test_yield(void) {
   memset(&co, 0, sizeof(co));
 
   int v = 0;
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
+  TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, v);
 
   func_yield(&co, &v);
-  TEST_ASSERT_NOT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // running
-  TEST_ASSERT_NOT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));    // running
+  TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&co));  // running
+  TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&co));    // running
   TEST_ASSERT_EQUAL_INT(1, v);
 
   func_yield(&co, &v);
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));  // end
+  TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&co));  // end
   TEST_ASSERT_EQUAL_INT(2, v);
 
   // noop when coroutine end
   func_yield(&co, &v);
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
+  TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&co));
   TEST_ASSERT_EQUAL_INT(2, v);
 }
 
@@ -51,16 +51,16 @@ static void test_return(void) {
   memset(&co, 0, sizeof(co));
 
   int v = 0;
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
+  TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&co));  // begin
   TEST_ASSERT_EQUAL_INT(0, v);
 
   func_return(&co, &v);
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));  // end
+  TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&co));  // end
   TEST_ASSERT_EQUAL_INT(1, v);
 
   // noop when coroutine end
   func_return(&co, &v);
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
+  TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&co));
   TEST_ASSERT_EQUAL_INT(1, v);
 }
 
@@ -87,7 +87,7 @@ static void test_prologue(void) {
       .exit = 0,
   };
 
-  while (CO_STATUS(&prologue.co) != CO_STATUS_END) {
+  while (COGO_STATUS(&prologue.co) != COGO_STATUS_END) {
     func_prologue(&prologue);
   }
   TEST_ASSERT_EQUAL_INT(3, prologue.enter);
@@ -98,7 +98,7 @@ static void test_prologue(void) {
   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
 
-CO_DECLARE(/*func*/ nat, /*param*/ int v) {
+CO_DECLARE(/*name*/ nat, /*param*/ int v) {
   nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
 

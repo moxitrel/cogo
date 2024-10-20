@@ -1,10 +1,13 @@
 /build/
 compile_commands.json
 
-# ignore files begin with dot default
+# Ignore files begin with dot default
 .*
 !.clang-format
 !.clang-tidy
 !.editorconfig
 !.github/
 !.gitignore
+
+# Ignore files end with .bak
+Doxyfile.bak

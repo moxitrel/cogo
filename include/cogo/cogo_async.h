@@ -190,7 +190,7 @@ bool cogo_chan_write(cogo_async_t* co_this, co_chan_t* chan, co_message_t* msg);
 
 #undef CO_RESUME
 #define CO_RESUME(CO) cogo_async_resume((cogo_async_t*)(CO))
-co_status_t cogo_async_resume(cogo_async_t* co);
+cogo_status_t cogo_async_resume(cogo_async_t* co);
 
 #undef CO_RUN
 #define CO_RUN(CO) cogo_async_run((cogo_async_t*)(CO))

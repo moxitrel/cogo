@@ -7,15 +7,15 @@ CO_END      : coroutine end label.
 CO_YIELD    : yield from coroutine.
 CO_RETURN   : return from coroutine.
 
-co_status_t       : type of CO_STATUS().
-CO_STATUS()       : get the current running status.
-  CO_STATUS_BEGIN : inited
-  CO_STATUS_END   : finished
+cogo_status_t       : type of COGO_STATUS().
+COGO_STATUS()       : get the current running status.
+  COGO_STATUS_BEGIN : inited
+  COGO_STATUS_END   : finished
 
-CO_DECLARE(FUNC, ...){} : declare a coroutine.
+CO_DECLARE(NAME, ...){} : declare a coroutine.
   FUNC_t                : the declared coroutine type.
   FUNC_resume           : the declared coroutine function.
-CO_DEFINE (FUNC)     {} : define a declared coroutine which is not defined.
+CO_DEFINE (NAME)     {} : define a declared coroutine which is not defined.
 
 */
 #ifndef COGO_YIELD_H_
@@ -35,68 +35,64 @@ CO_DEFINE (FUNC)     {} : define a declared coroutine which is not defined.
 extern "C" {
 #endif
 
-// COGO_STRUCT(Type, T1 field1, ...): define a struct named <Type>
-//
-// * Example
-// COGO_STRUCT(point, int x, int y, int z) will be expanded to
+#define COGO_COMMA_static ,
+#define COGO_BLANK_static
+
+// COGO_STRUCT(point, int x, int y):
 //  typedef struct point {
 //      int x;
 //      int y;
-//      int z;
 //  } point_t
-//
-#define COGO_COMMA_static ,
-#define COGO_BLANK_static
-#define COGO_STRUCT(TYPE, ...)    COGO_STRUCT1(ET_COUNT(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
-#define COGO_STRUCT1(...)         COGO_STRUCT2(__VA_ARGS__)
-#define COGO_STRUCT2(N, ...)      COGO_STRUCT3_##N(__VA_ARGS__)
-#define COGO_STRUCT3_1(TYPE, ...) /* TYPE: name */ \
-  typedef struct TYPE TYPE##_t;                    \
-  struct TYPE {                                    \
-    ET_MAP(;, ET_IDENTITY, __VA_ARGS__);           \
-  }
-#define COGO_STRUCT3_2(TYPE, ...) /* TYPE: static name */ \
-  typedef struct COGO_BLANK_##TYPE COGO_BLANK_##TYPE##_t; \
-  struct COGO_BLANK_##TYPE {                              \
-    ET_MAP(;, ET_IDENTITY, __VA_ARGS__);                  \
+#define COGO_STRUCT(NAME, ...)           \
+  typedef struct NAME NAME##_t;          \
+  struct NAME {                          \
+    ET_MAP(;, ET_IDENTITY, __VA_ARGS__); \
   }
 
-#define COGO_DECLARE(FUNC, BASE, ...)              \
-  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),              \
-            COGO_STRUCT(FUNC, BASE),               \
-            COGO_STRUCT(FUNC, BASE, __VA_ARGS__)); \
-  CO_DEFINE(FUNC)
-
-#define CO_DEFINE(FUNC)    CO_DEFINE1(ET_COUNT(COGO_COMMA_##FUNC), FUNC)
-#define CO_DEFINE1(...)    CO_DEFINE2(__VA_ARGS__)
-#define CO_DEFINE2(N, ...) CO_DEFINE3_##N(__VA_ARGS__)
-#define CO_DEFINE3_1(FUNC) void FUNC##_resume(void* const co_this)
-#define CO_DEFINE3_2(FUNC) static void COGO_BLANK_##FUNC##_resume(void* const co_this)
-
-// typedef struct FUNC FUNC_t;
-// struct FUNC {
-//  cogo_yield_t base_yield;
+// typedef struct NAME NAME_t;
+// struct NAME {
+//  FIRST_FIELD;
 //  ...
 // };
-// void FUNC_resume(void* const co_this)
-#define CO_DECLARE(FUNC, ...) \
-  COGO_DECLARE(FUNC, cogo_yield_t base_yield, __VA_ARGS__)
+// void NAME_resume(void* const co_this)
+#define COGO_DECLARE(NAME, FIRST_FIELD, ...)    COGO_DECLARE1(ET_COUNT(COGO_COMMA_##NAME), NAME, FIRST_FIELD, __VA_ARGS__)
+#define COGO_DECLARE1(...)                      COGO_DECLARE2(__VA_ARGS__)
+#define COGO_DECLARE2(N, ...)                   COGO_DECLARE3_##N(__VA_ARGS__)
+#define COGO_DECLARE3_1(NAME, FIRST_FIELD, ...) /* NAME: name */ \
+  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                            \
+            COGO_STRUCT(NAME, FIRST_FIELD),                      \
+            COGO_STRUCT(NAME, FIRST_FIELD, __VA_ARGS__));        \
+  COGO_DEFINE(NAME, void* const co_this)
+#define COGO_DECLARE3_2(NAME, FIRST_FIELD, ...) /* NAME: static name */ \
+  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                                   \
+            COGO_STRUCT(COGO_BLANK_##NAME, FIRST_FIELD),                \
+            COGO_STRUCT(COGO_BLANK_##NAME, FIRST_FIELD, __VA_ARGS__));  \
+  COGO_DEFINE(NAME, void* const co_this)
 
-#define CO_BEGIN  COGO_BEGIN(co_this)
-#define CO_END    COGO_END(co_this)
-#define CO_YIELD  COGO_YIELD(co_this)
-#define CO_RETURN COGO_RETURN(co_this)
+#define COGO_DEFINE(NAME, ...)    COGO_DEFINE1(ET_COUNT(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
+#define COGO_DEFINE1(...)         COGO_DEFINE2(__VA_ARGS__)
+#define COGO_DEFINE2(N, ...)      COGO_DEFINE3_##N(__VA_ARGS__)
+#define COGO_DEFINE3_1(NAME, ...) void NAME##_resume(__VA_ARGS__)
+#define COGO_DEFINE3_2(NAME, ...) static void COGO_BLANK_##NAME##_resume(__VA_ARGS__)
 
-typedef cogo_pc_t co_status_t;
-#define CO_STATUS_BEGIN COGO_PC_BEGIN
-#define CO_STATUS_END   COGO_PC_END
-#define CO_STATUS(CO)   ((co_status_t)COGO_PC(CO))  // get as rvalue
+typedef cogo_pc_t cogo_status_t;
+#define COGO_STATUS_BEGIN COGO_PC_BEGIN
+#define COGO_STATUS_END   COGO_PC_END
+#define COGO_STATUS(CO)   ((cogo_status_t)COGO_PC(CO))  // get as rvalue
 
-#ifdef assert
-#define COGO_ASSERT(...) assert(__VA_ARGS__)
-#else
-#define COGO_ASSERT(...) /*noop*/
-#endif
+/// Coroutine begin label.
+#define CO_BEGIN          COGO_BEGIN(co_this)
+/// Coroutine end label.
+#define CO_END            COGO_END(co_this)
+/// Jump to `COGO_END`, and the next run will start from here.
+#define CO_YIELD          COGO_YIELD(co_this)
+/// Jump to `COGO_END`, and end the coroutine.
+#define CO_RETURN         COGO_RETURN(co_this)
+
+#define CO_DECLARE(NAME, ...) \
+  COGO_DECLARE(NAME, cogo_yield_t base_yield, __VA_ARGS__)
+
+#define CO_DEFINE(NAME) COGO_DEFINE(NAME, void* const co_this)
 
 #ifdef __cplusplus
 }
