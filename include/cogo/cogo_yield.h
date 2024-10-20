@@ -51,29 +51,23 @@ extern "C" {
 
 // typedef struct NAME NAME_t;
 // struct NAME {
-//  FIRST_FIELD;
+//  BASE_FIELD;
 //  ...
 // };
 // void NAME_resume(void* const co_this)
-#define COGO_DECLARE(NAME, FIRST_FIELD, ...)    COGO_DECLARE1(ET_COUNT(COGO_COMMA_##NAME), NAME, FIRST_FIELD, __VA_ARGS__)
-#define COGO_DECLARE1(...)                      COGO_DECLARE2(__VA_ARGS__)
-#define COGO_DECLARE2(N, ...)                   COGO_DECLARE3_##N(__VA_ARGS__)
-#define COGO_DECLARE3_1(NAME, FIRST_FIELD, ...) /* NAME: name */ \
-  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                            \
-            COGO_STRUCT(NAME, FIRST_FIELD),                      \
-            COGO_STRUCT(NAME, FIRST_FIELD, __VA_ARGS__));        \
-  COGO_DEFINE(NAME, void* const co_this)
-#define COGO_DECLARE3_2(NAME, FIRST_FIELD, ...) /* NAME: static name */ \
-  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                                   \
-            COGO_STRUCT(COGO_BLANK_##NAME, FIRST_FIELD),                \
-            COGO_STRUCT(COGO_BLANK_##NAME, FIRST_FIELD, __VA_ARGS__));  \
-  COGO_DEFINE(NAME, void* const co_this)
-
-#define COGO_DEFINE(NAME, ...)    COGO_DEFINE1(ET_COUNT(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
-#define COGO_DEFINE1(...)         COGO_DEFINE2(__VA_ARGS__)
-#define COGO_DEFINE2(N, ...)      COGO_DEFINE3_##N(__VA_ARGS__)
-#define COGO_DEFINE3_1(NAME, ...) void NAME##_resume(__VA_ARGS__)
-#define COGO_DEFINE3_2(NAME, ...) static void COGO_BLANK_##NAME##_resume(__VA_ARGS__)
+#define COGO_DECLARE(NAME, BASE_FIELD, ...)    COGO_DECLARE1(ET_COUNT(COGO_COMMA_##NAME), NAME, BASE_FIELD, __VA_ARGS__)
+#define COGO_DECLARE1(...)                     COGO_DECLARE2(__VA_ARGS__)
+#define COGO_DECLARE2(N, ...)                  COGO_DECLARE3_##N(__VA_ARGS__)
+#define COGO_DECLARE3_1(NAME, BASE_FIELD, ...) /* NAME: name */ \
+  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                           \
+            COGO_STRUCT(NAME, BASE_FIELD),                      \
+            COGO_STRUCT(NAME, BASE_FIELD, __VA_ARGS__));        \
+  CO_DEFINE(NAME)
+#define COGO_DECLARE3_2(NAME, BASE_FIELD, ...) /* NAME: static name */ \
+  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                                  \
+            COGO_STRUCT(COGO_BLANK_##NAME, BASE_FIELD),                \
+            COGO_STRUCT(COGO_BLANK_##NAME, BASE_FIELD, __VA_ARGS__));  \
+  CO_DEFINE(NAME)
 
 typedef cogo_pc_t cogo_status_t;
 #define COGO_STATUS_BEGIN COGO_PC_BEGIN
@@ -92,7 +86,11 @@ typedef cogo_pc_t cogo_status_t;
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE(NAME, cogo_yield_t base_yield, __VA_ARGS__)
 
-#define CO_DEFINE(NAME) COGO_DEFINE(NAME, void* const co_this)
+#define CO_DEFINE(NAME)    CO_DEFINE1(ET_COUNT(COGO_COMMA_##NAME), NAME)
+#define CO_DEFINE1(...)    CO_DEFINE2(__VA_ARGS__)
+#define CO_DEFINE2(N, ...) CO_DEFINE3_##N(__VA_ARGS__)
+#define CO_DEFINE3_1(NAME) void NAME##_resume(void* const co_this)
+#define CO_DEFINE3_2(NAME) static void COGO_BLANK_##NAME##_resume(void* const co_this)
 
 #ifdef __cplusplus
 }
