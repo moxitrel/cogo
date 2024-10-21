@@ -61,13 +61,12 @@ typedef struct cogo_yield {
   cogo_pc_t private_pc;
 } cogo_yield_t;
 
-#define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
 #define COGO_PC(CO)   (((cogo_yield_t*)(CO))->private_pc)
 
 #define COGO_BEGIN(CO)                                                                            \
   switch (COGO_PC(CO)) {                                                                          \
-    case COGO_PC_BEGIN:                                                                           \
+    case 0:                                                                           \
       COGO_ON_BEGIN(((void const*)(CO)));                                                         \
       goto cogo_begin;                                                                            \
       /* eliminate warning of unused label */                                                     \
@@ -84,9 +83,9 @@ typedef struct cogo_yield {
 #define COGO_YIELD(CO)                                                   \
   do {                                                                   \
     COGO_ON_YIELD(((void const*)(CO)), __LINE__);                        \
-    COGO_PC(CO) = (cogo_pc_t)(&&COGO_LABEL); /* 1. save restore point */ \
+    COGO_PC(CO) = (cogo_pc_t)(&&COGO_LABEL); /* 1. save resume point */ \
     goto cogo_end;                           /* 2. return */             \
-  COGO_LABEL:                                /* 3. restore point */      \
+  COGO_LABEL:                                /* 3. resume point */      \
     COGO_ON_RESUME(((void const*)(CO)), __LINE__);                       \
   } while (0)
 
@@ -132,6 +131,11 @@ typedef struct cogo_yield {
 #ifndef COGO_ON_END
 #define COGO_ON_END(CO)
 #endif
+
+typedef cogo_pc_t cogo_status_t;
+#define COGO_STATUS_BEGIN 0
+#define COGO_STATUS_END   COGO_PC_END
+#define COGO_STATUS(CO)   ((cogo_status_t)COGO_PC(CO))  // get as rvalue
 
 #ifdef __cplusplus
 }
