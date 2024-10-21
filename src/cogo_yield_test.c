@@ -99,7 +99,7 @@ static void test_prologue(void) {
 }
 
 CO_DECLARE(/*name*/ nat, /*param*/ int v) {
-  nat_t* const thiz = (nat_t*)co_this;
+  nat_t* const thiz = (nat_t*)cogo_this;
 CO_BEGIN:
 
   for (thiz->v = 0;; thiz->v++) {

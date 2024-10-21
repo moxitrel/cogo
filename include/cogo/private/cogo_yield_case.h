@@ -7,11 +7,11 @@
 * Use Duff's Device (Protothreads)
 
 * Example
-void nat_func(nat_t* co_this)
+void nat_func(nat_t* cogo_this)
 {
 CO_BEGIN:
 
-    for (co_this->i = 0; ;co_this->i++) {
+    for (cogo_this->i = 0; ;cogo_this->i++) {
         CO_YIELD;
     }
 
@@ -19,14 +19,14 @@ CO_END:;
 }
 
 * Internal
-void nat_func(nat_t* co_this)
+void nat_func(nat_t* cogo_this)
 {
-    switch (co_this->line) {    // CO_BEGIN:
+    switch (cogo_this->line) {    // CO_BEGIN:
     case  0:                    //
 
-        for (co_this->i = 0; ;co_this->i++) {
+        for (cogo_this->i = 0; ;cogo_this->i++) {
 
-            co_this->line = 11; //
+            cogo_this->line = 11; //
             return;             // CO_YIELD;
     case 11:;                   //
 
@@ -57,9 +57,9 @@ typedef struct cogo_yield {
   cogo_pc_t private_pc;
 } cogo_yield_t;
 
-#define COGO_PC_BEGIN 0 // The coroutine is initialized, and ready to run.
-#define COGO_PC_END                         (-1) // The coroutine has finished running.
-#define COGO_PC(/*cogo_yield_t* const*/ CO) (((cogo_yield_t*)(CO))->private_pc)  // pc field
+#define COGO_PC_BEGIN 0                                    // The coroutine is initialized, and ready to run.
+#define COGO_PC_END   (-1)                                 // The coroutine has finished running.
+#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->private_pc)  // pc field
 
 /// Coroutine begin label.
 /// - There must be a `COGO_END` after `COGO_BEGIN`.
@@ -87,7 +87,7 @@ typedef struct cogo_yield {
 #define COGO_BEGIN(/*cogo_yield_t* const*/ CO)                                              \
   switch (COGO_PC(CO)) {                                                                    \
     default: /* invalid pc */                                                               \
-      /* Pass as rvalue to prevent from tampered by user. */                           \
+      /* Pass as rvalue to prevent from tampered by user. */                                \
       COGO_ON_EPC(((void const*)(CO)), ((cogo_pc_t)COGO_PC(CO)));                           \
       goto cogo_end;                                                                        \
       goto cogo_return; /* redundant statement: to eliminate the warning of unused label */ \
@@ -104,13 +104,13 @@ typedef struct cogo_yield {
 /// And the object referenced by CO must be the same one as passed to COGO_BEGIN and COGO_END.
 /// It must not be nullptr.
 /// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_YIELD(/*cogo_yield_t* const*/ CO)                               \
-  do {                                                                       \
-    COGO_ON_YIELD(((void const*)(CO)), __LINE__);                            \
+#define COGO_YIELD(/*cogo_yield_t* const*/ CO)                              \
+  do {                                                                      \
+    COGO_ON_YIELD(((void const*)(CO)), __LINE__);                           \
     COGO_PC(CO) = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
-    goto cogo_end;          /* 2. return */                                  \
+    goto cogo_end;          /* 2. return */                                 \
     case __LINE__:          /* 3. resume point */                           \
-      COGO_ON_RESUME(((void const*)(CO)), __LINE__);                         \
+      COGO_ON_RESUME(((void const*)(CO)), __LINE__);                        \
   } while (0)
 
 /// Jump to COGO_END, and end the coroutine.
@@ -170,8 +170,8 @@ typedef struct cogo_yield {
 #endif
 
 typedef cogo_pc_t cogo_status_t;
-#define COGO_STATUS_BEGIN COGO_PC_BEGIN // The coroutine is initialized, and ready to run.
-#define COGO_STATUS_END   COGO_PC_END // The coroutine has finished running.
+#define COGO_STATUS_BEGIN COGO_PC_BEGIN                 // The coroutine is initialized, and ready to run.
+#define COGO_STATUS_END   COGO_PC_END                   // The coroutine has finished running.
 #define COGO_STATUS(CO)   ((cogo_status_t)COGO_PC(CO))  // Get as rvalue.
 
 #ifdef __cplusplus

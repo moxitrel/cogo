@@ -79,13 +79,13 @@ extern "C" {
 #define CO_DEFINE3_2(NAME) static void COGO_BLANK_##NAME##_resume(void* const cogo_this)
 
 /// Coroutine begin label.
-#define CO_BEGIN          COGO_BEGIN(cogo_this)
+#define CO_BEGIN           COGO_BEGIN(cogo_this)
 /// Coroutine end label.
-#define CO_END            COGO_END(cogo_this)
+#define CO_END             COGO_END(cogo_this)
 /// Jump to `COGO_END`, and the next run will start from here.
-#define CO_YIELD          COGO_YIELD(cogo_this)
+#define CO_YIELD           COGO_YIELD(cogo_this)
 /// Jump to `COGO_END`, and end the coroutine.
-#define CO_RETURN         COGO_RETURN(cogo_this)
+#define CO_RETURN          COGO_RETURN(cogo_this)
 
 #ifdef __cplusplus
 }

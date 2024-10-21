@@ -8,11 +8,11 @@ that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 * Labels as Values (GCC Extension)
 
 * Example
-void nat_func(nat_t* co_this)
+void nat_func(nat_t* cogo_this)
 {
 CO_BEGIN:
 
-    for (co_this->i = 0; ;co_this->i++) {
+    for (cogo_this->i = 0; ;cogo_this->i++) {
         CO_YIELD;
     }
 
@@ -20,13 +20,13 @@ CO_END:;
 }
 
 * Internal
-void nat_func(nat_t* co_this)
+void nat_func(nat_t* cogo_this)
 {
-    if (co_this->pc) {          //
-        goto *co_this->pc;      // CO_BEGIN:
+    if (cogo_this->pc) {          //
+        goto *cogo_this->pc;      // CO_BEGIN:
     }                           //
 
-    for (co_this->i = 0; ;co_this->i++) {
+    for (cogo_this->i = 0; ;cogo_this->i++) {
 
         pc = &&yield_11;        //
         return;                 // CO_YIELD;
@@ -61,12 +61,12 @@ typedef struct cogo_yield {
   cogo_pc_t private_pc;
 } cogo_yield_t;
 
-#define COGO_PC_END   (-1)
-#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->private_pc)
+#define COGO_PC_END (-1)
+#define COGO_PC(CO) (((cogo_yield_t*)(CO))->private_pc)
 
 #define COGO_BEGIN(CO)                                                                            \
   switch (COGO_PC(CO)) {                                                                          \
-    case 0:                                                                           \
+    case 0:                                                                                       \
       COGO_ON_BEGIN(((void const*)(CO)));                                                         \
       goto cogo_begin;                                                                            \
       /* eliminate warning of unused label */                                                     \
@@ -80,13 +80,13 @@ typedef struct cogo_yield {
   }                                                                                               \
   cogo_begin
 
-#define COGO_YIELD(CO)                                                   \
-  do {                                                                   \
-    COGO_ON_YIELD(((void const*)(CO)), __LINE__);                        \
+#define COGO_YIELD(CO)                                                  \
+  do {                                                                  \
+    COGO_ON_YIELD(((void const*)(CO)), __LINE__);                       \
     COGO_PC(CO) = (cogo_pc_t)(&&COGO_LABEL); /* 1. save resume point */ \
-    goto cogo_end;                           /* 2. return */             \
+    goto cogo_end;                           /* 2. return */            \
   COGO_LABEL:                                /* 3. resume point */      \
-    COGO_ON_RESUME(((void const*)(CO)), __LINE__);                       \
+    COGO_ON_RESUME(((void const*)(CO)), __LINE__);                      \
   } while (0)
 
 #define COGO_RETURN(CO)                  \
