@@ -61,18 +61,19 @@ typedef struct cogo_yield {
   cogo_pc_t private_pc;
 } cogo_yield_t;
 
-#define COGO_PC_END (-1)
-#define COGO_PC(CO) (((cogo_yield_t*)(CO))->private_pc)
+#define COGO_PC_BEGIN 0
+#define COGO_PC_END   (-1)
+#define COGO_PC(CO)   ((cogo_pc_t)((cogo_yield_t*)(CO))->private_pc)
 
 #define COGO_BEGIN(CO)                                                                            \
   switch (COGO_PC(CO)) {                                                                          \
-    case 0:                                                                                       \
+    case COGO_PC_BEGIN:                                                                           \
       COGO_ON_BEGIN(((void const*)(CO)));                                                         \
       goto cogo_begin;                                                                            \
       /* eliminate warning of unused label */                                                     \
       goto cogo_return;                                                                           \
       /* eliminate clang error: indirect goto in function with no address-of-label expressions */ \
-      COGO_PC(CO) = (cogo_pc_t)(&&cogo_begin);                                                    \
+      ((cogo_yield_t*)(CO))->private_pc = (cogo_pc_t)(&&cogo_begin);                              \
     case COGO_PC_END:                                                                             \
       goto cogo_end;                                                                              \
     default:                                                                                      \
@@ -80,13 +81,13 @@ typedef struct cogo_yield {
   }                                                                                               \
   cogo_begin
 
-#define COGO_YIELD(CO)                                                  \
-  do {                                                                  \
-    COGO_ON_YIELD(((void const*)(CO)), __LINE__);                       \
-    COGO_PC(CO) = (cogo_pc_t)(&&COGO_LABEL); /* 1. save resume point */ \
-    goto cogo_end;                           /* 2. return */            \
-  COGO_LABEL:                                /* 3. resume point */      \
-    COGO_ON_RESUME(((void const*)(CO)), __LINE__);                      \
+#define COGO_YIELD(CO)                                                                        \
+  do {                                                                                        \
+    COGO_ON_YIELD(((void const*)(CO)));                                                       \
+    ((cogo_yield_t*)(CO))->private_pc = (cogo_pc_t)(&&COGO_LABEL); /* 1. save resume point */ \
+    goto cogo_end;                                                 /* 2. return */            \
+  COGO_LABEL:                                                      /* 3. resume point */      \
+    COGO_ON_RESUME(((void const*)(CO)), (cogo_pc_t)(&&COGO_LABEL));                           \
   } while (0)
 
 #define COGO_RETURN(CO)                  \
@@ -95,10 +96,10 @@ typedef struct cogo_yield {
     goto cogo_return;                    \
   } while (0)
 
-#define COGO_END(CO)                \
-  cogo_return:                      \
-  COGO_ON_END(((void const*)(CO))); \
-  COGO_PC(CO) = COGO_PC_END;        \
+#define COGO_END(CO)                               \
+  cogo_return:                                     \
+  COGO_ON_END(((void const*)(CO)));                \
+  ((cogo_yield_t*)(CO))->private_pc = COGO_PC_END; \
   cogo_end
 
 // Make goto label.
@@ -114,7 +115,7 @@ typedef struct cogo_yield {
 
 // Invoked when COGO_YIELD() is called.
 #ifndef COGO_ON_YIELD
-#define COGO_ON_YIELD(CO, NEXT_PC)
+#define COGO_ON_YIELD(CO)
 #endif
 
 // Invoked when coroutine resumed (continue to run).
@@ -131,11 +132,6 @@ typedef struct cogo_yield {
 #ifndef COGO_ON_END
 #define COGO_ON_END(CO)
 #endif
-
-typedef cogo_pc_t cogo_status_t;
-#define COGO_STATUS_BEGIN 0
-#define COGO_STATUS_END   COGO_PC_END
-#define COGO_STATUS(CO)   ((cogo_status_t)COGO_PC(CO))  // get as rvalue
 
 #ifdef __cplusplus
 }

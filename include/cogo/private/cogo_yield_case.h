@@ -57,9 +57,9 @@ typedef struct cogo_yield {
   cogo_pc_t private_pc;
 } cogo_yield_t;
 
-#define COGO_PC_BEGIN 0                                    // The coroutine is initialized, and ready to run.
-#define COGO_PC_END   (-1)                                 // The coroutine has finished running.
-#define COGO_PC(CO)   (((cogo_yield_t*)(CO))->private_pc)  // pc field
+#define COGO_PC_BEGIN 0                                               // The coroutine is initialized, and ready to run.
+#define COGO_PC_END   (-1)                                            // The coroutine has finished running.
+#define COGO_PC(CO)   ((cogo_pc_t)((cogo_yield_t*)(CO))->private_pc)  // Get as rvalue to prevent pc from changing.
 
 /// Coroutine begin label.
 /// - There must be a `COGO_END` after `COGO_BEGIN`.
@@ -88,7 +88,7 @@ typedef struct cogo_yield {
   switch (COGO_PC(CO)) {                                                                    \
     default: /* invalid pc */                                                               \
       /* Pass as rvalue to prevent from tampered by user. */                                \
-      COGO_ON_EPC(((void const*)(CO)), ((cogo_pc_t)COGO_PC(CO)));                           \
+      COGO_ON_EPC(((void const*)(CO)), COGO_PC(CO));                                        \
       goto cogo_end;                                                                        \
       goto cogo_return; /* redundant statement: to eliminate the warning of unused label */ \
       goto cogo_begin;  /* redundant statement: to eliminate the warning of unused label */ \
@@ -104,13 +104,13 @@ typedef struct cogo_yield {
 /// And the object referenced by CO must be the same one as passed to COGO_BEGIN and COGO_END.
 /// It must not be nullptr.
 /// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_YIELD(/*cogo_yield_t* const*/ CO)                              \
-  do {                                                                      \
-    COGO_ON_YIELD(((void const*)(CO)), __LINE__);                           \
-    COGO_PC(CO) = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
-    goto cogo_end;          /* 2. return */                                 \
-    case __LINE__:          /* 3. resume point */                           \
-      COGO_ON_RESUME(((void const*)(CO)), __LINE__);                        \
+#define COGO_YIELD(/*cogo_yield_t* const*/ CO)                                                    \
+  do {                                                                                            \
+    COGO_ON_YIELD(((void const*)(CO)));                                                           \
+    ((cogo_yield_t*)(CO))->private_pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
+    goto cogo_end;                                /* 2. return */                                 \
+    case __LINE__:                                /* 3. resume point */                           \
+      COGO_ON_RESUME(((void const*)(CO)), __LINE__);                                              \
   } while (0)
 
 /// Jump to COGO_END, and end the coroutine.
@@ -132,11 +132,11 @@ typedef struct cogo_yield {
 /// And the object referenced by CO must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
 /// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_END(/*cogo_yield_t* const*/ CO) \
-  cogo_return:                               \
-  COGO_ON_END(((void const*)(CO)));          \
-  COGO_PC(CO) = COGO_PC_END;                 \
-  }                                          \
+#define COGO_END(/*cogo_yield_t* const*/ CO)       \
+  cogo_return:                                     \
+  COGO_ON_END(((void const*)(CO)));                \
+  ((cogo_yield_t*)(CO))->private_pc = COGO_PC_END; \
+  }                                                \
   cogo_end
 
 /// Invalid pc callback. Invoked when pc isn't valid.
@@ -151,7 +151,7 @@ typedef struct cogo_yield {
 
 /// Coroutine yield callback. Invoked when COGO_YIELD is called.
 #ifndef COGO_ON_YIELD
-#define COGO_ON_YIELD(/*void const**/ CO, /*cogo_pc_t*/ NEXT_PC)  // noop
+#define COGO_ON_YIELD(/*void const**/ CO)  // noop
 #endif
 
 /// Coroutine resume callback. Invoked when coroutine resumed (continue to run).
@@ -168,11 +168,6 @@ typedef struct cogo_yield {
 #ifndef COGO_ON_END
 #define COGO_ON_END(/*void const**/ CO)  // noop
 #endif
-
-typedef cogo_pc_t cogo_status_t;
-#define COGO_STATUS_BEGIN COGO_PC_BEGIN                 // The coroutine is initialized, and ready to run.
-#define COGO_STATUS_END   COGO_PC_END                   // The coroutine has finished running.
-#define COGO_STATUS(CO)   ((cogo_status_t)COGO_PC(CO))  // Get as rvalue.
 
 #ifdef __cplusplus
 }
