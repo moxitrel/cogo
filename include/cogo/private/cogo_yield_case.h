@@ -45,6 +45,9 @@ void nat_func(nat_t* cogo_this)
 
 #ifdef __cplusplus
 extern "C" {
+#define COGO_CAST(T,V) static_cast<T>(V)
+#else
+#define COGO_CAST(T,V) ((T)(V))
 #endif
 
 typedef int cogo_pc_t;
@@ -61,18 +64,18 @@ typedef struct cogo_yield {
 #define COGO_PC_BEGIN 0
 /// The coroutine has finished running.
 #define COGO_PC_END   (-1)
-/// Get running status as rvalue to prevent pc from changing by assignment (`COGO_PC(CO) = v`).
-#define COGO_PC(CO)   ((cogo_pc_t)((cogo_yield_t*)(CO))->private_pc)
+/// Get the pc as an rvalue to prevent changes via assignment (`COGO_PC(THIS) = v`).
+#define COGO_PC(THIS)   (COGO_CAST(cogo_pc_t, COGO_CAST(cogo_yield_t*, THIS)->private_pc))
 
 /// Coroutine begin label.
 /// - There must be a `COGO_END` after `COGO_BEGIN`.
 /// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
 /// - `COGO_ON_BEGIN` is called if it's defined and the coroutine runs the first time.
 ///
-/// @param CO Coroutine object.
-/// - The value of `CO` should point to an object which inherit from `cogo_yield_t`.
+/// @param THIS Coroutine object.
+/// - The value of `THIS` should point to an object which inherit from `cogo_yield_t`.
 /// - It must not be `nullptr`.
-/// - The expression of `CO` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
+/// - The expression of `THIS` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
 ///
 /// @exception
 /// - `COGO_ON_EPC` is called if it's defined and the resume point is an invalid value.
@@ -87,89 +90,89 @@ typedef struct cogo_yield {
 /// COGO_END(co):;
 /// }
 /// @endcode
-#define COGO_BEGIN(/*cogo_yield_t* const*/ CO)                                              \
-  switch (COGO_PC(CO)) {                                                                    \
+#define COGO_BEGIN(THIS)                                              \
+  switch (COGO_PC(THIS)) {                                                                    \
     default: /* invalid pc */                                                               \
       /* Pass as rvalue to prevent from tampered by user. */                                \
-      COGO_ON_EPC(((void const*)(CO)), COGO_PC(CO));                                        \
+      COGO_ON_EPC(COGO_CAST(void const*, THIS), COGO_PC(THIS));                                        \
       goto cogo_end;                                                                        \
       goto cogo_return; /* redundant statement: to eliminate the warning of unused label */ \
       goto cogo_begin;  /* redundant statement: to eliminate the warning of unused label */ \
     case COGO_PC_END:   /* coroutine end */                                                 \
       goto cogo_end;                                                                        \
     case COGO_PC_BEGIN: /* coroutine begin */                                               \
-      COGO_ON_BEGIN(((void const*)(CO)));                                                   \
+      COGO_ON_BEGIN(COGO_CAST(void const*, THIS));                                                   \
       cogo_begin /* coroutine begin label */
 
 /// Jump to COGO_END, and the next run will start from here.
 /// Undefined behavior if COGO_YIELD used in **case** statements.
-/// @param CO The value of CO should point to an object which inherit from cogo_yield_t.
-/// And the object referenced by CO must be the same one as passed to COGO_BEGIN and COGO_END.
+/// @param THIS The value of THIS should point to an object which inherit from cogo_yield_t.
+/// And the object referenced by THIS must be the same one as passed to COGO_BEGIN and COGO_END.
 /// It must not be nullptr.
-/// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_YIELD(/*cogo_yield_t* const*/ CO)                                                    \
+/// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+#define COGO_YIELD(THIS)                                                    \
   do {                                                                                            \
-    COGO_ON_YIELD(((void const*)(CO)));                                                           \
-    ((cogo_yield_t*)(CO))->private_pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
+    COGO_ON_YIELD(COGO_CAST(void const*, THIS));                                                           \
+    COGO_CAST(cogo_yield_t*, THIS)->private_pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
     goto cogo_end;                                /* 2. return */                                 \
     case __LINE__:                                /* 3. resume point */                           \
-      COGO_ON_RESUME(((void const*)(CO)), __LINE__);                                              \
+      COGO_ON_RESUME(COGO_CAST(void const*, THIS), __LINE__);                                              \
   } while (0)
 
 /// Jump to COGO_END, and end the coroutine.
 /// When a coroutine is ended, the coroutine body (between COGO_BEGIN and COGO_END) will be skipped if run again.
-/// @param CO The value of CO should point to an object which inherit from cogo_yield_t.
-/// And the object referenced by CO must be the same one as passed to COGO_BEGIN and COGO_END.
+/// @param THIS The value of THIS should point to an object which inherit from cogo_yield_t.
+/// And the object referenced by THIS must be the same one as passed to COGO_BEGIN and COGO_END.
 /// It must not be nullptr.
-/// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_RETURN(/*cogo_yield_t* const*/ CO) \
+/// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+#define COGO_RETURN(THIS) \
   do {                                          \
-    COGO_ON_RETURN(((void const*)(CO)));        \
+    COGO_ON_RETURN(COGO_CAST(void const*, THIS));        \
     goto cogo_return; /* end coroutine */       \
   } while (0)
 
 /// Coroutine end label.
 /// There must be a corresponding @ref COGO_BEGIN before in the same function.
 /// And there should be only one COGO_BEGIN and COGO_END in a function.
-/// @param CO The value of CO should point to an object which inherit from cogo_yield_t.
-/// And the object referenced by CO must be the same one as passed to COGO_BEGIN.
+/// @param THIS The value of THIS should point to an object which inherit from cogo_yield_t.
+/// And the object referenced by THIS must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
-/// The expression of CO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_END(/*cogo_yield_t* const*/ CO)       \
+/// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+#define COGO_END(THIS)       \
   cogo_return:                                     \
-  COGO_ON_END(((void const*)(CO)));                \
-  ((cogo_yield_t*)(CO))->private_pc = COGO_PC_END; \
+  COGO_ON_END(COGO_CAST(void const*, THIS));                \
+  COGO_CAST(cogo_yield_t*, THIS)->private_pc = COGO_PC_END; \
   }                                                \
   cogo_end
 
 /// Invalid pc callback. Invoked when pc isn't valid.
 #ifndef COGO_ON_EPC
-#define COGO_ON_EPC(/*void const**/ CO, /*cogo_pc_t*/ PC)  // noop
+#define COGO_ON_EPC(THIS, PC)  // noop
 #endif
 
 /// Coroutine begin callback. Invoked when coroutine begin (enter for the first time).
 #ifndef COGO_ON_BEGIN
-#define COGO_ON_BEGIN(/*void const**/ CO)  // noop
+#define COGO_ON_BEGIN(THIS)  // noop
 #endif
 
 /// Coroutine yield callback. Invoked when COGO_YIELD is called.
 #ifndef COGO_ON_YIELD
-#define COGO_ON_YIELD(/*void const**/ CO)  // noop
+#define COGO_ON_YIELD(THIS)  // noop
 #endif
 
 /// Coroutine resume callback. Invoked when coroutine resumed (continue to run).
 #ifndef COGO_ON_RESUME
-#define COGO_ON_RESUME(/*void const**/ CO, /*cogo_pc_t*/ PC)  // noop
+#define COGO_ON_RESUME(THIS, PC)  // noop
 #endif
 
 /// Coroutine return callback. Invoked when COGO_RETURN is called.
 #ifndef COGO_ON_RETURN
-#define COGO_ON_RETURN(/*void const**/ CO)  // noop
+#define COGO_ON_RETURN(THIS)  // noop
 #endif
 
 /// Coroutine end callback. Invoked when coroutine end (finished).
 #ifndef COGO_ON_END
-#define COGO_ON_END(/*void const**/ CO)  // noop
+#define COGO_ON_END(THIS)  // noop
 #endif
 
 #ifdef __cplusplus
