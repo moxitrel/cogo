@@ -57,9 +57,12 @@ typedef struct cogo_yield {
   cogo_pc_t private_pc;
 } cogo_yield_t;
 
-#define COGO_PC_BEGIN 0                                               // The coroutine is initialized, and ready to run.
-#define COGO_PC_END   (-1)                                            // The coroutine has finished running.
-#define COGO_PC(CO)   ((cogo_pc_t)((cogo_yield_t*)(CO))->private_pc)  // Get as rvalue to prevent pc from changing.
+/// The coroutine is initialized, and ready to run.
+#define COGO_PC_BEGIN 0
+/// The coroutine has finished running.
+#define COGO_PC_END   (-1)
+/// Get running status as rvalue to prevent pc from changing by assignment (`COGO_PC(CO) = v`).
+#define COGO_PC(CO)   ((cogo_pc_t)((cogo_yield_t*)(CO))->private_pc)
 
 /// Coroutine begin label.
 /// - There must be a `COGO_END` after `COGO_BEGIN`.

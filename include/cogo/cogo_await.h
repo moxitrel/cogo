@@ -9,8 +9,8 @@ CO_RETURN
 CO_AWAIT  (CO)  : run another coroutine until finished
 
 CO_INIT   (CO, NAME, ...)
-cogo_status_t
-COGO_STATUS (CO)
+co_status_t
+CO_STATUS (CO)
 CO_RESUME (CO)
 CO_RUN    (CO)
 
@@ -80,7 +80,7 @@ void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
 
 // continue to run a suspended coroutine until yield or finished
 #define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))
-cogo_status_t cogo_await_resume(cogo_await_t* co);
+co_status_t cogo_await_resume(cogo_await_t* co);
 
 // run the coroutines until all finished
 #define CO_RUN(CO) cogo_await_run((cogo_await_t*)(CO))

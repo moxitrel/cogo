@@ -7,10 +7,10 @@ CO_END      : coroutine end label.
 CO_YIELD    : yield from coroutine.
 CO_RETURN   : return from coroutine.
 
-cogo_status_t       : type of COGO_STATUS().
-COGO_STATUS()       : get the current running status.
-  COGO_STATUS_BEGIN : inited
-  COGO_STATUS_END   : finished
+co_status_t       : type of CO_STATUS().
+CO_STATUS()       : get the current running status.
+  CO_STATUS_BEGIN : inited
+  CO_STATUS_END   : finished
 
 CO_DECLARE(NAME, ...){} : declare a coroutine.
   FUNC_t                : the declared coroutine type.
@@ -83,10 +83,10 @@ extern "C" {
 #define CO_YIELD             COGO_YIELD(cogo_this)
 #define CO_RETURN            COGO_RETURN(cogo_this)
 
-typedef cogo_pc_t cogo_status_t;
-#define COGO_STATUS_BEGIN COGO_PC_BEGIN
-#define COGO_STATUS_END   COGO_PC_END
-#define COGO_STATUS(CO)   ((cogo_status_t)COGO_PC(CO))
+typedef cogo_pc_t co_status_t;
+#define CO_STATUS_BEGIN COGO_PC_BEGIN
+#define CO_STATUS_END   COGO_PC_END
+#define CO_STATUS(CO)   ((co_status_t)COGO_PC(CO))
 
 #ifdef __cplusplus
 }
