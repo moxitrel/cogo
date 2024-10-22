@@ -45,6 +45,9 @@ void nat_func(nat_t* cogo_this)
 
 #ifdef __cplusplus
 extern "C" {
+#define COGO_CAST(T, V) static_cast<T>(V)
+#else
+#define COGO_CAST(T, V) ((T)(V))
 #endif
 
 typedef int cogo_pc_t;
@@ -61,8 +64,8 @@ typedef struct cogo_yield {
 #define COGO_PC_BEGIN 0
 /// The coroutine has finished running.
 #define COGO_PC_END   (-1)
-/// The pc field.
-#define COGO_PC(THIS) ((THIS)->protected_pc)
+/// Get pc as rvalue to prevent from changing by assignment (`COGO_PC(CO) = v`).
+#define COGO_PC(THIS) COGO_CAST(cogo_pc_t, (THIS)->protected_pc)
 
 /// Coroutine begin label.
 /// - There must be a `COGO_END` after `COGO_BEGIN`.
@@ -107,13 +110,13 @@ typedef struct cogo_yield {
 /// And the object referenced by THIS must be the same one as passed to COGO_BEGIN and COGO_END.
 /// It must not be nullptr.
 /// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_YIELD(THIS)                                                      \
-  do {                                                                        \
-    COGO_ON_YIELD(THIS);                                                      \
-    COGO_PC(THIS) = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
-    goto cogo_end;            /* 2. return */                                 \
-    case __LINE__:            /* 3. resume point */                           \
-      COGO_ON_RESUME(THIS, __LINE__);                                         \
+#define COGO_YIELD(THIS)                                                             \
+  do {                                                                               \
+    COGO_ON_YIELD(THIS);                                                             \
+    (THIS)->protected_pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
+    goto cogo_end;                   /* 2. return */                                 \
+    case __LINE__:                   /* 3. resume point */                           \
+      COGO_ON_RESUME(THIS, __LINE__);                                                \
   } while (0)
 
 /// Jump to COGO_END, and end the coroutine.
@@ -135,11 +138,11 @@ typedef struct cogo_yield {
 /// And the object referenced by THIS must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
 /// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_END(THIS)         \
-  cogo_return:                 \
-  COGO_ON_END(THIS);           \
-  COGO_PC(THIS) = COGO_PC_END; \
-  }                            \
+#define COGO_END(THIS)                \
+  cogo_return:                        \
+  COGO_ON_END(THIS);                  \
+  (THIS)->protected_pc = COGO_PC_END; \
+  }                                   \
   cogo_end
 
 /// Invalid pc callback. Invoked when pc isn't valid.
