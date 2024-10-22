@@ -184,6 +184,9 @@ bool cogo_chan_write(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg
 #define CO_DECLARE(FUNC, ...) \
   COGO_DECLARE(FUNC, cogo_async_t base_async, __VA_ARGS__)
 
+#undef COGO_PC
+#define COGO_PC(THIS) ((THIS)->base_async.base_await.base_yield.protected_pc)
+
 #undef CO_INIT
 #define CO_INIT(THIZ, FUNC, ...) \
   ((FUNC##_t){{.base_await = {.resume = FUNC##_resume, .top = (cogo_await_t*)(THIZ)}}, __VA_ARGS__})

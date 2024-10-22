@@ -6,7 +6,7 @@ static cogo_async_t* cogo_async_sched_step(cogo_async_sched_t* const sched) {
 #define TOP (sched->base_await.top)
   TOP->sched = &sched->base_await;
   TOP->resume(TOP);
-  if (!(/*blocked*/ !TOP || /*finished*/ (CO_STATUS(TOP) == CO_STATUS_END && !(TOP = TOP->caller)))) {
+  if (!(/*blocked*/ !TOP || /*finished*/ (CO_STATUS((cogo_async_t*)TOP) == CO_STATUS_END && !(TOP = TOP->caller)))) {
     // yield, await, return, async, read, write
     cogo_async_sched_push(sched, (cogo_async_t*)TOP);
   }

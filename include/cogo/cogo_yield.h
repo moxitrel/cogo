@@ -75,13 +75,13 @@ extern "C" {
 #define CO_DEFINE(NAME)      CO_DEFINE_F1(ET_COUNT(COGO_COMMA_##NAME), NAME)
 #define CO_DEFINE_F1(...)    CO_DEFINE_F2(__VA_ARGS__)
 #define CO_DEFINE_F2(N, ...) CO_DEFINE_F3_##N(__VA_ARGS__)
-#define CO_DEFINE_F3_1(NAME) void NAME##_resume(void* const cogo_this)
-#define CO_DEFINE_F3_2(NAME) static void COGO_BLANK_##NAME##_resume(void* const cogo_this)
+#define CO_DEFINE_F3_1(NAME) void NAME##_resume(NAME##_t* const cogo_this)
+#define CO_DEFINE_F3_2(NAME) static void COGO_BLANK_##NAME##_resume(COGO_BLANK_##NAME##_t* const cogo_this)
 
-#define CO_BEGIN             COGO_BEGIN(cogo_this)
-#define CO_END               COGO_END(cogo_this)
-#define CO_YIELD             COGO_YIELD(cogo_this)
-#define CO_RETURN            COGO_RETURN(cogo_this)
+#define CO_BEGIN             COGO_BEGIN(&cogo_this->base_yield)
+#define CO_END               COGO_END(&cogo_this->base_yield)
+#define CO_YIELD             COGO_YIELD(&cogo_this->base_yield)
+#define CO_RETURN            COGO_RETURN(&cogo_this->base_yield)
 
 typedef cogo_pc_t co_status_t;
 #define CO_STATUS_BEGIN COGO_PC_BEGIN

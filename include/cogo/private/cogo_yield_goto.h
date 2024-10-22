@@ -58,12 +58,12 @@ typedef struct cogo_yield {
   // Label address where coroutine function continue to run after yield.
   //  0: inited
   // -1: finished
-  cogo_pc_t private_pc;
+  cogo_pc_t protected_pc;
 } cogo_yield_t;
 
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
-#define COGO_PC(CO)   ((cogo_pc_t)((cogo_yield_t*)(CO))->private_pc)
+#define COGO_PC(CO)   ((cogo_pc_t)((cogo_yield_t*)(CO))->protected_pc)
 
 #define COGO_BEGIN(CO)                                                                            \
   switch (COGO_PC(CO)) {                                                                          \
@@ -73,7 +73,7 @@ typedef struct cogo_yield {
       /* eliminate warning of unused label */                                                     \
       goto cogo_return;                                                                           \
       /* eliminate clang error: indirect goto in function with no address-of-label expressions */ \
-      ((cogo_yield_t*)(CO))->private_pc = (cogo_pc_t)(&&cogo_begin);                              \
+      ((cogo_yield_t*)(CO))->protected_pc = (cogo_pc_t)(&&cogo_begin);                            \
     case COGO_PC_END:                                                                             \
       goto cogo_end;                                                                              \
     default:                                                                                      \
@@ -81,13 +81,13 @@ typedef struct cogo_yield {
   }                                                                                               \
   cogo_begin
 
-#define COGO_YIELD(CO)                                                                        \
-  do {                                                                                        \
-    COGO_ON_YIELD(((void const*)(CO)));                                                       \
-    ((cogo_yield_t*)(CO))->private_pc = (cogo_pc_t)(&&COGO_LABEL); /* 1. save resume point */ \
-    goto cogo_end;                                                 /* 2. return */            \
-  COGO_LABEL:                                                      /* 3. resume point */      \
-    COGO_ON_RESUME(((void const*)(CO)), (cogo_pc_t)(&&COGO_LABEL));                           \
+#define COGO_YIELD(CO)                                                                          \
+  do {                                                                                          \
+    COGO_ON_YIELD(((void const*)(CO)));                                                         \
+    ((cogo_yield_t*)(CO))->protected_pc = (cogo_pc_t)(&&COGO_LABEL); /* 1. save resume point */ \
+    goto cogo_end;                                                   /* 2. return */            \
+  COGO_LABEL:                                                        /* 3. resume point */      \
+    COGO_ON_RESUME(((void const*)(CO)), (cogo_pc_t)(&&COGO_LABEL));                             \
   } while (0)
 
 #define COGO_RETURN(CO)                  \
@@ -96,10 +96,10 @@ typedef struct cogo_yield {
     goto cogo_return;                    \
   } while (0)
 
-#define COGO_END(CO)                               \
-  cogo_return:                                     \
-  COGO_ON_END(((void const*)(CO)));                \
-  ((cogo_yield_t*)(CO))->private_pc = COGO_PC_END; \
+#define COGO_END(CO)                                 \
+  cogo_return:                                       \
+  COGO_ON_END(((void const*)(CO)));                  \
+  ((cogo_yield_t*)(CO))->protected_pc = COGO_PC_END; \
   cogo_end
 
 // Make goto label.
