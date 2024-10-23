@@ -32,7 +32,7 @@ CO_END:;
 // Define generator.
 CO_DECLARE(nat, int n)
 {
-  nat_t* thiz = (nat_t*)co_this;
+  nat_t* thiz = (nat_t*)cogo_this;
 CO_BEGIN:
 
   for (thiz->n = 0;; thiz->n++) {

@@ -7,11 +7,11 @@
 * Use Duff's Device (Protothreads)
 
 * Example
-void nat_func(nat_t* co_this)
+void nat_func(nat_t* cogo_this)
 {
 CO_BEGIN:
 
-    for (co_this->i = 0; ;co_this->i++) {
+    for (cogo_this->i = 0; ;cogo_this->i++) {
         CO_YIELD;
     }
 
@@ -19,14 +19,14 @@ CO_END:;
 }
 
 * Internal
-void nat_func(nat_t* co_this)
+void nat_func(nat_t* cogo_this)
 {
-    switch (co_this->line) {    // CO_BEGIN:
+    switch (cogo_this->line) {    // CO_BEGIN:
     case  0:                    //
 
-        for (co_this->i = 0; ;co_this->i++) {
+        for (cogo_this->i = 0; ;cogo_this->i++) {
 
-            co_this->line = 11; //
+            cogo_this->line = 11; //
             return;             // CO_YIELD;
     case 11:;                   //
 
@@ -89,15 +89,15 @@ typedef struct cogo_yield {
 #define COGO_BEGIN(THIS)                                                                    \
   switch (COGO_PC(THIS)) {                                                                  \
     default: /* invalid pc */                                                               \
-      /* Convert `THIS` to an rvalue to prevent tampering. */                                       \
-      COGO_ON_EPC((&*(THIS)));                             \
+      /* Convert `THIS` to an rvalue to prevent tampering. */                               \
+      COGO_ON_EPC((&*(THIS)));                                                              \
       goto cogo_end;                                                                        \
       goto cogo_return; /* redundant statement: to eliminate the warning of unused label */ \
       goto cogo_begin;  /* redundant statement: to eliminate the warning of unused label */ \
-    case COGO_PC_END:                                                  \
+    case COGO_PC_END:                                                                       \
       goto cogo_end;                                                                        \
-    case COGO_PC_BEGIN:                                              \
-      COGO_ON_BEGIN((&*(THIS)));                                          \
+    case COGO_PC_BEGIN:                                                                     \
+      COGO_ON_BEGIN((&*(THIS)));                                                            \
       cogo_begin /* coroutine begin label */
 
 /// Jump to COGO_END, and the next run will start from here.
@@ -108,11 +108,11 @@ typedef struct cogo_yield {
 /// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
 #define COGO_YIELD(THIS)                                                             \
   do {                                                                               \
-    COGO_ON_YIELD((&*(THIS)));                                     \
+    COGO_ON_YIELD((&*(THIS)));                                                       \
     (THIS)->protected_pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
     goto cogo_end;                   /* 2. return */                                 \
     case __LINE__:                   /* 3. resume point */                           \
-      COGO_ON_RESUME((&*(THIS)));                        \
+      COGO_ON_RESUME((&*(THIS)));                                                    \
   } while (0)
 
 /// Jump to COGO_END, and end the coroutine.
@@ -121,10 +121,10 @@ typedef struct cogo_yield {
 /// And the object referenced by THIS must be the same one as passed to COGO_BEGIN and COGO_END.
 /// It must not be nullptr.
 /// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_RETURN(THIS)                         \
-  do {                                            \
-    COGO_ON_RETURN((&*(THIS))); \
-    goto cogo_return; /* end coroutine */         \
+#define COGO_RETURN(THIS)                 \
+  do {                                    \
+    COGO_ON_RETURN((&*(THIS)));           \
+    goto cogo_return; /* end coroutine */ \
   } while (0)
 
 /// Coroutine end label.
@@ -134,11 +134,11 @@ typedef struct cogo_yield {
 /// And the object referenced by THIS must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
 /// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_END(THIS)                       \
-  cogo_return:                               \
-  COGO_ON_END((&*(THIS))); \
-  (THIS)->protected_pc = COGO_PC_END;        \
-  }                                          \
+#define COGO_END(THIS)                \
+  cogo_return:                        \
+  COGO_ON_END((&*(THIS)));            \
+  (THIS)->protected_pc = COGO_PC_END; \
+  }                                   \
   cogo_end
 
 /// Invalid pc handler. Invoked when pc isn't valid.
@@ -171,10 +171,10 @@ typedef struct cogo_yield {
 #define COGO_ON_END(THIS)  // noop
 #endif
 
-#define CO_BEGIN             COGO_BEGIN(cogo_this)
-#define CO_END               COGO_END(cogo_this)
-#define CO_YIELD             COGO_YIELD(cogo_this)
-#define CO_RETURN            COGO_RETURN(cogo_this)
+#define CO_BEGIN  COGO_BEGIN(cogo_this)
+#define CO_END    COGO_END(cogo_this)
+#define CO_YIELD  COGO_YIELD(cogo_this)
+#define CO_RETURN COGO_RETURN(cogo_this)
 
 #ifdef __cplusplus
 }

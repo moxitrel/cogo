@@ -8,11 +8,11 @@ that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 * Labels as Values (GCC Extension)
 
 * Example
-void nat_func(nat_t* co_this)
+void nat_func(nat_t* cogo_this)
 {
 CO_BEGIN:
 
-    for (co_this->i = 0; ;co_this->i++) {
+    for (cogo_this->i = 0; ;cogo_this->i++) {
         CO_YIELD;
     }
 
@@ -20,13 +20,13 @@ CO_END:;
 }
 
 * Internal
-void nat_func(nat_t* co_this)
+void nat_func(nat_t* cogo_this)
 {
-    if (co_this->pc) {          //
-        goto *co_this->pc;      // CO_BEGIN:
+    if (cogo_this->pc) {          //
+        goto *cogo_this->pc;      // CO_BEGIN:
     }                           //
 
-    for (co_this->i = 0; ;co_this->i++) {
+    for (cogo_this->i = 0; ;cogo_this->i++) {
 
         pc = &&yield_11;        //
         return;                 // CO_YIELD;

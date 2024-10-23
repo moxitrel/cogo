@@ -14,7 +14,7 @@ CO_END:;
 
 CO_DECLARE(/*NAME*/ await1, /*param*/ await2_t* a2);
 CO_DEFINE(/*NAME*/ await1) {
-  await1_t* const thiz = (await1_t*)co_this;
+  await1_t* const thiz = (await1_t*)cogo_this;
 CO_BEGIN:
 
   CO_AWAIT(thiz->a2);
@@ -56,7 +56,7 @@ static void test_resume(void) {
 }
 
 CO_DECLARE(/*NAME*/ static await0, /*param*/ await2_t a2) {
-  await0_t* const thiz = (await0_t*)co_this;
+  await0_t* const thiz = (await0_t*)cogo_this;
 CO_BEGIN:
 
   CO_RESUME(&thiz->a2);
@@ -80,7 +80,7 @@ static void test_await_resumed(void) {
 }
 
 CO_DECLARE(/*NAME*/ nat, /*return*/ int v) {
-  nat_t* const thiz = (nat_t*)co_this;
+  nat_t* const thiz = (nat_t*)cogo_this;
 CO_BEGIN:
 
   for (thiz->v = 0;; thiz->v++) {
@@ -115,7 +115,7 @@ static int fib(int n) {
 }
 
 CO_DECLARE(/*NAME*/ fib2, /*param*/ int n, /*return*/ int v, /*local*/ fib2_t* fib_n1, /*local*/ fib2_t* fib_n2) {
-  fib2_t* const thiz = (fib2_t*)co_this;
+  fib2_t* const thiz = (fib2_t*)cogo_this;
 CO_BEGIN:
   assert(thiz->n > 0);
 

@@ -1,7 +1,7 @@
 /*
 
 * API
-co_this     : void*, point to coroutine object.
+cogo_this     : void*, point to coroutine object.
 CO_BEGIN    : coroutine begin label.
 CO_END      : coroutine end label.
 CO_YIELD    : yield from coroutine.
@@ -54,17 +54,17 @@ extern "C" {
 //  PARAM1;
 //  ...
 // };
-// void NAME_resume(NAME_t* const co_this)
+// void NAME_resume(NAME_t* const cogo_this)
 #define COGO_DECLARE(NAME, PARAM1, ...)      COGO_DECLARE_F1(ET_COUNT(COGO_COMMA_##NAME), NAME, PARAM1, __VA_ARGS__)
-#define COGO_DECLARE_F1(...)                     COGO_DECLARE_F2(__VA_ARGS__)
-#define COGO_DECLARE_F2(N, ...)                  COGO_DECLARE_F3_##N(__VA_ARGS__)
+#define COGO_DECLARE_F1(...)                 COGO_DECLARE_F2(__VA_ARGS__)
+#define COGO_DECLARE_F2(N, ...)              COGO_DECLARE_F3_##N(__VA_ARGS__)
 #define COGO_DECLARE_F3_1(NAME, PARAM1, ...) /* NAME: name */ \
-  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                             \
+  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                         \
             COGO_STRUCT1(NAME, PARAM1),                       \
             COGO_STRUCT1(NAME, PARAM1, __VA_ARGS__));         \
   CO_DEFINE(NAME)
 #define COGO_DECLARE_F3_2(NAME, PARAM1, ...) /* NAME: static name */ \
-  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                                    \
+  ET_IF_NIL(ET_IDENTITY(__VA_ARGS__),                                \
             COGO_STRUCT1(COGO_BLANK_##NAME, PARAM1),                 \
             COGO_STRUCT1(COGO_BLANK_##NAME, PARAM1, __VA_ARGS__));   \
   CO_DEFINE(NAME)
@@ -75,17 +75,8 @@ extern "C" {
 #define CO_DEFINE(NAME)      CO_DEFINE_F1(ET_COUNT(COGO_COMMA_##NAME), NAME)
 #define CO_DEFINE_F1(...)    CO_DEFINE_F2(__VA_ARGS__)
 #define CO_DEFINE_F2(N, ...) CO_DEFINE_F3_##N(__VA_ARGS__)
-#define CO_DEFINE_F3_1(NAME) void NAME##_resume(void* const co_this) // NAME: name
-#define CO_DEFINE_F3_2(NAME) static void COGO_BLANK_##NAME##_resume(void* const co_this) // NAME: static name
-
-#undef CO_BEGIN
-#undef CO_END
-#undef CO_YIELD
-#undef CO_RETURN
-#define CO_BEGIN             COGO_BEGIN(&co_this->base_yield)
-#define CO_END               COGO_END(&co_this->base_yield)
-#define CO_YIELD             COGO_YIELD(&co_this->base_yield)
-#define CO_RETURN            COGO_RETURN(&co_this->base_yield)
+#define CO_DEFINE_F3_1(NAME) void NAME##_resume(cogo_yield_t* const cogo_this)                      // NAME: name
+#define CO_DEFINE_F3_2(NAME) static void COGO_BLANK_##NAME##_resume(cogo_yield_t* const cogo_this)  // NAME: static name
 
 typedef cogo_pc_t co_status_t;
 #define CO_STATUS_BEGIN COGO_PC_BEGIN
