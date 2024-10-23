@@ -3,7 +3,7 @@
 #include <unity.h>
 
 CO_DECLARE(/*FUNC*/ nat, /*return*/ int v) {
-  nat_t* const thiz = (nat_t*)cogo_this;
+  nat_t* const thiz = (nat_t*)co_this;
 CO_BEGIN:
 
   for (thiz->v = 0;; thiz->v++) {
@@ -27,7 +27,7 @@ static void test_nat(void) {
 }
 
 CO_DECLARE(consume, co_chan_t* chan, co_message_t msg) {
-  consume_t* const thiz = (consume_t*)cogo_this;
+  consume_t* const thiz = (consume_t*)co_this;
 CO_BEGIN:
 
   CO_CHAN_READ(thiz->chan, &thiz->msg);
@@ -36,7 +36,7 @@ CO_END:;
 }
 
 CO_DECLARE(product, co_chan_t* chan, co_message_t msg) {
-  product_t* const thiz = (product_t*)cogo_this;
+  product_t* const thiz = (product_t*)co_this;
 CO_BEGIN:
 
   CO_CHAN_WRITE(thiz->chan, &thiz->msg);
@@ -45,7 +45,7 @@ CO_END:;
 }
 
 CO_DECLARE(entry, consume_t* r, product_t* w) {
-  entry_t* const thiz = (entry_t*)cogo_this;
+  entry_t* const thiz = (entry_t*)co_this;
 CO_BEGIN:
 
   CO_ASYNC(thiz->r);

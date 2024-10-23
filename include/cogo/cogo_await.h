@@ -1,7 +1,7 @@
 /*
 
 * API
-cogo_this
+co_this
 CO_BEGIN
 CO_END
 CO_YIELD
@@ -38,7 +38,7 @@ struct cogo_await {
   cogo_yield_t base_yield;
 
   // the coroutine function
-  void (*resume)(void* cogo_this);
+  void (*resume)(void* co_this);
 
   // build call stack
   cogo_await_t* caller;
@@ -60,7 +60,7 @@ struct cogo_await_sched {
 /// Run another coroutine until finished.
 #define CO_AWAIT(/*cogo_await_t**/ CO)                               \
   do {                                                               \
-    cogo_await_await((cogo_await_t*)cogo_this, (cogo_await_t*)(CO)); \
+    cogo_await_await((cogo_await_t*)co_this, (cogo_await_t*)(CO)); \
     CO_YIELD;                                                        \
   } while (0)
 void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
