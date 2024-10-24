@@ -35,7 +35,7 @@ typedef struct cogo_await_sched cogo_await_sched_t;
 // implement call stack
 struct cogo_await {
   // inherit from cogo_yield_t
-  cogo_yield_t base_yield;
+  cogo_yield_t base;
 
   // the coroutine function
   void (*resume)(void* cogo_this);
@@ -76,7 +76,7 @@ void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
   COGO_DECLARE(NAME, cogo_await_t base_await, __VA_ARGS__)
 
 #undef COGO_PC
-#define COGO_PC(THIS) ((THIS)->base_yield.protected_pc)
+#define COGO_PC(THIS) ((THIS)->base.protected_pc)
 
 #define CO_INIT(NAME, THIZ, ...) \
   ((NAME##_t){{.resume = NAME##_resume, .top = (cogo_await_t*)(THIZ)}, __VA_ARGS__})

@@ -43,6 +43,38 @@ void nat_func(nat_t* cogo_this)
 #ifndef COGO_YIELD_CASE_H_
 #define COGO_YIELD_CASE_H_
 
+/// Invalid pc handler. 
+/// Invoked when pc isn't valid.
+/// You must redefine this macro (undef it first, then define it again) or define it before including the header if you want to customize.
+#ifndef COGO_ON_EPC
+#define COGO_ON_EPC(THIS)  // noop
+#endif
+
+/// Invoked when coroutine begin to run for the first time.
+#ifndef COGO_ON_BEGIN
+#define COGO_ON_BEGIN(THIS)  // noop
+#endif
+
+/// Invoked when COGO_YIELD is called.
+#ifndef COGO_ON_YIELD
+#define COGO_ON_YIELD(THIS)  // noop
+#endif
+
+/// Invoked when coroutine resumed (continue to run).
+#ifndef COGO_ON_RESUME
+#define COGO_ON_RESUME(THIS)  // noop
+#endif
+
+/// Invoked when COGO_RETURN is called.
+#ifndef COGO_ON_RETURN
+#define COGO_ON_RETURN(THIS)  // noop
+#endif
+
+/// Invoked when coroutine end (finished).
+#ifndef COGO_ON_END
+#define COGO_ON_END(THIS)  // noop
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -62,7 +94,7 @@ typedef struct cogo_yield {
 /// The coroutine has finished running.
 #define COGO_PC_END   (-1)
 /// Get pc as an rvalue to prevent it from being tampered with by assignment (e.g. `COGO_PC(THIS) = 0`).
-#define COGO_PC(THIS) (+(THIS)->protected_pc)
+#define COGO_PC(THIS) ((THIS)->protected_pc)
 
 /// Coroutine begin label.
 /// - There must be a `COGO_END` after `COGO_BEGIN`.
@@ -109,7 +141,7 @@ typedef struct cogo_yield {
 #define COGO_YIELD(THIS)                                                             \
   do {                                                                               \
     COGO_ON_YIELD((&*(THIS)));                                                       \
-    (THIS)->protected_pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
+    COGO_PC(THIS) = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
     goto cogo_end;                   /* 2. return */                                 \
     case __LINE__:                   /* 3. resume point */                           \
       COGO_ON_RESUME((&*(THIS)));                                                    \
@@ -137,39 +169,9 @@ typedef struct cogo_yield {
 #define COGO_END(THIS)                \
   cogo_return:                        \
   COGO_ON_END((&*(THIS)));            \
-  (THIS)->protected_pc = COGO_PC_END; \
+  COGO_PC(THIS) = COGO_PC_END; \
   }                                   \
   cogo_end
-
-/// Invalid pc handler. Invoked when pc isn't valid.
-#ifndef COGO_ON_EPC
-#define COGO_ON_EPC(THIS)  // noop
-#endif
-
-/// Invoked when coroutine begin to run for the first time.
-#ifndef COGO_ON_BEGIN
-#define COGO_ON_BEGIN(THIS)  // noop
-#endif
-
-/// Invoked when COGO_YIELD is called.
-#ifndef COGO_ON_YIELD
-#define COGO_ON_YIELD(THIS)  // noop
-#endif
-
-/// Invoked when coroutine resumed (continue to run).
-#ifndef COGO_ON_RESUME
-#define COGO_ON_RESUME(THIS)  // noop
-#endif
-
-/// Invoked when COGO_RETURN is called.
-#ifndef COGO_ON_RETURN
-#define COGO_ON_RETURN(THIS)  // noop
-#endif
-
-/// Invoked when coroutine end (finished).
-#ifndef COGO_ON_END
-#define COGO_ON_END(THIS)  // noop
-#endif
 
 #define CO_BEGIN  COGO_BEGIN(cogo_this)
 #define CO_END    COGO_END(cogo_this)

@@ -70,13 +70,13 @@ extern "C" {
   CO_DEFINE(NAME)
 
 #define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_yield_t base_yield, __VA_ARGS__)
+  COGO_DECLARE(NAME, COGO_T base, __VA_ARGS__)
 
 #define CO_DEFINE(NAME)      CO_DEFINE_F1(ET_COUNT(COGO_COMMA_##NAME), NAME)
 #define CO_DEFINE_F1(...)    CO_DEFINE_F2(__VA_ARGS__)
 #define CO_DEFINE_F2(N, ...) CO_DEFINE_F3_##N(__VA_ARGS__)
-#define CO_DEFINE_F3_1(NAME) void NAME##_resume(cogo_yield_t* const cogo_this)                      // NAME: name
-#define CO_DEFINE_F3_2(NAME) static void COGO_BLANK_##NAME##_resume(cogo_yield_t* const cogo_this)  // NAME: static name
+#define CO_DEFINE_F3_1(NAME) void NAME##_resume(COGO_T* const cogo_this)                      // NAME: name
+#define CO_DEFINE_F3_2(NAME) static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)  // NAME: static name
 
 typedef cogo_pc_t co_status_t;
 #define CO_STATUS_BEGIN COGO_PC_BEGIN
