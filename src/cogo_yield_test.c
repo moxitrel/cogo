@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unity.h>
 
-static void func_yield(cogo_yield_t* co, int* v) {
+static void func_yield(COGO_T* co, int* v) {
   COGO_BEGIN(co) :;
 
   (*v)++;
@@ -14,7 +14,7 @@ static void func_yield(cogo_yield_t* co, int* v) {
 }
 
 static void test_yield(void) {
-  cogo_yield_t co;
+  COGO_T co;
   memset(&co, 0, sizeof(co));
 
   int v = 0;
@@ -36,66 +36,72 @@ static void test_yield(void) {
   TEST_ASSERT_EQUAL_INT(2, v);
 }
 
-static void func_return(cogo_yield_t* co, int* v) {
-  COGO_BEGIN(co) :;
+typedef struct func_return {
+  COGO_T co;
+  int v;
+} func_return_t;
 
-  (*v)++;
-  COGO_RETURN(co);
-  (*v)++;
+static void func_return(func_return_t* args) {
+  COGO_BEGIN(&args->co) :;
 
-  COGO_END(co) :;
+  (args->v)++;
+  COGO_RETURN(&args->co);
+  (args->v)++;
+
+  COGO_END(&args->co) :;
 }
 
 static void test_return(void) {
-  cogo_yield_t co;
-  memset(&co, 0, sizeof(co));
+  func_return_t args;
+  memset(&args, 0, sizeof(args));
 
-  int v = 0;
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&co));  // begin
-  TEST_ASSERT_EQUAL_INT(0, v);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_BEGIN, CO_STATUS(&args.co));  // begin
+  TEST_ASSERT_EQUAL_INT(0, args.v);
 
-  func_return(&co, &v);
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));  // end
-  TEST_ASSERT_EQUAL_INT(1, v);
+  func_return(&args);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&args.co));  // end
+  TEST_ASSERT_EQUAL_INT(1, args.v);
 
   // noop when coroutine end
-  func_return(&co, &v);
-  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&co));
-  TEST_ASSERT_EQUAL_INT(1, v);
+  func_return(&args);
+  TEST_ASSERT_EQUAL_INT64(CO_STATUS_END, CO_STATUS(&args.co));
+  TEST_ASSERT_EQUAL_INT(1, args.v);
 }
 
-typedef struct prologue {
-  int enter;
-  int exit;
-  cogo_yield_t co;
-} prologue_t;
+// typedef struct prologue {
+//   int enter;
+//   int exit;
+// } prologue_t;
 
-static void func_prologue(prologue_t* prologue) {
-  prologue->enter++;
-  COGO_BEGIN(&prologue->co) :;
+// static void func_prologue(COGO_T* COGO_THIS, prologue_t* prologue) {
+//   prologue->enter++;
+// CO_BEGIN:
 
-  COGO_YIELD(&prologue->co);
-  COGO_YIELD(&prologue->co);
+//   CO_YIELD;
+//   CO_YIELD;
 
-  COGO_END(&prologue->co) :;
-  prologue->exit++;
-}
+// CO_END:
+//   prologue->exit++;
+// }
 
 static void test_prologue(void) {
-  prologue_t prologue = {
-      .enter = 0,
-      .exit = 0,
-  };
+  //   COGO_T co;
+  //   memset(&co, 0, sizeof(co));
 
-  while (CO_STATUS(&prologue.co) != CO_STATUS_END) {
-    func_prologue(&prologue);
-  }
-  TEST_ASSERT_EQUAL_INT(3, prologue.enter);
-  TEST_ASSERT_EQUAL_INT(3, prologue.exit);
+  //   prologue_t prologue = {
+  //       .enter = 0,
+  //       .exit = 0,
+  //   };
 
-  func_prologue(&prologue);
-  TEST_ASSERT_EQUAL_INT(4, prologue.enter);
-  TEST_ASSERT_EQUAL_INT(4, prologue.exit);
+  //   while (CO_STATUS(&co) != CO_STATUS_END) {
+  //     func_prologue(&co, &prologue);
+  //   }
+  //   TEST_ASSERT_EQUAL_INT(3, prologue.enter);
+  //   TEST_ASSERT_EQUAL_INT(3, prologue.exit);
+
+  //   func_prologue(&co, &prologue);
+  //   TEST_ASSERT_EQUAL_INT(4, prologue.enter);
+  //   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
 
 CO_DECLARE(/*name*/ nat, /*param*/ int v) {

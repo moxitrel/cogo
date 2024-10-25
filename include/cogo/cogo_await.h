@@ -76,7 +76,7 @@ void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
   COGO_DECLARE(NAME, cogo_await_t base_await, __VA_ARGS__)
 
 #undef COGO_PC
-#define COGO_PC(THIS) ((THIS)->base.protected_pc)
+#define COGO_PC(THIS) ((cogo_pc_t)(THIS)->base.protected_pc)
 
 #define CO_INIT(NAME, THIZ, ...) \
   ((NAME##_t){{.resume = NAME##_resume, .top = (cogo_await_t*)(THIZ)}, __VA_ARGS__})

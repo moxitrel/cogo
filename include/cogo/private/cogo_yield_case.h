@@ -43,7 +43,7 @@ void nat_func(nat_t* cogo_this)
 #ifndef COGO_YIELD_CASE_H_
 #define COGO_YIELD_CASE_H_
 
-/// Invalid pc handler. 
+/// Invalid pc handler.
 /// Invoked when pc isn't valid.
 /// You must redefine this macro (undef it first, then define it again) or define it before including the header if you want to customize.
 #ifndef COGO_ON_EPC
@@ -79,9 +79,11 @@ void nat_func(nat_t* cogo_this)
 extern "C" {
 #endif
 
+/// The position where function has reached.
 typedef int cogo_pc_t;
 
 /// An opaque (all fields are private or protected, and shouldn't be accessed by user directly) object type represents a coroutine.
+#define COGO_T cogo_yield_t
 typedef struct cogo_yield {
   // Source line (`__LINE__`) where function continues to run when reentered.
   // It must be initialized to `0`.
@@ -101,7 +103,7 @@ typedef struct cogo_yield {
 /// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
 /// - `COGO_ON_BEGIN` is called if it's defined and the coroutine runs the first time.
 ///
-/// @param THIS The coroutine object pointer that has the type of `cogo_yield_t*` .
+/// @param THIS The coroutine object pointer that has the type of `cogo_yield_t*`.
 /// - It must not be `nullptr`.
 /// - The expression of `THIS` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
 ///
@@ -132,19 +134,36 @@ typedef struct cogo_yield {
       COGO_ON_BEGIN((&*(THIS)));                                                            \
       cogo_begin /* coroutine begin label */
 
-/// Jump to COGO_END, and the next run will start from here.
-/// Undefined behavior if COGO_YIELD used in **case** statements.
-/// @param THIS The value of THIS should point to an object which inherit from cogo_yield_t.
-/// And the object referenced by THIS must be the same one as passed to COGO_BEGIN and COGO_END.
-/// It must not be nullptr.
-/// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_YIELD(THIS)                                                             \
-  do {                                                                               \
-    COGO_ON_YIELD((&*(THIS)));                                                       \
+/// Jump to `COGO_END`, and the next run will start from here.
+/// - Undefined behavior if `COGO_YIELD` used in **case** statements.
+/// - `COGO_ON_YIELD` is called if it's defined.
+/// - `COGO_ON_RESUME` is called if it's defined and the coroutine is reentered.
+///
+/// @param THIS The coroutine object pointer that has the type of `cogo_yield_t*`.
+/// - It must not be `nullptr`.
+/// - The expression of `THIS` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
+/// - The object referenced by `THIS` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
+///
+/// @par Example
+/// @code
+/// void natural_number_generator(cogo_yield_t* co, int* v) {
+/// COGO_BEGIN(co):
+///
+///   for (int i = 0; ; i++) {
+///     *v = i;
+///     COGO_YIELD(co); // Pause the execution and return. The next run will start from here.
+///   }
+///
+/// COGO_END(co):;
+/// }
+/// @endcode
+#define COGO_YIELD(THIS)                                                      \
+  do {                                                                        \
+    COGO_ON_YIELD((&*(THIS)));                                                \
     COGO_PC(THIS) = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
-    goto cogo_end;                   /* 2. return */                                 \
-    case __LINE__:                   /* 3. resume point */                           \
-      COGO_ON_RESUME((&*(THIS)));                                                    \
+    goto cogo_end;            /* 2. return */                                 \
+    case __LINE__:            /* 3. resume point */                           \
+      COGO_ON_RESUME((&*(THIS)));                                             \
   } while (0)
 
 /// Jump to COGO_END, and end the coroutine.
@@ -166,17 +185,18 @@ typedef struct cogo_yield {
 /// And the object referenced by THIS must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
 /// The expression of THIS must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_END(THIS)                \
-  cogo_return:                        \
-  COGO_ON_END((&*(THIS)));            \
+#define COGO_END(THIS)         \
+  cogo_return:                 \
+  COGO_ON_END((&*(THIS)));     \
   COGO_PC(THIS) = COGO_PC_END; \
-  }                                   \
+  }                            \
   cogo_end
 
-#define CO_BEGIN  COGO_BEGIN(cogo_this)
-#define CO_END    COGO_END(cogo_this)
-#define CO_YIELD  COGO_YIELD(cogo_this)
-#define CO_RETURN COGO_RETURN(cogo_this)
+#define COGO_THIS cogo_this
+#define CO_BEGIN  COGO_BEGIN(COGO_THIS)
+#define CO_END    COGO_END(COGO_THIS)
+#define CO_YIELD  COGO_YIELD(COGO_THIS)
+#define CO_RETURN COGO_RETURN(COGO_THIS)
 
 #ifdef __cplusplus
 }

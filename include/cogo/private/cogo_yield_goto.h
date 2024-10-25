@@ -1,49 +1,30 @@
-/* Copyright (c) 2018-2024 Moxi Color
+// Copyright (c) 2018-2024 Moxi Color
+//
+// Use of this source code is governed by a MIT-style license
+// that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
-Use of this source code is governed by a MIT-style license
-that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
-
----
-
-* Labels as Values (GCC Extension)
-
-* Example
-void nat_func(nat_t* cogo_this)
-{
-CO_BEGIN:
-
-    for (cogo_this->i = 0; ;cogo_this->i++) {
-        CO_YIELD;
-    }
-
-CO_END:;
-}
-
-* Internal
-void nat_func(nat_t* cogo_this)
-{
-    if (cogo_this->pc) {          //
-        goto *cogo_this->pc;      // CO_BEGIN:
-    }                           //
-
-    for (cogo_this->i = 0; ;cogo_this->i++) {
-
-        pc = &&yield_11;        //
-        return;                 // CO_YIELD;
-    yield_11:;                  //
-
-    }
-
-    pc = &&yield_end;           // CO_END:
-yield_end:;                     //
-}
-
-* Drawbacks
-- Use GCC extension.
-
-*/
 #ifndef COGO_YIELD_GOTO_H_
 #define COGO_YIELD_GOTO_H_
+
+#ifndef COGO_ON_BEGIN
+#define COGO_ON_BEGIN(THIS)
+#endif
+
+#ifndef COGO_ON_YIELD
+#define COGO_ON_YIELD(THIS)
+#endif
+
+#ifndef COGO_ON_RESUME
+#define COGO_ON_RESUME(THIS)
+#endif
+
+#ifndef COGO_ON_RETURN
+#define COGO_ON_RETURN(THIS)
+#endif
+
+#ifndef COGO_ON_END
+#define COGO_ON_END(THIS)
+#endif
 
 #include <stdint.h>
 
@@ -53,85 +34,61 @@ extern "C" {
 
 typedef intptr_t cogo_pc_t;
 
-// implement yield
+#define COGO_T cogo_yield_t
 typedef struct cogo_yield {
-  // Label address where coroutine function continue to run after yield.
-  //  0: inited
-  // -1: finished
   cogo_pc_t protected_pc;
 } cogo_yield_t;
 
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
-#define COGO_PC(CO)   ((cogo_pc_t)((cogo_yield_t*)(CO))->protected_pc)
+#define COGO_PC(THIS) ((THIS)->protected_pc)
 
-#define COGO_BEGIN(CO)                                                                            \
-  switch (COGO_PC(CO)) {                                                                          \
+#define COGO_BEGIN(THIS)                                                                          \
+  switch (COGO_PC(THIS)) {                                                                        \
     case COGO_PC_BEGIN:                                                                           \
-      COGO_ON_BEGIN(((void const*)(CO)));                                                         \
+      COGO_ON_BEGIN((&*(THIS)));                                                                  \
       goto cogo_begin;                                                                            \
       /* eliminate warning of unused label */                                                     \
       goto cogo_return;                                                                           \
       /* eliminate clang error: indirect goto in function with no address-of-label expressions */ \
-      ((cogo_yield_t*)(CO))->protected_pc = (cogo_pc_t)(&&cogo_begin);                            \
+      COGO_PC(THIS) = (cogo_pc_t)(&&cogo_begin);                                                  \
     case COGO_PC_END:                                                                             \
       goto cogo_end;                                                                              \
     default:                                                                                      \
-      goto*(void const*)COGO_PC(CO);                                                              \
+      goto*(void*)COGO_PC(THIS);                                                                  \
   }                                                                                               \
   cogo_begin
 
-#define COGO_YIELD(CO)                                                                          \
-  do {                                                                                          \
-    COGO_ON_YIELD(((void const*)(CO)));                                                         \
-    ((cogo_yield_t*)(CO))->protected_pc = (cogo_pc_t)(&&COGO_LABEL); /* 1. save resume point */ \
-    goto cogo_end;                                                   /* 2. return */            \
-  COGO_LABEL:                                                        /* 3. resume point */      \
-    COGO_ON_RESUME(((void const*)(CO)), (cogo_pc_t)(&&COGO_LABEL));                             \
+#define COGO_YIELD(THIS)                       \
+  do {                                         \
+    COGO_ON_YIELD((&*(THIS)));                 \
+    COGO_PC(THIS) = (cogo_pc_t)(&&COGO_LABEL); \
+    goto cogo_end;                             \
+  COGO_LABEL:                                  \
+    COGO_ON_RESUME((&*(THIS)));                \
   } while (0)
 
-#define COGO_RETURN(CO)                  \
-  do {                                   \
-    COGO_ON_RETURN(((void const*)(CO))); \
-    goto cogo_return;                    \
+#define COGO_RETURN(THIS)       \
+  do {                          \
+    COGO_ON_RETURN((&*(THIS))); \
+    goto cogo_return;           \
   } while (0)
 
-#define COGO_END(CO)                                 \
-  cogo_return:                                       \
-  COGO_ON_END(((void const*)(CO)));                  \
-  ((cogo_yield_t*)(CO))->protected_pc = COGO_PC_END; \
+#define COGO_END(THIS)         \
+  cogo_return:                 \
+  COGO_ON_END((&*(THIS)));     \
+  COGO_PC(THIS) = COGO_PC_END; \
   cogo_end
 
-// Make goto label.
-// e.g. COGO_LABEL -> COGO_LABEL(__LINE__) -> cogo_yield_118
 #define COGO_LABEL       COGO_LABEL1(__LINE__)
 #define COGO_LABEL1(...) COGO_LABEL2(__VA_ARGS__)
 #define COGO_LABEL2(N)   cogo_yield_##N
 
-// Invoked when coroutine begin (enter for the first time).
-#ifndef COGO_ON_BEGIN
-#define COGO_ON_BEGIN(CO)
-#endif
-
-// Invoked when COGO_YIELD() is called.
-#ifndef COGO_ON_YIELD
-#define COGO_ON_YIELD(CO)
-#endif
-
-// Invoked when coroutine resumed (continue to run).
-#ifndef COGO_ON_RESUME
-#define COGO_ON_RESUME(CO, PC)
-#endif
-
-// Invoked when COGO_RETURN() is called.
-#ifndef COGO_ON_RETURN
-#define COGO_ON_RETURN(CO)
-#endif
-
-// Invoked when coroutine end (finished).
-#ifndef COGO_ON_END
-#define COGO_ON_END(CO)
-#endif
+#define COGO_THIS        cogo_this
+#define CO_BEGIN         COGO_BEGIN(COGO_THIS)
+#define CO_END           COGO_END(COGO_THIS)
+#define CO_YIELD         COGO_YIELD(COGO_THIS)
+#define CO_RETURN        COGO_RETURN(COGO_THIS)
 
 #ifdef __cplusplus
 }
