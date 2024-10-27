@@ -141,6 +141,8 @@ if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TE
   link_libraries(cogo unity)
 
   # yield
+  add_executable(test_pt src/cogo_pt_test.c)
+  add_test(NAME test_pt COMMAND test_pt)
   add_executable(test_yield src/cogo_yield_test.c)
   add_test(NAME test_yield COMMAND test_yield)
 

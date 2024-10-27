@@ -15,8 +15,8 @@ CO_INIT       (CO, FUNC, ...)
 co_message_t      : channel message type
 co_chan_t         : channel type
 CO_CHAN_MAKE  (N) : return a channel with capacity size_t
-co_status_t
-CO_STATUS     (CO)
+cogo_status_t
+COGO_STATUS     (CO)
 CO_RESUME     (CO)
 CO_RUN        (CO)
 
@@ -185,7 +185,7 @@ bool cogo_chan_write(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg
   COGO_DECLARE(FUNC, cogo_async_t base_async, __VA_ARGS__)
 
 #undef COGO_PC
-#define COGO_PC(THIS) ((THIS)->base_async.base_await.base.protected_pc)
+#define COGO_PC(THIS) ((THIS)->base_async.base_await.base.private_pc)
 
 #undef CO_INIT
 #define CO_INIT(THIZ, FUNC, ...) \
@@ -193,7 +193,7 @@ bool cogo_chan_write(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg
 
 #undef CO_RESUME
 #define CO_RESUME(CO) cogo_async_resume((cogo_async_t*)(CO))
-co_status_t cogo_async_resume(cogo_async_t* co);
+cogo_status_t cogo_async_resume(cogo_async_t* co);
 
 #undef CO_RUN
 #define CO_RUN(CO) cogo_async_run((cogo_async_t*)(CO))
