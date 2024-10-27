@@ -94,11 +94,11 @@ typedef cogo_pc_t cogo_status_t;
 #define COGO_STATUS(YIELD) (+COGO_PC((COGO_T*)YIELD))
 
 #define COGO_RESUME(YIELD) cogo_yield_resume((COGO_T*)YIELD)
-static inline cogo_status_t cogo_yield_resume(COGO_T* yield) {
-  if (COGO_PC(yield) != COGO_PC_END) {
-    yield->resume(yield);
+static inline cogo_status_t cogo_yield_resume(COGO_T* cogo_this) {
+  if (COGO_PC(cogo_this) != COGO_PC_END) {
+    cogo_this->resume(cogo_this);
   }
-  return COGO_PC(yield);
+  return COGO_PC(cogo_this);
 }
 
 #ifdef __cplusplus
