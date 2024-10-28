@@ -35,16 +35,14 @@ CO_DEFINE (NAME)     {} : define a declared coroutine which is not defined.
 extern "C" {
 #endif
 
-#undef COGO_T
-#define COGO_T cogo_yield_t
 typedef struct cogo_yield cogo_yield_t;
 struct cogo_yield {
   cogo_pt_t private_pt;
   void (*resume)(COGO_T* cogo_this);
 };
 
-#undef COGO_PC
-#define COGO_PC(YIELD) ((YIELD)->private_pt.private_pc)
+#undef COGO_T
+#define COGO_T cogo_yield_t
 
 // COGO_STRUCT1(point, int x, int y):
 //  typedef struct point {
@@ -71,19 +69,21 @@ struct cogo_yield {
 #define COGO_DECLARE1_F2(N, ...)      COGO_DECLARE1_F3_##N(__VA_ARGS__)
 #define COGO_DECLARE1_F3_1(NAME, ...) /* NAME: name */ \
   COGO_STRUCT1(NAME, __VA_ARGS__);                     \
-  void NAME##_resume(COGO_T* const cogo_this)
+  CO_DEFINE(NAME)
 #define COGO_DECLARE1_F3_2(NAME, ...) /* NAME: static name */ \
   COGO_STRUCT1(COGO_BLANK_##NAME, __VA_ARGS__);               \
-  static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)
+  CO_DEFINE(NAME)
 
 #define CO_DECLARE(NAME, ...) \
   COGO_DECLARE1(NAME, COGO_T private_yield, __VA_ARGS__)
 
-#define CO_DEFINE(NAME)      CO_DEFINE_F1(ET_COUNT(COGO_COMMA_##NAME), NAME)
-#define CO_DEFINE_F1(...)    CO_DEFINE_F2(__VA_ARGS__)
-#define CO_DEFINE_F2(N, ...) CO_DEFINE_F3_##N(__VA_ARGS__)
-#define CO_DEFINE_F3_1(NAME) void NAME##_resume(COGO_T* const cogo_this)                      // NAME: name
-#define CO_DEFINE_F3_2(NAME) static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)  // NAME: static name
+#define CO_DEFINE(NAME)        CO_DEFINE_F1(ET_COUNT(COGO_COMMA_##NAME), NAME)
+#define CO_DEFINE_F1(...)      CO_DEFINE_F2(__VA_ARGS__)
+#define CO_DEFINE_F2(N, ...)   CO_DEFINE_F3_##N(__VA_ARGS__)
+#define CO_DEFINE_F3_1(NAME)   CO_DEFINE_EXTERN(NAME)  // NAME: name
+#define CO_DEFINE_F3_2(NAME)   CO_DEFINE_STATIC(NAME)  // NAME: static name
+#define CO_DEFINE_EXTERN(NAME) void NAME##_resume(COGO_T* const cogo_this)
+#define CO_DEFINE_STATIC(NAME) static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)
 
 #undef COGO_PT
 #define COGO_PT (&cogo_this->private_pt)
