@@ -44,14 +44,20 @@ struct cogo_yield {
 #undef COGO_T
 #define COGO_T cogo_yield_t
 
-// COGO_STRUCT1(point, int x, int y):
+// COGO_STRUCT(point, int x, int y):
 //  typedef struct point {
 //      int x;
 //      int y;
 //  } point_t
-#define COGO_STRUCT1(NAME, ...)          \
+#define COGO_STRUCT(NAME, BASE_T, ...)          COGO_DO_STRUCT1(ET_IS_EMPTY(__VA_ARGS__), NAME, BASE_T, __VA_ARGS__)
+#define COGO_DO_STRUCT1(...)          COGO_DO_STRUCT2(__VA_ARGS__)
+#define COGO_DO_STRUCT2(N, ...)          COGO_DO_STRUCT3_##N(__VA_ARGS__)
+#define COGO_DO_STRUCT3_0(NAME, BASE_T)
+#define COGO_DO_STRUCT3_1(NAME, BASE_T)
+#define COGO_STRUCT(NAME, BASE_T, ...)          \
   typedef struct NAME NAME##_t;          \
   struct NAME {                          \
+    BASE_T cogo_this;\
     ET_MAP(;, ET_IDENTITY, __VA_ARGS__); \
   }
 
@@ -68,10 +74,10 @@ struct cogo_yield {
 #define COGO_DECLARE1_F1(...)         COGO_DECLARE1_F2(__VA_ARGS__)
 #define COGO_DECLARE1_F2(N, ...)      COGO_DECLARE1_F3_##N(__VA_ARGS__)
 #define COGO_DECLARE1_F3_1(NAME, ...) /* NAME: name */ \
-  COGO_STRUCT1(NAME, __VA_ARGS__);                     \
+  COGO_STRUCT(NAME, __VA_ARGS__);                     \
   CO_DEFINE(NAME)
 #define COGO_DECLARE1_F3_2(NAME, ...) /* NAME: static name */ \
-  COGO_STRUCT1(COGO_BLANK_##NAME, __VA_ARGS__);               \
+  COGO_STRUCT(COGO_BLANK_##NAME, __VA_ARGS__);               \
   CO_DEFINE(NAME)
 
 #define CO_DECLARE(NAME, ...) \

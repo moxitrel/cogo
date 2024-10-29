@@ -5,11 +5,10 @@
 
 /// @file
 /// @warning Undefined behavior if CO_YIELD used in the **case** statement.
-#ifndef COGO_YIELD_CASE_H_
-#define COGO_YIELD_CASE_H_
+#ifndef COGO_PT_CASE_H_
+#define COGO_PT_CASE_H_
 
-/// Invalid pc handler.
-/// Invoked when pc isn't valid.
+/// Invalid pc handler. Invoked when pc isn't valid.
 /// You must redefine this macro (undef it first, then define it again) or define it before including the header if you want to customize.
 #ifndef COGO_ON_EPC
 #define COGO_ON_EPC(PT)  // noop
@@ -48,7 +47,6 @@ extern "C" {
 typedef int cogo_pc_t;
 
 /// An opaque (all fields are private, and shouldn't be accessed by user directly) object type represents a coroutine.
-#define COGO_T cogo_pt_t
 typedef struct cogo_pt {
   // Source line (`__LINE__`) where function continues to run when reentered.
   // It must be initialized to `0`.
@@ -88,8 +86,7 @@ typedef struct cogo_pt {
 #define COGO_BEGIN(PT)                                                                      \
   switch (COGO_PC(PT)) {                                                                    \
     default: /* invalid pc */                                                               \
-      /* Convert `PT` to an rvalue to prevent tampering. */                                 \
-      COGO_ON_EPC((&*(PT)));                                                                \
+      COGO_ON_EPC((&*(PT)));    /* Convert `PT` to an rvalue to prevent tampering. */       \
       goto cogo_end;                                                                        \
       goto cogo_return; /* redundant statement: to eliminate the warning of unused label */ \
       goto cogo_begin;  /* redundant statement: to eliminate the warning of unused label */ \
@@ -157,6 +154,7 @@ typedef struct cogo_pt {
   }                          \
   cogo_end
 
+#define COGO_T cogo_pt_t
 #define COGO_PT   cogo_this
 #define CO_BEGIN  COGO_BEGIN(COGO_PT)
 #define CO_END    COGO_END(COGO_PT)
@@ -166,4 +164,4 @@ typedef struct cogo_pt {
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_YIELD_CASE_H_
+#endif  // COGO_PT_CASE_H_
