@@ -85,8 +85,8 @@ typedef struct cogo_pt {
 /// @endcode
 #define COGO_BEGIN(PT)                                                                      \
   switch (COGO_PC(PT)) {                                                                    \
-    default: /* invalid pc */                                                               \
-      COGO_ON_EPC((&*(PT)));    /* Convert `PT` to an rvalue to prevent tampering. */       \
+    default:                 /* invalid pc */                                               \
+      COGO_ON_EPC((&*(PT))); /* Convert `PT` to an rvalue to prevent tampering. */          \
       goto cogo_end;                                                                        \
       goto cogo_return; /* redundant statement: to eliminate the warning of unused label */ \
       goto cogo_begin;  /* redundant statement: to eliminate the warning of unused label */ \
@@ -154,7 +154,7 @@ typedef struct cogo_pt {
   }                          \
   cogo_end
 
-#define COGO_T cogo_pt_t
+#define COGO_T    cogo_pt_t
 #define COGO_PT   cogo_this
 #define CO_BEGIN  COGO_BEGIN(COGO_PT)
 #define CO_END    COGO_END(COGO_PT)

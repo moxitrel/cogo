@@ -20,41 +20,41 @@ typedef struct cogo_pt {
 
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
-#define COGO_PC(PT) ((PT)->private_pc)
+#define COGO_PC(PT)   ((PT)->private_pc)
 
 #define COGO_BEGIN(PT)                         \
   switch (COGO_PC(PT)) {                       \
-    case COGO_PC_BEGIN:                          \
-      COGO_ON_BEGIN(PT);                 \
-      goto cogo_begin;                           \
-                                                 \
-      goto cogo_return;                          \
+    case COGO_PC_BEGIN:                        \
+      COGO_ON_BEGIN(PT);                       \
+      goto cogo_begin;                         \
+                                               \
+      goto cogo_return;                        \
       COGO_PC(PT) = (cogo_pc_t)(&&cogo_begin); \
-    case COGO_PC_END:                            \
-      goto cogo_end;                             \
-    default:                                     \
+    case COGO_PC_END:                          \
+      goto cogo_end;                           \
+    default:                                   \
       goto*(void*)COGO_PC(PT);                 \
-  }                                              \
+  }                                            \
   cogo_begin
 
 #define COGO_YIELD(PT)                       \
-  do {                                         \
-    COGO_ON_YIELD(PT);                 \
+  do {                                       \
+    COGO_ON_YIELD(PT);                       \
     COGO_PC(PT) = (cogo_pc_t)(&&COGO_LABEL); \
-    goto cogo_end;                             \
-  COGO_LABEL:                                  \
-    COGO_ON_RESUME(PT);                \
+    goto cogo_end;                           \
+  COGO_LABEL:                                \
+    COGO_ON_RESUME(PT);                      \
   } while (0)
 
-#define COGO_RETURN(PT)       \
-  do {                          \
+#define COGO_RETURN(PT) \
+  do {                  \
     COGO_ON_RETURN(PT); \
-    goto cogo_return;           \
+    goto cogo_return;   \
   } while (0)
 
 #define COGO_END(PT)         \
-  cogo_return:                 \
-  COGO_ON_END(PT);     \
+  cogo_return:               \
+  COGO_ON_END(PT);           \
   COGO_PC(PT) = COGO_PC_END; \
   cogo_end
 
@@ -82,12 +82,12 @@ typedef struct cogo_pt {
 #define COGO_ON_END(PT)
 #endif
 
-#define COGO_T cogo_pt_t
-#define COGO_PT          cogo_this
-#define CO_BEGIN         COGO_BEGIN(COGO_PT)
-#define CO_END           COGO_END(COGO_PT)
-#define CO_YIELD         COGO_YIELD(COGO_PT)
-#define CO_RETURN        COGO_RETURN(COGO_PT)
+#define COGO_T    cogo_pt_t
+#define COGO_PT   cogo_this
+#define CO_BEGIN  COGO_BEGIN(COGO_PT)
+#define CO_END    COGO_END(COGO_PT)
+#define CO_YIELD  COGO_YIELD(COGO_PT)
+#define CO_RETURN COGO_RETURN(COGO_PT)
 
 #ifdef __cplusplus
 }
