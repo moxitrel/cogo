@@ -35,27 +35,26 @@ COGO_DEFINE (NAME)     {} : define a declared coroutine which is not defined.
 extern "C" {
 #endif
 
-typedef struct cogo_yield cogo_yield_t;
-struct cogo_yield {
-  cogo_pt_t private_pt;
-  void (*resume)(COGO_T* cogo_this);
-};
-
 #undef COGO_T
 #define COGO_T cogo_yield_t
+typedef struct cogo_yield cogo_yield_t;
+typedef struct cogo_yield {
+  cogo_pt_t private_pt;
+  void (*resume)(COGO_T* cogo_this, void* const cogo_param);
+} cogo_yield_t;
 
 // COGO_STRUCT(point, int x, int y):
 //  typedef struct point {
 //      int x;
 //      int y;
 //  } point_t
-#define COGO_STRUCT(NAME, BASE, ...)       \
+#define COGO_STRUCT(NAME, ...)             \
   typedef struct NAME NAME##_t;            \
   struct NAME {                            \
-    BASE;                                  \
+    COGO_T cogo_self;                      \
     struct {                               \
       ET_MAP(;, ET_IDENTITY, __VA_ARGS__); \
-    } cogo_this;                           \
+    } cogo_param;                          \
   }
 
 #define COGO_COMMA_static ,
@@ -72,16 +71,16 @@ struct cogo_yield {
 #define COGO_DO_DECLARE2(N1, ...)      COGO_DO_DECLARE3_##N1(__VA_ARGS__) COGO_DEFINE(NAME)
 #define COGO_DO_DECLARE3_0(NAME, ...)  COGO_DECLARE_EXTERN(NAME, __VA_ARGS__)  // NAME: name
 #define COGO_DO_DECLARE3_1(NAME, ...)  COGO_DECLARE_STATIC(NAME, __VA_ARGS__)  // NAME: static name
-#define COGO_DECLARE_EXTERN(NAME, ...) COGO_STRUCT(NAME, COGO_T cogo_pt, __VA_ARGS__);
-#define COGO_DECLARE_STATIC(NAME, ...) COGO_STRUCT(COGO_BLANK_##NAME, COGO_T cogo_pt, __VA_ARGS__);
+#define COGO_DECLARE_EXTERN(NAME, ...) COGO_STRUCT(NAME, __VA_ARGS__);
+#define COGO_DECLARE_STATIC(NAME, ...) COGO_STRUCT(COGO_BLANK_##NAME, __VA_ARGS__);
 
 #define COGO_DEFINE(NAME)              COGO_DO_DEFINE1(ET_HAS_COMMA(COGO_COMMA_##NAME), NAME)
 #define COGO_DO_DEFINE1(...)           COGO_DO_DEFINE2(__VA_ARGS__)
 #define COGO_DO_DEFINE2(N, ...)        COGO_DO_DEFINE3_##N(__VA_ARGS__)
 #define COGO_DO_DEFINE3_0(NAME)        COGO_DEFINE_EXTERN(NAME)  // NAME: name
 #define COGO_DO_DEFINE3_1(NAME)        COGO_DEFINE_STATIC(NAME)  // NAME: static name
-#define COGO_DEFINE_EXTERN(NAME)       void NAME##_resume(void* const cogo_this)
-#define COGO_DEFINE_STATIC(NAME)       static void COGO_BLANK_##NAME##_resume(void* const cogo_this)
+#define COGO_DEFINE_EXTERN(NAME)       void NAME##_resume(COGO_T* const cogo_this, void* const cogo_param)
+#define COGO_DEFINE_STATIC(NAME)       static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this, void* const cogo_param)
 
 #undef COGO_PT
 #define COGO_PT (&cogo_this->private_pt)
@@ -93,7 +92,7 @@ typedef cogo_pc_t cogo_status_t;
 
 #define COGO_RESUME(YIELD) cogo_yield_resume((COGO_T*)YIELD)
 static inline cogo_status_t cogo_yield_resume(COGO_T* cogo_this) {
-  if (COGO_PC(cogo_this) != COGO_PC_END) {
+  if (COGO_PC(&cogo_this->private_pt) != COGO_PC_END) {
     cogo_this->resume(cogo_this);
   }
   return COGO_PC(cogo_this);
