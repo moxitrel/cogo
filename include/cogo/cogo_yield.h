@@ -15,7 +15,7 @@ COGO_STATUS()       : get the current running status.
 CO_DECLARE(NAME, ...){} : declare a coroutine.
   FUNC_t                : the declared coroutine type.
   FUNC_resume           : the declared coroutine function.
-CO_DEFINE (NAME)     {} : define a declared coroutine which is not defined.
+COGO_DEFINE (NAME)     {} : define a declared coroutine which is not defined.
 
 */
 #ifndef COGO_YIELD_H_
@@ -42,23 +42,20 @@ struct cogo_yield {
 };
 
 #undef COGO_T
-#define COGO_T                         cogo_yield_t
+#define COGO_T cogo_yield_t
 
 // COGO_STRUCT(point, int x, int y):
 //  typedef struct point {
 //      int x;
 //      int y;
 //  } point_t
-#define COGO_STRUCT(NAME, BASE_T, ...) COGO_DO_STRUCT1(ET_IS_EMPTY(__VA_ARGS__), NAME, BASE_T, __VA_ARGS__)
-#define COGO_DO_STRUCT1(...)           COGO_DO_STRUCT2(__VA_ARGS__)
-#define COGO_DO_STRUCT2(N, ...)        COGO_DO_STRUCT3_##N(__VA_ARGS__)
-#define COGO_DO_STRUCT3_0(NAME, BASE_T)
-#define COGO_DO_STRUCT3_1(NAME, BASE_T)
-#define COGO_STRUCT(NAME, BASE_T, ...)   \
-  typedef struct NAME NAME##_t;          \
-  struct NAME {                          \
-    BASE_T cogo_this;                    \
-    ET_MAP(;, ET_IDENTITY, __VA_ARGS__); \
+#define COGO_STRUCT(NAME, BASE, ...)       \
+  typedef struct NAME NAME##_t;            \
+  struct NAME {                            \
+    BASE;                                  \
+    struct {                               \
+      ET_MAP(;, ET_IDENTITY, __VA_ARGS__); \
+    } cogo_this;                           \
   }
 
 #define COGO_COMMA_static ,
@@ -70,26 +67,21 @@ struct cogo_yield {
 //  ...
 // };
 // void NAME_resume(NAME_t* const cogo_this)
-#define COGO_DECLARE1(NAME, ...)      COGO_DECLARE1_F1(ET_COUNT(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
-#define COGO_DECLARE1_F1(...)         COGO_DECLARE1_F2(__VA_ARGS__)
-#define COGO_DECLARE1_F2(N, ...)      COGO_DECLARE1_F3_##N(__VA_ARGS__)
-#define COGO_DECLARE1_F3_1(NAME, ...) /* NAME: name */ \
-  COGO_STRUCT(NAME, __VA_ARGS__);                      \
-  CO_DEFINE(NAME)
-#define COGO_DECLARE1_F3_2(NAME, ...) /* NAME: static name */ \
-  COGO_STRUCT(COGO_BLANK_##NAME, __VA_ARGS__);                \
-  CO_DEFINE(NAME)
+#define COGO_DECLARE(NAME, ...)        COGO_DO_DECLARE1(ET_HAS_COMMA(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
+#define COGO_DO_DECLARE1(...)          COGO_DO_DECLARE2(__VA_ARGS__)
+#define COGO_DO_DECLARE2(N1, ...)      COGO_DO_DECLARE3_##N1(__VA_ARGS__) COGO_DEFINE(NAME)
+#define COGO_DO_DECLARE3_0(NAME, ...)  COGO_DECLARE_EXTERN(NAME, __VA_ARGS__)  // NAME: name
+#define COGO_DO_DECLARE3_1(NAME, ...)  COGO_DECLARE_STATIC(NAME, __VA_ARGS__)  // NAME: static name
+#define COGO_DECLARE_EXTERN(NAME, ...) COGO_STRUCT(NAME, COGO_T cogo_pt, __VA_ARGS__);
+#define COGO_DECLARE_STATIC(NAME, ...) COGO_STRUCT(COGO_BLANK_##NAME, COGO_T cogo_pt, __VA_ARGS__);
 
-#define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE1(NAME, COGO_T private_yield, __VA_ARGS__)
-
-#define CO_DEFINE(NAME)        CO_DEFINE_F1(ET_COUNT(COGO_COMMA_##NAME), NAME)
-#define CO_DEFINE_F1(...)      CO_DEFINE_F2(__VA_ARGS__)
-#define CO_DEFINE_F2(N, ...)   CO_DEFINE_F3_##N(__VA_ARGS__)
-#define CO_DEFINE_F3_1(NAME)   CO_DEFINE_EXTERN(NAME)  // NAME: name
-#define CO_DEFINE_F3_2(NAME)   CO_DEFINE_STATIC(NAME)  // NAME: static name
-#define CO_DEFINE_EXTERN(NAME) void NAME##_resume(COGO_T* const cogo_this)
-#define CO_DEFINE_STATIC(NAME) static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)
+#define COGO_DEFINE(NAME)              COGO_DO_DEFINE1(ET_HAS_COMMA(COGO_COMMA_##NAME), NAME)
+#define COGO_DO_DEFINE1(...)           COGO_DO_DEFINE2(__VA_ARGS__)
+#define COGO_DO_DEFINE2(N, ...)        COGO_DO_DEFINE3_##N(__VA_ARGS__)
+#define COGO_DO_DEFINE3_0(NAME)        COGO_DEFINE_EXTERN(NAME)  // NAME: name
+#define COGO_DO_DEFINE3_1(NAME)        COGO_DEFINE_STATIC(NAME)  // NAME: static name
+#define COGO_DEFINE_EXTERN(NAME)       void NAME##_resume(void* const cogo_this)
+#define COGO_DEFINE_STATIC(NAME)       static void COGO_BLANK_##NAME##_resume(void* const cogo_this)
 
 #undef COGO_PT
 #define COGO_PT (&cogo_this->private_pt)
