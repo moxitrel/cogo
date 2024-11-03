@@ -77,10 +77,8 @@ typedef struct cogo_yield {
 #define COGO_DEFINE(NAME)             COGO_DO_DEFINE1(ET_HAS_COMMA(COGO_COMMA_##NAME), NAME)
 #define COGO_DO_DEFINE1(...)          COGO_DO_DEFINE2(__VA_ARGS__)
 #define COGO_DO_DEFINE2(N, ...)       COGO_DO_DEFINE3_##N(__VA_ARGS__)
-#define COGO_DO_DEFINE3_0(NAME)       COGO_DEFINE_EXTERN(NAME)  // NAME: name
-#define COGO_DO_DEFINE3_1(NAME)       COGO_DEFINE_STATIC(NAME)  // NAME: static name
-#define COGO_DEFINE_EXTERN(NAME)      void NAME##_resume(COGO_T* const cogo_this)
-#define COGO_DEFINE_STATIC(NAME)      static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)
+#define COGO_DO_DEFINE3_0(NAME)       void NAME##_resume(COGO_T* const cogo_this)                      // NAME: name
+#define COGO_DO_DEFINE3_1(NAME)       static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)  // NAME: static name
 
 #undef COGO_T
 #undef CO_BEGIN
