@@ -37,7 +37,7 @@ extern "C" {
 
 typedef struct cogo_yield {
   cogo_pt_t private_pt;
-  void (*resume)(struct cogo_yield* cogo_this);
+  void (*private_resume)(struct cogo_yield* cogo_this);
 } cogo_yield_t;
 
 // COGO_STRUCT(point, int x, int y):
@@ -101,7 +101,7 @@ typedef cogo_pc_t cogo_status_t;
 #define COGO_RESUME(YIELD) cogo_yield_resume(YIELD)
 static inline cogo_status_t cogo_yield_resume(COGO_T* const cogo_this) {
   if (COGO_PC(&cogo_this->private_pt) != COGO_PC_END) {
-    cogo_this->resume(cogo_this);
+    cogo_this->private_resume(cogo_this);
   }
   return COGO_PC(&cogo_this->private_pt);
 }
