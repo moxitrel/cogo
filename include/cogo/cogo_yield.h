@@ -60,7 +60,9 @@ typedef struct cogo_yield {
   } NAME##_t
 
 #define COGO_COMMA_static ,
+#define COGO_COMMA_extern ,
 #define COGO_BLANK_static
+#define COGO_BLANK_extern
 
 // typedef struct NAME NAME_t;
 // struct NAME {
