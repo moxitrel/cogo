@@ -35,13 +35,10 @@ COGO_DEFINE (NAME)     {} : define a declared coroutine which is not defined.
 extern "C" {
 #endif
 
-#undef COGO_T
-#define COGO_T cogo_yield_t
-typedef struct cogo_yield cogo_yield_t;
-struct cogo_yield {
+typedef struct cogo_yield {
   cogo_pt_t private_pt;
-  void (*private_resume)(COGO_T* cogo_this);
-};
+  void (*private_resume)(struct cogo_yield* cogo_this);
+} cogo_yield_t;
 
 // COGO_STRUCT(point, int x, int y):
 //  typedef struct point {
@@ -80,13 +77,15 @@ struct cogo_yield {
 #define COGO_DEFINE(NAME)             COGO_DO_DEFINE1(ET_HAS_COMMA(COGO_COMMA_##NAME), NAME)
 #define COGO_DO_DEFINE1(...)          COGO_DO_DEFINE2(__VA_ARGS__)
 #define COGO_DO_DEFINE2(N, ...)       COGO_DO_DEFINE3_##N(__VA_ARGS__)
-#define COGO_DO_DEFINE3_0(NAME)       void NAME##_resume(COGO_T* const cogo_this)                      // NAME: name
+#define COGO_DO_DEFINE3_0(NAME)       void NAME##_resume(COGO_T* const cogo_this)  // NAME: name
 #define COGO_DO_DEFINE3_1(NAME)       static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)  // NAME: static name
 
+#undef COGO_T
 #undef CO_BEGIN
 #undef CO_END
 #undef CO_YIELD
 #undef CO_RETURN
+#define COGO_T    cogo_yield_t
 #define CO_BEGIN  COGO_BEGIN(&cogo_this->private_pt)
 #define CO_END    COGO_END(&cogo_this->private_pt)
 #define CO_YIELD  COGO_YIELD(&cogo_this->private_pt)
