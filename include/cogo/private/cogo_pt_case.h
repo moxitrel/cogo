@@ -147,19 +147,17 @@ typedef struct cogo_pt {
 /// And the object referenced by PT must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
 /// The expression of PT must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_END(PT)         \
-  cogo_return:               \
-  COGO_ON_END((&*(PT)));     \
-  COGO_PC(PT) = COGO_PC_END; \
-  }                          \
+#define COGO_END(PT)                   \
+  cogo_return : COGO_ON_END((&*(PT))); \
+  COGO_PC(PT) = COGO_PC_END;           \
+  }                                    \
   cogo_end
 
 #define COGO_T    cogo_pt_t
-#define COGO_PT   cogo_this
-#define CO_BEGIN  COGO_BEGIN(COGO_PT)
-#define CO_END    COGO_END(COGO_PT)
-#define CO_YIELD  COGO_YIELD(COGO_PT)
-#define CO_RETURN COGO_RETURN(COGO_PT)
+#define CO_BEGIN  COGO_BEGIN(cogo_this)
+#define CO_END    COGO_END(cogo_this)
+#define CO_YIELD  COGO_YIELD(cogo_this)
+#define CO_RETURN COGO_RETURN(cogo_this)
 
 #ifdef __cplusplus
 }
