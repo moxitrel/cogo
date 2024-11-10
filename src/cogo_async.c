@@ -4,8 +4,8 @@
 
 static cogo_async_t* cogo_async_sched_step(cogo_async_sched_t* const sched) {
 #define TOP (sched->base_await.top)
-  TOP->sched = &sched->base_await;
-  TOP->resume(TOP);
+  TOP->base_await.sched = &sched->base_await;
+  TOP->base_await.base_yield.resume(TOP);
   if (!(/*blocked*/ !TOP || /*finished*/ (COGO_STATUS((cogo_async_t*)TOP) == COGO_STATUS_END && !(TOP = TOP->caller)))) {
     // yield, await, return, async, read, write
     cogo_async_sched_push(sched, (cogo_async_t*)TOP);
@@ -103,7 +103,7 @@ cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* const sched) {
 }
 
 // run until yield, return the next coroutine will be run
-cogo_status_t cogo_async_resume(cogo_async_t* const co) {
+cogo_pc_t cogo_async_resume(cogo_async_t* const co) {
 #define TOP (co->base_await.top)
   COGO_ASSERT(co);
   if (co->base_await.top) {

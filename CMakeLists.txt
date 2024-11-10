@@ -21,7 +21,7 @@ file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS
 )
 
 add_library(cogo
-  # src/cogo_async.c
+  src/cogo_async.c
   src/cogo_await.c
   src/cogo_yield.c
 )
@@ -153,7 +153,7 @@ if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TE
   add_executable(test_await src/cogo_await_test.c)
   add_test(NAME test_await COMMAND test_await)
 
-  # # async
-  # add_executable(test_async src/cogo_async_test.c)
-  # add_test(NAME test_async COMMAND test_async)
+  # async
+  add_executable(test_async src/cogo_async_test.c)
+  add_test(NAME test_async COMMAND test_async)
 endif()

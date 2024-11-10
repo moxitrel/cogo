@@ -12,7 +12,7 @@ COGO_INIT   (CO, NAME, ...)
 cogo_status_t
 COGO_STATUS (CO)
 COGO_RESUME (CO)
-CO_RUN    (CO)
+COGO_RUN    (CO)
 
 CO_DECLARE(NAME, ...){}
 CO_DEFINE (NAME)     {}
@@ -50,13 +50,13 @@ struct cogo_await {
     cogo_await_sched_t* sched;
 
     // resume point
-    cogo_await_t* top;
+    COGO_T* top;
   };
 };
 
 struct cogo_await_sched {
   // call stack top
-  cogo_await_t* top;
+  COGO_T* top;
 };
 
 /// Run another coroutine until finished.

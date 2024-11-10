@@ -2,7 +2,7 @@
 #include <cogo/cogo_async.h>
 #include <unity.h>
 
-CO_DECLARE(/*FUNC*/ nat, /*return*/ int v) {
+COGO_DECLARE(/*FUNC*/ nat, /*return*/ int v) {
   nat_t* const thiz = (nat_t*)cogo_this;
 CO_BEGIN:
 
@@ -26,7 +26,7 @@ static void test_nat(void) {
   TEST_ASSERT_EQUAL_INT(2, n.v);
 }
 
-CO_DECLARE(consume, co_chan_t* chan, co_message_t msg) {
+COGO_DECLARE(consume, co_chan_t* chan, co_message_t msg) {
   consume_t* const thiz = (consume_t*)cogo_this;
 CO_BEGIN:
 
@@ -35,7 +35,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(product, co_chan_t* chan, co_message_t msg) {
+COGO_DECLARE(product, co_chan_t* chan, co_message_t msg) {
   product_t* const thiz = (product_t*)cogo_this;
 CO_BEGIN:
 
@@ -44,7 +44,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-CO_DECLARE(entry, consume_t* r, product_t* w) {
+COGO_DECLARE(entry, consume_t* r, product_t* w) {
   entry_t* const thiz = (entry_t*)cogo_this;
 CO_BEGIN:
 
@@ -59,7 +59,7 @@ static void test_chan(void) {
   consume_t r = COGO_INIT(/*this*/ &r, /*FUNC*/ consume, .chan = &c);
   product_t w = COGO_INIT(/*this*/ &w, /*FUNC*/ product, .chan = &c);
   entry_t m = COGO_INIT(/*this*/ &m, /*FUNC*/ entry, .w = &w, .r = &r);
-  CO_RUN(&m);
+  COGO_RUN(&m);
   TEST_ASSERT_EQUAL_PTR(&w.msg, r.msg.next);
 }
 
