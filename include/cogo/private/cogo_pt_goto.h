@@ -27,7 +27,6 @@ typedef struct cogo_pt {
     case COGO_PC_BEGIN:                        \
       COGO_ON_BEGIN(PT);                       \
       goto cogo_begin;                         \
-                                               \
       goto cogo_return;                        \
       COGO_PC(PT) = (cogo_pc_t)(&&cogo_begin); \
     case COGO_PC_END:                          \
@@ -82,12 +81,10 @@ typedef struct cogo_pt {
 #define COGO_ON_END(PT)
 #endif
 
-#define COGO_T    cogo_pt_t
-#define COGO_PT   cogo_this
-#define CO_BEGIN  COGO_BEGIN(COGO_PT)
-#define CO_END    COGO_END(COGO_PT)
-#define CO_YIELD  COGO_YIELD(COGO_PT)
-#define CO_RETURN COGO_RETURN(COGO_PT)
+#define CO_BEGIN  COGO_BEGIN(cogo_this)
+#define CO_END    COGO_END(cogo_this)
+#define CO_YIELD  COGO_YIELD(cogo_this)
+#define CO_RETURN COGO_RETURN(cogo_this)
 
 #ifdef __cplusplus
 }

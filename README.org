@@ -45,15 +45,15 @@ CO_END:;
 // Usage.
 void example(void)
 {
-  nat_t ng = CO_INIT(&ng, nat, /*n*/ 0);
+  nat_t ng = COGO_INIT(&ng, nat, /*n*/ 0);
 
-  CO_RESUME(&ng);
+  COGO_RESUME(&ng);
   printf("ng.n: %d\n", ng.n);  // ng.n: 0
 
-  CO_RESUME(&ng);
+  COGO_RESUME(&ng);
   printf("ng.n: %d\n", ng.n);  // ng.n: 1
 
-  CO_RESUME(&ng);
+  COGO_RESUME(&ng);
   printf("ng.n: %d\n", ng.n);  // ng.n: 2
 }
 #+END_SRC

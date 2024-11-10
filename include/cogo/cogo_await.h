@@ -8,10 +8,10 @@ CO_YIELD
 CO_RETURN
 CO_AWAIT  (CO)  : run another coroutine until finished
 
-CO_INIT   (CO, NAME, ...)
+COGO_INIT   (CO, NAME, ...)
 cogo_status_t
 COGO_STATUS (CO)
-CO_RESUME (CO)
+COGO_RESUME (CO)
 CO_RUN    (CO)
 
 CO_DECLARE(NAME, ...){}
@@ -22,6 +22,11 @@ cogo_await_t    : coroutine type
 */
 #ifndef COGO_AWAIT_H_
 #define COGO_AWAIT_H_
+
+#ifndef COGO_T
+#define COGO_T cogo_await_t
+typedef struct cogo_await cogo_await_t;
+#endif
 
 #include "cogo_yield.h"
 
@@ -34,11 +39,8 @@ typedef struct cogo_await_sched cogo_await_sched_t;
 
 // implement call stack
 struct cogo_await {
-  // inherit from cogo_pt_t
-  cogo_pt_t base;
-
-  // the coroutine function
-  void (*resume)(void* cogo_this);
+  // inherit from cogo_yield_t
+  cogo_yield_t base_yield;
 
   // build call stack
   cogo_await_t* caller;
@@ -58,36 +60,38 @@ struct cogo_await_sched {
 };
 
 /// Run another coroutine until finished.
-#define CO_AWAIT(/*cogo_await_t**/ CO)                               \
-  do {                                                               \
-    cogo_await_await((cogo_await_t*)cogo_this, (cogo_await_t*)(CO)); \
-    CO_YIELD;                                                        \
+#define CO_AWAIT(COGO)                          \
+  do {                                          \
+    cogo_await_await(cogo_this, &(COGO)->cogo); \
+    CO_YIELD;                                   \
   } while (0)
-void cogo_await_await(cogo_await_t* thiz, cogo_await_t* co);
+void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo);
 
-#ifdef assert
-#define COGO_ASSERT(...) assert(__VA_ARGS__)
-#else
-#define COGO_ASSERT(...) /*noop*/
-#endif
+#undef COGO_INIT
+#define COGO_INIT(NAME, THIZ, ...)                 \
+  ((NAME##_t){                                     \
+      /* .cogo = */ {                              \
+          .base_yield = {.resume = NAME##_resume}, \
+          .top = &(THIZ)->cogo,                    \
+      },                                           \
+      __VA_ARGS__})
 
-#undef CO_DECLARE
-#define CO_DECLARE(NAME, ...) \
-  COGO_DECLARE(NAME, cogo_await_t base_await, __VA_ARGS__)
+// Continue to run a suspended coroutine until yield or finished.
+#undef COGO_RESUME
+#define COGO_RESUME(COGO) cogo_await_resume(&(COGO)->cogo)
+cogo_pc_t cogo_await_resume(cogo_await_t* cogo);
 
-#undef COGO_PC
-#define COGO_PC(THIS) ((cogo_pc_t)(THIS)->base.private_pt)
+#undef COGO_STATUS
+#define COGO_STATUS(COGO) COGO_PC(&(COGO)->cogo.base_yield.base_pt)
 
-#define CO_INIT(NAME, THIZ, ...) \
-  ((NAME##_t){{.resume = NAME##_resume, .top = (cogo_await_t*)(THIZ)}, __VA_ARGS__})
-
-// continue to run a suspended coroutine until yield or finished
-#define CO_RESUME(CO) cogo_await_resume((cogo_await_t*)(CO))
-cogo_status_t cogo_await_resume(cogo_await_t* co);
-
-// run the coroutines until all finished
-#define CO_RUN(CO) cogo_await_run((cogo_await_t*)(CO))
-void cogo_await_run(cogo_await_t* co);
+#undef CO_BEGIN
+#undef CO_END
+#undef CO_YIELD
+#undef CO_RETURN
+#define CO_BEGIN  COGO_BEGIN(&cogo_this->base_yield.base_pt)
+#define CO_END    COGO_END(&cogo_this->base_yield.base_pt)
+#define CO_YIELD  COGO_YIELD(&cogo_this->base_yield.base_pt)
+#define CO_RETURN COGO_RETURN(&cogo_this->base_yield.base_pt)
 
 #ifdef __cplusplus
 }

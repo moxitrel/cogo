@@ -4,7 +4,7 @@
 // that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
 /// @file
-/// @warning Undefined behavior if CO_YIELD used in the **case** statement.
+/// @warning Undefined behavior if CO_YIELD used in the **switch case** statement.
 #ifndef COGO_PT_CASE_H_
 #define COGO_PT_CASE_H_
 
@@ -59,7 +59,7 @@ typedef struct cogo_pt {
 /// The coroutine has finished running.
 #define COGO_PC_END   (-1)
 /// Get pc as an rvalue to prevent it from being tampered with by assignment (e.g. `COGO_PC(PT) = 0`).
-#define COGO_PC(PT)   ((PT)->private_pc)
+#define COGO_PC(PT)   (+(PT)->private_pc)
 
 /// Coroutine begin label.
 /// - There must be a `COGO_END` after `COGO_BEGIN`.
@@ -71,7 +71,7 @@ typedef struct cogo_pt {
 /// - The expression of `PT` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
 ///
 /// @exception
-/// - `COGO_ON_EPC` is called if it's defined and the resume point is an invalid value.
+/// - `COGO_ON_EPC` is called if the resume point is invalid.
 ///
 /// @par Example
 /// @code
@@ -119,13 +119,13 @@ typedef struct cogo_pt {
 /// COGO_END(pt):;
 /// }
 /// @endcode
-#define COGO_YIELD(PT)                                                      \
-  do {                                                                      \
-    COGO_ON_YIELD((&*(PT)));                                                \
-    COGO_PC(PT) = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
-    goto cogo_end;          /* 2. return */                                 \
-    case __LINE__:          /* 3. resume point */                           \
-      COGO_ON_RESUME((&*(PT)));                                             \
+#define COGO_YIELD(PT)                                                           \
+  do {                                                                           \
+    COGO_ON_YIELD((&*(PT)));                                                     \
+    (PT)->private_pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
+    goto cogo_end;               /* 2. return */                                 \
+    case __LINE__:               /* 3. resume point */                           \
+      COGO_ON_RESUME((&*(PT)));                                                  \
   } while (0)
 
 /// Jump to COGO_END, and end the coroutine.
@@ -147,13 +147,13 @@ typedef struct cogo_pt {
 /// And the object referenced by PT must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
 /// The expression of PT must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_END(PT)                   \
-  cogo_return : COGO_ON_END((&*(PT))); \
-  COGO_PC(PT) = COGO_PC_END;           \
-  }                                    \
+#define COGO_END(PT)              \
+  cogo_return:                    \
+  COGO_ON_END((&*(PT)));          \
+  (PT)->private_pc = COGO_PC_END; \
+  }                               \
   cogo_end
 
-#define COGO_T    cogo_pt_t
 #define CO_BEGIN  COGO_BEGIN(cogo_this)
 #define CO_END    COGO_END(cogo_this)
 #define CO_YIELD  COGO_YIELD(cogo_this)

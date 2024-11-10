@@ -1,32 +1,30 @@
 #include <cogo/cogo_await.h>
 
-// should be invoked through CO_AWAIT()
-void cogo_await_await(cogo_await_t* const thiz, cogo_await_t* const co) {
-  COGO_ASSERT(thiz && thiz->sched && co);
-
+// Should be invoked through CO_AWAIT()
+void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo) {
+  COGO_ASSERT(cogo_this && cogo_this->sched && cogo);
 #ifndef NDEBUG
-  // no loop in call chain
-  for (cogo_await_t const* node = thiz; node; node = node->caller) {
-    COGO_ASSERT(co != node);
+  // No loop in the call chain.
+  for (cogo_await_t const* node = cogo_this; node; node = node->caller) {
+    COGO_ASSERT(cogo != node);
   }
 #endif
-
-  co->caller = thiz;           // call stack push
-  thiz->sched->top = co->top;  // continue from resume point
+  cogo->caller = cogo_this;           // call stack push
+  cogo_this->sched->top = cogo->top;  // continue from resume point
 }
 
 // run until yield
-cogo_pc_t cogo_await_resume(cogo_await_t* const co) {
+cogo_pc_t cogo_await_resume(cogo_await_t* const cogo) {
 #define TOP (sched.top)
-  COGO_ASSERT(co);
-  if (COGO_PC(co) != COGO_PC_END) {
+  COGO_ASSERT(cogo);
+  if (COGO_PC(&cogo->base_yield.base_pt) != COGO_PC_END) {
     cogo_await_sched_t sched = {
-        .top = co->top,  // restore resume point
+        .top = cogo->top,  // Restore the resume point.
     };
     for (;;) {
       TOP->sched = &sched;
-      TOP->resume(TOP);
-      switch (COGO_PC(TOP)) {
+      TOP->base_yield.resume(TOP);
+      switch (COGO_PC(&TOP->base_yield.base_pt)) {
         case COGO_PC_END:  // return
           TOP = TOP->caller;
           if (!TOP) {  // end
@@ -40,14 +38,8 @@ cogo_pc_t cogo_await_resume(cogo_await_t* const co) {
       }
     }
   exit:
-    co->top = TOP;  // save resume point
+    cogo->top = TOP;  // Save the resume point.
   }
-  return COGO_PC(co);
+  return COGO_PC(&cogo->base_yield.base_pt);
 #undef TOP
-}
-
-void cogo_await_run(cogo_await_t* const co) {
-  COGO_ASSERT(co);
-  while (cogo_await_resume(co) != COGO_PC_END) {
-  }
 }

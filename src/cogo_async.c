@@ -51,7 +51,7 @@ exit:
 #undef TOP
 }
 
-bool cogo_chan_read(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t* const msg_next) {
+int cogo_chan_read(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t* const msg_next) {
   COGO_ASSERT(thiz && chan && chan->cap >= 0 && chan->size > PTRDIFF_MIN && msg_next);
   ptrdiff_t const chan_size = chan->size--;
   if (chan_size <= 0) {
@@ -71,7 +71,7 @@ bool cogo_chan_read(cogo_async_t* const thiz, co_chan_t* const chan, co_message_
   }
 }
 
-bool cogo_chan_write(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t* const msg) {
+int cogo_chan_write(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t* const msg) {
   COGO_ASSERT(thiz && chan && chan->cap >= 0 && chan->size < PTRDIFF_MAX && msg);
   ptrdiff_t const chan_size = chan->size++;
   if (chan_size < 0) {
@@ -91,7 +91,7 @@ bool cogo_chan_write(cogo_async_t* const thiz, co_chan_t* const chan, co_message
   }
 }
 
-bool cogo_async_sched_push(cogo_async_sched_t* const sched, cogo_async_t* const co) {
+int cogo_async_sched_push(cogo_async_sched_t* const sched, cogo_async_t* const co) {
   COGO_ASSERT(sched && co);
   COGO_CQ_PUSH(&sched->q, co);
   return true;  // switch context
