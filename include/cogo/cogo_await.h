@@ -28,6 +28,11 @@ cogo_await_t    : coroutine type
 typedef struct cogo_await cogo_await_t;
 #endif
 
+#ifndef COGO_SCHED_T
+#define COGO_SCHED_T cogo_await_sched_t
+typedef struct cogo_await_sched cogo_await_sched_t;
+#endif
+
 #include "cogo_yield.h"
 
 #ifdef __cplusplus
@@ -43,11 +48,11 @@ struct cogo_await {
   cogo_yield_t base_yield;
 
   // build call stack
-  cogo_await_t* caller;
+  COGO_T* caller;
 
   union {
     // associated scheduler
-    cogo_await_sched_t* sched;
+    COGO_SCHED_T* sched;
 
     // resume point
     COGO_T* top;
@@ -81,17 +86,8 @@ void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo);
 #define COGO_RESUME(COGO) cogo_await_resume(&(COGO)->cogo)
 cogo_pc_t cogo_await_resume(cogo_await_t* cogo);
 
-#undef COGO_STATUS
-#define COGO_STATUS(COGO) COGO_PC(&(COGO)->cogo.base_yield.base_pt)
-
-#undef CO_BEGIN
-#undef CO_END
-#undef CO_YIELD
-#undef CO_RETURN
-#define CO_BEGIN  COGO_BEGIN(&cogo_this->base_yield.base_pt)
-#define CO_END    COGO_END(&cogo_this->base_yield.base_pt)
-#define CO_YIELD  COGO_YIELD(&cogo_this->base_yield.base_pt)
-#define CO_RETURN COGO_RETURN(&cogo_this->base_yield.base_pt)
+#undef COGO_PT
+#define COGO_PT(COGO_THIS) (&(COGO_THIS)->base_yield.base_pt)
 
 #ifdef __cplusplus
 }

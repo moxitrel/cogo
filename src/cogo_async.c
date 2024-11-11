@@ -3,45 +3,45 @@
 #include <stdbool.h>
 
 static cogo_async_t* cogo_async_sched_step(cogo_async_sched_t* const sched) {
-#define TOP (sched->base_await.top)
-  TOP->base_await.sched = &sched->base_await;
+#define TOP (sched->base_await_sched.top)
+  TOP->base_await.sched = sched;
   TOP->base_await.base_yield.resume(TOP);
-  if (!(/*blocked*/ !TOP || /*finished*/ (COGO_STATUS((cogo_async_t*)TOP) == COGO_STATUS_END && !(TOP = TOP->caller)))) {
+  if (!(/*blocked*/ !TOP || /*finished*/ (COGO_PC(&TOP->base_await.base_yield.base_pt) == COGO_PC_END && !(TOP = TOP->base_await.caller)))) {
     // yield, await, return, async, read, write
     cogo_async_sched_push(sched, (cogo_async_t*)TOP);
   }
-  return (cogo_async_t*)(TOP = &cogo_async_sched_pop(sched)->base_await);
+  return TOP = cogo_async_sched_pop(sched);
 #undef TOP
 }
 
 // Run until yield. Return the next coroutine to be run.
 static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
-#define TOP (sched->base_await.top)
+#define TOP (sched->base_await_sched.top)
   COGO_ASSERT(sched && TOP);
   for (;;) {
-    TOP->sched = &sched->base_await;
-    TOP->resume(TOP);
+    TOP->base_await.sched = sched;
+    TOP->base_await.base_yield.resume(TOP);
     if (!TOP) {  // blocked
       goto on_blocked;
     } else {
-      switch (COGO_STATUS(TOP)) {
-        case COGO_STATUS_END:  // return
-          TOP = TOP->caller;
+      switch (COGO_PC(&TOP->base_await.base_yield.base_pt)) {
+        case COGO_PC_END:  // return
+          TOP = TOP->base_await.caller;
           if (!TOP) {  // end
             goto on_end;
           }
           continue;
-        case COGO_STATUS_BEGIN:  // await
+        case COGO_PC_BEGIN:  // await
           continue;
         default:  // yield, async
           cogo_async_sched_push(sched, (cogo_async_t*)TOP);
-          TOP = &cogo_async_sched_pop(sched)->base_await;
+          TOP = cogo_async_sched_pop(sched);
           goto exit;
       }
     }
   on_blocked:
   on_end:
-    TOP = &cogo_async_sched_pop(sched)->base_await;
+    TOP = cogo_async_sched_pop(sched);
     if (!TOP) {  // no more active coroutines
       goto exit;
     }
@@ -57,9 +57,9 @@ int cogo_chan_read(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t
   if (chan_size <= 0) {
     COGO_MQ_PUSH(&chan->mq, msg_next);
     // sleep in background
-    COGO_CQ_PUSH(&chan->cq, thiz);       // append to blocking queue
-    thiz->base_await.sched->top = NULL;  // remove from scheduler
-    return true;                         // switch context
+    COGO_CQ_PUSH(&chan->cq, thiz);                        // append to blocking queue
+    thiz->base_await.sched->base_await_sched.top = NULL;  // remove from scheduler
+    return true;                                          // switch context
   } else {
     msg_next->next = COGO_MQ_POP_NONEMPTY(&chan->mq);
     if (chan_size <= chan->cap) {
@@ -85,7 +85,7 @@ int cogo_chan_write(cogo_async_t* const thiz, co_chan_t* const chan, co_message_
     } else {
       // sleep in background
       COGO_CQ_PUSH(&chan->cq, thiz);
-      thiz->base_await.sched->top = NULL;
+      thiz->base_await.sched->base_await_sched.top = NULL;
       return true;
     }
   }
@@ -108,7 +108,7 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const co) {
   COGO_ASSERT(co);
   if (co->base_await.top) {
     cogo_async_sched_t sched = {
-        .base_await = {
+        .base_await_sched = {
             .top = TOP,
         },
         .q = {
@@ -123,21 +123,21 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const co) {
     }
 
     // save resume point
-    TOP = &cogo_async_sched_resume(&sched)->base_await;
+    TOP = cogo_async_sched_resume(&sched);
     // save q
     if (TOP) {
       ((cogo_async_t*)TOP)->next = sched.q.head;
     }
   }
-  return TOP ? COGO_STATUS(TOP) : COGO_STATUS_END;
+  return TOP ? COGO_PC(&TOP->base_await.base_yield.base_pt) : COGO_PC_END;
 #undef TOP
 }
 
-void cogo_async_run(cogo_async_t* const co) {
+void cogo_async_run(cogo_async_t* const cogo) {
   COGO_ASSERT(co);
   cogo_async_sched_t sched = {
-      .base_await = {
-          .top = &co->base_await,
+      .base_await_sched = {
+          .top = cogo,
       },
   };
   while (cogo_async_sched_step(&sched)) {

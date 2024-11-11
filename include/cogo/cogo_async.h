@@ -35,6 +35,11 @@ cogo_async_sched_t         : scheduler type
 typedef struct cogo_async cogo_async_t;
 #endif
 
+#ifndef COGO_SCHED_T
+#define COGO_SCHED_T cogo_async_sched_t
+typedef struct cogo_async_sched cogo_async_sched_t;
+#endif
+
 #include <stddef.h>
 
 #include "cogo_await.h"
@@ -43,14 +48,16 @@ typedef struct cogo_async cogo_async_t;
 extern "C" {
 #endif
 
-// implement concurrency
 typedef struct cogo_async cogo_async_t;
+typedef struct cogo_async_sched cogo_async_sched_t;
+
+// implement concurrency
 struct cogo_async {
   // inherit cogo_await_t (with scheduler)
   cogo_await_t base_await;
 
   // build coroutine list
-  struct cogo_async* next;
+  COGO_T* next;
 };
 
 // COGO_QUEUE_T             (cogo_async_t)
@@ -68,29 +75,29 @@ struct cogo_async {
 #define COGO_CQ_PUSH         COGO_QUEUE_PUSH(cogo_async_t)
 #define COGO_CQ_POP          COGO_QUEUE_POP(cogo_async_t)
 #define COGO_CQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_async_t)
-typedef struct cogo_async_sched {
-  cogo_await_sched_t base_await;
+struct cogo_async_sched {
+  cogo_await_sched_t base_await_sched;
 
   // other coroutines running concurrently
   COGO_CQ_T q;
 
   // global:
   //  struct cogo_async_sched* run; // running schedulers (idles not in list)
-} cogo_async_sched_t;
+};
 
 // Add coroutine to the concurrent queue.
 // Switch context if return non-zero.
-int cogo_async_sched_push(cogo_async_sched_t* sched, cogo_async_t* co);
+int cogo_async_sched_push(cogo_async_sched_t* sched, cogo_async_t* cogo);
 
 // return the next coroutine to be run, and remove it from the queue
-cogo_async_t* cogo_async_sched_pop(cogo_async_sched_t* sched);
+COGO_T* cogo_async_sched_pop(cogo_async_sched_t* sched);
 
 // CO_ASYNC(cogo_async_t*): start a new coroutine to run concurrently.
-#define CO_ASYNC(COGO)                                                                                                     \
-  do {                                                                                                                     \
-    if (cogo_async_sched_push((cogo_async_sched_t*)((cogo_async_t*)cogo_this)->base_await.sched, (cogo_async_t*)(COGO))) { \
-      CO_YIELD_BY_ASYNC;                                                                                                   \
-    }                                                                                                                      \
+#define CO_ASYNC(COGO)                                                       \
+  do {                                                                       \
+    if (cogo_async_sched_push(cogo_this->base_await.sched, &(COGO)->cogo)) { \
+      CO_YIELD_BY_ASYNC;                                                     \
+    }                                                                        \
   } while (0)
 #define CO_YIELD_BY_ASYNC CO_YIELD;
 
@@ -157,11 +164,11 @@ CO_END:;
 }
  @endcode
 */
-#define CO_CHAN_READ(CHAN, MSG_NEXT)                                                               \
-  do {                                                                                             \
-    if (cogo_chan_read((cogo_async_t*)cogo_this, (co_chan_t*)(CHAN), (co_message_t*)(MSG_NEXT))) { \
-      CO_YIELD_BY_CHAN_READ;                                                                       \
-    }                                                                                              \
+#define CO_CHAN_READ(CHAN, MSG_NEXT)                     \
+  do {                                                   \
+    if (cogo_chan_read(cogo_this, (CHAN), (MSG_NEXT))) { \
+      CO_YIELD_BY_CHAN_READ;                             \
+    }                                                    \
   } while (0)
 // Switch context if return non-zero.
 int cogo_chan_read(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg_next);
@@ -175,11 +182,11 @@ int cogo_chan_read(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg_n
  @post At the time of writing success (and before any message has been read by other coroutines), the size of channel is increased by 1.
  @invariant the MSG body is not modified.
 */
-#define CO_CHAN_WRITE(CHAN, MSG)                                                               \
-  do {                                                                                         \
-    if (cogo_chan_write((cogo_async_t*)cogo_this, (co_chan_t*)(CHAN), (co_message_t*)(MSG))) { \
-      CO_YIELD_BY_CHAN_WRITE;                                                                  \
-    }                                                                                          \
+#define CO_CHAN_WRITE(CHAN, MSG)                     \
+  do {                                               \
+    if (cogo_chan_write(cogo_this, (CHAN), (MSG))) { \
+      CO_YIELD_BY_CHAN_WRITE;                        \
+    }                                                \
   } while (0)
 // Switch context if return non-zero.
 int cogo_chan_write(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg);
@@ -191,7 +198,7 @@ int cogo_chan_write(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg)
       /* .cogo = */ {                                  \
           .base_await = {                              \
               .base_yield = {.resume = NAME##_resume}, \
-              .top = &(THIZ)->cogo.base_await,         \
+              .top = &(THIZ)->cogo,                    \
           },                                           \
       },                                               \
       __VA_ARGS__})
@@ -203,14 +210,8 @@ cogo_pc_t cogo_async_resume(cogo_async_t* cogo);
 #define COGO_RUN(COGO) cogo_async_run(&(COGO)->cogo)
 void cogo_async_run(cogo_async_t* cogo);
 
-#undef CO_BEGIN
-#undef CO_END
-#undef CO_YIELD
-#undef CO_RETURN
-#define CO_BEGIN  COGO_BEGIN(&cogo_this->base_await.base_yield.base_pt)
-#define CO_END    COGO_END(&cogo_this->base_await.base_yield.base_pt)
-#define CO_YIELD  COGO_YIELD(&cogo_this->base_await.base_yield.base_pt)
-#define CO_RETURN COGO_RETURN(&cogo_this->base_await.base_yield.base_pt)
+#undef COGO_PT
+#define COGO_PT(COGO_THIS) (&(COGO_THIS)->base_await.base_yield.base_pt)
 
 #ifdef __cplusplus
 }

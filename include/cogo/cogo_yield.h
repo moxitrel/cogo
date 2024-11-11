@@ -43,6 +43,7 @@ extern "C" {
 
 #ifndef COGO_T
 #define COGO_T cogo_yield_t
+typedef struct cogo_yield cogo_yield_t;
 #endif
 
 #define COGO_COMMA_static ,
@@ -102,18 +103,19 @@ struct cogo_yield {
 
 // Continue to run a suspended coroutine until yield or finished.
 #define COGO_RESUME(COGO) cogo_yield_resume(&(COGO)->cogo)
-cogo_pc_t cogo_yield_resume(cogo_yield_t* const cogo);
-
-#define COGO_STATUS(COGO) COGO_PC(&(COGO)->cogo.base_pt)
+cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo);
 
 #undef CO_BEGIN
 #undef CO_END
 #undef CO_YIELD
 #undef CO_RETURN
-#define CO_BEGIN  COGO_BEGIN(&cogo_this->base_pt)
-#define CO_END    COGO_END(&cogo_this->base_pt)
-#define CO_YIELD  COGO_YIELD(&cogo_this->base_pt)
-#define CO_RETURN COGO_RETURN(&cogo_this->base_pt)
+#define COGO_PT(COGO_THIS) (&(COGO_THIS)->base_pt)
+#define CO_BEGIN           COGO_BEGIN(COGO_PT(cogo_this))
+#define CO_END             COGO_END(COGO_PT(cogo_this))
+#define CO_YIELD           COGO_YIELD(COGO_PT(cogo_this))
+#define CO_RETURN          COGO_RETURN(COGO_PT(cogo_this))
+
+#define COGO_STATUS(COGO)  COGO_PC(COGO_PT(&(COGO)->cogo))
 
 #ifdef __cplusplus
 }
