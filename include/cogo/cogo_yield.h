@@ -109,13 +109,13 @@ cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo);
 #undef CO_END
 #undef CO_YIELD
 #undef CO_RETURN
-#define COGO_PT(COGO_THIS) (&(COGO_THIS)->base_pt)
-#define CO_BEGIN           COGO_BEGIN(COGO_PT(cogo_this))
-#define CO_END             COGO_END(COGO_PT(cogo_this))
-#define CO_YIELD           COGO_YIELD(COGO_PT(cogo_this))
-#define CO_RETURN          COGO_RETURN(COGO_PT(cogo_this))
+#define COGO_PT_V(COGO_THIS) (&(COGO_THIS)->base_pt)
+#define CO_BEGIN             COGO_BEGIN(COGO_PT_V(cogo_this))
+#define CO_END               COGO_END(COGO_PT_V(cogo_this))
+#define CO_YIELD             COGO_YIELD(COGO_PT_V(cogo_this))
+#define CO_RETURN            COGO_RETURN(COGO_PT_V(cogo_this))
 
-#define COGO_STATUS(COGO)  COGO_PC(COGO_PT(&(COGO)->cogo))
+#define COGO_STATUS(COGO)    COGO_PC(COGO_PT_V(&(COGO)->cogo))
 
 #ifdef __cplusplus
 }

@@ -8,7 +8,7 @@ static cogo_async_t* cogo_async_sched_step(cogo_async_sched_t* const sched) {
   TOP->base_await.base_yield.resume(TOP);
   if (!(/*blocked*/ !TOP || /*finished*/ (COGO_PC(&TOP->base_await.base_yield.base_pt) == COGO_PC_END && !(TOP = TOP->base_await.caller)))) {
     // yield, await, return, async, read, write
-    cogo_async_sched_push(sched, (cogo_async_t*)TOP);
+    cogo_async_sched_push(sched, TOP);
   }
   return TOP = cogo_async_sched_pop(sched);
 #undef TOP
@@ -34,7 +34,7 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
         case COGO_PC_BEGIN:  // await
           continue;
         default:  // yield, async
-          cogo_async_sched_push(sched, (cogo_async_t*)TOP);
+          cogo_async_sched_push(sched, TOP);
           TOP = cogo_async_sched_pop(sched);
           goto exit;
       }
@@ -51,41 +51,41 @@ exit:
 #undef TOP
 }
 
-int cogo_chan_read(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t* const msg_next) {
-  COGO_ASSERT(thiz && chan && chan->cap >= 0 && chan->size > PTRDIFF_MIN && msg_next);
+int cogo_chan_read(cogo_async_t* const cogo_this, co_chan_t* const chan, co_message_t* const msg_next) {
+  COGO_ASSERT(cogo_this && chan && chan->cap >= 0 && chan->size > PTRDIFF_MIN && msg_next);
   ptrdiff_t const chan_size = chan->size--;
   if (chan_size <= 0) {
     COGO_MQ_PUSH(&chan->mq, msg_next);
     // sleep in background
-    COGO_CQ_PUSH(&chan->cq, thiz);                        // append to blocking queue
-    thiz->base_await.sched->base_await_sched.top = NULL;  // remove from scheduler
-    return true;                                          // switch context
+    COGO_CQ_PUSH(&chan->cq, cogo_this);                        // append to blocking queue
+    cogo_this->base_await.sched->base_await_sched.top = NULL;  // remove from scheduler
+    return true;                                               // switch context
   } else {
     msg_next->next = COGO_MQ_POP_NONEMPTY(&chan->mq);
     if (chan_size <= chan->cap) {
       return false;
     } else {
       // wake up a writer
-      return cogo_async_sched_push((cogo_async_sched_t*)thiz->base_await.sched, COGO_CQ_POP_NONEMPTY(&chan->cq));
+      return cogo_async_sched_push(cogo_this->base_await.sched, COGO_CQ_POP_NONEMPTY(&chan->cq));
     }
   }
 }
 
-int cogo_chan_write(cogo_async_t* const thiz, co_chan_t* const chan, co_message_t* const msg) {
-  COGO_ASSERT(thiz && chan && chan->cap >= 0 && chan->size < PTRDIFF_MAX && msg);
+int cogo_chan_write(cogo_async_t* const cogo_this, co_chan_t* const chan, co_message_t* const msg) {
+  COGO_ASSERT(cogo_this && chan && chan->cap >= 0 && chan->size < PTRDIFF_MAX && msg);
   ptrdiff_t const chan_size = chan->size++;
   if (chan_size < 0) {
     COGO_MQ_POP_NONEMPTY(&chan->mq)->next = msg;
     // wake up a reader
-    return cogo_async_sched_push((cogo_async_sched_t*)thiz->base_await.sched, COGO_CQ_POP_NONEMPTY(&chan->cq));
+    return cogo_async_sched_push(cogo_this->base_await.sched, COGO_CQ_POP_NONEMPTY(&chan->cq));
   } else {
     COGO_MQ_PUSH(&chan->mq, msg);
     if (chan_size < chan->cap) {
       return false;
     } else {
       // sleep in background
-      COGO_CQ_PUSH(&chan->cq, thiz);
-      thiz->base_await.sched->base_await_sched.top = NULL;
+      COGO_CQ_PUSH(&chan->cq, cogo_this);
+      cogo_this->base_await.sched->base_await_sched.top = NULL;
       return true;
     }
   }
@@ -112,8 +112,8 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const co) {
             .top = TOP,
         },
         .q = {
-            .head = ((cogo_async_t*)TOP)->next,
-            .tail = ((cogo_async_t*)TOP)->next,
+            .head = TOP->next,
+            .tail = TOP->next,
         },
     };
     if (sched.q.tail) {
@@ -126,7 +126,7 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const co) {
     TOP = cogo_async_sched_resume(&sched);
     // save q
     if (TOP) {
-      ((cogo_async_t*)TOP)->next = sched.q.head;
+      TOP->next = sched.q.head;
     }
   }
   return TOP ? COGO_PC(&TOP->base_await.base_yield.base_pt) : COGO_PC_END;

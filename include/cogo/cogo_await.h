@@ -86,8 +86,8 @@ void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo);
 #define COGO_RESUME(COGO) cogo_await_resume(&(COGO)->cogo)
 cogo_pc_t cogo_await_resume(cogo_await_t* cogo);
 
-#undef COGO_PT
-#define COGO_PT(COGO_THIS) (&(COGO_THIS)->base_yield.base_pt)
+#undef COGO_PT_V
+#define COGO_PT_V(COGO_THIS) (&(COGO_THIS)->base_yield.base_pt)
 
 #ifdef __cplusplus
 }
