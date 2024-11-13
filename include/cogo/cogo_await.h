@@ -64,11 +64,15 @@ struct cogo_await_sched {
   COGO_T* top;
 };
 
+#undef COGO_YIELD_V
+#define COGO_AWAIT_V(AWAIT) (AWAIT)
+#define COGO_YIELD_V(AWAIT) (&COGO_AWAIT_V(AWAIT)->base_yield)
+
 /// Run another coroutine until finished.
-#define CO_AWAIT(COGO)                          \
-  do {                                          \
-    cogo_await_await(cogo_this, &(COGO)->cogo); \
-    CO_YIELD;                                   \
+#define CO_AWAIT(COGO)                                                      \
+  do {                                                                      \
+    cogo_await_await(COGO_AWAIT_V(cogo_this), COGO_AWAIT_V(&(COGO)->cogo)); \
+    CO_YIELD;                                                               \
   } while (0)
 void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo);
 
@@ -85,9 +89,6 @@ void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo);
 #undef COGO_RESUME
 #define COGO_RESUME(COGO) cogo_await_resume(&(COGO)->cogo)
 cogo_pc_t cogo_await_resume(cogo_await_t* cogo);
-
-#undef COGO_PT_V
-#define COGO_PT_V(COGO_THIS) (&(COGO_THIS)->base_yield.base_pt)
 
 #ifdef __cplusplus
 }

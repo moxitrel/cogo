@@ -210,8 +210,11 @@ cogo_pc_t cogo_async_resume(cogo_async_t* cogo);
 #define COGO_RUN(COGO) cogo_async_run(&(COGO)->cogo)
 void cogo_async_run(cogo_async_t* cogo);
 
-#undef COGO_PT_V
-#define COGO_PT_V(COGO_THIS) (&(COGO_THIS)->base_await.base_yield.base_pt)
+#undef COGO_AWAIT_V
+#undef COGO_YIELD_V
+#define COGO_ASYNC_V(ASYNC) (ASYNC)
+#define COGO_AWAIT_V(ASYNC) (&COGO_ASYNC_V(ASYNC)->base_await)
+#define COGO_YIELD_V(ASYNC) (&COGO_AWAIT_V(ASYNC)->base_yield)
 
 #ifdef __cplusplus
 }
