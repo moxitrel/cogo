@@ -14,7 +14,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = COGO_INIT(/*this*/ &n, /*FUNC*/ nat);  // "v" isn't explicitly initialized
+  nat_t n = COGO_MAKE(/*FUNC*/ nat, /*this*/ &n);  // "v" isn't explicitly initialized
 
   COGO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -56,9 +56,9 @@ CO_END:;
 
 static void test_chan(void) {
   co_chan_t c = CO_CHAN_MAKE(0);
-  consume_t r = COGO_INIT(/*this*/ &r, /*FUNC*/ consume, .chan = &c);
-  product_t w = COGO_INIT(/*this*/ &w, /*FUNC*/ product, .chan = &c);
-  entry_t m = COGO_INIT(/*this*/ &m, /*FUNC*/ entry, .w = &w, .r = &r);
+  consume_t r = COGO_MAKE(/*FUNC*/ consume, /*this*/ &r, .chan = &c);
+  product_t w = COGO_MAKE(/*FUNC*/ product, /*this*/ &w, .chan = &c);
+  entry_t m = COGO_MAKE(/*FUNC*/ entry, /*this*/ &m, .w = &w, .r = &r);
   COGO_RUN(&m);
   TEST_ASSERT_EQUAL_PTR(&w.msg, r.msg.next);
 }

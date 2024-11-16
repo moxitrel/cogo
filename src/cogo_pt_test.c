@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <unity.h>
 
-#if defined(COGO_NO_LABELS_AS_VALUES)
+#if defined(COGO_USE_COMPUTED_GOTO)
 #include <cogo/private/cogo_pt_case.h>
 #elif defined(__GNUC__)
 #include <cogo/private/cogo_pt_goto.h>
@@ -9,7 +9,7 @@
 #include <cogo/private/cogo_pt_case.h>
 #endif
 
-static void func_yield(cogo_pt_t* cogo, int* v) {
+static void func_yield(COGO_T* cogo, int* v) {
   COGO_BEGIN(cogo) :;
 
   (*v)++;
@@ -20,7 +20,7 @@ static void func_yield(cogo_pt_t* cogo, int* v) {
 }
 
 static void test_yield(void) {
-  cogo_pt_t cogo = {0};
+  COGO_T cogo = {0};
 
   int v = 0;
   TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&cogo));  // begin
@@ -42,18 +42,18 @@ static void test_yield(void) {
 }
 
 typedef struct func_return {
-  cogo_pt_t cogo;
   int v;
+  COGO_T cogo;
 } func_return_t;
 
-static void func_return(func_return_t* param) {
-  COGO_BEGIN(&param->cogo) :;
+static void func_return(func_return_t* params) {
+  COGO_BEGIN(&params->cogo) :;
 
-  (param->v)++;
-  COGO_RETURN(&param->cogo);
-  (param->v)++;
+  (params->v)++;
+  COGO_RETURN(&params->cogo);
+  (params->v)++;
 
-  COGO_END(&param->cogo) :;
+  COGO_END(&params->cogo) :;
 }
 
 static void test_return(void) {
@@ -77,7 +77,7 @@ typedef struct prologue {
   int exit;
 } prologue_t;
 
-static void func_prologue(cogo_pt_t* cogo_this, prologue_t* prologue) {
+static void func_prologue(COGO_T* cogo_this, prologue_t* prologue) {
   prologue->enter++;
 CO_BEGIN:
 
@@ -89,7 +89,7 @@ CO_END:
 }
 
 static void test_prologue(void) {
-  cogo_pt_t cogo = {0};
+  COGO_T cogo = {0};
   prologue_t prologue = {
       .enter = 0,
       .exit = 0,
@@ -106,6 +106,38 @@ static void test_prologue(void) {
   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
 
+typedef struct ng {
+  COGO_T cogo;
+  int v;
+} ng_t;
+
+static void ng_run(ng_t* thiz) {
+  assert(thiz);
+  COGO_T* cogo_this = &thiz->cogo;
+CO_BEGIN:
+
+  for (;; thiz->v++) {
+    CO_YIELD;
+  }
+
+CO_END:;
+}
+
+static void test_ng(void) {
+  ng_t ng = {
+      .v = 0,
+  };
+
+  ng_run(&ng);
+  TEST_ASSERT_EQUAL_INT(0, ng.v);
+
+  ng_run(&ng);
+  TEST_ASSERT_EQUAL_INT(1, ng.v);
+
+  ng_run(&ng);
+  TEST_ASSERT_EQUAL_INT(2, ng.v);
+}
+
 void setUp(void) {
 }
 
@@ -118,6 +150,7 @@ int main(void) {
   RUN_TEST(test_yield);
   RUN_TEST(test_return);
   RUN_TEST(test_prologue);
+  RUN_TEST(test_ng);
 
   return UNITY_END();
 }

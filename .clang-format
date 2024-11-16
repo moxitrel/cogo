@@ -6,4 +6,7 @@ Language: Cpp
 AlignConsecutiveMacros: AcrossEmptyLinesAndComments
 ColumnLimit: 0
 ReflowComments: false
+# Macros:
+# - COGO_BEGIN(PT)=PT
+# - COGO_END(PT)=PT
 ---

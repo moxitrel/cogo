@@ -1,9 +1,9 @@
 #include <cogo/cogo_yield.h>
 
-cogo_pc_t cogo_yield_resume(cogo_yield_t* const cogo) {
-  COGO_ASSERT(cogo && cogo->resume);
-  if (COGO_PC(&cogo->base_pt) != COGO_PC_END) {
-    cogo->resume(cogo);
+cogo_pc_t cogo_yield_resume(cogo_yield_t* const cogo_this) {
+  COGO_ASSERT(cogo_this && cogo_this->resume);
+  if (COGO_PC(cogo_this) != COGO_PC_END) {
+    cogo_this->resume(cogo_this);
   }
-  return COGO_PC(&cogo->base_pt);
+  return COGO_PC(cogo_this);
 }

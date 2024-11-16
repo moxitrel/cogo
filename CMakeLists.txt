@@ -10,10 +10,10 @@ include(GNUInstallDirs)
 include(cmake/cogoCPack.cmake)
 
 option(COGO_BUILD_TESTING "Build tests."
-  OFF
+  NO
 )
-option(COGO_NO_LABELS_AS_VALUES "Don't use GCC extension (computed goto) to implement CO_YIELD."
-  OFF
+option(COGO_USE_COMPUTED_GOTO "Don't use GCC extension (labels as values) to implement CO_YIELD."
+  YES
 )
 
 file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS
@@ -36,7 +36,7 @@ target_include_directories(cogo PUBLIC
 )
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
-  $<$<BOOL:${COGO_NO_LABELS_AS_VALUES}>:COGO_NO_LABELS_AS_VALUES>
+  $<$<BOOL:${COGO_USE_COMPUTED_GOTO}>:COGO_USE_COMPUTED_GOTO>
   COGO_MP=1 # multithreaded scheduler
 )
 install(TARGETS cogo EXPORT cogoTargets
@@ -74,8 +74,8 @@ if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TE
   include(CheckCCompilerFlag)
   include(cmake/unity.cmake)
 
-  message(STATUS "COGO_NO_LABELS_AS_VALUES : ${COGO_NO_LABELS_AS_VALUES}")
-  message(STATUS "CMAKE_C_COMPILER         : ${CMAKE_C_COMPILER}")
+  message(STATUS "COGO_USE_COMPUTED_GOTO : ${COGO_USE_COMPUTED_GOTO}")
+  message(STATUS "CMAKE_C_COMPILER       : ${CMAKE_C_COMPILER}")
 
   check_c_compiler_flag(-Wc++-compat _Wcpp_compat)
   check_c_compiler_flag(-Wpedantic _Wpedantic)
@@ -104,7 +104,7 @@ if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TE
 
   set(_compile_options
     $<$<BOOL:${_Wcpp_compat}>:-Wc++-compat>
-    $<$<AND:$<BOOL:${_Wpedantic}>,$<BOOL:${COGO_NO_LABELS_AS_VALUES}>>:-Wpedantic>
+    $<$<AND:$<BOOL:${_Wpedantic}>,$<BOOL:${COGO_USE_COMPUTED_GOTO}>>:-Wpedantic>
     $<$<BOOL:${_Wall}>:-Wall>
     $<$<BOOL:${_Wextra}>:-Wextra>
     $<$<BOOL:${_Wconversion}>:-Wconversion>

@@ -13,14 +13,15 @@ extern "C" {
 #endif
 
 typedef intptr_t cogo_pc_t;
-
-typedef struct cogo_pt {
-  cogo_pc_t private_pc;
-} cogo_pt_t;
-
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
-#define COGO_PC(PT)   ((PT)->private_pc)
+
+typedef struct cogo_pt {
+  cogo_pc_t pc;
+} cogo_pt_t;
+
+#define COGO_PT_V(PT) (PT)
+#define COGO_PC(PT)   (COGO_PT_V(PT)->pc)
 
 #define COGO_BEGIN(PT)                         \
   switch (COGO_PC(PT)) {                       \
@@ -79,6 +80,10 @@ typedef struct cogo_pt {
 
 #ifndef COGO_ON_END
 #define COGO_ON_END(PT)
+#endif
+
+#ifndef COGO_T
+#define COGO_T cogo_pt_t
 #endif
 
 #define CO_BEGIN  COGO_BEGIN(cogo_this)

@@ -1,45 +1,45 @@
 #include <cogo/cogo_await.h>
 
 // Should be invoked through CO_AWAIT()
-void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo) {
-  COGO_ASSERT(cogo_this && cogo_this->sched && cogo);
+void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1_base) {
+  COGO_ASSERT(cogo_this && cogo_this->sched && cogo1_base);
 #ifndef NDEBUG
   // No loop in the call chain.
   for (cogo_await_t const* node = cogo_this; node; node = node->caller) {
-    COGO_ASSERT(cogo != node);
+    COGO_ASSERT(cogo1_base != node);
   }
 #endif
-  cogo->caller = cogo_this;           // call stack push
-  cogo_this->sched->top = cogo->top;  // continue from resume point
+  cogo1_base->caller = cogo_this->sched->top;  // call stack push
+  cogo_this->sched->top = cogo1_base->top;     // continue from resume point
 }
 
 // run until yield
-cogo_pc_t cogo_await_resume(cogo_await_t* const cogo) {
+cogo_pc_t cogo_await_resume(cogo_await_t* const cogo_this) {
 #define TOP (sched.top)
-  COGO_ASSERT(cogo);
-  if (COGO_PC(&cogo->base_yield.base_pt) != COGO_PC_END) {
+  COGO_ASSERT(cogo_this);
+  if (COGO_PC(cogo_this) != COGO_PC_END) {
     cogo_await_sched_t sched = {
-        .top = cogo->top,  // Restore the resume point.
+        .top = cogo_this->top,  // Restore the resume point.
     };
     for (;;) {
       TOP->sched = &sched;
-      TOP->base_yield.resume(TOP);
-      switch (COGO_PC(&TOP->base_yield.base_pt)) {
+      COGO_YIELD_V(TOP)->resume(TOP);
+      switch (COGO_PC(TOP)) {
         case COGO_PC_END:  // return
           TOP = TOP->caller;
           if (!TOP) {  // end
-            goto exit;
+            goto resume_end;
           }
           continue;
         case COGO_PC_BEGIN:  // await
           continue;
         default:  // yield
-          goto exit;
+          goto resume_end;
       }
     }
-  exit:
-    cogo->top = TOP;  // Save the resume point.
+  resume_end:
+    cogo_this->top = TOP;  // Save the resume point.
   }
-  return COGO_PC(&cogo->base_yield.base_pt);
+  return COGO_PC(cogo_this);
 #undef TOP
 }

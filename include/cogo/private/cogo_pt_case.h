@@ -11,32 +11,32 @@
 /// Invalid pc handler. Invoked when pc isn't valid.
 /// You must redefine this macro (undef it first, then define it again) or define it before including the header if you want to customize.
 #ifndef COGO_ON_EPC
-#define COGO_ON_EPC(PT)  // noop
+#define COGO_ON_EPC(COGO)  // noop
 #endif
 
 /// Invoked when coroutine begin to run for the first time.
 #ifndef COGO_ON_BEGIN
-#define COGO_ON_BEGIN(PT)  // noop
+#define COGO_ON_BEGIN(COGO)  // noop
 #endif
 
 /// Invoked when COGO_YIELD is called.
 #ifndef COGO_ON_YIELD
-#define COGO_ON_YIELD(PT)  // noop
+#define COGO_ON_YIELD(COGO)  // noop
 #endif
 
 /// Invoked when coroutine resumed (continue to run).
 #ifndef COGO_ON_RESUME
-#define COGO_ON_RESUME(PT)  // noop
+#define COGO_ON_RESUME(COGO)  // noop
 #endif
 
 /// Invoked when COGO_RETURN is called.
 #ifndef COGO_ON_RETURN
-#define COGO_ON_RETURN(PT)  // noop
+#define COGO_ON_RETURN(COGO)  // noop
 #endif
 
 /// Invoked when coroutine end (finished).
 #ifndef COGO_ON_END
-#define COGO_ON_END(PT)  // noop
+#define COGO_ON_END(COGO)  // noop
 #endif
 
 #ifdef __cplusplus
@@ -45,30 +45,33 @@ extern "C" {
 
 /// The position where function has reached.
 typedef int cogo_pc_t;
-
-/// An opaque (all fields are private, and shouldn't be accessed by user directly) object type represents a coroutine.
-typedef struct cogo_pt {
-  // Source line (`__LINE__`) where function continues to run when reentered.
-  // It must be initialized to `0`.
-  // It must be set to `-1` if it has finished running.
-  cogo_pc_t private_pc;
-} cogo_pt_t;
-
 /// The coroutine is initialized, and ready to run.
 #define COGO_PC_BEGIN 0
 /// The coroutine has finished running.
 #define COGO_PC_END   (-1)
-/// Get pc as an rvalue to prevent it from being tampered with by assignment (e.g. `COGO_PC(PT) = 0`).
-#define COGO_PC(PT)   (+(PT)->private_pc)
+
+/// An opaque object type (all fields are protected, and shouldn't be accessed by user directly) represents a coroutine.
+typedef struct cogo_pt {
+  // Source line (`__LINE__`) where function continues to run when reentered.
+  // It must be initialized to `0`.
+  // It must be set to `-1` if it has finished running.
+  cogo_pc_t pc;
+} cogo_pt_t;
+
+// Get the cogo_pt_t object from the derived (i.e. COGO_T) object.
+#define COGO_PT_V(PT) (PT)
+
+/// Get pc as an rvalue to prevent it from being tampered with by assignment (e.g. `COGO_PC(COGO) = 0`).
+#define COGO_PC(COGO) (+COGO_PT_V(COGO)->pc)
 
 /// Coroutine begin label.
 /// - There must be a `COGO_END` after `COGO_BEGIN`.
 /// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
 /// - `COGO_ON_BEGIN` is called if it's defined and the coroutine runs the first time.
 ///
-/// @param PT The coroutine object pointer that has the type of `cogo_pt_t*`.
+/// @param COGO The coroutine object pointer that has the type of `cogo_pt_t*`.
 /// - It must not be `nullptr`.
-/// - The expression of `PT` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
+/// - The expression of `COGO` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
 ///
 /// @exception
 /// - `COGO_ON_EPC` is called if the resume point is invalid.
@@ -83,17 +86,17 @@ typedef struct cogo_pt {
 /// COGO_END(pt):;
 /// }
 /// @endcode
-#define COGO_BEGIN(PT)                                                                      \
-  switch (COGO_PC(PT)) {                                                                    \
-    default:                 /* invalid pc */                                               \
-      COGO_ON_EPC((&*(PT))); /* Convert `PT` to an rvalue to prevent tampering. */          \
-      goto cogo_end;                                                                        \
-      goto cogo_return; /* redundant statement: to eliminate the warning of unused label */ \
-      goto cogo_begin;  /* redundant statement: to eliminate the warning of unused label */ \
-    case COGO_PC_END:                                                                       \
-      goto cogo_end;                                                                        \
-    case COGO_PC_BEGIN:                                                                     \
-      COGO_ON_BEGIN((&*(PT)));                                                              \
+#define COGO_BEGIN(COGO)                                                                     \
+  switch (COGO_PC(COGO)) {                                                                   \
+    default:                   /* invalid pc */                                              \
+      COGO_ON_EPC((&*(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */       \
+      goto cogo_end;                                                                         \
+      goto cogo_return; /* Redundant statement: to eliminate the warning of unused label. */ \
+      goto cogo_begin;  /* Redundant statement: to eliminate the warning of unused label. */ \
+    case COGO_PC_END:                                                                        \
+      goto cogo_end;                                                                         \
+    case COGO_PC_BEGIN:                                                                      \
+      COGO_ON_BEGIN((&*(COGO)));                                                             \
       cogo_begin /* coroutine begin label */
 
 /// Jump to `COGO_END`, and the next run will start from here.
@@ -101,10 +104,10 @@ typedef struct cogo_pt {
 /// - `COGO_ON_YIELD` is called if it's defined.
 /// - `COGO_ON_RESUME` is called if it's defined and the coroutine is reentered.
 ///
-/// @param PT The coroutine object pointer that has the type of `cogo_pt_t*`.
+/// @param COGO The coroutine object pointer that has the type of `cogo_pt_t*`.
 /// - It must not be `nullptr`.
-/// - The expression of `PT` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
-/// - The object referenced by `PT` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
+/// - The expression of `COGO` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
+/// - The object referenced by `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
 ///
 /// @par Example
 /// @code
@@ -119,40 +122,44 @@ typedef struct cogo_pt {
 /// COGO_END(pt):;
 /// }
 /// @endcode
-#define COGO_YIELD(PT)                                                           \
-  do {                                                                           \
-    COGO_ON_YIELD((&*(PT)));                                                     \
-    (PT)->private_pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
-    goto cogo_end;               /* 2. return */                                 \
-    case __LINE__:               /* 3. resume point */                           \
-      COGO_ON_RESUME((&*(PT)));                                                  \
+#define COGO_YIELD(COGO)                                                            \
+  do {                                                                              \
+    COGO_ON_YIELD((&*(COGO)));                                                      \
+    COGO_PT_V(COGO)->pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
+    goto cogo_end;                  /* 2. return */                                 \
+    case __LINE__:                  /* 3. resume point */                           \
+      COGO_ON_RESUME((&*(COGO)));                                                   \
   } while (0)
 
 /// Jump to COGO_END, and end the coroutine.
 /// When a coroutine is ended, the coroutine body (between COGO_BEGIN and COGO_END) will be skipped if run again.
-/// @param PT The value of PT should point to an object which inherit from cogo_pt_t.
-/// And the object referenced by PT must be the same one as passed to COGO_BEGIN and COGO_END.
+/// @param COGO The value of COGO should point to an object which inherit from cogo_pt_t.
+/// And the object referenced by COGO must be the same one as passed to COGO_BEGIN and COGO_END.
 /// It must not be nullptr.
-/// The expression of PT must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_RETURN(PT)                   \
+/// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+#define COGO_RETURN(COGO)                 \
   do {                                    \
-    COGO_ON_RETURN((&*(PT)));             \
+    COGO_ON_RETURN((&*(COGO)));           \
     goto cogo_return; /* end coroutine */ \
   } while (0)
 
 /// Coroutine end label.
 /// There must be a corresponding @ref COGO_BEGIN before in the same function.
 /// And there should be only one COGO_BEGIN and COGO_END in a function.
-/// @param PT The value of PT should point to an object which inherit from cogo_pt_t.
-/// And the object referenced by PT must be the same one as passed to COGO_BEGIN.
+/// @param COGO The value of COGO should point to an object which inherit from cogo_pt_t.
+/// And the object referenced by COGO must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
-/// The expression of PT must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
-#define COGO_END(PT)              \
-  cogo_return:                    \
-  COGO_ON_END((&*(PT)));          \
-  (PT)->private_pc = COGO_PC_END; \
-  }                               \
+/// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+#define COGO_END(COGO)               \
+  cogo_return:                       \
+  COGO_ON_END((&*(COGO)));           \
+  COGO_PT_V(COGO)->pc = COGO_PC_END; \
+  }                                  \
   cogo_end
+
+#ifndef COGO_T
+#define COGO_T cogo_pt_t
+#endif
 
 #define CO_BEGIN  COGO_BEGIN(cogo_this)
 #define CO_END    COGO_END(cogo_this)

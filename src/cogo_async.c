@@ -6,7 +6,7 @@ static cogo_async_t* cogo_async_sched_step(cogo_async_sched_t* const sched) {
 #define TOP (sched->base_await_sched.top)
   TOP->base_await.sched = sched;
   TOP->base_await.base_yield.resume(TOP);
-  if (!(/*blocked*/ !TOP || /*finished*/ (COGO_PC(&TOP->base_await.base_yield.base_pt) == COGO_PC_END && !(TOP = TOP->base_await.caller)))) {
+  if (!(/*blocked*/ !TOP || /*finished*/ (COGO_PC(TOP) == COGO_PC_END && !(TOP = TOP->base_await.caller)))) {
     // yield, await, return, async, read, write
     cogo_async_sched_push(sched, TOP);
   }
@@ -24,7 +24,7 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
     if (!TOP) {  // blocked
       goto on_blocked;
     } else {
-      switch (COGO_PC(&TOP->base_await.base_yield.base_pt)) {
+      switch (COGO_PC(TOP)) {
         case COGO_PC_END:  // return
           TOP = TOP->base_await.caller;
           if (!TOP) {  // end
@@ -129,7 +129,7 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const co) {
       TOP->next = sched.q.head;
     }
   }
-  return TOP ? COGO_PC(&TOP->base_await.base_yield.base_pt) : COGO_PC_END;
+  return TOP ? COGO_PC(TOP) : COGO_PC_END;
 #undef TOP
 }
 
