@@ -45,7 +45,7 @@ CO_END:;
 // Usage.
 void example(void)
 {
-  nat_t ng = COGO_MAKE(&ng, nat, /*n*/ 0);
+  nat_t ng = COGO_INIT(&ng, nat, /*n*/ 0);
 
   COGO_RESUME(&ng);
   printf("ng.n: %d\n", ng.n);  // ng.n: 0

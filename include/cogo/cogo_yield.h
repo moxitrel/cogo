@@ -28,7 +28,7 @@ typedef struct cogo_yield cogo_yield_t;
 
 #include "private/macro_utils.h"
 
-#if defined(COGO_USE_COMPUTED_GOTO)
+#if defined(COGO_NO_COMPUTED_GOTO)
 #include "private/cogo_pt_case.h"
 #elif defined(__GNUC__)
 #include "private/cogo_pt_goto.h"
@@ -100,7 +100,7 @@ struct cogo_yield {
 
 #define COGO_STATUS(DERIVANT) COGO_PC(&(DERIVANT)->base_cogo)
 
-#define COGO_MAKE(NAME, THIZ, ...) \
+#define COGO_INIT(NAME, THIZ, ...) \
   ((NAME##_t){COGO_YIELD_INITIALIZER(NAME), __VA_ARGS__})
 
 // Continue to run a suspended coroutine until yield or finished.

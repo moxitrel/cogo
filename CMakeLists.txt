@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 3.23)
 project(cogo
-  VERSION 1.0.0
-  DESCRIPTION "Asymmetric stackless coroutine library for C."
-  HOMEPAGE_URL "https://github.com/moxitrel/cogo"
+  VERSION 2.0.0
   LANGUAGES C
 )
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 include(cmake/cogoCPack.cmake)
+include(CTest)
 
-option(COGO_BUILD_TESTING "Build tests."
+option(COGO_TEST "Build and run tests."
   NO
 )
-option(COGO_USE_COMPUTED_GOTO "Don't use GCC extension (labels as values) to implement CO_YIELD."
-  YES
+option(COGO_NO_COMPUTED_GOTO "Don't use GCC extension (labels as values) to implement the coroutine."
+  NO
 )
 
 file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS
@@ -36,7 +35,7 @@ target_include_directories(cogo PUBLIC
 )
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
-  $<$<BOOL:${COGO_USE_COMPUTED_GOTO}>:COGO_USE_COMPUTED_GOTO>
+  $<$<BOOL:${COGO_NO_COMPUTED_GOTO}>:COGO_NO_COMPUTED_GOTO>
   COGO_MP=1 # multithreaded scheduler
 )
 install(TARGETS cogo EXPORT cogoTargets
@@ -68,14 +67,12 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-include(CTest)
-
-if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TESTING))
+if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
   include(CheckCCompilerFlag)
   include(cmake/unity.cmake)
 
-  message(STATUS "COGO_USE_COMPUTED_GOTO : ${COGO_USE_COMPUTED_GOTO}")
-  message(STATUS "CMAKE_C_COMPILER       : ${CMAKE_C_COMPILER}")
+  message(STATUS "COGO_NO_COMPUTED_GOTO : ${COGO_NO_COMPUTED_GOTO}")
+  message(STATUS "CMAKE_C_COMPILER      : ${CMAKE_C_COMPILER}")
 
   check_c_compiler_flag(-Wc++-compat _Wcpp_compat)
   check_c_compiler_flag(-Wpedantic _Wpedantic)
@@ -104,7 +101,7 @@ if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TE
 
   set(_compile_options
     $<$<BOOL:${_Wcpp_compat}>:-Wc++-compat>
-    $<$<AND:$<BOOL:${_Wpedantic}>,$<BOOL:${COGO_USE_COMPUTED_GOTO}>>:-Wpedantic>
+    $<$<AND:$<BOOL:${_Wpedantic}>,$<BOOL:${COGO_NO_COMPUTED_GOTO}>>:-Wpedantic>
     $<$<BOOL:${_Wall}>:-Wall>
     $<$<BOOL:${_Wextra}>:-Wextra>
     $<$<BOOL:${_Wconversion}>:-Wconversion>
@@ -156,4 +153,14 @@ if(COGO_BUILD_TESTING OR((PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME) AND BUILD_TE
   # async
   add_executable(test_async src/cogo_async_test.c)
   add_test(NAME test_async COMMAND test_async)
+
+  add_custom_target(RunTests ALL VERBATIM
+    COMMAND ctest --output-on-failure --schedule-random -T MemCheck -j2
+  )
+  add_dependencies(RunTests
+    test_pt
+    test_yield
+    test_await
+    test_async
+  )
 endif()

@@ -79,8 +79,8 @@ typedef struct cogo_pt {
 /// Get pc as an rvalue to prevent it from being tampered with by assignment (e.g. `COGO_PC(COGO) = 0`).
 #define COGO_PC(COGO) (+COGO_PT_V(COGO)->pc)
 
-/// A label like macro marks the beginning of the coroutine.
-/// The execution will jump to the postion just after the last `COGO_YIELD(COGO)`.
+/// A label like macro marks the beginning of coroutine.
+/// The execution will jump to the last `COGO_YIELD(COGO)` and continue to run.
 /// - `COGO_ON_BEGIN(COGO)` is invoked if the coroutine runs the first time.
 /// - `COGO_ON_EPC(COGO)` is invoked if the resume point is invalid.
 ///

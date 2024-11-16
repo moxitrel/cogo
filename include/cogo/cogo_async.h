@@ -11,7 +11,7 @@ CO_ASYNC      (COGO)              : run a new coroutine concurrently.
 CO_CHAN_WRITE (CHAN, MSG)       : send a message to channel
 CO_CHAN_READ  (CHAN, MSG_NEXT)  : receive a message from channel, the result stored in co_message_t.next
 
-COGO_MAKE       (COGO, FUNC, ...)
+COGO_INIT       (COGO, FUNC, ...)
 co_message_t      : channel message type
 co_chan_t         : channel type
 CO_CHAN_MAKE  (N) : return a channel with capacity size_t
@@ -196,8 +196,8 @@ int cogo_chan_read(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg_n
 // Switch context if return non-zero.
 int cogo_chan_write(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg);
 
-#undef COGO_MAKE
-#define COGO_MAKE(NAME, THIZ, ...) \
+#undef COGO_INIT
+#define COGO_INIT(NAME, THIZ, ...) \
   ((NAME##_t){COGO_ASYNC_INITIALIZER(NAME, THIZ), __VA_ARGS__})
 
 #undef COGO_RESUME

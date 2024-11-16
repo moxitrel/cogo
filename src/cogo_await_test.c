@@ -23,8 +23,8 @@ CO_END:;
 }
 
 static void test_resume(void) {
-  await2_t a2 = COGO_MAKE(/*NAME*/ await2, /*this*/ &a2);
-  await1_t a1 = COGO_MAKE(/*NAME*/ await1, /*this*/ &a1, /*param*/ &a2);
+  await2_t a2 = COGO_INIT(/*NAME*/ await2, /*this*/ &a2);
+  await1_t a1 = COGO_INIT(/*NAME*/ await1, /*this*/ &a1, /*param*/ &a2);
 
   // begin
   TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_STATUS(&a1));
@@ -69,10 +69,10 @@ CO_END:;
 }
 
 static void test_await_resumed(void) {
-  await0_t a0 = COGO_MAKE(
+  await0_t a0 = COGO_INIT(
       /*NAME*/ await0,
       /*this*/ &a0,
-      /*param*/ COGO_MAKE(
+      /*param*/ COGO_INIT(
           /*NAME*/ await2,
           /*this*/ &a0.a2));
   while (COGO_RESUME(&a0) != COGO_PC_END) {
@@ -92,7 +92,7 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  nat_t n = COGO_MAKE(/*NAME*/ nat, /*this*/ &n);  // "v" is implicitly initialized to 0
+  nat_t n = COGO_INIT(/*NAME*/ nat, /*this*/ &n);  // "v" is implicitly initialized to 0
 
   COGO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -128,14 +128,14 @@ CO_BEGIN:
     thiz->fib_n1 = (fib2_t*)malloc(sizeof(*thiz->fib_n1));
     assert(thiz->fib_n1);
     // "v", "fib_n1" and "fib_n2" are implicitly initialized to 0.
-    *thiz->fib_n1 = COGO_MAKE(/*NAME*/ fib2, /*this*/ thiz->fib_n1, /*param*/ thiz->n - 1);
+    *thiz->fib_n1 = COGO_INIT(/*NAME*/ fib2, /*this*/ thiz->fib_n1, /*param*/ thiz->n - 1);
     CO_AWAIT(thiz->fib_n1);  // eval f(n-1)
     thiz->v += thiz->fib_n1->v;
     free(thiz->fib_n1);
 
     thiz->fib_n2 = (fib2_t*)malloc(sizeof(*thiz->fib_n2));
     assert(thiz->fib_n2);
-    *thiz->fib_n2 = COGO_MAKE(/*NAME*/ fib2, /*this*/ thiz->fib_n2, /*param*/ thiz->n - 2);
+    *thiz->fib_n2 = COGO_INIT(/*NAME*/ fib2, /*this*/ thiz->fib_n2, /*param*/ thiz->n - 2);
     CO_AWAIT(thiz->fib_n2);  // eval f(n-2)
     thiz->v += thiz->fib_n2->v;
     free(thiz->fib_n2);
@@ -145,9 +145,9 @@ CO_END:;
 }
 
 static void test_fib2(void) {
-  fib2_t f03 = COGO_MAKE(/*NAME*/ fib2, /*this*/ &f03, /*param*/ 3);
-  fib2_t f11 = COGO_MAKE(/*NAME*/ fib2, /*this*/ &f11, /*param*/ 11);
-  fib2_t f23 = COGO_MAKE(/*NAME*/ fib2, /*this*/ &f23, /*param*/ 23);
+  fib2_t f03 = COGO_INIT(/*NAME*/ fib2, /*this*/ &f03, /*param*/ 3);
+  fib2_t f11 = COGO_INIT(/*NAME*/ fib2, /*this*/ &f11, /*param*/ 11);
+  fib2_t f23 = COGO_INIT(/*NAME*/ fib2, /*this*/ &f23, /*param*/ 23);
 
   struct {
     fib2_t* fib;

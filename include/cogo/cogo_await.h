@@ -8,7 +8,7 @@ CO_YIELD
 CO_RETURN
 CO_AWAIT  (CO)  : run another coroutine until finished
 
-COGO_MAKE   (CO, NAME, ...)
+COGO_INIT   (CO, NAME, ...)
 cogo_status_t
 COGO_STATUS (CO)
 COGO_RESUME (CO)
@@ -41,11 +41,13 @@ typedef struct cogo_await_sched cogo_await_sched_t;
 #define COGO_ON_AWAITED(COGO)  // noop
 #endif
 
-#ifndef COGO_MALLOC(SIZE)
+#ifndef COGO_MALLOC
+#include <stdlib.h>
 #define COGO_MALLOC(SIZE) malloc(SIZE)
 #endif
 
-#ifndef COGO_FREE(PTR)
+#ifndef COGO_FREE
+#include <stdlib.h>
 #define COGO_FREE(PTR) free(PTR)
 #endif
 
@@ -100,16 +102,16 @@ struct cogo_await_sched {
   } while (0)
 void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo1_base);
 
-#undef COGO_MAKE
-#define COGO_MAKE(NAME, THIZ, ...) \
+#undef COGO_INIT
+#define COGO_INIT(NAME, THIZ, ...) \
   ((NAME##_t){COGO_AWAIT_INITIALIZER(NAME, THIZ), __VA_ARGS__})
 
-#define COGO_CALL(NAME, ...)                    \
-  _cogo = COGO_MALLOC(sizeof(NAME##_t));        \
-  *_cogo = COGO_MAKE(NAME, _cogo, __VA_ARGS__); \
-  CO_AWAIT(_cogo);                              \
-  *(NAME##_t*)_cogo;                            \
-  COGO_FREE(_cogo);                             \
+#define CO_CALL(NAME, ...)                       \
+  NAME##_t* _cogo = COGO_MALLOC(sizeof(*_cogo)); \
+  *_cogo = COGO_INIT(NAME, _cogo, __VA_ARGS__);  \
+  CO_AWAIT(_cogo);                               \
+  *(NAME##_t*)_cogo;                             \
+  COGO_FREE(_cogo);                              \
   _cogo = NULL;
 
 // Continue to run a suspended coroutine until yield or finished.

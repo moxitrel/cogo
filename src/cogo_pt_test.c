@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <unity.h>
 
-#if defined(COGO_USE_COMPUTED_GOTO)
+#if defined(COGO_NO_COMPUTED_GOTO)
 #include <cogo/private/cogo_pt_case.h>
 #elif defined(__GNUC__)
 #include <cogo/private/cogo_pt_goto.h>
