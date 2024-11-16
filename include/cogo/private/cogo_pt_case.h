@@ -4,6 +4,21 @@
 // that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
 /// @file
+///
+/// @par Example
+/// @code
+/// void natural_number_generator(cogo_pt_t* pt, int* v) {
+/// COGO_BEGIN(pt): // Coroutine begin.
+///
+///   for (*v = 0;; (*v)++) {
+///     COGO_YIELD(pt); // Return. The next run will start from here.
+///   }
+///
+/// COGO_END(pt): // Coroutine end.
+///   ;
+/// }
+/// @endcode
+///
 /// @warning Undefined behavior if CO_YIELD used in the **switch case** statement.
 #ifndef COGO_PT_CASE_H_
 #define COGO_PT_CASE_H_
@@ -64,28 +79,18 @@ typedef struct cogo_pt {
 /// Get pc as an rvalue to prevent it from being tampered with by assignment (e.g. `COGO_PC(COGO) = 0`).
 #define COGO_PC(COGO) (+COGO_PT_V(COGO)->pc)
 
-/// Coroutine begin label.
-/// - There must be a `COGO_END` after `COGO_BEGIN`.
+/// A label like macro marks the beginning of the coroutine.
+/// The execution will jump to the postion just after the last `COGO_YIELD(COGO)`.
+/// - `COGO_ON_BEGIN(COGO)` is invoked if the coroutine runs the first time.
+/// - `COGO_ON_EPC(COGO)` is invoked if the resume point is invalid.
+///
+/// @param COGO COGO_T*, the coroutine object.
+/// - It mustn't be `nullptr`.
+/// - Undefined behavior if the expression of `COGO` has side effects (e.g. e++, e -= v).
+///
+/// @pre
+/// - There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
 /// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
-/// - `COGO_ON_BEGIN` is called if it's defined and the coroutine runs the first time.
-///
-/// @param COGO The coroutine object pointer that has the type of `cogo_pt_t*`.
-/// - It must not be `nullptr`.
-/// - The expression of `COGO` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
-///
-/// @exception
-/// - `COGO_ON_EPC` is called if the resume point is invalid.
-///
-/// @par Example
-/// @code
-/// void func(cogo_pt_t* pt) {
-/// COGO_BEGIN(pt):
-///
-///   // User codes.
-///
-/// COGO_END(pt):;
-/// }
-/// @endcode
 #define COGO_BEGIN(COGO)                                                                     \
   switch (COGO_PC(COGO)) {                                                                   \
     default:                   /* invalid pc */                                              \
@@ -108,20 +113,6 @@ typedef struct cogo_pt {
 /// - It must not be `nullptr`.
 /// - The expression of `COGO` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
 /// - The object referenced by `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
-///
-/// @par Example
-/// @code
-/// void natural_number_generator(cogo_pt_t* pt, int* v) {
-/// COGO_BEGIN(pt):
-///
-///   for (int i = 0; ; i++) {
-///     *v = i;
-///     COGO_YIELD(pt); // Pause the execution and return. The next run will start from here.
-///   }
-///
-/// COGO_END(pt):;
-/// }
-/// @endcode
 #define COGO_YIELD(COGO)                                                            \
   do {                                                                              \
     COGO_ON_YIELD((&*(COGO)));                                                      \
@@ -143,7 +134,7 @@ typedef struct cogo_pt {
     goto cogo_return; /* end coroutine */ \
   } while (0)
 
-/// Coroutine end label.
+/// A label like macro marks the end of coroutine function.
 /// There must be a corresponding @ref COGO_BEGIN before in the same function.
 /// And there should be only one COGO_BEGIN and COGO_END in a function.
 /// @param COGO The value of COGO should point to an object which inherit from cogo_pt_t.
@@ -157,6 +148,7 @@ typedef struct cogo_pt {
   }                                  \
   cogo_end
 
+/// Alias to cogo_*_t base type.
 #ifndef COGO_T
 #define COGO_T cogo_pt_t
 #endif
