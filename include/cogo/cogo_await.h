@@ -41,6 +41,14 @@ typedef struct cogo_await_sched cogo_await_sched_t;
 #define COGO_ON_AWAITED(COGO)  // noop
 #endif
 
+#ifndef COGO_MALLOC(SIZE)
+#define COGO_MALLOC(SIZE) malloc(SIZE)
+#endif
+
+#ifndef COGO_FREE(PTR)
+#define COGO_FREE(PTR) free(PTR)
+#endif
+
 #include "cogo_yield.h"
 
 #ifdef __cplusplus
@@ -95,6 +103,14 @@ void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo1_base);
 #undef COGO_MAKE
 #define COGO_MAKE(NAME, THIZ, ...) \
   ((NAME##_t){COGO_AWAIT_INITIALIZER(NAME, THIZ), __VA_ARGS__})
+
+#define COGO_CALL(NAME, ...)                    \
+  _cogo = COGO_MALLOC(sizeof(NAME##_t));        \
+  *_cogo = COGO_MAKE(NAME, _cogo, __VA_ARGS__); \
+  CO_AWAIT(_cogo);                              \
+  *(NAME##_t*)_cogo;                            \
+  COGO_FREE(_cogo);                             \
+  _cogo = NULL;
 
 // Continue to run a suspended coroutine until yield or finished.
 #undef COGO_RESUME
