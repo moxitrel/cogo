@@ -1,7 +1,6 @@
 /*
 
 * API
-cogo_this   : void*, point to coroutine object.
 CO_BEGIN    : coroutine begin label.
 CO_END      : coroutine end label.
 CO_YIELD    : yield from coroutine.
@@ -48,7 +47,9 @@ extern "C" {
 
 typedef struct cogo_yield cogo_yield_t;
 struct cogo_yield {
+  /// @private The base type.
   cogo_pt_t base_pt;
+  /// @protected The coroutine function.
   void (*resume)(COGO_T* cogo_this);
 };
 

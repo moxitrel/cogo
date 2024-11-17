@@ -67,9 +67,9 @@ typedef int cogo_pc_t;
 
 /// An opaque object type (all fields are protected, and shouldn't be accessed by user directly) represents a coroutine.
 typedef struct cogo_pt {
-  // Source line (`__LINE__`) where function continues to run when reentered.
-  // It must be initialized to `0`.
-  // It must be set to `-1` if it has finished running.
+  /// @private The source line (`__LINE__`) where function continues to run when reentered.
+  /// It must be initialized to `0`.
+  /// It must be set to `-1` if it has finished running.
   cogo_pc_t pc;
 } cogo_pt_t;
 
@@ -148,11 +148,15 @@ typedef struct cogo_pt {
   }                                  \
   cogo_end
 
-/// Alias to cogo_*_t base type.
+/// An alias type defined to `cogo_pt_t`.
+/// The main purpose of this macro is to maintain the consistency with `cogo_yield.h`, `cogo_await.h` and `cogo_async.h`,
+/// all of which define `COGO_T`.
 #ifndef COGO_T
 #define COGO_T cogo_pt_t
 #endif
 
+/// @var COGO_T* cogo_this
+/// The implicit variable representing the current coroutine object, which is used by CO_* macros (e.g., CO_BEGIN, CO_YIELD, ...).
 #define CO_BEGIN  COGO_BEGIN(cogo_this)
 #define CO_END    COGO_END(cogo_this)
 #define CO_YIELD  COGO_YIELD(cogo_this)

@@ -9,6 +9,12 @@
 #include <cogo/private/cogo_pt_case.h>
 #endif
 
+void setUp(void) {
+}
+
+void tearDown(void) {
+}
+
 static void func_yield(COGO_T* cogo, int* v) {
   COGO_BEGIN(cogo) :;
 
@@ -111,12 +117,12 @@ typedef struct ng {
   int v;
 } ng_t;
 
-static void ng_run(ng_t* thiz) {
-  assert(thiz);
-  COGO_T* cogo_this = &thiz->cogo;
+static void ng_run(ng_t* ng) {
+  assert(ng);
+  COGO_T* cogo_this = &ng->cogo;
 CO_BEGIN:
 
-  for (;; thiz->v++) {
+  for (;; ng->v++) {
     CO_YIELD;
   }
 
@@ -136,12 +142,6 @@ static void test_ng(void) {
 
   ng_run(&ng);
   TEST_ASSERT_EQUAL_INT(2, ng.v);
-}
-
-void setUp(void) {
-}
-
-void tearDown(void) {
 }
 
 int main(void) {
