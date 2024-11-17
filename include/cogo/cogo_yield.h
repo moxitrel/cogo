@@ -66,7 +66,7 @@ struct cogo_yield {
 //  ...
 // };
 // void NAME_resume(NAME_t* const cogo_this)
-#define COGO_DECLARE(NAME, ...) COGO_DO_DECLARE1(ET_HAS_COMMA(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
+#define COGO_DECLARE(NAME, ...) COGO_DO_DECLARE1(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
 #define COGO_DO_DECLARE1(...)   COGO_DO_DECLARE2(__VA_ARGS__)
 #define COGO_DO_DECLARE2(N, NAME, ...)     \
   COGO_DO_DECLARE3_##N(NAME, __VA_ARGS__); \
@@ -74,21 +74,21 @@ struct cogo_yield {
 #define COGO_DO_DECLARE3_0(NAME, ...) COGO_STRUCT(NAME, __VA_ARGS__)               // NAME: name
 #define COGO_DO_DECLARE3_1(NAME, ...) COGO_STRUCT(COGO_BLANK_##NAME, __VA_ARGS__)  // NAME: static name
 
-#define COGO_STRUCT(NAME, ...)        COGO_DO_STRUCT1(ET_IS_EMPTY(__VA_ARGS__), NAME, __VA_ARGS__)
+#define COGO_STRUCT(NAME, ...)        COGO_DO_STRUCT1(ZY_IS_EMPTY(__VA_ARGS__), NAME, __VA_ARGS__)
 #define COGO_DO_STRUCT1(...)          COGO_DO_STRUCT2(__VA_ARGS__)
 #define COGO_DO_STRUCT2(N, ...)       COGO_DO_STRUCT3_##N(__VA_ARGS__)
-#define COGO_DO_STRUCT3_0(NAME, ...)     \
-  typedef struct NAME NAME##_t;          \
-  struct NAME {                          \
-    COGO_T base_cogo;                    \
-    ET_MAP(;, ET_IDENTITY, __VA_ARGS__); \
+#define COGO_DO_STRUCT3_0(NAME, ...)      \
+  typedef struct NAME NAME##_t;           \
+  struct NAME {                           \
+    COGO_T base_cogo;                     \
+    ZY_MAP1(;, ZY_IDENTITY, __VA_ARGS__); \
   }
 #define COGO_DO_STRUCT3_1(NAME, ...) \
   typedef struct NAME {              \
     COGO_T base_cogo;                \
   } NAME##_t
 
-#define COGO_DEFINE(NAME)       COGO_DO_DEFINE1(ET_HAS_COMMA(COGO_COMMA_##NAME), NAME)
+#define COGO_DEFINE(NAME)       COGO_DO_DEFINE1(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME)
 #define COGO_DO_DEFINE1(...)    COGO_DO_DEFINE2(__VA_ARGS__)
 #define COGO_DO_DEFINE2(N, ...) COGO_DO_DEFINE3_##N(__VA_ARGS__)
 #define COGO_DO_DEFINE3_0(NAME) void NAME##_resume(COGO_T* const cogo_this)                      // NAME: name

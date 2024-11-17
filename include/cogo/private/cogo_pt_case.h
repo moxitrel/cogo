@@ -84,7 +84,7 @@ typedef struct cogo_pt {
 /// - `COGO_ON_BEGIN(COGO)` is invoked if the coroutine runs the first time.
 /// - `COGO_ON_EPC(COGO)` is invoked if the resume point is invalid.
 ///
-/// @param COGO COGO_T*, the coroutine object.
+/// @param[in] COGO COGO_T*, the coroutine object.
 /// - It mustn't be `nullptr`.
 /// - Undefined behavior if the expression of `COGO` has side effects (e.g. e++, e -= v).
 ///
@@ -109,7 +109,7 @@ typedef struct cogo_pt {
 /// - `COGO_ON_YIELD` is called if it's defined.
 /// - `COGO_ON_RESUME` is called if it's defined and the coroutine is reentered.
 ///
-/// @param COGO The coroutine object pointer that has the type of `cogo_pt_t*`.
+/// @param[in] COGO The coroutine object pointer that has the type of `cogo_pt_t*`.
 /// - It must not be `nullptr`.
 /// - The expression of `COGO` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
 /// - The object referenced by `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
@@ -124,7 +124,7 @@ typedef struct cogo_pt {
 
 /// Jump to COGO_END, and end the coroutine.
 /// When a coroutine is ended, the coroutine body (between COGO_BEGIN and COGO_END) will be skipped if run again.
-/// @param COGO The value of COGO should point to an object which inherit from cogo_pt_t.
+/// @param[in] COGO The value of COGO should point to an object which inherit from cogo_pt_t.
 /// And the object referenced by COGO must be the same one as passed to COGO_BEGIN and COGO_END.
 /// It must not be nullptr.
 /// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
@@ -137,7 +137,7 @@ typedef struct cogo_pt {
 /// A label like macro marks the end of coroutine function.
 /// There must be a corresponding @ref COGO_BEGIN before in the same function.
 /// And there should be only one COGO_BEGIN and COGO_END in a function.
-/// @param COGO The value of COGO should point to an object which inherit from cogo_pt_t.
+/// @param[in] COGO The value of COGO should point to an object which inherit from cogo_pt_t.
 /// And the object referenced by COGO must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
 /// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
