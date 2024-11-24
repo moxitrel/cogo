@@ -31,12 +31,12 @@ cogo_async_sched_t         : scheduler type
 #define COGO_ASYNC_H_
 
 #ifndef COGO_T
-#define COGO_T cogo_async_t
+  #define COGO_T cogo_async_t
 typedef struct cogo_async cogo_async_t;
 #endif
 
 #ifndef COGO_SCHED_T
-#define COGO_SCHED_T cogo_async_sched_t
+  #define COGO_SCHED_T cogo_async_sched_t
 typedef struct cogo_async_sched cogo_async_sched_t;
 #endif
 
@@ -100,11 +100,11 @@ int cogo_async_sched_push(cogo_async_sched_t* sched, cogo_async_t* cogo);
 COGO_T* cogo_async_sched_pop(cogo_async_sched_t* sched);
 
 // CO_ASYNC(cogo_async_t*): start a new coroutine to run concurrently.
-#define CO_ASYNC(DERIVANT1)                                                                          \
-  do {                                                                                               \
-    if (cogo_async_sched_push(cogo_this->base_await.sched, COGO_ASYNC_V(&(DERIVANT1)->base_cogo))) { \
-      CO_YIELD;                                                                                      \
-    }                                                                                                \
+#define CO_ASYNC(DERIVANT1)                                                                     \
+  do {                                                                                          \
+    if (cogo_async_sched_push(cogo_this->base_await.sched, COGO_ASYNC_V(&(DERIVANT1)->cogo))) { \
+      CO_YIELD;                                                                                 \
+    }                                                                                           \
   } while (0)
 
 // channel message
@@ -198,13 +198,13 @@ int cogo_chan_write(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg)
 
 #undef COGO_INIT
 #define COGO_INIT(NAME, THIZ, ...) \
-  ((NAME##_t){COGO_ASYNC_INITIALIZER(NAME, THIZ), __VA_ARGS__})
+  ((NAME##_t){.cogo = COGO_ASYNC_INITIALIZER(NAME, THIZ), __VA_ARGS__})
 
 #undef COGO_RESUME
-#define COGO_RESUME(DERIVANT) cogo_async_resume(&(DERIVANT)->base_cogo)
+#define COGO_RESUME(DERIVANT) cogo_async_resume(&(DERIVANT)->cogo)
 cogo_pc_t cogo_async_resume(cogo_async_t* cogo_this);
 
-#define COGO_RUN(DERIVANT) cogo_async_run(&(DERIVANT)->base_cogo)
+#define COGO_RUN(DERIVANT) cogo_async_run(&(DERIVANT)->cogo)
 void cogo_async_run(cogo_async_t* cogo_this);
 
 #ifdef __cplusplus

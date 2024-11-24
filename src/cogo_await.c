@@ -1,6 +1,6 @@
 #include <cogo/cogo_await.h>
 
-// Should be invoked through CO_AWAIT()
+// Should be invoked through CO_AWAIT().
 void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1_base) {
   COGO_ASSERT(cogo_this && cogo_this->sched && cogo1_base);
 #ifndef NDEBUG
@@ -13,7 +13,7 @@ void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1_b
   cogo_this->sched->top = cogo1_base->top;     // continue from resume point
 }
 
-// run until yield
+// Run until CO_YIELD().
 cogo_pc_t cogo_await_resume(cogo_await_t* const cogo_this) {
 #define TOP (sched.top)
   COGO_ASSERT(cogo_this);

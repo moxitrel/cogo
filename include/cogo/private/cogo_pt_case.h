@@ -26,36 +26,44 @@
 /// Invalid pc handler. Invoked when pc isn't valid.
 /// You must redefine this macro (undef it first, then define it again) or define it before including the header if you want to customize.
 #ifndef COGO_ON_EPC
-#define COGO_ON_EPC(COGO)  // noop
+  #define COGO_ON_EPC(COGO)  // noop
 #endif
 
 /// Invoked when coroutine begin to run for the first time.
 #ifndef COGO_ON_BEGIN
-#define COGO_ON_BEGIN(COGO)  // noop
+  #define COGO_ON_BEGIN(COGO)  // noop
 #endif
 
 /// Invoked when COGO_YIELD is called.
 #ifndef COGO_ON_YIELD
-#define COGO_ON_YIELD(COGO)  // noop
+  #define COGO_ON_YIELD(COGO)  // noop
 #endif
 
 /// Invoked when coroutine resumed (continue to run).
 #ifndef COGO_ON_RESUME
-#define COGO_ON_RESUME(COGO)  // noop
+  #define COGO_ON_RESUME(COGO)  // noop
 #endif
 
 /// Invoked when COGO_RETURN is called.
 #ifndef COGO_ON_RETURN
-#define COGO_ON_RETURN(COGO)  // noop
+  #define COGO_ON_RETURN(COGO)  // noop
 #endif
 
 /// Invoked when coroutine end (finished).
 #ifndef COGO_ON_END
-#define COGO_ON_END(COGO)  // noop
+  #define COGO_ON_END(COGO)  // noop
 #endif
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifndef COGO_ASSERT
+  #ifdef assert
+    #define COGO_ASSERT(...) assert(__VA_ARGS__)
+  #else
+    #define COGO_ASSERT(...)  // noop
+  #endif
 #endif
 
 /// The position where function has reached.
@@ -92,8 +100,9 @@ typedef struct cogo_pt {
 /// - There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
 /// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
 #define COGO_BEGIN(COGO)                                                                     \
+  COGO_ASSERT((COGO) == (COGO)); /* Ensure the expression of `COGO` has no side effects. */  \
   switch (COGO_PC(COGO)) {                                                                   \
-    default:                   /* invalid pc */                                              \
+    default:                   /* Invalid pc */                                              \
       COGO_ON_EPC((&*(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */       \
       goto cogo_end;                                                                         \
       goto cogo_return; /* Redundant statement: to eliminate the warning of unused label. */ \
@@ -115,6 +124,7 @@ typedef struct cogo_pt {
 /// - The object referenced by `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
 #define COGO_YIELD(COGO)                                                            \
   do {                                                                              \
+    COGO_ASSERT((COGO) == (COGO));                                                  \
     COGO_ON_YIELD((&*(COGO)));                                                      \
     COGO_PT_V(COGO)->pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
     goto cogo_end;                  /* 2. return */                                 \
@@ -142,7 +152,8 @@ typedef struct cogo_pt {
 /// It must not be nullptr.
 /// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
 #define COGO_END(COGO)               \
-  cogo_return:                       \
+cogo_return:                         \
+  COGO_ASSERT((COGO) == (COGO));     \
   COGO_ON_END((&*(COGO)));           \
   COGO_PT_V(COGO)->pc = COGO_PC_END; \
   }                                  \
@@ -152,7 +163,7 @@ typedef struct cogo_pt {
 /// The main purpose of this macro is to maintain the consistency with `cogo_yield.h`, `cogo_await.h` and `cogo_async.h`,
 /// all of which define `COGO_T`.
 #ifndef COGO_T
-#define COGO_T cogo_pt_t
+  #define COGO_T cogo_pt_t
 #endif
 
 /// @var COGO_T* cogo_this

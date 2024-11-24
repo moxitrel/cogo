@@ -2,18 +2,12 @@
 #include <unity.h>
 
 #if defined(COGO_NO_COMPUTED_GOTO)
-#include <cogo/private/cogo_pt_case.h>
+  #include <cogo/private/cogo_pt_case.h>
 #elif defined(__GNUC__)
-#include <cogo/private/cogo_pt_goto.h>
+  #include <cogo/private/cogo_pt_goto.h>
 #else
-#include <cogo/private/cogo_pt_case.h>
+  #include <cogo/private/cogo_pt_case.h>
 #endif
-
-void setUp(void) {
-}
-
-void tearDown(void) {
-}
 
 static void func_yield(COGO_T* cogo, int* v) {
   COGO_BEGIN(cogo) :;
@@ -48,8 +42,8 @@ static void test_yield(void) {
 }
 
 typedef struct func_return {
-  int v;
   COGO_T cogo;
+  int v;
 } func_return_t;
 
 static void func_return(func_return_t* params) {
@@ -113,8 +107,8 @@ static void test_prologue(void) {
 }
 
 typedef struct ng {
-  COGO_T cogo;
   int v;
+  COGO_T cogo;
 } ng_t;
 
 static void ng_run(ng_t* ng) {
@@ -142,6 +136,12 @@ static void test_ng(void) {
 
   ng_run(&ng);
   TEST_ASSERT_EQUAL_INT(2, ng.v);
+}
+
+void setUp(void) {
+}
+
+void tearDown(void) {
 }
 
 int main(void) {

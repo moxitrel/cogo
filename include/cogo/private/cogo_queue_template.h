@@ -6,25 +6,25 @@ COGO_QUEUE_NEXT()   : return the next element
 #include <stddef.h>
 
 #ifndef COGO_QUEUE_TEMPLATE_H_
-#define COGO_QUEUE_TEMPLATE_H_
+  #define COGO_QUEUE_TEMPLATE_H_
 
-#define COGO_QUEUE_T(T)             COGO_QUEUE_T1(T)
-#define COGO_QUEUE_T1(T)            cogo_##T##_queue_t
+  #define COGO_QUEUE_T(T)             COGO_QUEUE_T1(T)
+  #define COGO_QUEUE_T1(T)            cogo_##T##_queue_t
 
-#define COGO_QUEUE_IS_EMPTY(T)      COGO_QUEUE_IS_EMPTY1(T)
-#define COGO_QUEUE_IS_EMPTY1(T)     cogo_##T##_queue_is_empty
+  #define COGO_QUEUE_IS_EMPTY(T)      COGO_QUEUE_IS_EMPTY1(T)
+  #define COGO_QUEUE_IS_EMPTY1(T)     cogo_##T##_queue_is_empty
 
-#define COGO_QUEUE_TOP(T)           COGO_QUEUE_TOP1(T)
-#define COGO_QUEUE_TOP1(T)          cogo_##T##_queue_top
+  #define COGO_QUEUE_TOP(T)           COGO_QUEUE_TOP1(T)
+  #define COGO_QUEUE_TOP1(T)          cogo_##T##_queue_top
 
-#define COGO_QUEUE_POP(T)           COGO_QUEUE_POP1(T)
-#define COGO_QUEUE_POP1(T)          cogo_##T##_queue_pop
+  #define COGO_QUEUE_POP(T)           COGO_QUEUE_POP1(T)
+  #define COGO_QUEUE_POP1(T)          cogo_##T##_queue_pop
 
-#define COGO_QUEUE_PUSH(T)          COGO_QUEUE_PUSH1(T)
-#define COGO_QUEUE_PUSH1(T)         cogo_##T##_queue_push
+  #define COGO_QUEUE_PUSH(T)          COGO_QUEUE_PUSH1(T)
+  #define COGO_QUEUE_PUSH1(T)         cogo_##T##_queue_push
 
-#define COGO_QUEUE_POP_NONEMPTY(T)  COGO_QUEUE_POP_NONEMPTY1(T)
-#define COGO_QUEUE_POP_NONEMPTY1(T) cogo_##T##_queue_pop_nonempty
+  #define COGO_QUEUE_POP_NONEMPTY(T)  COGO_QUEUE_POP_NONEMPTY1(T)
+  #define COGO_QUEUE_POP_NONEMPTY1(T) cogo_##T##_queue_pop_nonempty
 
 #endif  // COGO_QUEUE_TEMPLATE_H_
 

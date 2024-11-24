@@ -24,31 +24,21 @@ cogo_await_t    : coroutine type
 #define COGO_AWAIT_H_
 
 #ifndef COGO_T
-#define COGO_T cogo_await_t
+  #define COGO_T cogo_await_t
 typedef struct cogo_await cogo_await_t;
 #endif
 
 #ifndef COGO_SCHED_T
-#define COGO_SCHED_T cogo_await_sched_t
+  #define COGO_SCHED_T cogo_await_sched_t
 typedef struct cogo_await_sched cogo_await_sched_t;
 #endif
 
 #ifndef COGO_ON_AWAITING
-#define COGO_ON_AWAITING(COGO)  // noop
+  #define COGO_ON_AWAITING(COGO)  // noop
 #endif
 
 #ifndef COGO_ON_AWAITED
-#define COGO_ON_AWAITED(COGO)  // noop
-#endif
-
-#ifndef COGO_MALLOC
-#include <stdlib.h>
-#define COGO_MALLOC(SIZE) malloc(SIZE)
-#endif
-
-#ifndef COGO_FREE
-#include <stdlib.h>
-#define COGO_FREE(PTR) free(PTR)
+  #define COGO_ON_AWAITED(COGO)  // noop
 #endif
 
 #include "cogo_yield.h"
@@ -82,10 +72,10 @@ struct cogo_await_sched {
   COGO_T* top;
 };
 
-#define COGO_AWAIT_INITIALIZER(NAME, THIZ)      \
-  {                                             \
-    .base_yield = COGO_YIELD_INITIALIZER(NAME), \
-    .top = &(THIZ)->base_cogo,                  \
+#define COGO_AWAIT_INITIALIZER(NAME, THIZ)            \
+  {                                                   \
+    .base_yield = COGO_YIELD_INITIALIZER(NAME, THIZ), \
+    .top = &(THIZ)->cogo,                             \
   }
 
 #undef COGO_YIELD_V
@@ -93,30 +83,24 @@ struct cogo_await_sched {
 #define COGO_YIELD_V(COGO)  (&COGO_AWAIT_V(COGO)->base_yield)
 
 /// Run another coroutine until finished.
-#define CO_AWAIT(DERIVANT1)                                                           \
-  do {                                                                                \
-    COGO_ON_AWAITING(&*cogo_this);                                                    \
-    cogo_await_await(COGO_AWAIT_V(cogo_this), COGO_AWAIT_V(&(DERIVANT1)->base_cogo)); \
-    CO_YIELD;                                                                         \
-    COGO_ON_AWAITED(&*cogo_this);                                                     \
+#define CO_AWAIT(DERIVANT1)                                                      \
+  do {                                                                           \
+    COGO_ON_AWAITING(&*cogo_this);                                               \
+    cogo_await_await(COGO_AWAIT_V(cogo_this), COGO_AWAIT_V(&(DERIVANT1)->cogo)); \
+    CO_YIELD;                                                                    \
+    COGO_ON_AWAITED(&*cogo_this);                                                \
   } while (0)
 void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo1_base);
 
+#undef COGO_INITIALIZER
 #undef COGO_INIT
+#define COGO_INITIALIZER COGO_AWAIT_INITIALIZER
 #define COGO_INIT(NAME, THIZ, ...) \
-  ((NAME##_t){COGO_AWAIT_INITIALIZER(NAME, THIZ), __VA_ARGS__})
-
-#define CO_CALL(NAME, ...)                       \
-  NAME##_t* _cogo = COGO_MALLOC(sizeof(*_cogo)); \
-  *_cogo = COGO_INIT(NAME, _cogo, __VA_ARGS__);  \
-  CO_AWAIT(_cogo);                               \
-  *(NAME##_t*)_cogo;                             \
-  COGO_FREE(_cogo);                              \
-  _cogo = NULL;
+  ((NAME##_t){.cogo = COGO_AWAIT_INITIALIZER(NAME, THIZ), __VA_ARGS__})
 
 // Continue to run a suspended coroutine until yield or finished.
 #undef COGO_RESUME
-#define COGO_RESUME(DERIVANT) cogo_await_resume(&(DERIVANT)->base_cogo)
+#define COGO_RESUME(DERIVANT) cogo_await_resume(&(DERIVANT)->cogo)
 cogo_pc_t cogo_await_resume(cogo_await_t* cogo_this);
 
 #ifdef __cplusplus

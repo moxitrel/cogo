@@ -21,28 +21,22 @@ COGO_DEFINE (NAME)     {} : define a declared coroutine which is not defined.
 #define COGO_YIELD_H_
 
 #ifndef COGO_T
-#define COGO_T cogo_yield_t
+  #define COGO_T cogo_yield_t
 typedef struct cogo_yield cogo_yield_t;
 #endif
 
 #include "private/macro_utils.h"
 
 #if defined(COGO_NO_COMPUTED_GOTO)
-#include "private/cogo_pt_case.h"
+  #include "private/cogo_pt_case.h"
 #elif defined(__GNUC__)
-#include "private/cogo_pt_goto.h"
+  #include "private/cogo_pt_goto.h"
 #else
-#include "private/cogo_pt_case.h"
+  #include "private/cogo_pt_case.h"
 #endif
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifdef assert
-#define COGO_ASSERT(...) assert(__VA_ARGS__)
-#else
-#define COGO_ASSERT(...)  // noop
 #endif
 
 typedef struct cogo_yield cogo_yield_t;
@@ -53,7 +47,7 @@ struct cogo_yield {
   void (*resume)(COGO_T* cogo_this);
 };
 
-#define COGO_YIELD_INITIALIZER(NAME) \
+#define COGO_YIELD_INITIALIZER(NAME, ...) \
   { .resume = NAME##_resume }
 
 #undef COGO_PT_V
@@ -62,7 +56,7 @@ struct cogo_yield {
 
 // typedef struct NAME NAME_t;
 // struct NAME {
-//  COGO_T base_cogo;
+//  COGO_T cogo;
 //  ...
 // };
 // void NAME_resume(NAME_t* const cogo_this)
@@ -80,12 +74,12 @@ struct cogo_yield {
 #define COGO_DO_STRUCT3_0(NAME, ...)      \
   typedef struct NAME NAME##_t;           \
   struct NAME {                           \
-    COGO_T base_cogo;                     \
+    COGO_T cogo;                          \
     ZY_MAP1(;, ZY_IDENTITY, __VA_ARGS__); \
   }
 #define COGO_DO_STRUCT3_1(NAME, ...) \
   typedef struct NAME {              \
-    COGO_T base_cogo;                \
+    COGO_T cogo;                     \
   } NAME##_t
 
 #define COGO_DEFINE(NAME)       COGO_DO_DEFINE1(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME)
@@ -99,13 +93,14 @@ struct cogo_yield {
 #define COGO_BLANK_static
 #define COGO_BLANK_extern
 
-#define COGO_STATUS(DERIVANT) COGO_PC(&(DERIVANT)->base_cogo)
+#define COGO_STATUS(DERIVANT) COGO_PC(&(DERIVANT)->cogo)
 
+#define COGO_INITIALIZER      COGO_YIELD_INITIALIZER
 #define COGO_INIT(NAME, THIZ, ...) \
-  ((NAME##_t){COGO_YIELD_INITIALIZER(NAME), __VA_ARGS__})
+  ((NAME##_t){.cogo = COGO_YIELD_INITIALIZER(NAME), __VA_ARGS__})
 
 // Continue to run a suspended coroutine until yield or finished.
-#define COGO_RESUME(DERIVANT) cogo_yield_resume(&(DERIVANT)->base_cogo)
+#define COGO_RESUME(DERIVANT) cogo_yield_resume(&(DERIVANT)->cogo)
 cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo_this);
 
 #ifdef __cplusplus
