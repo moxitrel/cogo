@@ -2,8 +2,8 @@
 #include <cogo/cogo_async.h>
 #include <unity.h>
 
-COGO_DECLARE(/*FUNC*/ nat, /*return*/ int v) {
-  nat_t* const thiz = (nat_t*)cogo_this;
+COGO_DECLARE(/*FUNC*/ ng, /*return*/ int v) {
+  ng_t* const thiz = (ng_t*)cogo_this;
 CO_BEGIN:
 
   for (thiz->v = 0;; thiz->v++) {
@@ -13,18 +13,18 @@ CO_BEGIN:
 CO_END:;
 }
 
-static void test_nat(void) {
-  nat_t n = {
-      .cogo = COGO_INIT(nat, &n),
+static void test_ng(void) {
+  ng_t ng = {
+      .cogo = COGO_INIT(ng, &ng),
   };
-  COGO_RESUME(&n);
-  TEST_ASSERT_EQUAL_INT(0, n.v);
+  COGO_RESUME(&ng);
+  TEST_ASSERT_EQUAL_INT(0, ng.v);
 
-  COGO_RESUME(&n);
-  TEST_ASSERT_EQUAL_INT(1, n.v);
+  COGO_RESUME(&ng);
+  TEST_ASSERT_EQUAL_INT(1, ng.v);
 
-  COGO_RESUME(&n);
-  TEST_ASSERT_EQUAL_INT(2, n.v);
+  COGO_RESUME(&ng);
+  TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 
 COGO_DECLARE(consume, co_chan_t* chan, co_message_t msg) {
@@ -83,7 +83,7 @@ void tearDown(void) {
 int main(void) {
   UNITY_BEGIN();
 
-  RUN_TEST(test_nat);
+  RUN_TEST(test_ng);
   RUN_TEST(test_chan);
 
   return UNITY_END();

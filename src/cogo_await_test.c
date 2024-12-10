@@ -95,7 +95,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-static void test_nat(void) {
+static void test_ng(void) {
   ng_t ng = {
       .cogo = COGO_INIT(ng, &ng),
   };
@@ -197,7 +197,7 @@ int main(void) {
 
   RUN_TEST(test_resume);
   RUN_TEST(test_await_resumed);
-  RUN_TEST(test_nat);
+  RUN_TEST(test_ng);
   RUN_TEST(test_fib);
 
   return UNITY_END();
