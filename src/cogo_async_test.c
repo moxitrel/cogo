@@ -15,7 +15,7 @@ CO_END:;
 
 static void test_nat(void) {
   nat_t n = {
-      .cogo = COGO_INITIALIZER(nat, &n),
+      .cogo = COGO_INIT(nat, &n),
   };
   COGO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -58,15 +58,15 @@ CO_END:;
 static void test_chan(void) {
   co_chan_t c = CO_CHAN_MAKE(0);
   consume_t r = {
-      .cogo = COGO_INITIALIZER(consume, &r),
+      .cogo = COGO_INIT(consume, &r),
       .chan = &c,
   };
   product_t w = {
-      .cogo = COGO_INITIALIZER(product, &w),
+      .cogo = COGO_INIT(product, &w),
       .chan = &c,
   };
   entry_t m = {
-      .cogo = COGO_INITIALIZER(entry, &m),
+      .cogo = COGO_INIT(entry, &m),
       .w = &w,
       .r = &r,
   };

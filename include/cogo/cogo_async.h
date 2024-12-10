@@ -85,12 +85,12 @@ struct cogo_async_sched {
   //  struct cogo_async_sched* run; // running schedulers (idles not in list)
 };
 
-#define COGO_ASYNC_INITIALIZER(NAME, THIZ) \
-  ((cogo_async_t){ .base_await = COGO_AWAIT_INITIALIZER(NAME, THIZ) })
+#define COGO_ASYNC_INIT(NAME, THIZ) \
+  ((cogo_async_t){.base_await = COGO_AWAIT_INIT(NAME, THIZ)})
 
 #undef COGO_AWAIT_V
 #define COGO_ASYNC_V(ASYNC) (ASYNC)
-#define COGO_AWAIT_V(ASYNC)  (&COGO_ASYNC_V(ASYNC)->base_await)
+#define COGO_AWAIT_V(ASYNC) (&COGO_ASYNC_V(ASYNC)->base_await)
 
 // Add coroutine to the concurrent queue.
 // Switch context if return non-zero.
@@ -196,8 +196,8 @@ int cogo_chan_read(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg_n
 // Switch context if return non-zero.
 int cogo_chan_write(cogo_async_t* cogo_this, co_chan_t* chan, co_message_t* msg);
 
-#undef COGO_INITIALIZER
-#define COGO_INITIALIZER COGO_ASYNC_INITIALIZER
+#undef COGO_INIT
+#define COGO_INIT COGO_ASYNC_INIT
 
 #undef COGO_RESUME
 #define COGO_RESUME(DERIVANT) cogo_async_resume(&(DERIVANT)->cogo)

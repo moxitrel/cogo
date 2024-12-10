@@ -72,15 +72,15 @@ struct cogo_await_sched {
   COGO_T* top;
 };
 
-#define COGO_AWAIT_INITIALIZER(NAME, THIZ)            \
-  ((cogo_await_t){                                                   \
-    .base_yield = COGO_YIELD_INITIALIZER(NAME, THIZ), \
-    .top = &(THIZ)->cogo,                             \
+#define COGO_AWAIT_INIT(NAME, THIZ)              \
+  ((cogo_await_t){                               \
+      .base_yield = COGO_YIELD_INIT(NAME, THIZ), \
+      .top = &(THIZ)->cogo,                      \
   })
 
 #undef COGO_YIELD_V
 #define COGO_AWAIT_V(COGO) (COGO)
-#define COGO_YIELD_V(COGO)  (&COGO_AWAIT_V(COGO)->base_yield)
+#define COGO_YIELD_V(COGO) (&COGO_AWAIT_V(COGO)->base_yield)
 
 /// Run another coroutine until finished.
 #define CO_AWAIT(DERIVANT1)                                                      \
@@ -92,8 +92,8 @@ struct cogo_await_sched {
   } while (0)
 void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo1_base);
 
-#undef COGO_INITIALIZER
-#define COGO_INITIALIZER COGO_AWAIT_INITIALIZER
+#undef COGO_INIT
+#define COGO_INIT COGO_AWAIT_INIT
 
 // Continue to run a suspended coroutine until yield or finished.
 #undef COGO_RESUME

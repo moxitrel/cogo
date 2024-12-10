@@ -13,7 +13,7 @@ option(COGO_TEST "Build and run tests."
   NO
 )
 option(COGO_USE_COMPUTED_GOTO "Don't use GCC extension (labels as values) to implement the coroutine."
-  NO
+  OFF
 )
 
 file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS
@@ -102,7 +102,7 @@ if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
 
   set(_compile_options
     $<$<BOOL:${_Wcpp_compat}>:-Wc++-compat>
-    $<$<AND:$<BOOL:${_Wpedantic}>,$<BOOL:${COGO_USE_COMPUTED_GOTO}>>:-Wpedantic>
+    $<$<AND:$<BOOL:${_Wpedantic}>,$<NOT:$<BOOL:${COGO_USE_COMPUTED_GOTO}>>>:-Wpedantic>
     $<$<BOOL:${_Wall}>:-Wall>
     $<$<BOOL:${_Wextra}>:-Wextra>
     $<$<BOOL:${_Wconversion}>:-Wconversion>
@@ -121,7 +121,7 @@ if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
     ${_compile_options}
   )
 
-  set(_compile_options
+  add_compile_options(
     ${_compile_options}
 
     $<$<BOOL:${_Wno_gnu_zero_variadic_macro_arguments}>:-Wno-gnu-zero-variadic-macro-arguments>
@@ -132,9 +132,6 @@ if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
     $<$<BOOL:${_Wno_unreachable_code}>:-Wno-unreachable-code>
     $<$<BOOL:${_Wno_unsafe_buffer_usage}>:-Wno-unsafe-buffer-usage>
     $<$<BOOL:${_Wno_gnu_empty_initializer}>:-Wno-gnu-empty-initializer>
-  )
-  add_compile_options(
-    ${_compile_options}
   )
 
   link_libraries(cogo unity)

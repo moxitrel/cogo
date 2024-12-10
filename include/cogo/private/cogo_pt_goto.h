@@ -8,7 +8,7 @@
 #define COGO_PT_GOTO_H_
 
 #ifndef __GNUC__
-#error "Computed goto isn't supported."
+  #error "Computed goto isn't supported."
 #endif
 
 #include <stdint.h>
@@ -71,7 +71,7 @@ cogo_return:                 \
   COGO_PC(PT) = COGO_PC_END; \
   cogo_end
 
-#define COGO_LABEL       COGO_DO1_LABEL(__LINE__)
+#define COGO_LABEL          COGO_DO1_LABEL(__LINE__)
 #define COGO_DO1_LABEL(...) COGO_DO2_LABEL(__VA_ARGS__)
 #define COGO_DO2_LABEL(N)   cogo_yield_##N
 

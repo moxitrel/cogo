@@ -45,11 +45,11 @@ struct cogo_yield {
   void (*resume)(COGO_T* cogo_this);
 };
 
-#define COGO_YIELD_INITIALIZER(NAME, THIZ) \
-  ((cogo_yield_t){ .resume = NAME##_resume, })
+#define COGO_YIELD_INIT(NAME, THIZ) \
+  ((cogo_yield_t){.resume = NAME##_resume})
 
 #undef COGO_PT_V
-#define COGO_YIELD_V(COGO)     (COGO)
+#define COGO_YIELD_V(COGO)      (COGO)
 #define COGO_PT_V(COGO)         (&COGO_YIELD_V(COGO)->base_pt)
 
 // typedef struct NAME NAME_t;
@@ -68,16 +68,18 @@ struct cogo_yield {
 
 #define COGO_STRUCT(NAME, ...)        COGO_DO1_STRUCT(ZY_IS_EMPTY(__VA_ARGS__), NAME, __VA_ARGS__)
 #define COGO_DO1_STRUCT(...)          COGO_DO2_STRUCT(__VA_ARGS__)
-#define COGO_DO2_STRUCT(N, ...)       typedef struct NAME NAME##_t; COGO_DO3_STRUCT_##N(__VA_ARGS__)
+#define COGO_DO2_STRUCT(N, NAME, ...) \
+  typedef struct NAME NAME##_t;       \
+  COGO_DO3_STRUCT_##N(NAME, __VA_ARGS__)
 #define COGO_DO3_STRUCT_0(NAME, ...)      \
   struct NAME {                           \
     COGO_T cogo;                          \
     ZY_MAP1(;, ZY_IDENTITY, __VA_ARGS__); \
   }
 #define COGO_DO3_STRUCT_1(NAME, ...) \
-  struct NAME {                       \
+  struct NAME {                      \
     COGO_T cogo;                     \
-  };
+  }
 
 #define COGO_DEFINE(NAME)       COGO_DO1_DEFINE(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME)
 #define COGO_DO1_DEFINE(...)    COGO_DO2_DEFINE(__VA_ARGS__)
@@ -92,8 +94,8 @@ struct cogo_yield {
 
 #define COGO_STATUS(DERIVANT) COGO_PC(&(DERIVANT)->cogo)
 
-// #define COGO_INIT(NAME, THIZ, ...) ((NAME##_t){COGO_YIELD_INITIALIZER(NAME, THIZ), __VA_ARGS__})
-#define COGO_INITIALIZER      COGO_YIELD_INITIALIZER
+// #define COGO_INIT(NAME, THIZ, ...) ((NAME##_t){COGO_YIELD_INIT(NAME, THIZ), __VA_ARGS__})
+#define COGO_INIT             COGO_YIELD_INIT
 
 // Continue to run a suspended coroutine until yield or finished.
 #define COGO_RESUME(DERIVANT) cogo_yield_resume(&(DERIVANT)->cogo)

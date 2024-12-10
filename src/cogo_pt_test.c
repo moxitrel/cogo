@@ -2,9 +2,9 @@
 #include <unity.h>
 
 #ifdef COGO_USE_COMPUTED_GOTO
-  #include "private/cogo_pt_goto.h"
+  #include "cogo/private/cogo_pt_goto.h"
 #else
-  #include "private/cogo_pt_case.h"
+  #include "cogo/private/cogo_pt_case.h"
 #endif
 
 static void func_yield(COGO_T* cogo, int* v) {

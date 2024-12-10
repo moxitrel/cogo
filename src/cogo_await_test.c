@@ -23,12 +23,12 @@ CO_END:;
 
 static void test_resume(void) {
   await2_t a2 = {
-    .cogo = COGO_INITIALIZER(await2, &a2),
-  }
+      .cogo = COGO_INIT(await2, &a2),
+  };
   await1_t a1 = {
-    .cogo = COGO_INITIALIZER(await1, &a1),
-    .a2 = &a2,
-  }
+      .cogo = COGO_INIT(await1, &a1),
+      .a2 = &a2,
+  };
 
   // begin
   TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_STATUS(&a1));
@@ -74,11 +74,11 @@ CO_END:;
 
 static void test_await_resumed(void) {
   await0_t a0 = {
-    .cogo = COGO_INITIALIZER(await0, &a0),
-    .a2 = {
-      .cogo = COGO_INITIALIZER(await2, &a0.a2),
-    },
-  }
+      .cogo = COGO_INIT(await0, &a0),
+      .a2 = {
+          .cogo = COGO_INIT(await2, &a0.a2),
+      },
+  };
   while (COGO_RESUME(&a0) != COGO_PC_END) {
   }
   TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_STATUS(&a0));
@@ -97,17 +97,17 @@ CO_END:;
 
 static void test_nat(void) {
   ng_t ng = {
-      .cogo = COGO_INITIALIZER(ng, &ng),
+      .cogo = COGO_INIT(ng, &ng),
   };
 
-  COGO_RESUME(&n);
-  TEST_ASSERT_EQUAL_INT(0, n.v);
+  COGO_RESUME(&ng);
+  TEST_ASSERT_EQUAL_INT(0, ng.v);
 
-  COGO_RESUME(&n);
-  TEST_ASSERT_EQUAL_INT(1, n.v);
+  COGO_RESUME(&ng);
+  TEST_ASSERT_EQUAL_INT(1, ng.v);
 
-  COGO_RESUME(&n);
-  TEST_ASSERT_EQUAL_INT(2, n.v);
+  COGO_RESUME(&ng);
+  TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 
 static int fib(int n) {
@@ -133,14 +133,20 @@ CO_BEGIN:
 
     thiz->fib1 = (fib_t*)malloc(sizeof(*thiz->fib1));
     assert(thiz->fib1);
-    *thiz->fib1 = COGO_INIT(fib, thiz->fib1, thiz->n - 1); // `v`, `fib1` and `fib2` are implicitly initialized to 0.
+    *thiz->fib1 = (fib_t){
+        .cogo = COGO_INIT(fib, thiz->fib1),
+        .n = thiz->n - 1,
+    };
     CO_AWAIT(thiz->fib1);  // eval f(n-1)
     thiz->v += thiz->fib1->v;
     free(thiz->fib1);
 
     thiz->fib2 = (fib_t*)malloc(sizeof(*thiz->fib2));
     assert(thiz->fib2);
-    *thiz->fib2 = COGO_INIT(fib, thiz->fib2, thiz->n - 2);
+    *thiz->fib2 = (fib_t){
+        .cogo = COGO_INIT(fib, thiz->fib2),
+        .n = thiz->n - 2,
+    };
     CO_AWAIT(thiz->fib2);  // eval f(n-2)
     thiz->v += thiz->fib2->v;
     free(thiz->fib2);
@@ -151,15 +157,15 @@ CO_END:;
 
 static void test_fib(void) {
   fib_t f03 = {
-      .cogo = COGO_INITIALIZER(fib, &f03),
+      .cogo = COGO_INIT(fib, &f03),
       .n = 3,
   };
   fib_t f11 = {
-      .cogo = COGO_INITIALIZER(fib, &f11),
+      .cogo = COGO_INIT(fib, &f11),
       .n = 11,
   };
   fib_t f23 = {
-      .cogo = COGO_INITIALIZER(fib, &f23),
+      .cogo = COGO_INIT(fib, &f23),
       .n = 23,
   };
 
