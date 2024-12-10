@@ -23,6 +23,14 @@ cogo_await_t    : coroutine type
 #ifndef COGO_AWAIT_H_
 #define COGO_AWAIT_H_
 
+#ifndef COGO_ON_AWAITING
+  #define COGO_ON_AWAITING(COGO)  // noop
+#endif
+
+#ifndef COGO_ON_AWAITED
+  #define COGO_ON_AWAITED(COGO)  // noop
+#endif
+
 #ifndef COGO_T
   #define COGO_T cogo_await_t
 typedef struct cogo_await cogo_await_t;
@@ -31,14 +39,6 @@ typedef struct cogo_await cogo_await_t;
 #ifndef COGO_SCHED_T
   #define COGO_SCHED_T cogo_await_sched_t
 typedef struct cogo_await_sched cogo_await_sched_t;
-#endif
-
-#ifndef COGO_ON_AWAITING
-  #define COGO_ON_AWAITING(COGO)  // noop
-#endif
-
-#ifndef COGO_ON_AWAITED
-  #define COGO_ON_AWAITED(COGO)  // noop
 #endif
 
 #include "cogo_yield.h"
@@ -73,13 +73,13 @@ struct cogo_await_sched {
 };
 
 #define COGO_AWAIT_INITIALIZER(NAME, THIZ)            \
-  {                                                   \
+  ((cogo_await_t){                                                   \
     .base_yield = COGO_YIELD_INITIALIZER(NAME, THIZ), \
     .top = &(THIZ)->cogo,                             \
-  }
+  })
 
 #undef COGO_YIELD_V
-#define COGO_AWAIT_V(AWAIT) (AWAIT)
+#define COGO_AWAIT_V(COGO) (COGO)
 #define COGO_YIELD_V(COGO)  (&COGO_AWAIT_V(COGO)->base_yield)
 
 /// Run another coroutine until finished.
@@ -93,10 +93,7 @@ struct cogo_await_sched {
 void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo1_base);
 
 #undef COGO_INITIALIZER
-#undef COGO_INIT
 #define COGO_INITIALIZER COGO_AWAIT_INITIALIZER
-#define COGO_INIT(NAME, THIZ, ...) \
-  ((NAME##_t){.cogo = COGO_AWAIT_INITIALIZER(NAME, THIZ), __VA_ARGS__})
 
 // Continue to run a suspended coroutine until yield or finished.
 #undef COGO_RESUME

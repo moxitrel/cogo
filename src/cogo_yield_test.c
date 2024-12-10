@@ -14,11 +14,10 @@ CO_END:;
 }
 
 static void test_ng(void) {
-  // ng_t ng = {
-  //     .cogo = COGO_INITIALIZER(ng, &ng),
-  //     .v = 0,
-  // };
-  ng_t ng = COGO_INIT(/*NAME*/ ng, /*THIZ*/ &ng, /*args*/ 0);
+  ng_t ng = {
+      .cogo = COGO_INITIALIZER(ng, &ng),
+      .v = 0,
+  };
 
   COGO_RESUME(&ng);
   TEST_ASSERT_EQUAL_INT(0, ng.v);

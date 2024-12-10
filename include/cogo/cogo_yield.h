@@ -27,9 +27,7 @@ typedef struct cogo_yield cogo_yield_t;
 
 #include "private/macro_utils.h"
 
-#if defined(COGO_NO_COMPUTED_GOTO)
-  #include "private/cogo_pt_case.h"
-#elif defined(__GNUC__)
+#ifdef COGO_USE_COMPUTED_GOTO
   #include "private/cogo_pt_goto.h"
 #else
   #include "private/cogo_pt_case.h"
@@ -47,11 +45,11 @@ struct cogo_yield {
   void (*resume)(COGO_T* cogo_this);
 };
 
-#define COGO_YIELD_INITIALIZER(NAME, ...) \
-  { .resume = NAME##_resume }
+#define COGO_YIELD_INITIALIZER(NAME, THIZ) \
+  ((cogo_yield_t){ .resume = NAME##_resume, })
 
 #undef COGO_PT_V
-#define COGO_YIELD_V(YIELD)     (YIELD)
+#define COGO_YIELD_V(COGO)     (COGO)
 #define COGO_PT_V(COGO)         (&COGO_YIELD_V(COGO)->base_pt)
 
 // typedef struct NAME NAME_t;
@@ -60,33 +58,32 @@ struct cogo_yield {
 //  ...
 // };
 // void NAME_resume(NAME_t* const cogo_this)
-#define COGO_DECLARE(NAME, ...) COGO_DO_DECLARE1(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
-#define COGO_DO_DECLARE1(...)   COGO_DO_DECLARE2(__VA_ARGS__)
-#define COGO_DO_DECLARE2(N, NAME, ...)     \
-  COGO_DO_DECLARE3_##N(NAME, __VA_ARGS__); \
+#define COGO_DECLARE(NAME, ...) COGO_DO1_DECLARE(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
+#define COGO_DO1_DECLARE(...)   COGO_DO2_DECLARE(__VA_ARGS__)
+#define COGO_DO2_DECLARE(N, NAME, ...)     \
+  COGO_DO3_DECLARE_##N(NAME, __VA_ARGS__); \
   COGO_DEFINE(NAME)
-#define COGO_DO_DECLARE3_0(NAME, ...) COGO_STRUCT(NAME, __VA_ARGS__)               // NAME: name
-#define COGO_DO_DECLARE3_1(NAME, ...) COGO_STRUCT(COGO_BLANK_##NAME, __VA_ARGS__)  // NAME: static name
+#define COGO_DO3_DECLARE_0(NAME, ...) COGO_STRUCT(NAME, __VA_ARGS__)               // NAME: name
+#define COGO_DO3_DECLARE_1(NAME, ...) COGO_STRUCT(COGO_BLANK_##NAME, __VA_ARGS__)  // NAME: static name
 
-#define COGO_STRUCT(NAME, ...)        COGO_DO_STRUCT1(ZY_IS_EMPTY(__VA_ARGS__), NAME, __VA_ARGS__)
-#define COGO_DO_STRUCT1(...)          COGO_DO_STRUCT2(__VA_ARGS__)
-#define COGO_DO_STRUCT2(N, ...)       COGO_DO_STRUCT3_##N(__VA_ARGS__)
-#define COGO_DO_STRUCT3_0(NAME, ...)      \
-  typedef struct NAME NAME##_t;           \
+#define COGO_STRUCT(NAME, ...)        COGO_DO1_STRUCT(ZY_IS_EMPTY(__VA_ARGS__), NAME, __VA_ARGS__)
+#define COGO_DO1_STRUCT(...)          COGO_DO2_STRUCT(__VA_ARGS__)
+#define COGO_DO2_STRUCT(N, ...)       typedef struct NAME NAME##_t; COGO_DO3_STRUCT_##N(__VA_ARGS__)
+#define COGO_DO3_STRUCT_0(NAME, ...)      \
   struct NAME {                           \
     COGO_T cogo;                          \
     ZY_MAP1(;, ZY_IDENTITY, __VA_ARGS__); \
   }
-#define COGO_DO_STRUCT3_1(NAME, ...) \
-  typedef struct NAME {              \
+#define COGO_DO3_STRUCT_1(NAME, ...) \
+  struct NAME {                       \
     COGO_T cogo;                     \
-  } NAME##_t
+  };
 
-#define COGO_DEFINE(NAME)       COGO_DO_DEFINE1(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME)
-#define COGO_DO_DEFINE1(...)    COGO_DO_DEFINE2(__VA_ARGS__)
-#define COGO_DO_DEFINE2(N, ...) COGO_DO_DEFINE3_##N(__VA_ARGS__)
-#define COGO_DO_DEFINE3_0(NAME) void NAME##_resume(COGO_T* const cogo_this)                      // NAME: name
-#define COGO_DO_DEFINE3_1(NAME) static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)  // NAME: static name
+#define COGO_DEFINE(NAME)       COGO_DO1_DEFINE(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME)
+#define COGO_DO1_DEFINE(...)    COGO_DO2_DEFINE(__VA_ARGS__)
+#define COGO_DO2_DEFINE(N, ...) COGO_DO3_DEFINE_##N(__VA_ARGS__)
+#define COGO_DO3_DEFINE_0(NAME) void NAME##_resume(COGO_T* const cogo_this)                      // NAME: name
+#define COGO_DO3_DEFINE_1(NAME) static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)  // NAME: static name
 
 #define COGO_COMMA_static       ,
 #define COGO_COMMA_extern       ,
@@ -95,9 +92,8 @@ struct cogo_yield {
 
 #define COGO_STATUS(DERIVANT) COGO_PC(&(DERIVANT)->cogo)
 
+// #define COGO_INIT(NAME, THIZ, ...) ((NAME##_t){COGO_YIELD_INITIALIZER(NAME, THIZ), __VA_ARGS__})
 #define COGO_INITIALIZER      COGO_YIELD_INITIALIZER
-#define COGO_INIT(NAME, THIZ, ...) \
-  ((NAME##_t){.cogo = COGO_YIELD_INITIALIZER(NAME), __VA_ARGS__})
 
 // Continue to run a suspended coroutine until yield or finished.
 #define COGO_RESUME(DERIVANT) cogo_yield_resume(&(DERIVANT)->cogo)

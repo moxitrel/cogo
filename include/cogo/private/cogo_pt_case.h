@@ -100,7 +100,7 @@ typedef struct cogo_pt {
 /// - There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
 /// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
 #define COGO_BEGIN(COGO)                                                                     \
-  COGO_ASSERT((COGO) == (COGO)); /* Ensure the expression of `COGO` has no side effects. */  \
+  COGO_ASSERT((COGO) == (COGO) && (COGO)); /* `COGO` must has no side effects, and mustn't be `nullptr`. */  \
   switch (COGO_PC(COGO)) {                                                                   \
     default:                   /* Invalid pc */                                              \
       COGO_ON_EPC((&*(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */       \
@@ -124,7 +124,7 @@ typedef struct cogo_pt {
 /// - The object referenced by `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
 #define COGO_YIELD(COGO)                                                            \
   do {                                                                              \
-    COGO_ASSERT((COGO) == (COGO));                                                  \
+    COGO_ASSERT((COGO) == (COGO) && (COGO));\
     COGO_ON_YIELD((&*(COGO)));                                                      \
     COGO_PT_V(COGO)->pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
     goto cogo_end;                  /* 2. return */                                 \
@@ -140,6 +140,7 @@ typedef struct cogo_pt {
 /// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
 #define COGO_RETURN(COGO)                 \
   do {                                    \
+    COGO_ASSERT((COGO) == (COGO) && (COGO));\
     COGO_ON_RETURN((&*(COGO)));           \
     goto cogo_return; /* end coroutine */ \
   } while (0)
@@ -153,7 +154,7 @@ typedef struct cogo_pt {
 /// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
 #define COGO_END(COGO)               \
 cogo_return:                         \
-  COGO_ASSERT((COGO) == (COGO));     \
+  COGO_ASSERT((COGO) == (COGO) && (COGO));\
   COGO_ON_END((&*(COGO)));           \
   COGO_PT_V(COGO)->pc = COGO_PC_END; \
   }                                  \

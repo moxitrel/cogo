@@ -12,8 +12,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-COGO_DECLARE(await1, await2_t* a2);
-COGO_DEFINE(await1) {
+COGO_DECLARE(await1, await2_t* a2) {
   await1_t* const thiz = (await1_t*)cogo_this;
 CO_BEGIN:
 
@@ -23,8 +22,13 @@ CO_END:;
 }
 
 static void test_resume(void) {
-  await2_t a2 = COGO_INIT(await2, &a2);
-  await1_t a1 = COGO_INIT(await1, &a1, &a2);
+  await2_t a2 = {
+    .cogo = COGO_INITIALIZER(await2, &a2),
+  }
+  await1_t a1 = {
+    .cogo = COGO_INITIALIZER(await1, &a1),
+    .a2 = &a2,
+  }
 
   // begin
   TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_STATUS(&a1));
@@ -69,8 +73,12 @@ CO_END:;
 }
 
 static void test_await_resumed(void) {
-  await0_t a0 = COGO_INIT(await0, &a0,
-                          COGO_INIT(await2, &a0.a2));
+  await0_t a0 = {
+    .cogo = COGO_INITIALIZER(await0, &a0),
+    .a2 = {
+      .cogo = COGO_INITIALIZER(await2, &a0.a2),
+    },
+  }
   while (COGO_RESUME(&a0) != COGO_PC_END) {
   }
   TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_STATUS(&a0));
@@ -88,7 +96,9 @@ CO_END:;
 }
 
 static void test_nat(void) {
-  ng_t n = COGO_INIT(ng, &n);  // `v` is implicitly initialized to 0
+  ng_t ng = {
+      .cogo = COGO_INITIALIZER(ng, &ng),
+  };
 
   COGO_RESUME(&n);
   TEST_ASSERT_EQUAL_INT(0, n.v);
@@ -123,8 +133,7 @@ CO_BEGIN:
 
     thiz->fib1 = (fib_t*)malloc(sizeof(*thiz->fib1));
     assert(thiz->fib1);
-    // `v`, `fib1` and `fib2` are implicitly initialized to 0.
-    *thiz->fib1 = COGO_INIT(fib, thiz->fib1, thiz->n - 1);
+    *thiz->fib1 = COGO_INIT(fib, thiz->fib1, thiz->n - 1); // `v`, `fib1` and `fib2` are implicitly initialized to 0.
     CO_AWAIT(thiz->fib1);  // eval f(n-1)
     thiz->v += thiz->fib1->v;
     free(thiz->fib1);
@@ -141,9 +150,18 @@ CO_END:;
 }
 
 static void test_fib(void) {
-  fib_t f03 = COGO_INIT(fib, &f03, 3);
-  fib_t f11 = COGO_INIT(fib, &f11, 11);
-  fib_t f23 = COGO_INIT(fib, &f23, 23);
+  fib_t f03 = {
+      .cogo = COGO_INITIALIZER(fib, &f03),
+      .n = 3,
+  };
+  fib_t f11 = {
+      .cogo = COGO_INITIALIZER(fib, &f11),
+      .n = 11,
+  };
+  fib_t f23 = {
+      .cogo = COGO_INITIALIZER(fib, &f23),
+      .n = 23,
+  };
 
   struct {
     fib_t* fib;

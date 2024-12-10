@@ -1,12 +1,10 @@
 #include <assert.h>
 #include <unity.h>
 
-#if defined(COGO_NO_COMPUTED_GOTO)
-  #include <cogo/private/cogo_pt_case.h>
-#elif defined(__GNUC__)
-  #include <cogo/private/cogo_pt_goto.h>
+#ifdef COGO_USE_COMPUTED_GOTO
+  #include "private/cogo_pt_goto.h"
 #else
-  #include <cogo/private/cogo_pt_case.h>
+  #include "private/cogo_pt_case.h"
 #endif
 
 static void func_yield(COGO_T* cogo, int* v) {

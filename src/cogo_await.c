@@ -1,16 +1,16 @@
 #include <cogo/cogo_await.h>
 
 // Should be invoked through CO_AWAIT().
-void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1_base) {
-  COGO_ASSERT(cogo_this && cogo_this->sched && cogo1_base);
+void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1) {
+  COGO_ASSERT(cogo_this && cogo_this->sched && cogo1);
 #ifndef NDEBUG
   // No loop in the call chain.
   for (cogo_await_t const* node = cogo_this; node; node = node->caller) {
-    COGO_ASSERT(cogo1_base != node);
+    COGO_ASSERT(cogo1 != node);
   }
 #endif
-  cogo1_base->caller = cogo_this->sched->top;  // call stack push
-  cogo_this->sched->top = cogo1_base->top;     // continue from resume point
+  cogo1->caller = cogo_this->sched->top;  // call stack push
+  cogo_this->sched->top = cogo1->top;     // continue from resume point
 }
 
 // Run until CO_YIELD().

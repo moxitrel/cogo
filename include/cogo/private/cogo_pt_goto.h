@@ -3,9 +3,13 @@
 // Use of this source code is governed by a MIT-style license
 // that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
-// SEE: https://github.com/moxitrel/cogo
+// URL: https://github.com/moxitrel/cogo
 #ifndef COGO_PT_GOTO_H_
 #define COGO_PT_GOTO_H_
+
+#ifndef __GNUC__
+#error "Computed goto isn't supported."
+#endif
 
 #include <stdint.h>
 
@@ -67,9 +71,9 @@ cogo_return:                 \
   COGO_PC(PT) = COGO_PC_END; \
   cogo_end
 
-#define COGO_LABEL       COGO_LABEL1(__LINE__)
-#define COGO_LABEL1(...) COGO_LABEL2(__VA_ARGS__)
-#define COGO_LABEL2(N)   cogo_yield_##N
+#define COGO_LABEL       COGO_DO1_LABEL(__LINE__)
+#define COGO_DO1_LABEL(...) COGO_DO2_LABEL(__VA_ARGS__)
+#define COGO_DO2_LABEL(N)   cogo_yield_##N
 
 #ifndef COGO_ON_BEGIN
   #define COGO_ON_BEGIN(PT)

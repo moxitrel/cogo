@@ -12,7 +12,7 @@ include(CTest)
 option(COGO_TEST "Build and run tests."
   NO
 )
-option(COGO_NO_COMPUTED_GOTO "Don't use GCC extension (labels as values) to implement the coroutine."
+option(COGO_USE_COMPUTED_GOTO "Don't use GCC extension (labels as values) to implement the coroutine."
   NO
 )
 
@@ -36,7 +36,7 @@ target_include_directories(cogo PUBLIC
 )
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
-  $<$<BOOL:${COGO_NO_COMPUTED_GOTO}>:COGO_NO_COMPUTED_GOTO>
+  $<$<BOOL:${COGO_USE_COMPUTED_GOTO}>:COGO_USE_COMPUTED_GOTO>
   COGO_MP=1 # multithreaded scheduler
 )
 install(TARGETS cogo EXPORT cogoTargets
@@ -72,7 +72,7 @@ if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
   include(CheckCCompilerFlag)
   include(cmake/unity.cmake)
 
-  message(STATUS "COGO_NO_COMPUTED_GOTO : ${COGO_NO_COMPUTED_GOTO}")
+  message(STATUS "COGO_USE_COMPUTED_GOTO : ${COGO_USE_COMPUTED_GOTO}")
   message(STATUS "CMAKE_C_COMPILER      : ${CMAKE_C_COMPILER}")
 
   check_c_compiler_flag(-Wc++-compat _Wcpp_compat)
@@ -102,7 +102,7 @@ if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
 
   set(_compile_options
     $<$<BOOL:${_Wcpp_compat}>:-Wc++-compat>
-    $<$<AND:$<BOOL:${_Wpedantic}>,$<BOOL:${COGO_NO_COMPUTED_GOTO}>>:-Wpedantic>
+    $<$<AND:$<BOOL:${_Wpedantic}>,$<BOOL:${COGO_USE_COMPUTED_GOTO}>>:-Wpedantic>
     $<$<BOOL:${_Wall}>:-Wall>
     $<$<BOOL:${_Wextra}>:-Wextra>
     $<$<BOOL:${_Wconversion}>:-Wconversion>
