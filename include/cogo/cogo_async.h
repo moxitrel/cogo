@@ -30,6 +30,10 @@ cogo_async_sched_t         : scheduler type
 #ifndef COGO_ASYNC_H_
 #define COGO_ASYNC_H_
 
+#ifndef COGO_ON_ASYNC
+  #define COGO_ON_ASYNC(COGO)  // noop
+#endif
+
 #ifndef COGO_T
   #define COGO_T cogo_async_t
 typedef struct cogo_async cogo_async_t;
@@ -102,8 +106,9 @@ COGO_T* cogo_async_sched_pop(cogo_async_sched_t* sched);
 // CO_ASYNC(cogo_async_t*): start a new coroutine to run concurrently.
 #define CO_ASYNC(DERIVANT1)                                                                     \
   do {                                                                                          \
+    COGO_ON_ASYNC(+cogo_this);                                                                  \
     if (cogo_async_sched_push(cogo_this->base_await.sched, COGO_ASYNC_V(&(DERIVANT1)->cogo))) { \
-      CO_YIELD;                                                                                 \
+      COGO_DO_YIELD(cogo_this);                                                                 \
     }                                                                                           \
   } while (0)
 

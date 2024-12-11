@@ -86,9 +86,9 @@ struct cogo_await_sched {
 #define CO_AWAIT(DERIVANT1)                                                      \
   do {                                                                           \
     cogo_await_await(COGO_AWAIT_V(cogo_this), COGO_AWAIT_V(&(DERIVANT1)->cogo)); \
-    COGO_ON_AWAITING(&*cogo_this);                                               \
+    COGO_ON_AWAITING(+cogo_this);                                                \
     COGO_DO_YIELD(cogo_this);                                                    \
-    COGO_ON_AWAITED(&*cogo_this);                                                \
+    COGO_ON_AWAITED(+cogo_this);                                                 \
   } while (0)
 void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo1_base);
 
