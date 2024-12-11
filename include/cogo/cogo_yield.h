@@ -65,7 +65,6 @@ struct cogo_yield {
   COGO_DEFINE(NAME)
 #define COGO_DO3_DECLARE_0(NAME, ...) COGO_STRUCT(NAME, __VA_ARGS__)               // NAME: name
 #define COGO_DO3_DECLARE_1(NAME, ...) COGO_STRUCT(COGO_BLANK_##NAME, __VA_ARGS__)  // NAME: static name
-
 #define COGO_STRUCT(NAME, ...)        COGO_DO1_STRUCT(ZY_IS_EMPTY(__VA_ARGS__), NAME, __VA_ARGS__)
 #define COGO_DO1_STRUCT(...)          COGO_DO2_STRUCT(__VA_ARGS__)
 #define COGO_DO2_STRUCT(N, NAME, ...) \
@@ -94,7 +93,6 @@ struct cogo_yield {
 
 #define COGO_STATUS(DERIVANT) COGO_PC(&(DERIVANT)->cogo)
 
-// #define COGO_INIT(NAME, THIZ, ...) ((NAME##_t){COGO_YIELD_INIT(NAME, THIZ), __VA_ARGS__})
 #define COGO_INIT             COGO_YIELD_INIT
 
 // Continue to run a suspended coroutine until yield or finished.

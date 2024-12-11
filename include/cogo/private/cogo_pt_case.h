@@ -58,12 +58,10 @@
 extern "C" {
 #endif
 
-#ifndef COGO_ASSERT
-  #ifdef assert
-    #define COGO_ASSERT(...) assert(__VA_ARGS__)
-  #else
-    #define COGO_ASSERT(...)  // noop
-  #endif
+#if defined(COGO_DEBUG) && defined(assert)
+  #define COGO_ASSERT(...) assert(__VA_ARGS__)
+#else
+  #define COGO_ASSERT(...) // noop
 #endif
 
 /// The position where function has reached.
@@ -81,7 +79,7 @@ typedef struct cogo_pt {
   cogo_pc_t pc;
 } cogo_pt_t;
 
-// Get the cogo_pt_t object from the derived (i.e. COGO_T) object.
+/// @protected Get the cogo_pt_t object from the derived (i.e. COGO_T) object.
 #define COGO_PT_V(PT) (PT)
 
 /// Get pc as an rvalue to prevent it from being tampered with by assignment (e.g. `COGO_PC(COGO) = 0`).
@@ -100,17 +98,17 @@ typedef struct cogo_pt {
 /// - There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
 /// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
 #define COGO_BEGIN(COGO)                                                                                    \
-  COGO_ASSERT((COGO) == (COGO) && (COGO)); /* `COGO` must has no side effects, and mustn't be `nullptr`. */ \
+  COGO_ASSERT((COGO) == (COGO)); /* `COGO` should has no side effects. */ \
   switch (COGO_PC(COGO)) {                                                                                  \
     default:                   /* Invalid pc */                                                             \
-      COGO_ON_EPC((&*(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */                      \
+      COGO_ON_EPC((+(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */                      \
       goto cogo_end;                                                                                        \
       goto cogo_return; /* Redundant statement: to eliminate the warning of unused label. */                \
       goto cogo_begin;  /* Redundant statement: to eliminate the warning of unused label. */                \
     case COGO_PC_END:                                                                                       \
       goto cogo_end;                                                                                        \
     case COGO_PC_BEGIN:                                                                                     \
-      COGO_ON_BEGIN((&*(COGO)));                                                                            \
+      COGO_ON_BEGIN((+(COGO)));                                                                            \
       cogo_begin /* coroutine begin label */
 
 /// Jump to `COGO_END`, and the next run will start from here.
@@ -124,12 +122,18 @@ typedef struct cogo_pt {
 /// - The object referenced by `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
 #define COGO_YIELD(COGO)                                                            \
   do {                                                                              \
-    COGO_ASSERT((COGO) == (COGO) && (COGO));                                        \
-    COGO_ON_YIELD((&*(COGO)));                                                      \
+    COGO_ASSERT((COGO) == (COGO));                                        \
+    COGO_ON_YIELD((+(COGO)));                                                      \
+    COGO_DO_YIELD(COGO);                                                            \
+    COGO_ON_RESUME((+(COGO)));                                                     \
+  } while (0)
+  
+/// @protected
+#define COGO_DO_YIELD(COGO)                                                         \
+  do {                                                                              \
     COGO_PT_V(COGO)->pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
     goto cogo_end;                  /* 2. return */                                 \
     case __LINE__:                  /* 3. resume point */                           \
-      COGO_ON_RESUME((&*(COGO)));                                                   \
   } while (0)
 
 /// Jump to COGO_END, and end the coroutine.
@@ -140,8 +144,8 @@ typedef struct cogo_pt {
 /// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
 #define COGO_RETURN(COGO)                    \
   do {                                       \
-    COGO_ASSERT((COGO) == (COGO) && (COGO)); \
-    COGO_ON_RETURN((&*(COGO)));              \
+    COGO_ASSERT((COGO) == (COGO)); \
+    COGO_ON_RETURN((+(COGO)));              \
     goto cogo_return; /* end coroutine */    \
   } while (0)
 
@@ -154,8 +158,8 @@ typedef struct cogo_pt {
 /// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
 #define COGO_END(COGO)                     \
 cogo_return:                               \
-  COGO_ASSERT((COGO) == (COGO) && (COGO)); \
-  COGO_ON_END((&*(COGO)));                 \
+  COGO_ASSERT((COGO) == (COGO)); \
+  COGO_ON_END((+(COGO)));                 \
   COGO_PT_V(COGO)->pc = COGO_PC_END;       \
   }                                        \
   cogo_end

@@ -17,12 +17,10 @@
 extern "C" {
 #endif
 
-#ifndef COGO_ASSERT
-  #ifdef assert
-    #define COGO_ASSERT(...) assert(__VA_ARGS__)
-  #else
-    #define COGO_ASSERT(...)  // noop
-  #endif
+#if defined(COGO_DEBUG) && defined(assert)
+  #define COGO_ASSERT(...) assert(__VA_ARGS__)
+#else
+  #define COGO_ASSERT(...) // noop
 #endif
 
 typedef intptr_t cogo_pc_t;
@@ -53,10 +51,14 @@ typedef struct cogo_pt {
 #define COGO_YIELD(PT)                       \
   do {                                       \
     COGO_ON_YIELD(PT);                       \
+    COGO_DO_YIELD(PT);                       \
+    COGO_ON_RESUME(PT);                      \
+  } while (0)
+#define COGO_DO_YIELD(PT)                    \
+  do {                                       \
     COGO_PC(PT) = (cogo_pc_t)(&&COGO_LABEL); \
     goto cogo_end;                           \
   COGO_LABEL:                                \
-    COGO_ON_RESUME(PT);                      \
   } while (0)
 
 #define COGO_RETURN(PT) \

@@ -36,7 +36,11 @@ target_include_directories(cogo PUBLIC
 )
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
-  $<$<BOOL:${COGO_USE_COMPUTED_GOTO}>:COGO_USE_COMPUTED_GOTO>
+  $<$<BOOL:${COGO_USE_COMPUTED_GOTO}>
+    :COGO_USE_COMPUTED_GOTO>
+  $<$<AND:$<CONFIG:Debug>
+         ,$<NOT:$<BOOL:${COGO_DEBUG}>>>
+    :COGO_DEBUG>
   COGO_MP=1 # multithreaded scheduler
 )
 install(TARGETS cogo EXPORT cogoTargets
