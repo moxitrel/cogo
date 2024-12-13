@@ -1,3 +1,4 @@
+
 /*
 COGO_QUEUE_ELEMENT_T: the element type of queue
 COGO_QUEUE_NEXT()   : return the next element
@@ -8,23 +9,23 @@ COGO_QUEUE_NEXT()   : return the next element
 #ifndef COGO_QUEUE_TEMPLATE_H_
   #define COGO_QUEUE_TEMPLATE_H_
 
-  #define COGO_QUEUE_T(T)             COGO_QUEUE_T1(T)
-  #define COGO_QUEUE_T1(T)            cogo_##T##_queue_t
+  #define COGO_QUEUE_T(T)             COGO_QUEUE_DO1_T(T)
+  #define COGO_QUEUE_DO1_T(T)            cogo_##T##_queue_t
 
-  #define COGO_QUEUE_IS_EMPTY(T)      COGO_QUEUE_IS_EMPTY1(T)
-  #define COGO_QUEUE_IS_EMPTY1(T)     cogo_##T##_queue_is_empty
+  #define COGO_QUEUE_IS_EMPTY(T)      COGO_QUEUE_DO1_IS_EMPTY(T)
+  #define COGO_QUEUE_DO1_IS_EMPTY(T)     cogo_##T##_queue_is_empty
 
-  #define COGO_QUEUE_TOP(T)           COGO_QUEUE_TOP1(T)
-  #define COGO_QUEUE_TOP1(T)          cogo_##T##_queue_top
+  #define COGO_QUEUE_TOP(T)           COGO_QUEUE_DO1_TOP(T)
+  #define COGO_QUEUE_DO1_TOP(T)          cogo_##T##_queue_top
 
-  #define COGO_QUEUE_POP(T)           COGO_QUEUE_POP1(T)
-  #define COGO_QUEUE_POP1(T)          cogo_##T##_queue_pop
+  #define COGO_QUEUE_POP(T)           COGO_QUEUE_DO1_POP(T)
+  #define COGO_QUEUE_DO1_POP(T)          cogo_##T##_queue_pop
 
-  #define COGO_QUEUE_PUSH(T)          COGO_QUEUE_PUSH1(T)
-  #define COGO_QUEUE_PUSH1(T)         cogo_##T##_queue_push
+  #define COGO_QUEUE_PUSH(T)          COGO_QUEUE_DO1_PUSH(T)
+  #define COGO_QUEUE_DO1_PUSH(T)         cogo_##T##_queue_push
 
-  #define COGO_QUEUE_POP_NONEMPTY(T)  COGO_QUEUE_POP_NONEMPTY1(T)
-  #define COGO_QUEUE_POP_NONEMPTY1(T) cogo_##T##_queue_pop_nonempty
+  #define COGO_QUEUE_POP_NONEMPTY(T)  COGO_QUEUE_DO1_POP_NONEMPTY(T)
+  #define COGO_QUEUE_DO1_POP_NONEMPTY(T) cogo_##T##_queue_pop_nonempty
 
 #endif  // COGO_QUEUE_TEMPLATE_H_
 

@@ -39,9 +39,9 @@ extern "C" {
 
 typedef struct cogo_yield cogo_yield_t;
 struct cogo_yield {
-  /// @private The base type.
+  // The base type.
   cogo_pt_t base_pt;
-  /// @protected The coroutine function.
+  // The coroutine function.
   void (*resume)(COGO_T* cogo_this);
 };
 
@@ -95,7 +95,7 @@ struct cogo_yield {
 
 #define COGO_INIT             COGO_YIELD_INIT
 
-// Continue to run a suspended coroutine until yield or finished.
+/// ontinue to run a suspended coroutine until yield or finished.
 #define COGO_RESUME(DERIVANT) cogo_yield_resume(&(DERIVANT)->cogo)
 cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo_this);
 

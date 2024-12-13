@@ -71,18 +71,18 @@ typedef int cogo_pc_t;
 /// The coroutine has finished running.
 #define COGO_PC_END   (-1)
 
-/// An opaque object type (all fields are protected, and shouldn't be accessed by user directly) represents a coroutine.
+// An opaque object type (all fields are protected, and shouldn't be accessed by user directly) represents a coroutine.
 typedef struct cogo_pt {
-  /// @private The source line (`__LINE__`) where function continues to run when reentered.
-  /// It must be initialized to `0`.
-  /// It must be set to `-1` if it has finished running.
+  // The source line (`__LINE__`) where function continues to run when reentered.
+  // It must be initialized to `0`.
+  // It must be set to `-1` if it has finished running.
   cogo_pc_t pc;
 } cogo_pt_t;
 
-/// @protected Get the cogo_pt_t object from the derived (i.e. COGO_T) object.
+// Get the cogo_pt_t object from the derived (i.e. COGO_T) object.
 #define COGO_PT_V(PT) (PT)
 
-/// Get pc as an rvalue to prevent it from being tampered with by assignment (e.g. `COGO_PC(COGO) = 0`).
+/// Get pc as an rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
 #define COGO_PC(COGO) (+COGO_PT_V(COGO)->pc)
 
 /// A label like macro marks the beginning of coroutine.
@@ -128,7 +128,6 @@ typedef struct cogo_pt {
     COGO_ON_RESUME((+(COGO)));     \
   } while (0)
 
-/// @protected
 #define COGO_DO_YIELD(COGO)                                                         \
   do {                                                                              \
     COGO_PT_V(COGO)->pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
@@ -173,9 +172,13 @@ cogo_return:                         \
 
 /// @var COGO_T* cogo_this
 /// The implicit variable representing the current coroutine object, which is used by CO_* macros (e.g., CO_BEGIN, CO_YIELD, ...).
+///
 #define CO_BEGIN  COGO_BEGIN(cogo_this)
+/// 
 #define CO_END    COGO_END(cogo_this)
+/// 
 #define CO_YIELD  COGO_YIELD(cogo_this)
+/// 
 #define CO_RETURN COGO_RETURN(cogo_this)
 
 #ifdef __cplusplus
