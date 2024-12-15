@@ -96,7 +96,7 @@ struct cogo_yield {
 #define COGO_INIT             COGO_YIELD_INIT
 
 /// ontinue to run a suspended coroutine until yield or finished.
-#define COGO_RESUME(DERIVANT) cogo_yield_resume(&(DERIVANT)->cogo)
+#define COGO_RESUME(DERIVANT) cogo_yield_resume(COGO_YIELD_V(&(DERIVANT)->cogo))
 cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo_this);
 
 #ifdef __cplusplus

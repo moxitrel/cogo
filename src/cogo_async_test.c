@@ -27,7 +27,7 @@ static void test_ng(void) {
   TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 
-COGO_DECLARE(consume, co_chan_t* chan, co_message_t msg) {
+COGO_DECLARE(consume, cogo_chan_t* chan, cogo_msg_t msg) {
   consume_t* const thiz = (consume_t*)cogo_this;
 CO_BEGIN:
 
@@ -36,7 +36,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-COGO_DECLARE(product, co_chan_t* chan, co_message_t msg) {
+COGO_DECLARE(product, cogo_chan_t* chan, cogo_msg_t msg) {
   product_t* const thiz = (product_t*)cogo_this;
 CO_BEGIN:
 
@@ -56,7 +56,7 @@ CO_END:;
 }
 
 static void test_chan(void) {
-  co_chan_t c = CO_CHAN_MAKE(0);
+  cogo_chan_t c = COGO_CHAN_INIT(0);
   consume_t r = {
       .cogo = COGO_INIT(consume, &r),
       .chan = &c,

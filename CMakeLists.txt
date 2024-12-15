@@ -6,14 +6,14 @@ project(cogo
 )
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
-include(cmake/cogoCPack.cmake)
 include(CTest)
+include(cmake/cogoCPack.cmake)
 
 option(COGO_TEST "Build and run tests."
-  NO
+  YES
 )
-option(COGO_USE_COMPUTED_GOTO "Don't use GCC extension (labels as values) to implement the coroutine."
-  OFF
+option(COGO_USE_COMPUTED_GOTO "Use GCC extension (labels as values) to implement the coroutine."
+  NO
 )
 
 file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS

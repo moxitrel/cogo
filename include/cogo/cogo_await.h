@@ -24,11 +24,11 @@ cogo_await_t    : coroutine type
 #define COGO_AWAIT_H_
 
 #ifndef COGO_ON_AWAITING
-  #define COGO_ON_AWAITING(COGO)  // noop
+  #define COGO_ON_AWAITING(COGO, COGO1)  // noop
 #endif
 
 #ifndef COGO_ON_AWAITED
-  #define COGO_ON_AWAITED(COGO)  // noop
+  #define COGO_ON_AWAITED(COGO, COGO1)  // noop
 #endif
 
 #ifndef COGO_T
@@ -79,16 +79,18 @@ struct cogo_await_sched {
   })
 
 #undef COGO_YIELD_V
-#define COGO_AWAIT_V(COGO) (COGO)
-#define COGO_YIELD_V(COGO) (&COGO_AWAIT_V(COGO)->base_yield)
+#define COGO_AWAIT_V(COGO)        (COGO)
+#define COGO_YIELD_V(COGO)        (&COGO_AWAIT_V(COGO)->base_yield)
+#define COGO_AWAIT_SCHED_V(SCHED) (SCHED)
 
 /// Run another coroutine until finished.
 #define CO_AWAIT(DERIVANT1)                                                      \
   do {                                                                           \
+    COGO_ASSERT((DERIVANT1) == (DERIVANT1));                                     \
     cogo_await_await(COGO_AWAIT_V(cogo_this), COGO_AWAIT_V(&(DERIVANT1)->cogo)); \
-    COGO_ON_AWAITING(+cogo_this);                                                \
+    COGO_ON_AWAITING((+cogo_this), (&(DERIVANT1)->cogo));                        \
     COGO_DO_YIELD(cogo_this);                                                    \
-    COGO_ON_AWAITED(+cogo_this);                                                 \
+    COGO_ON_AWAITED((+cogo_this), (&(DERIVANT1)->cogo));                         \
   } while (0)
 void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo1_base);
 
@@ -97,8 +99,11 @@ void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo1_base);
 
 // Continue to run a suspended coroutine until yield or finished.
 #undef COGO_RESUME
-#define COGO_RESUME(DERIVANT) cogo_await_resume(&(DERIVANT)->cogo)
+#define COGO_RESUME(DERIVANT) cogo_await_resume(COGO_AWAIT_V(&(DERIVANT)->cogo))
 cogo_pc_t cogo_await_resume(cogo_await_t* cogo_this);
+
+#define COGO_RUN(DERIVANT) cogo_await_run(COGO_AWAIT_V(&(DERIVANT)->cogo))
+void cogo_await_run(cogo_await_t* cogo_this);
 
 #ifdef __cplusplus
 }

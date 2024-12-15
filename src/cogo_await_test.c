@@ -79,8 +79,7 @@ static void test_await_resumed(void) {
           .cogo = COGO_INIT(await2, &a0.a2),
       },
   };
-  while (COGO_RESUME(&a0) != COGO_PC_END) {
-  }
+  COGO_RUN(&a0);
   TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_STATUS(&a0));
 }
 

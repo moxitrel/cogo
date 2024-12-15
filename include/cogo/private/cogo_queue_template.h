@@ -9,22 +9,22 @@ COGO_QUEUE_NEXT()   : return the next element
 #ifndef COGO_QUEUE_TEMPLATE_H_
   #define COGO_QUEUE_TEMPLATE_H_
 
-  #define COGO_QUEUE_T(T)             COGO_QUEUE_DO1_T(T)
+  #define COGO_QUEUE_T(T)                COGO_QUEUE_DO1_T(T)
   #define COGO_QUEUE_DO1_T(T)            cogo_##T##_queue_t
 
-  #define COGO_QUEUE_IS_EMPTY(T)      COGO_QUEUE_DO1_IS_EMPTY(T)
+  #define COGO_QUEUE_IS_EMPTY(T)         COGO_QUEUE_DO1_IS_EMPTY(T)
   #define COGO_QUEUE_DO1_IS_EMPTY(T)     cogo_##T##_queue_is_empty
 
-  #define COGO_QUEUE_TOP(T)           COGO_QUEUE_DO1_TOP(T)
+  #define COGO_QUEUE_TOP(T)              COGO_QUEUE_DO1_TOP(T)
   #define COGO_QUEUE_DO1_TOP(T)          cogo_##T##_queue_top
 
-  #define COGO_QUEUE_POP(T)           COGO_QUEUE_DO1_POP(T)
+  #define COGO_QUEUE_POP(T)              COGO_QUEUE_DO1_POP(T)
   #define COGO_QUEUE_DO1_POP(T)          cogo_##T##_queue_pop
 
-  #define COGO_QUEUE_PUSH(T)          COGO_QUEUE_DO1_PUSH(T)
+  #define COGO_QUEUE_PUSH(T)             COGO_QUEUE_DO1_PUSH(T)
   #define COGO_QUEUE_DO1_PUSH(T)         cogo_##T##_queue_push
 
-  #define COGO_QUEUE_POP_NONEMPTY(T)  COGO_QUEUE_DO1_POP_NONEMPTY(T)
+  #define COGO_QUEUE_POP_NONEMPTY(T)     COGO_QUEUE_DO1_POP_NONEMPTY(T)
   #define COGO_QUEUE_DO1_POP_NONEMPTY(T) cogo_##T##_queue_pop_nonempty
 
 #endif  // COGO_QUEUE_TEMPLATE_H_
@@ -36,7 +36,7 @@ COGO_QUEUE_NEXT()   : return the next element
 #define COGO_Q_PUSH         COGO_QUEUE_PUSH(COGO_QUEUE_ELEMENT_T)
 #define COGO_Q_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(COGO_QUEUE_ELEMENT_T)
 
-typedef struct {
+typedef struct COGO_Q_T {
   COGO_QUEUE_ELEMENT_T* head;
   COGO_QUEUE_ELEMENT_T* tail;
 } COGO_Q_T;
