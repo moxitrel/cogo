@@ -1,27 +1,45 @@
 #include <cogo/cogo_async.h>
 #include <limits.h>
 
-enum {
-  cogo_state_yield,
-  cogo_state_end,
-  cogo_state_blocked,
-};
+typedef enum cogo_status {
+  cogo_status_yield,
+  cogo_status_end,
+  cogo_status_blocked,
+  cogo_status_awaiting,
+  cogo_status_awaited,
+} cogo_status_t;
 
 static cogo_async_t* cogo_async_sched_step(cogo_async_sched_t* const sched) {
 #define TOP        (sched->base_await_sched.top)
 #define TOP_SCHED  (COGO_AWAIT_V(TOP)->sched)
 #define TOP_CALLER (COGO_AWAIT_V(TOP)->caller)
-#define TOP_RESUME (COGO_YIELD_V(TOP)->resume)
+#define TOP_FUNC   (COGO_YIELD_V(TOP)->func)
 
-  COGO_ASSERT(sched && TOP && TOP_RESUME);
+  COGO_ASSERT(sched && TOP && TOP_FUNC);
   TOP_SCHED = sched;
-  TOP_RESUME(TOP);
+  TOP_FUNC(TOP);
   if (!(/*blocked*/ !TOP || /*end*/ (COGO_PC(TOP) == COGO_PC_END && !(TOP = TOP_CALLER)))) {
     cogo_async_sched_add(sched, TOP);
   }
   return TOP = cogo_async_sched_remove(sched);
 
-#undef TOP_RESUME
+  // if (!TOP) {
+  //   return cogo_status_blocked;
+  // }
+  // switch (COGO_PC(TOP)) {
+  //   case COGO_PC_END:
+  //     if (TOP_CALLER) {
+  //       return cogo_status_awaited;
+  //     } else {
+  //       return cogo_status_end;
+  //     }
+  //   case COGO_PC_BEGIN:
+  //     return cogo_status_awaiting;
+  //   default:
+  //     return cogo_status_yield;
+  // }
+
+#undef TOP_FUNC
 #undef TOP_CALLER
 #undef TOP_SCHED
 #undef TOP
@@ -32,13 +50,13 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
 #define TOP        (sched->base_await_sched.top)
 #define TOP_SCHED  (TOP->base_await.sched)
 #define TOP_CALLER (TOP->base_await.caller)
-#define TOP_RESUME (TOP->base_await.base_yield.resume)
+#define TOP_FUNC   (TOP->base_await.base_yield.func)
 
   COGO_ASSERT(sched);
   for (;;) {
-    COGO_ASSERT(TOP && TOP_RESUME);
+    COGO_ASSERT(TOP && TOP_FUNC);
     TOP_SCHED = sched;
-    TOP_RESUME(TOP);
+    TOP_FUNC(TOP);
     if (!TOP) {  // blocked
       goto on_blocked;
     } else {
@@ -65,7 +83,7 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
 exit:
   return TOP;
 
-#undef TOP_RESUME
+#undef TOP_FUNC
 #undef TOP_CALLER
 #undef TOP_SCHED
 #undef TOP
@@ -165,7 +183,7 @@ void cogo_async_run(cogo_async_t* const cogo) {
 
   /* mt
   for (;;) {
-    if (resume(&sched)) {
+    if (func(&sched)) {
       wait.wake
     } else {
       if (steal_coroutine() == 0) {

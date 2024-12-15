@@ -42,11 +42,11 @@ struct cogo_yield {
   // The base type.
   cogo_pt_t base_pt;
   // The coroutine function.
-  void (*resume)(COGO_T* cogo_this);
+  void (*func)(COGO_T* cogo_this);
 };
 
 #define COGO_YIELD_INIT(NAME, THIZ) \
-  ((cogo_yield_t){.resume = NAME##_resume})
+  ((cogo_yield_t){.func = NAME##_func})
 
 #undef COGO_PT_V
 #define COGO_YIELD_V(COGO)      (COGO)
@@ -83,8 +83,8 @@ struct cogo_yield {
 #define COGO_DEFINE(NAME)       COGO_DO1_DEFINE(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME)
 #define COGO_DO1_DEFINE(...)    COGO_DO2_DEFINE(__VA_ARGS__)
 #define COGO_DO2_DEFINE(N, ...) COGO_DO3_DEFINE_##N(__VA_ARGS__)
-#define COGO_DO3_DEFINE_0(NAME) void NAME##_resume(COGO_T* const cogo_this)                      // NAME: name
-#define COGO_DO3_DEFINE_1(NAME) static void COGO_BLANK_##NAME##_resume(COGO_T* const cogo_this)  // NAME: static name
+#define COGO_DO3_DEFINE_0(NAME) void NAME##_func(COGO_T* const cogo_this)                      // NAME: name
+#define COGO_DO3_DEFINE_1(NAME) static void COGO_BLANK_##NAME##_func(COGO_T* const cogo_this)  // NAME: static name
 
 #define COGO_COMMA_static       ,
 #define COGO_COMMA_extern       ,
