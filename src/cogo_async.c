@@ -14,15 +14,9 @@ static cogo_status_t cogo_async_sched_step(cogo_async_sched_t* const sched) {
 #define TOP_SCHED  (COGO_AWAIT_V(TOP)->sched)
 #define TOP_CALLER (COGO_AWAIT_V(TOP)->caller)
 #define TOP_FUNC   (COGO_YIELD_V(TOP)->func)
-
   COGO_ASSERT(sched && TOP && TOP_FUNC);
   TOP_SCHED = sched;
   TOP_FUNC(TOP);
-  // if (!(/*blocked*/ !TOP || /*end*/ (COGO_PC(TOP) == COGO_PC_END && !(TOP = TOP_CALLER)))) {
-  //   cogo_async_sched_add(sched, TOP);
-  // }
-  // return TOP = cogo_async_sched_remove(sched);
-
   if (!TOP) {
     return cogo_status_blocked;
   } else {
@@ -39,7 +33,6 @@ static cogo_status_t cogo_async_sched_step(cogo_async_sched_t* const sched) {
         return cogo_status_yield;
     }
   }
-
 #undef TOP_FUNC
 #undef TOP_CALLER
 #undef TOP_SCHED
@@ -48,45 +41,30 @@ static cogo_status_t cogo_async_sched_step(cogo_async_sched_t* const sched) {
 
 // Run until yield. Return the next coroutine to be run.
 static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
-#define TOP        (sched->base_await_sched.top)
-#define TOP_SCHED  (TOP->base_await.sched)
-#define TOP_CALLER (TOP->base_await.caller)
-#define TOP_FUNC   (TOP->base_await.base_yield.func)
+#define TOP (sched->base_await_sched.top)
 
   COGO_ASSERT(sched);
-  for (;;) {
-    COGO_ASSERT(TOP && TOP_FUNC);
-    TOP_SCHED = sched;
-    TOP_FUNC(TOP);
-    if (!TOP) {  // blocked
-      goto on_blocked;
-    } else {
-      switch (COGO_PC(TOP)) {
-        case COGO_PC_END:             // return
-          if (!(TOP = TOP_CALLER)) {  // end
-            goto on_end;
-          }
-          continue;
-        case COGO_PC_BEGIN:  // await
-          continue;
-        default:  // yield, async
-          cogo_async_sched_add(sched, TOP);
-          TOP = cogo_async_sched_remove(sched);
+  while (TOP) {
+    cogo_status_t status = cogo_async_sched_step(sched);
+    switch (status) {
+      case cogo_status_yield:
+        cogo_async_sched_add(sched, TOP);
+        __attribute__((fallthrough));
+      case cogo_status_blocked:
+      case cogo_status_end:
+        TOP = cogo_async_sched_remove(sched);
+        if (!TOP || status == cogo_status_end) {
+          // No more active coroutine, or coroutine end.
           goto exit;
-      }
-    }
-  on_blocked:
-  on_end:
-    if (!(TOP = cogo_async_sched_remove(sched))) {  // no more active coroutines
-      goto exit;
+        }
+        __attribute__((fallthrough));
+      case cogo_status_awaiting:
+      case cogo_status_awaited:
+        continue;
     }
   }
 exit:
   return TOP;
-
-#undef TOP_FUNC
-#undef TOP_CALLER
-#undef TOP_SCHED
 #undef TOP
 }
 
@@ -179,7 +157,7 @@ void cogo_async_run(cogo_async_t* const cogo) {
           .top = cogo,
       },
   };
-  while (cogo_async_sched_step(&sched)) {
+  while (cogo_async_sched_resume(&sched)) {
   }
 
   /* mt
