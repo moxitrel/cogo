@@ -4,12 +4,12 @@
 typedef enum cogo_status {
   cogo_status_yield,
   cogo_status_end,
-  cogo_status_blocked,
   cogo_status_awaiting,
   cogo_status_awaited,
+  cogo_status_blocked,
 } cogo_status_t;
 
-static cogo_async_t* cogo_async_sched_step(cogo_async_sched_t* const sched) {
+static cogo_status_t cogo_async_sched_step(cogo_async_sched_t* const sched) {
 #define TOP        (sched->base_await_sched.top)
 #define TOP_SCHED  (COGO_AWAIT_V(TOP)->sched)
 #define TOP_CALLER (COGO_AWAIT_V(TOP)->caller)
@@ -18,26 +18,27 @@ static cogo_async_t* cogo_async_sched_step(cogo_async_sched_t* const sched) {
   COGO_ASSERT(sched && TOP && TOP_FUNC);
   TOP_SCHED = sched;
   TOP_FUNC(TOP);
-  if (!(/*blocked*/ !TOP || /*end*/ (COGO_PC(TOP) == COGO_PC_END && !(TOP = TOP_CALLER)))) {
-    cogo_async_sched_add(sched, TOP);
-  }
-  return TOP = cogo_async_sched_remove(sched);
+  // if (!(/*blocked*/ !TOP || /*end*/ (COGO_PC(TOP) == COGO_PC_END && !(TOP = TOP_CALLER)))) {
+  //   cogo_async_sched_add(sched, TOP);
+  // }
+  // return TOP = cogo_async_sched_remove(sched);
 
-  // if (!TOP) {
-  //   return cogo_status_blocked;
-  // }
-  // switch (COGO_PC(TOP)) {
-  //   case COGO_PC_END:
-  //     if (TOP_CALLER) {
-  //       return cogo_status_awaited;
-  //     } else {
-  //       return cogo_status_end;
-  //     }
-  //   case COGO_PC_BEGIN:
-  //     return cogo_status_awaiting;
-  //   default:
-  //     return cogo_status_yield;
-  // }
+  if (!TOP) {
+    return cogo_status_blocked;
+  } else {
+    switch (COGO_PC(TOP)) {
+      case COGO_PC_END:
+        if (TOP_CALLER) {
+          return cogo_status_awaited;
+        } else {
+          return cogo_status_end;
+        }
+      case COGO_PC_BEGIN:
+        return cogo_status_awaiting;
+      default:
+        return cogo_status_yield;
+    }
+  }
 
 #undef TOP_FUNC
 #undef TOP_CALLER
