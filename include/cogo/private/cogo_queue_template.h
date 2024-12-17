@@ -1,3 +1,7 @@
+// Copyright (c) 2018-2024 Moxi Color
+//
+// Use of this source code is governed by a MIT-style license
+// that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
 /*
 COGO_QUEUE_ELEMENT_T: the element type of queue
