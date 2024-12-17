@@ -65,6 +65,7 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
   }
 exit:
   return TOP;
+
 #undef TOP
 }
 
