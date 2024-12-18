@@ -42,9 +42,8 @@ static cogo_status_t cogo_async_sched_step(cogo_async_sched_t* const sched) {
 // Run until yield. Return the next coroutine to be run.
 static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
 #define TOP (sched->base_await_sched.top)
-
-  COGO_ASSERT(sched);
-  while (TOP) {
+  COGO_ASSERT(sched && TOP);
+  for (;;) {
     cogo_status_t status = cogo_async_sched_step(sched);
     switch (status) {
       case cogo_status_yield:
@@ -53,9 +52,8 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
       case cogo_status_blocked:
       case cogo_status_end:
         TOP = cogo_async_sched_remove(sched);
-        if (!TOP || status == cogo_status_end) {
-          // No more active coroutine, or coroutine end.
-          goto exit;
+        if (!TOP || status == cogo_status_end) {  // No more active coroutine, or coroutine end.
+          return TOP;
         }
         __attribute__((fallthrough));
       case cogo_status_awaiting:
@@ -63,9 +61,6 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
         continue;
     }
   }
-exit:
-  return TOP;
-
 #undef TOP
 }
 
