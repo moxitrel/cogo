@@ -74,6 +74,7 @@ extern "C" {
 
 typedef struct cogo_async cogo_async_t;
 typedef struct cogo_async_sched cogo_async_sched_t;
+typedef struct cogo_chan cogo_chan_t;
 
 // implement concurrency
 struct cogo_async {
@@ -156,7 +157,7 @@ typedef struct cogo_msg {
 #define COGO_MQ_PUSH         COGO_QUEUE_PUSH(cogo_msg_t)
 #define COGO_MQ_POP          COGO_QUEUE_POP(cogo_msg_t)
 #define COGO_MQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_msg_t)
-typedef struct cogo_chan {
+struct cogo_chan {
   // all coroutines blocked by this channel
   COGO_CQ_T cq;
 
@@ -170,7 +171,7 @@ typedef struct cogo_chan {
 
   // max size
   ptrdiff_t maxsize;
-} cogo_chan_t;
+};
 
 #define COGO_CHAN_INIT(N) ((cogo_chan_t){.maxsize = (N)})
 
