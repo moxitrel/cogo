@@ -20,11 +20,11 @@ static void test_ng(void) {
   COGO_RESUME(&ng);
   TEST_ASSERT_EQUAL_INT(0, ng.v);
 
-  // COGO_RESUME(&ng);
-  // TEST_ASSERT_EQUAL_INT(1, ng.v);
+  COGO_RESUME(&ng);
+  TEST_ASSERT_EQUAL_INT(1, ng.v);
 
-  // COGO_RESUME(&ng);
-  // TEST_ASSERT_EQUAL_INT(2, ng.v);
+  COGO_RESUME(&ng);
+  TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 
 COGO_DECLARE(consume, cogo_chan_t* chan, cogo_msg_t msg) {
