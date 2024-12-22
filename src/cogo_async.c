@@ -1,107 +1,91 @@
 #include <cogo/cogo_async.h>
 #include <limits.h>
 
-typedef enum cogo_status {
-  cogo_status_yield,
-  cogo_status_end,
-  cogo_status_awaiting,
-  cogo_status_awaited,
-  cogo_status_blocked,
-} cogo_status_t;
-
-static cogo_status_t cogo_async_sched_step(cogo_async_sched_t* const sched) {
+// Run until yield. Return the next coroutine to be run.
+static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
 #define TOP        (sched->base_await_sched.top)
 #define TOP_SCHED  (COGO_AWAIT_V(TOP)->sched)
 #define TOP_CALLER (COGO_AWAIT_V(TOP)->caller)
 #define TOP_FUNC   (COGO_YIELD_V(TOP)->func)
-  COGO_ASSERT(sched && TOP && TOP_FUNC);
-  TOP_SCHED = sched;
-  TOP_FUNC(TOP);
-  if (!TOP) {
-    return cogo_status_blocked;
-  } else {
-    switch (COGO_PC(TOP)) {
-      case COGO_PC_END:
-        if (TOP_CALLER) {
-          return cogo_status_awaited;
-        } else {
-          return cogo_status_end;
-        }
-      case COGO_PC_BEGIN:
-        return cogo_status_awaiting;
-      default:
-        return cogo_status_yield;
+  COGO_ASSERT(sched);
+
+  for (;;) {
+    COGO_ASSERT(TOP && TOP_FUNC);
+    TOP_SCHED = sched;
+    TOP_FUNC(TOP);
+    if (!TOP) {  // blocking
+      goto exit;
+    } else {
+      switch (COGO_PC(TOP)) {
+        case COGO_PC_END:
+          if (TOP_CALLER) {  // awaited
+            continue;
+          } else {  // end
+            goto exit;
+          }
+        case COGO_PC_BEGIN:  // awaiting
+          continue;
+        default:  // yielding
+          cogo_async_sched_add(sched, TOP);
+          goto exit;
+      }
     }
   }
+
+exit:
+  return TOP = cogo_async_sched_remove(sched);
 #undef TOP_FUNC
 #undef TOP_CALLER
 #undef TOP_SCHED
 #undef TOP
 }
 
-// Run until yield. Return the next coroutine to be run.
-static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
-#define TOP (sched->base_await_sched.top)
-  COGO_ASSERT(sched && TOP);
-  for (;;) {
-    cogo_status_t status = cogo_async_sched_step(sched);
-    switch (status) {
-      case cogo_status_yield:
-        cogo_async_sched_add(sched, TOP);
-        __attribute__((fallthrough));
-      case cogo_status_blocked:
-      case cogo_status_end:
-        TOP = cogo_async_sched_remove(sched);
-        if (!TOP || status == cogo_status_end) {  // No more active coroutine, or coroutine end.
-          return TOP;
-        }
-        __attribute__((fallthrough));
-      case cogo_status_awaiting:
-      case cogo_status_awaited:
-        continue;
-    }
-  }
-#undef TOP
-}
-
 int cogo_chan_read(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
-  COGO_ASSERT(cogo_this && chan && chan->maxsize >= 0 && chan->size > PTRDIFF_MIN && msg_next);
+#define SCHED     (cogo_this->base_await.sched)
+#define SCHED_TOP (SCHED->base_await_sched.top)
+  COGO_ASSERT(cogo_this && chan && chan->capacity >= 0 && chan->size > PTRDIFF_MIN && msg_next);
   ptrdiff_t const chan_size = chan->size--;
   if (chan_size <= 0) {
     COGO_MQ_PUSH(&chan->mq, msg_next);
     // sleep in background
-    COGO_CQ_PUSH(&chan->cq, cogo_this);                        // append to blocking queue
-    cogo_this->base_await.sched->base_await_sched.top = NULL;  // remove from scheduler
-    return 1;                                                  // switch context
+    COGO_CQ_PUSH(&chan->cq, cogo_this);  // append to blocking queue
+    SCHED_TOP = NULL;                    // remove from scheduler
+    return 1;                            // switch context
   } else {
     msg_next->next = COGO_MQ_POP_NONEMPTY(&chan->mq);
-    if (chan_size <= chan->maxsize) {
+    if (chan_size <= chan->capacity) {
       return 0;
     } else {
       // wake up a writer
-      return cogo_async_sched_add(cogo_this->base_await.sched, COGO_CQ_POP_NONEMPTY(&chan->cq));
+      return cogo_async_sched_add(SCHED, COGO_CQ_POP_NONEMPTY(&chan->cq));
     }
   }
+#undef SCHED_TOP
+#undef SCHED
 }
 
 int cogo_chan_write(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_msg_t* const msg) {
-  COGO_ASSERT(cogo_this && chan && chan->maxsize >= 0 && chan->size < PTRDIFF_MAX && msg);
+#define SCHED     (cogo_this->base_await.sched)
+#define SCHED_TOP (SCHED->base_await_sched.top)
+  COGO_ASSERT(cogo_this && chan && chan->capacity >= 0 && chan->size < PTRDIFF_MAX && msg);
   ptrdiff_t const chan_size = chan->size++;
   if (chan_size < 0) {
     COGO_MQ_POP_NONEMPTY(&chan->mq)->next = msg;
     // wake up a reader
-    return cogo_async_sched_add(cogo_this->base_await.sched, COGO_CQ_POP_NONEMPTY(&chan->cq));
+    return cogo_async_sched_add(SCHED, COGO_CQ_POP_NONEMPTY(&chan->cq));
   } else {
     COGO_MQ_PUSH(&chan->mq, msg);
-    if (chan_size < chan->maxsize) {
+    if (chan_size < chan->capacity) {
       return 0;
     } else {
       // sleep in background
       COGO_CQ_PUSH(&chan->cq, cogo_this);
-      cogo_this->base_await.sched->base_await_sched.top = NULL;
+      SCHED_TOP = NULL;
       return 1;
     }
   }
+#undef SCHED_TOP
+#undef SCHED
 }
 
 int cogo_async_sched_add(cogo_async_sched_t* const sched, cogo_async_t* const cogo) {
@@ -117,19 +101,12 @@ cogo_async_t* cogo_async_sched_remove(cogo_async_sched_t* const sched) {
 
 // run until yield, return the next coroutine will be run
 cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
-#define TOP (cogo->base_await.top)
+#define TOP (COGO_AWAIT_V(cogo)->top)
   COGO_ASSERT(cogo);
   if (TOP) {
-    cogo_async_sched_t sched = {
-        .base_await_sched = {
-            .top = TOP,
-        },
-        .q = {
-            .head = TOP->next,
-            .tail = TOP->next,
-        },
-    };
-    if (sched.q.tail) {
+    cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(TOP);
+    COGO_CQ_PUSH(&sched.q, TOP->next);
+    if (!COGO_CQ_IS_EMPTY(&sched.q)) {
       while (sched.q.tail->next) {
         sched.q.tail = sched.q.tail->next;
       }
@@ -148,11 +125,7 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
 
 void cogo_async_run(cogo_async_t* const cogo) {
   COGO_ASSERT(cogo);
-  cogo_async_sched_t sched = {
-      .base_await_sched = {
-          .top = cogo,
-      },
-  };
+  cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(cogo);
   while (cogo_async_sched_resume(&sched)) {
   }
 

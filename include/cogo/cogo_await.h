@@ -23,12 +23,12 @@ cogo_await_t    : coroutine type
 #ifndef COGO_AWAIT_H_
 #define COGO_AWAIT_H_
 
-#ifndef COGO_ON_AWAITING
-  #define COGO_ON_AWAITING(COGO, COGO1)  // noop
+#ifndef COGO_PRE_AWAIT
+  #define COGO_PRE_AWAIT(COGO, COGO1)  // noop
 #endif
 
-#ifndef COGO_ON_AWAITED
-  #define COGO_ON_AWAITED(COGO, COGO1)  // noop
+#ifndef COGO_POST_AWAIT
+  #define COGO_POST_AWAIT(COGO, COGO1)  // noop
 #endif
 
 #ifndef COGO_T
@@ -77,6 +77,8 @@ struct cogo_await_sched {
       .base_yield = COGO_YIELD_INIT(NAME, THIZ), \
       .top = &(THIZ)->cogo,                      \
   })
+#define COGO_AWAIT_SCHED_INIT(COGO) \
+  ((cogo_await_sched_t){.top = (COGO)})
 
 #undef COGO_YIELD_V
 #define COGO_AWAIT_V(COGO)        (COGO)
@@ -87,10 +89,10 @@ struct cogo_await_sched {
 #define CO_AWAIT(DERIVANT1)                                                      \
   do {                                                                           \
     COGO_ASSERT((DERIVANT1) == (DERIVANT1));                                     \
+    COGO_PRE_AWAIT((+cogo_this), (&(DERIVANT1)->cogo));                          \
     cogo_await_await(COGO_AWAIT_V(cogo_this), COGO_AWAIT_V(&(DERIVANT1)->cogo)); \
-    COGO_ON_AWAITING((+cogo_this), (&(DERIVANT1)->cogo));                        \
     COGO_DO_YIELD(cogo_this);                                                    \
-    COGO_ON_AWAITED((+cogo_this), (&(DERIVANT1)->cogo));                         \
+    COGO_POST_AWAIT((+cogo_this), (&(DERIVANT1)->cogo));                         \
   } while (0)
 void cogo_await_await(cogo_await_t* cogo_this, cogo_await_t* cogo1_base);
 

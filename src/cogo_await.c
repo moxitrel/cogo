@@ -2,6 +2,7 @@
 
 // Should be invoked through CO_AWAIT().
 void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1) {
+#define TOP (cogo_this->sched->top)
   COGO_ASSERT(cogo_this && cogo_this->sched && cogo1);
 #ifdef COGO_DEBUG
   // No loop in the call chain.
@@ -9,8 +10,9 @@ void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1) 
     COGO_ASSERT(cogo1 != node);
   }
 #endif
-  cogo1->caller = cogo_this->sched->top;  // call stack push
-  cogo_this->sched->top = cogo1->top;     // continue from resume point
+  cogo1->caller = TOP;  // call stack push
+  TOP = cogo1->top;     // continue from resume point
+#undef TOP
 }
 
 // Run until CO_YIELD().
@@ -22,9 +24,7 @@ cogo_pc_t cogo_await_resume(cogo_await_t* const cogo_this) {
   COGO_ASSERT(cogo_this);
 
   if (COGO_PC(cogo_this) != COGO_PC_END) {
-    cogo_await_sched_t sched = {
-        .top = cogo_this->top,  // Restore the resume point.
-    };
+    cogo_await_sched_t sched = COGO_AWAIT_SCHED_INIT(cogo_this->top);  // Restore the resume point.
     for (;;) {
       COGO_ASSERT(TOP && TOP_FUNC);
       TOP_SCHED = &sched;

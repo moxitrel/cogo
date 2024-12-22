@@ -19,9 +19,6 @@ COGO_QUEUE_NEXT()   : return the next element
   #define COGO_QUEUE_IS_EMPTY(T)         COGO_QUEUE_DO1_IS_EMPTY(T)
   #define COGO_QUEUE_DO1_IS_EMPTY(T)     cogo_##T##_queue_is_empty
 
-  #define COGO_QUEUE_TOP(T)              COGO_QUEUE_DO1_TOP(T)
-  #define COGO_QUEUE_DO1_TOP(T)          cogo_##T##_queue_top
-
   #define COGO_QUEUE_POP(T)              COGO_QUEUE_DO1_POP(T)
   #define COGO_QUEUE_DO1_POP(T)          cogo_##T##_queue_pop
 
@@ -35,7 +32,6 @@ COGO_QUEUE_NEXT()   : return the next element
 
 #define COGO_Q_T            COGO_QUEUE_T(COGO_QUEUE_ELEMENT_T)
 #define COGO_Q_IS_EMPTY     COGO_QUEUE_IS_EMPTY(COGO_QUEUE_ELEMENT_T)
-#define COGO_Q_TOP          COGO_QUEUE_TOP(COGO_QUEUE_ELEMENT_T)
 #define COGO_Q_POP          COGO_QUEUE_POP(COGO_QUEUE_ELEMENT_T)
 #define COGO_Q_PUSH         COGO_QUEUE_PUSH(COGO_QUEUE_ELEMENT_T)
 #define COGO_Q_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(COGO_QUEUE_ELEMENT_T)
@@ -49,10 +45,6 @@ static inline bool COGO_Q_IS_EMPTY(COGO_Q_T const* const q) {
   return !q->head;
 }
 
-static inline COGO_QUEUE_ELEMENT_T* COGO_Q_TOP(COGO_Q_T const* const q) {
-  return q->head;
-}
-
 // dequeue, return NULL if empty
 static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP(COGO_Q_T* const q) {
   COGO_QUEUE_ELEMENT_T* node = q->head;
@@ -64,13 +56,15 @@ static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP(COGO_Q_T* const q) {
 
 // enqueue
 static inline void COGO_Q_PUSH(COGO_Q_T* const q, COGO_QUEUE_ELEMENT_T* const node) {
-  if (COGO_Q_IS_EMPTY(q)) {
-    q->head = node;
-  } else {
-    COGO_QUEUE_NEXT(q->tail) = node;
+  if (node) {
+    if (COGO_Q_IS_EMPTY(q)) {
+      q->head = node;
+    } else {
+      COGO_QUEUE_NEXT(q->tail) = node;
+    }
+    q->tail = node;
+    COGO_QUEUE_NEXT(node) = NULL;
   }
-  q->tail = node;
-  COGO_QUEUE_NEXT(node) = NULL;
 }
 
 static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {
@@ -82,6 +76,5 @@ static inline COGO_QUEUE_ELEMENT_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {
 #undef COGO_Q_POP_NONEMPTY
 #undef COGO_Q_PUSH
 #undef COGO_Q_POP
-#undef COGO_Q_TOP
 #undef COGO_Q_IS_EMPTY
 #undef COGO_Q_T
