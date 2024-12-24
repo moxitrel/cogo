@@ -48,17 +48,18 @@ typedef struct cogo_pt {
   }                                            \
   cogo_begin
 
-#define COGO_YIELD(PT)  \
-  do {                  \
-    COGO_ON_YIELD(PT);  \
-    COGO_DO_YIELD(PT);  \
-    COGO_ON_RESUME(PT); \
-  } while (0)
 #define COGO_DO_YIELD(PT)                    \
   do {                                       \
     COGO_PC(PT) = (cogo_pc_t)(&&COGO_LABEL); \
     goto cogo_end;                           \
   COGO_LABEL:;                               \
+  } while (0)
+
+#define COGO_YIELD(PT)  \
+  do {                  \
+    COGO_ON_YIELD(PT);  \
+    COGO_DO_YIELD(PT);  \
+    COGO_ON_RESUME(PT); \
   } while (0)
 
 #define COGO_RETURN(PT) \

@@ -21,7 +21,7 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
           if (!(TOP = TOP_CALLER)) {  // end
             goto exit;
           }
-          continue; // awaited
+          continue;          // awaited
         case COGO_PC_BEGIN:  // awaiting
           continue;
         default:  // yielding

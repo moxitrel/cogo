@@ -64,8 +64,9 @@ typedef struct cogo_async cogo_async_t;
 typedef struct cogo_async_sched cogo_async_sched_t;
 #endif
 
-#include "cogo_await.h"
 #include <stddef.h>
+
+#include "cogo_await.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,6 +75,7 @@ extern "C" {
 typedef struct cogo_async cogo_async_t;
 typedef struct cogo_async_sched cogo_async_sched_t;
 typedef struct cogo_chan cogo_chan_t;
+typedef struct cogo_msg cogo_msg_t;
 
 // implement concurrency
 struct cogo_async {
@@ -140,9 +142,17 @@ COGO_T* cogo_async_sched_remove(cogo_async_sched_t* sched);
   } while (0)
 
 // channel message
-typedef struct cogo_msg {
-  struct cogo_msg* next;
-} cogo_msg_t;
+struct cogo_msg {
+  union {
+    unsigned char uc;
+    int i;
+    double d;
+    ptrdiff_t t;
+    size_t z;
+    void* p;
+  } data;
+  cogo_msg_t* next;
+};
 
 // COGO_QUEUE_T             (cogo_msg_t)
 // COGO_QUEUE_IS_EMPTY      (cogo_msg_t) (const COGO_QUEUE_T(cogo_msg_t)*)

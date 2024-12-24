@@ -49,8 +49,8 @@ struct cogo_yield {
   ((cogo_yield_t){.func = NAME##_func})
 
 #undef COGO_PT_V
-#define COGO_YIELD_V(COGO)      (COGO)
-#define COGO_PT_V(COGO)         (&COGO_YIELD_V(COGO)->base_pt)
+#define COGO_YIELD_V(COGO) (COGO)
+#define COGO_PT_V(COGO)    (&COGO_YIELD_V(COGO)->base_pt)
 
 // typedef struct NAME NAME_t;
 // struct NAME {
@@ -58,8 +58,8 @@ struct cogo_yield {
 //  ...
 // };
 // void NAME_resume(NAME_t* const cogo_this)
-#define COGO_COMMA_static       ,
-#define COGO_COMMA_extern       ,
+#define COGO_COMMA_static  ,
+#define COGO_COMMA_extern  ,
 #define COGO_BLANK_static
 #define COGO_BLANK_extern
 
@@ -92,12 +92,12 @@ struct cogo_yield {
 #define COGO_DO3_DEFINE_0(NAME) void NAME##_func(COGO_T* const cogo_this)                      // NAME: name
 #define COGO_DO3_DEFINE_1(NAME) static void COGO_BLANK_##NAME##_func(COGO_T* const cogo_this)  // NAME: static name
 
-#define COGO_STATUS(DERIVANT) COGO_PC(&(DERIVANT)->cogo)
+#define COGO_STATUS(DERIVANT)   COGO_PC(&(DERIVANT)->cogo)
 
-#define COGO_INIT             COGO_YIELD_INIT
+#define COGO_INIT               COGO_YIELD_INIT
 
 /// Continue to run a suspended coroutine until yield or finished.
-#define COGO_RESUME(DERIVANT) cogo_yield_resume(COGO_YIELD_V(&(DERIVANT)->cogo))
+#define COGO_RESUME(DERIVANT)   cogo_yield_resume(COGO_YIELD_V(&(DERIVANT)->cogo))
 cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo_this);
 
 #ifdef __cplusplus

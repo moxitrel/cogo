@@ -34,7 +34,7 @@ cogo_pc_t cogo_await_resume(cogo_await_t* const cogo_this) {
           if (!(TOP = TOP_CALLER)) {  // end
             goto exit;
           }
-          continue; // awaited
+          continue;          // awaited
         case COGO_PC_BEGIN:  // awaiting
           continue;
         default:  // yielding
