@@ -19,11 +19,12 @@
 /// }
 /// @endcode
 ///
-/// @warning Undefined behavior if CO_YIELD used in the **switch case** statement.
+/// @warning Undefined behavior if COGO_YIELD used in the **switch case** statement.
 #ifndef COGO_PT_CASE_H_
 #define COGO_PT_CASE_H_
 
 /// The invalid coroutine pc handler, which is invoked when the coroutine pc value isn't valid.
+/// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
 #ifndef COGO_ON_EPC
@@ -31,6 +32,7 @@
 #endif
 
 /// The coroutine start handler, which is invoked when the coroutine function reaches the `COGO_BEGIN` label for the first time during its execution.
+/// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
 #ifndef COGO_ON_BEGIN
@@ -38,6 +40,7 @@
 #endif
 
 /// The coroutine yield handler, which is invoked when `COGO_YIELD` is called.
+/// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
 #ifndef COGO_ON_YIELD
@@ -45,6 +48,7 @@
 #endif
 
 /// Invoked when coroutine resumed (continue to run).
+/// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
 #ifndef COGO_ON_RESUME
@@ -52,6 +56,7 @@
 #endif
 
 /// The coroutine return handler, which is invoked when `COGO_RETURN` is called.
+/// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
 #ifndef COGO_ON_RETURN
@@ -59,10 +64,18 @@
 #endif
 
 /// The coroutine finish handler, which is invoked when the function reaches the `COGO_END` label.
+/// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
 #ifndef COGO_ON_END
   #define COGO_ON_END(COGO)  // noop
+#endif
+
+/// An alias type defined to `cogo_pt_t`.
+/// The main purpose of this macro is to maintain the consistency with `cogo_yield.h`, `cogo_await.h` and `cogo_async.h`,
+/// all of which define `COGO_T`.
+#ifndef COGO_T
+  #define COGO_T cogo_pt_t
 #endif
 
 #ifdef __cplusplus
@@ -173,13 +186,6 @@ cogo_return:                         \
   COGO_PT_V(COGO)->pc = COGO_PC_END; \
   } /* switch */                     \
   cogo_end
-
-/// An alias type defined to `cogo_pt_t`.
-/// The main purpose of this macro is to maintain the consistency with `cogo_yield.h`, `cogo_await.h` and `cogo_async.h`,
-/// all of which define `COGO_T`.
-#ifndef COGO_T
-  #define COGO_T cogo_pt_t
-#endif
 
 /// @var COGO_T* cogo_this
 /// The implicit variable representing the current coroutine object, which is used by CO_* macros (e.g., CO_BEGIN, CO_YIELD, ...).

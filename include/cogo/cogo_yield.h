@@ -25,13 +25,13 @@ COGO_DEFINE (NAME)     {} : define a declared coroutine which is not defined.
 typedef struct cogo_yield cogo_yield_t;
 #endif
 
-#include "private/macro_utils.h"
-
 #ifdef COGO_USE_COMPUTED_GOTO
   #include "private/cogo_pt_goto.h"
 #else
   #include "private/cogo_pt_case.h"
 #endif
+
+#include "private/macro_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,6 +58,11 @@ struct cogo_yield {
 //  ...
 // };
 // void NAME_resume(NAME_t* const cogo_this)
+#define COGO_COMMA_static       ,
+#define COGO_COMMA_extern       ,
+#define COGO_BLANK_static
+#define COGO_BLANK_extern
+
 #define COGO_DECLARE(NAME, ...) COGO_DO1_DECLARE(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
 #define COGO_DO1_DECLARE(...)   COGO_DO2_DECLARE(__VA_ARGS__)
 #define COGO_DO2_DECLARE(N, NAME, ...)     \
@@ -65,6 +70,7 @@ struct cogo_yield {
   COGO_DEFINE(NAME)
 #define COGO_DO3_DECLARE_0(NAME, ...) COGO_STRUCT(NAME, __VA_ARGS__)               // NAME: name
 #define COGO_DO3_DECLARE_1(NAME, ...) COGO_STRUCT(COGO_BLANK_##NAME, __VA_ARGS__)  // NAME: static name
+
 #define COGO_STRUCT(NAME, ...)        COGO_DO1_STRUCT(ZY_IS_EMPTY(__VA_ARGS__), NAME, __VA_ARGS__)
 #define COGO_DO1_STRUCT(...)          COGO_DO2_STRUCT(__VA_ARGS__)
 #define COGO_DO2_STRUCT(N, NAME, ...) \
@@ -86,16 +92,11 @@ struct cogo_yield {
 #define COGO_DO3_DEFINE_0(NAME) void NAME##_func(COGO_T* const cogo_this)                      // NAME: name
 #define COGO_DO3_DEFINE_1(NAME) static void COGO_BLANK_##NAME##_func(COGO_T* const cogo_this)  // NAME: static name
 
-#define COGO_COMMA_static       ,
-#define COGO_COMMA_extern       ,
-#define COGO_BLANK_static
-#define COGO_BLANK_extern
-
 #define COGO_STATUS(DERIVANT) COGO_PC(&(DERIVANT)->cogo)
 
 #define COGO_INIT             COGO_YIELD_INIT
 
-/// ontinue to run a suspended coroutine until yield or finished.
+/// Continue to run a suspended coroutine until yield or finished.
 #define COGO_RESUME(DERIVANT) cogo_yield_resume(COGO_YIELD_V(&(DERIVANT)->cogo))
 cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo_this);
 

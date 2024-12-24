@@ -64,9 +64,8 @@ typedef struct cogo_async cogo_async_t;
 typedef struct cogo_async_sched cogo_async_sched_t;
 #endif
 
-#include <stddef.h>
-
 #include "cogo_await.h"
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

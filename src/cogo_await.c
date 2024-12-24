@@ -31,18 +31,17 @@ cogo_pc_t cogo_await_resume(cogo_await_t* const cogo_this) {
       TOP_FUNC(TOP);
       switch (COGO_PC(TOP)) {
         case COGO_PC_END:
-          if (!(TOP = TOP_CALLER)) {
-            goto on_awaited;
+          if (!(TOP = TOP_CALLER)) {  // end
+            goto exit;
           }
+          continue; // awaited
+        case COGO_PC_BEGIN:  // awaiting
           continue;
-        case COGO_PC_BEGIN:  // await
-          continue;
-        default:  // yield
-          goto on_yield;
+        default:  // yielding
+          goto exit;
       }
     }
-  on_awaited:
-  on_yield:
+  exit:
     cogo_this->top = TOP;  // Save the resume point.
   }
 
