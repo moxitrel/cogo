@@ -146,7 +146,7 @@ struct cogo_msg {
   union {
     unsigned char uc;
     int i;
-    double d;
+    double lf;
     ptrdiff_t t;
     size_t z;
     void* p;

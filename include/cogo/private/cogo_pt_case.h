@@ -90,10 +90,10 @@ extern "C" {
 
 /// The position where function has reached.
 typedef int cogo_pc_t;
-/// The coroutine is initialized, and ready to run.
-#define COGO_PC_BEGIN 0
 /// The coroutine has finished running.
 #define COGO_PC_END   (-1)
+/// The coroutine is initialized, and ready to run.
+#define COGO_PC_BEGIN 0
 
 // An opaque object type (all fields are protected, and shouldn't be accessed by user directly) represents a coroutine.
 typedef struct cogo_pt {
