@@ -92,9 +92,6 @@ struct cogo_yield {
 #define COGO_DO3_DEFINE_0(NAME) void NAME##_func(COGO_T* const cogo_this)                      // NAME: name
 #define COGO_DO3_DEFINE_1(NAME) static void COGO_BLANK_##NAME##_func(COGO_T* const cogo_this)  // NAME: static name
 
-typedef cogo_pc_t cogo_status_t;
-#define COGO_STATUS_END COGO_PC_END
-#define COGO_STATUS_BEGIN COGO_PC_BEGIN
 #define COGO_STATUS(DERIVANT)   COGO_PC(&(DERIVANT)->cogo)
 
 #define COGO_INIT               COGO_YIELD_INIT

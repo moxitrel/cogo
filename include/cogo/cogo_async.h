@@ -193,7 +193,7 @@ struct cogo_chan {
  @param[in] CHAN the channel where to receive message.
  @param[out] MSG_NEXT the address of received message is stored in MSG_NEXT->next.
 
- @pre This macro can only be called in the coroutine function, i.e. between CO_BEGIN and CO_END, or COGO_BEGIN() and COGO_END().
+ @pre This macro can only be called in the coroutine function, i.e. between CO_BEGIN and CO_END.
  @pre CHAN != NULL && MSG_NEXT != NULL
  @post At the time of read success (and before any other messages written by other coroutines), the size of channel is decreased by 1.
  @post MSG_NEXT->next != NULL
