@@ -42,8 +42,10 @@ exit:
 int cogo_chan_read(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
 #define SCHED     (cogo_this->base_await.sched)
 #define SCHED_TOP (SCHED->base_await_sched.top)
+  ptrdiff_t chan_size;
   COGO_ASSERT(cogo_this && chan && chan->capacity >= 0 && chan->size > PTRDIFF_MIN && msg_next);
-  ptrdiff_t const chan_size = chan->size--;
+
+  chan_size = chan->size--;
   if (chan_size <= 0) {
     COGO_MQ_PUSH(&chan->mq, msg_next);
     // sleep in background
@@ -59,6 +61,7 @@ int cogo_chan_read(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_
       return cogo_async_sched_add(SCHED, COGO_CQ_POP_NONEMPTY(&chan->cq));
     }
   }
+
 #undef SCHED_TOP
 #undef SCHED
 }
@@ -66,8 +69,10 @@ int cogo_chan_read(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_
 int cogo_chan_write(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_msg_t* const msg) {
 #define SCHED     (cogo_this->base_await.sched)
 #define SCHED_TOP (SCHED->base_await_sched.top)
+  ptrdiff_t chan_size;
+
   COGO_ASSERT(cogo_this && chan && chan->capacity >= 0 && chan->size < PTRDIFF_MAX && msg);
-  ptrdiff_t const chan_size = chan->size++;
+  chan_size = chan->size++;
   if (chan_size < 0) {
     COGO_MQ_POP_NONEMPTY(&chan->mq)->next = msg;
     // wake up a reader
@@ -83,6 +88,7 @@ int cogo_chan_write(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo
       return 1;
     }
   }
+
 #undef SCHED_TOP
 #undef SCHED
 }
@@ -123,8 +129,10 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
 }
 
 void cogo_async_run(cogo_async_t* const cogo) {
+  cogo_async_sched_t sched;
   COGO_ASSERT(cogo);
-  cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(cogo);
+
+  sched = COGO_ASYNC_SCHED_INIT(cogo);
   while (cogo_async_sched_resume(&sched)) {
   }
 

@@ -144,13 +144,11 @@ COGO_T* cogo_async_sched_remove(cogo_async_sched_t* sched);
 // channel message
 struct cogo_msg {
   union {
-    unsigned char c;
-    int i;
-    double lf;
-    void* p;
-    char* s;
-    size_t z;
-    ptrdiff_t t;
+    int as_int;
+    ptrdiff_t as_ptrdiff_t;
+    size_t as_size_t;
+    double as_double;
+    void* as_pointer;
   } data;
   cogo_msg_t* next;
 };

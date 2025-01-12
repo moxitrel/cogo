@@ -7,10 +7,10 @@
 ///
 /// @par Example
 /// @code
-/// void natural_number_generator(cogo_pt_t* pt, int* v) {
+/// void number_generator(cogo_pt_t* pt, int* v) {
 /// COGO_BEGIN(pt): // Coroutine begin.
 ///
-///   for (*v = 0;; (*v)++) {
+///   for (;; (*v)++) {
 ///     COGO_YIELD(pt); // Return. The next run will start from here.
 ///   }
 ///

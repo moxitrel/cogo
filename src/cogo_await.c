@@ -3,15 +3,19 @@
 // Should be invoked through CO_AWAIT().
 void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1) {
 #define TOP (cogo_this->sched->top)
-  COGO_ASSERT(cogo_this && cogo_this->sched && cogo1);
+
 #ifdef COGO_DEBUG
+  cogo_await_t const* node;
   // No loop in the call chain.
-  for (cogo_await_t const* node = cogo_this; node; node = node->caller) {
+  for (node = cogo_this; node; node = node->caller) {
     COGO_ASSERT(cogo1 != node);
   }
 #endif
+  COGO_ASSERT(cogo_this && cogo_this->sched && cogo1);
+
   cogo1->caller = TOP;  // call stack push
   TOP = cogo1->top;     // continue from resume point
+
 #undef TOP
 }
 

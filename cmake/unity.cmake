@@ -23,7 +23,7 @@ endif()
 #
 FetchContent_Declare(unity # case-insensitive
   GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity.git
-  GIT_TAG v2.6.0
+  GIT_TAG v2.6.1
   GIT_SHALLOW Y # git clone --depth 1
 )
 
@@ -42,8 +42,8 @@ if(TARGET pch)
 endif()
 
 find_package_message(unity
-  "Found unity-v2.6.0+${CMAKE_BUILD_TYPE}"
-  "v2.6.0"
+  "Found unity-v2.6.1+${CMAKE_BUILD_TYPE}"
+  "v2.6.1"
 )
 
 set(CMAKE_BUILD_TYPE ${_bak_CMAKE_BUILD_TYPE})
