@@ -75,7 +75,7 @@ typedef struct prologue {
   int exit;
 } prologue_t;
 
-static void func_prologue(COGO_T* cogo_this, prologue_t* prologue) {
+static void func_prologue(prologue_t* prologue, COGO_T* cogo_this) {
   prologue->enter++;
 CO_BEGIN:
 

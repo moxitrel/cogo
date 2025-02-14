@@ -178,7 +178,7 @@ typedef struct cogo_pt {
 /// @param[in] COGO The value of COGO should point to an object which inherit from cogo_pt_t.
 /// And the object referenced by COGO must be the same one as passed to COGO_BEGIN.
 /// It must not be nullptr.
-/// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
+/// The expression of COGO must have no side effects (e.g., e++) which may cause undefined behavior.
 #define COGO_END(COGO)               \
 cogo_return:                         \
   COGO_ASSERT((COGO) == (COGO));     \
