@@ -7,19 +7,19 @@
 ///
 /// @par Example
 /// @code
-/// void number_generator(cogo_pt_t* pt, int* v) {
-/// COGO_BEGIN(pt): // Coroutine begin.
+/// void number_generator(COGO_T* cogo, int* v) {
+/// COGO_BEGIN(cogo): // Coroutine begin.
 ///
 ///   for (;; (*v)++) {
-///     COGO_YIELD(pt); // Return. The next run will start from here.
+///     COGO_YIELD(cogo); // Return. The next run will start from here.
 ///   }
 ///
-/// COGO_END(pt): // Coroutine end.
+/// COGO_END(cogo): // Coroutine end.
 ///   ;
 /// }
 /// @endcode
 ///
-/// @warning Undefined behavior if COGO_YIELD used in the **switch case** statement.
+/// @warning Undefined behavior if COGO_YIELD used in the **case** statement.
 #ifndef COGO_PT_CASE_H_
 #define COGO_PT_CASE_H_
 
@@ -71,9 +71,7 @@
   #define COGO_ON_END(COGO)  // noop
 #endif
 
-/// An alias type defined to `cogo_pt_t`.
-/// The main purpose of this macro is to maintain the consistency with `cogo_yield.h`, `cogo_await.h` and `cogo_async.h`,
-/// all of which define `COGO_T`.
+/// @hideinitializer Coroutine context type.
 #ifndef COGO_T
   #define COGO_T cogo_pt_t
 #endif
@@ -95,7 +93,7 @@ typedef int cogo_pc_t;
 /// The coroutine is initialized, and ready to run.
 #define COGO_PC_BEGIN 0
 
-// An opaque object type (all fields are protected, and shouldn't be accessed by user directly) represents a coroutine.
+// An opaque object type represents the coroutine context. (All fields are protected, and shouldn't be accessed by user directly) .
 typedef struct cogo_pt {
   // The source line (`__LINE__`) where function continues to run when reentered.
   // It must be initialized to `0`.
@@ -106,22 +104,19 @@ typedef struct cogo_pt {
 // Get the cogo_pt_t object from the derived (i.e. COGO_T) object.
 #define COGO_PT_V(PT) (PT)
 
-/// @hideinitializer Get pc as an rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
+/// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
 #define COGO_PC(COGO) (+COGO_PT_V(COGO)->pc)
 
 /// @hideinitializer A label like macro marks the beginning of coroutine.
-/// The execution will jump to the last `COGO_YIELD(COGO)` and continue to run.
-/// - `COGO_ON_BEGIN(COGO)` is invoked if the coroutine runs the first time.
-/// - `COGO_ON_EPC(COGO)` is invoked if the resume point is invalid.
-///
-/// @param[in] COGO COGO_T*, the coroutine object.
-/// - It mustn't be `nullptr`.
-/// - Undefined behavior if the expression of `COGO` has side effects (e.g. e++, e -= v).
-///
-/// @pre
+/// The execution will jump to the last `COGO_YIELD()` and continue to run.
+/// `COGO_ON_BEGIN(COGO)` is invoked if the coroutine runs the first time.
+/// `COGO_ON_EPC(COGO)` is invoked if the resume point is invalid.
+/// @param[in] COGO The coroutine object pointer.
+/// @pre COGO != nullptr
+/// @pre COGO has no effects, or the behavior is undefined (e.g. e++, e -= v).
 /// - There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
 /// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
-#define COGO_BEGIN(COGO)                                                                     \
+#define COGO_BEGIN(/* COGO_T* */ COGO)                                                       \
   COGO_ASSERT((COGO) == (COGO)); /* `COGO` should has no side effects. */                    \
   switch (COGO_PC(COGO)) {                                                                   \
     default:                  /* Invalid pc */                                               \
@@ -159,8 +154,8 @@ typedef struct cogo_pt {
     case __LINE__:;                 /* 3. resume point */                           \
   } while (0)
 
-/// @hideinitializer Jump to COGO_END, and end the coroutine.
-/// When a coroutine is ended, the coroutine body (between COGO_BEGIN and COGO_END) will be skipped if run again.
+/// @hideinitializer Jump to COGO_END, and finish the coroutine.
+/// When a coroutine is finished, the coroutine body (between COGO_BEGIN and COGO_END) will be skipped if run again.
 /// @param[in] COGO The value of COGO should point to an object which inherit from cogo_pt_t.
 /// And the object referenced by COGO must be the same one as passed to COGO_BEGIN and COGO_END.
 /// It must not be nullptr.
