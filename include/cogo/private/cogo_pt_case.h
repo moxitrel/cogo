@@ -71,7 +71,7 @@
   #define COGO_ON_END(COGO)  // noop
 #endif
 
-/// @hideinitializer Coroutine context type.
+/// @hideinitializer An opaque object type that saves the coroutine states.
 #ifndef COGO_T
   #define COGO_T cogo_pt_t
 #endif
@@ -93,30 +93,31 @@ typedef int cogo_pc_t;
 /// The coroutine is initialized, and ready to run.
 #define COGO_PC_BEGIN 0
 
-// An opaque object type represents the coroutine context. (All fields are protected, and shouldn't be accessed by user directly) .
+// The coroutine context type implement yield. 
+// All fields are protected, and shouldn't be accessed by user directly.
 typedef struct cogo_pt {
-  // The source line (`__LINE__`) where function continues to run when reentered.
-  // It must be initialized to `0`.
-  // It must be set to `-1` if it has finished running.
+  // The source line where function continues to run when reentered.
+  // It is initialized to `COGO_PC_BEGIN`, set to `__LINE__` when yield, or set to `COGO_PC_END` if finished running.
   cogo_pc_t pc;
 } cogo_pt_t;
 
-// Get the cogo_pt_t object from the derived (i.e. COGO_T) object.
+// Get the cogo_pt_t object pointer from derivant.
 #define COGO_PT_V(PT) (PT)
 
 /// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
 #define COGO_PC(COGO) (+COGO_PT_V(COGO)->pc)
 
 /// @hideinitializer A label like macro marks the beginning of coroutine.
-/// The execution will jump to the last `COGO_YIELD()` and continue to run.
-/// `COGO_ON_BEGIN(COGO)` is invoked if the coroutine runs the first time.
-/// `COGO_ON_EPC(COGO)` is invoked if the resume point is invalid.
 /// @param[in] COGO The coroutine object pointer.
-/// @pre COGO != nullptr
-/// @pre COGO has no effects, or the behavior is undefined (e.g. e++, e -= v).
+/// @pre `COGO != nullptr`
+/// @pre `COGO` should has no side effects, or the behavior is undefined (e.g. e++, e -= v).
 /// - There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
-/// - There should be only one `COGO_BEGIN` and `COGO_END` in a function.
-#define COGO_BEGIN(/* COGO_T* */ COGO)                                                       \
+/// - There must be only one `COGO_BEGIN` and `COGO_END` in a function.
+/// @post `COGO_ON_BEGIN(COGO)` is invoked and continue to execute if the coroutine runs the first time.
+/// @post The execution will jump to the last `COGO_YIELD()` if the coroutine reentered after a yield.
+/// @post The execution will jump to `COGO_END()` if the coroutine has finished running.
+/// @post `COGO_ON_EPC(COGO)` is invoked and jump to `COGO_END()` if the resume point is invalid.
+#define COGO_BEGIN(COGO)                                                       \
   COGO_ASSERT((COGO) == (COGO)); /* `COGO` should has no side effects. */                    \
   switch (COGO_PC(COGO)) {                                                                   \
     default:                  /* Invalid pc */                                               \
@@ -132,13 +133,12 @@ typedef struct cogo_pt {
 
 /// @hideinitializer Jump to `COGO_END`, and the next run will start from here.
 /// - Undefined behavior if `COGO_YIELD` used in the **case** statements.
-/// - `COGO_ON_YIELD` is called if it's defined.
-/// - `COGO_ON_RESUME` is called if it's defined and the coroutine is reentered.
-///
 /// @param[in] COGO The coroutine object pointer that has the type of `cogo_pt_t*`.
-/// - It must not be `nullptr`.
-/// - The expression of `COGO` must have no side effects (e.g. e++, e -= v), or the behavior is undefined.
-/// - The object referenced by `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
+/// @pre `COGO != nullptr`
+/// @pre `COGO` should has no side effects, or the behavior is undefined (e.g. e++, e -= v).
+/// @pre `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
+/// @post `COGO_ON_YIELD` is called if it's defined before yield.
+/// @post `COGO_ON_RESUME` is called if it's defined and the coroutine is reentered.
 #define COGO_YIELD(COGO)           \
   do {                             \
     COGO_ASSERT((COGO) == (COGO)); \
