@@ -93,7 +93,7 @@ typedef int cogo_pc_t;
 /// The coroutine is initialized, and ready to run.
 #define COGO_PC_BEGIN 0
 
-// The coroutine context type implement yield. 
+// The coroutine context type implement yield.
 // All fields are protected, and shouldn't be accessed by user directly.
 typedef struct cogo_pt {
   // The source line where function continues to run when reentered.
@@ -107,17 +107,17 @@ typedef struct cogo_pt {
 /// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
 #define COGO_PC(COGO) (+COGO_PT_V(COGO)->pc)
 
-/// @hideinitializer A label like macro marks the beginning of coroutine.
+/// @hideinitializer A label-like macro marks the start of the coroutine.
 /// @param[in] COGO The coroutine object pointer.
-/// @pre `COGO != nullptr`
-/// @pre `COGO` should has no side effects, or the behavior is undefined (e.g. e++, e -= v).
+/// @pre `(COGO) != nullptr`.
+/// @pre The expression `COGO` should have no side effects; otherwise, its behavior is undefined.
 /// - There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
 /// - There must be only one `COGO_BEGIN` and `COGO_END` in a function.
-/// @post `COGO_ON_BEGIN(COGO)` is invoked and continue to execute if the coroutine runs the first time.
-/// @post The execution will jump to the last `COGO_YIELD()` if the coroutine reentered after a yield.
-/// @post The execution will jump to `COGO_END()` if the coroutine has finished running.
-/// @post `COGO_ON_EPC(COGO)` is invoked and jump to `COGO_END()` if the resume point is invalid.
-#define COGO_BEGIN(COGO)                                                       \
+/// @post If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked first, and then the coroutine continues its execution.
+/// @post If the coroutine is reentered after a yield, the execution will jump to the last `COGO_YIELD()`.
+/// @post If the coroutine has finished running, the execution will jump to the `COGO_END()` label.
+/// @post If the resume point is invalid, invoke `COGO_ON_EPC(COGO)` first if defined, and then jump to `COGO_END()`.
+#define COGO_BEGIN(COGO)                                                                     \
   COGO_ASSERT((COGO) == (COGO)); /* `COGO` should has no side effects. */                    \
   switch (COGO_PC(COGO)) {                                                                   \
     default:                  /* Invalid pc */                                               \

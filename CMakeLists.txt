@@ -69,6 +69,8 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
+include(cmake/run_doxygen.cmake)
+
 if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
   include(CheckCCompilerFlag)
   include(cmake/unity.cmake)

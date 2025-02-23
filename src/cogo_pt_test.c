@@ -94,12 +94,12 @@ static void test_prologue(void) {
   };
 
   while (COGO_PC(&cogo) != COGO_PC_END) {
-    func_prologue(&cogo, &prologue);
+    func_prologue(&prologue, &cogo);
   }
   TEST_ASSERT_EQUAL_INT(3, prologue.enter);
   TEST_ASSERT_EQUAL_INT(3, prologue.exit);
 
-  func_prologue(&cogo, &prologue);
+  func_prologue(&prologue, &cogo);
   TEST_ASSERT_EQUAL_INT(4, prologue.enter);
   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
