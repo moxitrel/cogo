@@ -80,7 +80,7 @@ if(DOXYGEN_FOUND)
   set(DOXYGEN_DOT_IMAGE_FORMAT svg)
   set(DOXYGEN_DOT_TRANSPARENT YES)
 
-  doxygen_add_docs(_doxygen
+  doxygen_add_docs(_run_doxygen
     ALL
   )
 
