@@ -81,7 +81,6 @@ if(DOXYGEN_FOUND)
   set(DOXYGEN_DOT_TRANSPARENT YES)
 
   doxygen_add_docs(_doxygen
-    ${_doxygen_input}
     ALL
   )
 
