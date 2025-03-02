@@ -109,7 +109,7 @@ typedef struct cogo_pt {
 
 /// @hideinitializer A label-like macro marks the start of the coroutine.
 /// @param[in] COGO The coroutine object pointer.
-/// @pre `(COGO) != nullptr`.
+/// @pre `COGO != nullptr`.
 /// @pre The expression `COGO` should have no side effects; otherwise, its behavior is undefined.
 /// - There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
 /// - There must be only one `COGO_BEGIN` and `COGO_END` in a function.
@@ -118,7 +118,7 @@ typedef struct cogo_pt {
 /// @post If the coroutine has finished running, the execution will jump to the `COGO_END()` label.
 /// @post If the resume point is invalid, invoke `COGO_ON_EPC(COGO)` first if defined, and then jump to `COGO_END()`.
 #define COGO_BEGIN(COGO)                                                                     \
-  COGO_ASSERT((COGO) == (COGO)); /* `COGO` should has no side effects. */                    \
+  COGO_ASSERT((COGO) == (COGO)); /* `COGO` must have no side effects. */                     \
   switch (COGO_PC(COGO)) {                                                                   \
     default:                  /* Invalid pc */                                               \
       COGO_ON_EPC((+(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */        \
