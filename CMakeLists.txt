@@ -76,7 +76,7 @@ if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
   include(cmake/unity.cmake)
 
   message(STATUS "COGO_USE_COMPUTED_GOTO : ${COGO_USE_COMPUTED_GOTO}")
-  message(STATUS "CMAKE_C_COMPILER      : ${CMAKE_C_COMPILER}")
+  message(STATUS "CMAKE_C_COMPILER       : ${CMAKE_C_COMPILER}")
 
   check_c_compiler_flag(-Wc++-compat _Wcpp_compat)
   check_c_compiler_flag(-Wpedantic _Wpedantic)

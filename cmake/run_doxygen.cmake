@@ -3,7 +3,7 @@
 # Use of this source code is governed by a MIT-style license
 # that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
-include_guard(GLOBAL)
+include_guard(DIRECTORY)
 
 find_package(Doxygen OPTIONAL_COMPONENTS dot mscgen dia)
 
@@ -39,9 +39,11 @@ if(DOXYGEN_FOUND)
   #
   execute_process(
     COMMAND doxygen -w html header.html footer.html styleSheet.css
-    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen
   )
-  set(_install_extension [[
+  set(HeaderPath ${CMAKE_CURRENT_BINARY_DIR}/doxygen/header.html)
+
+  set(HeaderExtension [[
   <script type="text/javascript" src="$relpath^doxygen-awesome-darkmode-toggle.js"></script>
   <script type="text/javascript" src="$relpath^doxygen-awesome-fragment-copy-button.js"></script>
   <script type="text/javascript" src="$relpath^doxygen-awesome-paragraph-link.js"></script>
@@ -54,15 +56,15 @@ if(DOXYGEN_FOUND)
   </script>
   </head>
   ]])
-  file(READ ${PROJECT_BINARY_DIR}/header.html _header_html)
-  string(REPLACE "</head>" ${_install_extension} _header_html ${_header_html})
-  file(WRITE ${PROJECT_BINARY_DIR}/header.html ${_header_html})
+  file(READ ${HeaderPath} headerContent)
+  string(REPLACE "</head>" ${HeaderExtension} headerContent ${headerContent})
+  file(WRITE ${HeaderPath} ${headerContent})
 
+  set(DOXYGEN_HTML_HEADER ${HeaderPath})
   set(DOXYGEN_HTML_EXTRA_STYLESHEET
     ${DOXYGEN_HTML_EXTRA_STYLESHEET}
     ${doxygen-awesome-css_SOURCE_DIR}/doxygen-awesome-sidebar-only-darkmode-toggle.css
   )
-  set(DOXYGEN_HTML_HEADER ${PROJECT_BINARY_DIR}/header.html)
   set(DOXYGEN_HTML_EXTRA_FILES
     ${doxygen-awesome-css_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js
     ${doxygen-awesome-css_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js
@@ -76,14 +78,14 @@ if(DOXYGEN_FOUND)
   #
   # doxygen
   #
-  set(DOXYGEN_EXCLUDE ${PROJECT_BINARY_DIR})
-  set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
+  set(DOXYGEN_OUTPUT_DIRECTORY doxygen) # relative to CMAKE_CURRENT_BINARY_DIR
+  set(DOXYGEN_EXCLUDE ${CMAKE_CURRENT_BINARY_DIR})
   set(DOXYGEN_QUIET YES)
 
-  if(EXISTS ${PROJECT_SOURCE_DIR}/Doxyfile)
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
     doxygen_add_docs(_run_doxygen
       ALL
-      CONFIG_FILE ${PROJECT_SOURCE_DIR}/Doxyfile
+      CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
     )
   else()
     doxygen_add_docs(_run_doxygen

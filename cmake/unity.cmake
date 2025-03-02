@@ -6,13 +6,13 @@
 include_guard(GLOBAL)
 include(FetchContent)
 include(FindPackageMessage)
+block()
 
-string(TOLOWER "${CMAKE_BUILD_TYPE}" _lowercase_CMAKE_BUILD_TYPE)
-set(_bak_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+string(TOLOWER "${CMAKE_BUILD_TYPE}" lowercase_CMAKE_BUILD_TYPE)
 
-if(_lowercase_CMAKE_BUILD_TYPE STREQUAL "")
+if(lowercase_CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Release")
-elseif(_lowercase_CMAKE_BUILD_TYPE STREQUAL "debug")
+elseif(lowercase_CMAKE_BUILD_TYPE STREQUAL "debug")
   set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
 
@@ -21,10 +21,10 @@ endif()
 # SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/github.com/ThrowTheSwitch/Unity
 # )
 #
-FetchContent_Declare(unity # case-insensitive
+FetchContent_Declare(unity
   GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity.git
   GIT_TAG v2.6.1
-  GIT_SHALLOW Y # git clone --depth 1
+  GIT_SHALLOW Y
 )
 
 # Exclude from `cmake -install`
@@ -46,4 +46,4 @@ find_package_message(unity
   "v2.6.1"
 )
 
-set(CMAKE_BUILD_TYPE ${_bak_CMAKE_BUILD_TYPE})
+endblock()
