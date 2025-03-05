@@ -41,6 +41,7 @@ typedef struct cogo_yield cogo_yield_t;
 struct cogo_yield {
   // The base type.
   cogo_pt_t base_pt;
+  
   // The coroutine function.
   void (*func)(COGO_T* cogo_this);
 };

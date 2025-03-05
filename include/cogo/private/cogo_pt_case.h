@@ -110,9 +110,9 @@ typedef struct cogo_pt {
 /// @hideinitializer A label-like macro marks the start of the coroutine.
 /// @param[in] COGO The coroutine object pointer.
 /// @pre `COGO != nullptr`.
-/// @pre The expression `COGO` should have no side effects; otherwise, its behavior is undefined.
-/// - There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
-/// - There must be only one `COGO_BEGIN` and `COGO_END` in a function.
+/// @pre `COGO` should have no side effects, e.g., `e++`; otherwise, its behavior is undefined.
+/// @pre There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
+/// @pre There should be only one `COGO_BEGIN()` and `COGO_END()` in a function.
 /// @post If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked first, and then the coroutine continues its execution.
 /// @post If the coroutine is reentered after a yield, the execution will jump to the last `COGO_YIELD()`.
 /// @post If the coroutine has finished running, the execution will jump to the `COGO_END()` label.

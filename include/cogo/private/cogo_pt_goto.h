@@ -1,9 +1,8 @@
 // Copyright (c) 2018-2024 Moxi Color
 //
 // Use of this source code is governed by a MIT-style license
-// that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
+// that can be found in the LICENSE file or at https://github.com/moxitrel/cogo/refs/heads/main/LICENSE
 
-// URL: https://github.com/moxitrel/cogo
 #ifndef COGO_PT_GOTO_H_
 #define COGO_PT_GOTO_H_
 

@@ -44,14 +44,14 @@ typedef struct func_return {
   int v;
 } func_return_t;
 
-static void func_return(func_return_t* params) {
-  COGO_BEGIN(&params->cogo) :;
+static void func_return(func_return_t* param) {
+  COGO_BEGIN(&param->cogo) :;
 
-  (params->v)++;
-  COGO_RETURN(&params->cogo);
-  (params->v)++;
+  (param->v)++;
+  COGO_RETURN(&param->cogo);
+  (param->v)++;
 
-  COGO_END(&params->cogo) :;
+  COGO_END(&param->cogo) :;
 }
 
 static void test_return(void) {
@@ -109,9 +109,9 @@ typedef struct ng {
   COGO_T cogo;
 } ng_t;
 
-static void ng_run(ng_t* ng) {
+static void ng_run(ng_t* const ng) {
   assert(ng);
-  COGO_T* cogo_this = &ng->cogo;
+  COGO_T* const cogo_this = &ng->cogo;
 CO_BEGIN:
 
   for (;; ng->v++) {
