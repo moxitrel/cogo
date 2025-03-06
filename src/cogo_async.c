@@ -4,9 +4,9 @@
 // Run until yield. Return the next coroutine to be run.
 static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
 #define TOP        (sched->base_await_sched.top)
-#define TOP_SCHED  (COGO_AWAIT_V(TOP)->sched)
-#define TOP_CALLER (COGO_AWAIT_V(TOP)->caller)
-#define TOP_FUNC   (COGO_YIELD_V(TOP)->func)
+#define TOP_SCHED  (COGO_AWAIT_OF(TOP)->sched)
+#define TOP_CALLER (COGO_AWAIT_OF(TOP)->caller)
+#define TOP_FUNC   (COGO_YIELD_OF(TOP)->func)
   COGO_ASSERT(sched);
 
   for (;;) {
@@ -106,7 +106,7 @@ cogo_async_t* cogo_async_sched_remove(cogo_async_sched_t* const sched) {
 
 // run until yield, return the next coroutine will be run
 cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
-#define TOP (COGO_AWAIT_V(cogo)->top)
+#define TOP (COGO_AWAIT_OF(cogo)->top)
   COGO_ASSERT(cogo);
   if (TOP) {
     cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(TOP);

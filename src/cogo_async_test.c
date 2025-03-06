@@ -15,7 +15,7 @@ CO_END:;
 
 static void test_ng(void) {
   ng_t ng = {
-      .cogo = COGO_INIT(ng, &ng),
+      .cogo_self = COGO_INIT(ng, &ng),
   };
   COGO_RESUME(&ng);
   TEST_ASSERT_EQUAL_INT(0, ng.v);
@@ -58,15 +58,15 @@ CO_END:;
 static void test_chan(void) {
   cogo_chan_t c = COGO_CHAN_INIT(0);
   consume_t r = {
-      .cogo = COGO_INIT(consume, &r),
+      .cogo_self = COGO_INIT(consume, &r),
       .chan = &c,
   };
   product_t w = {
-      .cogo = COGO_INIT(product, &w),
+      .cogo_self = COGO_INIT(product, &w),
       .chan = &c,
   };
   entry_t m = {
-      .cogo = COGO_INIT(entry, &m),
+      .cogo_self = COGO_INIT(entry, &m),
       .w = &w,
       .r = &r,
   };

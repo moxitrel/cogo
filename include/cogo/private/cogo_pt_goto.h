@@ -30,8 +30,8 @@ typedef struct cogo_pt {
   cogo_pc_t pc;
 } cogo_pt_t;
 
-#define COGO_PT_V(PT) (PT)
-#define COGO_PC(PT)   (COGO_PT_V(PT)->pc)
+#define COGO_PT_OF(PT) (PT)
+#define COGO_PC(PT)    (COGO_PT_OF(PT)->pc)
 
 #define COGO_BEGIN(PT)                         \
   switch (COGO_PC(PT)) {                       \

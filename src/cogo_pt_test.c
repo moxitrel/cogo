@@ -7,19 +7,18 @@
   #include "cogo/private/cogo_pt_case.h"
 #endif
 
-static void func_yield(COGO_T* cogo, int* v) {
+static void func_yield(COGO_T* cogo, int* retval) {
   COGO_BEGIN(cogo) :;
 
-  (*v)++;
+  (*retval)++;
   COGO_YIELD(cogo);
-  (*v)++;
+  (*retval)++;
 
   COGO_END(cogo) :;
 }
 
 static void test_yield(void) {
   COGO_T cogo = {0};
-
   int v = 0;
   TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&cogo));  // begin
   TEST_ASSERT_EQUAL_INT(0, v);
@@ -40,8 +39,8 @@ static void test_yield(void) {
 }
 
 typedef struct func_return {
-  COGO_T cogo;
   int v;
+  COGO_T cogo;
 } func_return_t;
 
 static void func_return(func_return_t* param) {
@@ -55,8 +54,9 @@ static void func_return(func_return_t* param) {
 }
 
 static void test_return(void) {
-  func_return_t args = {.v = 0};
-
+  func_return_t args = {
+      .v = 0,
+  };
   TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&args.cogo));  // begin
   TEST_ASSERT_EQUAL_INT(0, args.v);
 
@@ -87,11 +87,11 @@ CO_END:
 }
 
 static void test_prologue(void) {
-  COGO_T cogo = {0};
   prologue_t prologue = {
       .enter = 0,
       .exit = 0,
   };
+  COGO_T cogo = {0};
 
   while (COGO_PC(&cogo) != COGO_PC_END) {
     func_prologue(&prologue, &cogo);
@@ -105,11 +105,11 @@ static void test_prologue(void) {
 }
 
 typedef struct ng {
-  int v;
   COGO_T cogo;
+  int v;
 } ng_t;
 
-static void ng_run(ng_t* const ng) {
+static void ng_func(ng_t* const ng) {
   assert(ng);
   COGO_T* const cogo_this = &ng->cogo;
 CO_BEGIN:
@@ -126,13 +126,13 @@ static void test_ng(void) {
       .v = 0,
   };
 
-  ng_run(&ng);
+  ng_func(&ng);
   TEST_ASSERT_EQUAL_INT(0, ng.v);
 
-  ng_run(&ng);
+  ng_func(&ng);
   TEST_ASSERT_EQUAL_INT(1, ng.v);
 
-  ng_run(&ng);
+  ng_func(&ng);
   TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 

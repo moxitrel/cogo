@@ -1,20 +1,20 @@
 #include <cogo/cogo_await.h>
 
 // Should be invoked through CO_AWAIT().
-void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1) {
+void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo_other) {
 #define TOP (cogo_this->sched->top)
 
 #ifdef COGO_DEBUG
   cogo_await_t const* node;
   // No loop in the call chain.
   for (node = cogo_this; node; node = node->caller) {
-    COGO_ASSERT(cogo1 != node);
+    COGO_ASSERT(cogo_other != node);
   }
 #endif
-  COGO_ASSERT(cogo_this && cogo_this->sched && cogo1);
+  COGO_ASSERT(cogo_await_is_valid(cogo_this) && cogo_this->sched && cogo_await_is_valid(cogo_other));
 
-  cogo1->caller = TOP;  // call stack push
-  TOP = cogo1->top;     // continue from resume point
+  cogo_other->caller = TOP;  // call stack push
+  TOP = cogo_other->top;     // continue from resume point
 
 #undef TOP
 }
@@ -22,15 +22,15 @@ void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo1) 
 // Run until CO_YIELD().
 cogo_pc_t cogo_await_resume(cogo_await_t* const cogo_this) {
 #define TOP        (sched.top)
-#define TOP_SCHED  (COGO_AWAIT_V(TOP)->sched)
-#define TOP_CALLER (COGO_AWAIT_V(TOP)->caller)
-#define TOP_FUNC   (COGO_YIELD_V(TOP)->func)
-  COGO_ASSERT(cogo_this);
+#define TOP_SCHED  (COGO_AWAIT_OF(TOP)->sched)
+#define TOP_CALLER (COGO_AWAIT_OF(TOP)->caller)
+#define TOP_FUNC   (COGO_YIELD_OF(TOP)->func)
+  COGO_ASSERT(cogo_await_is_valid(cogo_this));
 
   if (COGO_PC(cogo_this) != COGO_PC_END) {
     cogo_await_sched_t sched = COGO_AWAIT_SCHED_INIT(cogo_this->top);  // Restore the resume point.
     for (;;) {
-      COGO_ASSERT(TOP && TOP_FUNC);
+      COGO_ASSERT(cogo_await_is_valid(TOP));
       TOP_SCHED = &sched;
       TOP_FUNC(TOP);
       switch (COGO_PC(TOP)) {
@@ -57,7 +57,7 @@ cogo_pc_t cogo_await_resume(cogo_await_t* const cogo_this) {
 }
 
 void cogo_await_run(cogo_await_t* const cogo_this) {
-  COGO_ASSERT(cogo_this);
+  COGO_ASSERT(cogo_await_is_valid(cogo_this));
   while (cogo_await_resume(cogo_this) != COGO_PC_END) {
   }
 }

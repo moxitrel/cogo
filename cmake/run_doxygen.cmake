@@ -3,8 +3,6 @@
 # Use of this source code is governed by a MIT-style license
 # that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
 
-include_guard(DIRECTORY)
-
 find_package(Doxygen OPTIONAL_COMPONENTS dot mscgen dia)
 
 if(DOXYGEN_FOUND)
@@ -78,9 +76,13 @@ if(DOXYGEN_FOUND)
   #
   # doxygen
   #
+  set(DOXYGEN_JAVADOC_AUTOBRIEF YES)
+  set(DOXYGEN_QT_AUTOBRIEF YES)
   set(DOXYGEN_OUTPUT_DIRECTORY doxygen) # relative to CMAKE_CURRENT_BINARY_DIR
   set(DOXYGEN_EXCLUDE ${CMAKE_CURRENT_BINARY_DIR})
   set(DOXYGEN_QUIET YES)
+  set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
+  set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
 
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
     doxygen_add_docs(_run_doxygen
