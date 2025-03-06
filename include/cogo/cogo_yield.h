@@ -47,7 +47,9 @@ struct cogo_yield {
 };
 
 #define COGO_YIELD_INIT(NAME) \
-  {.func = NAME##_func}
+  {                           \
+      .func = NAME##_func,    \
+  }
 
 static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
   return cogo && cogo->func;

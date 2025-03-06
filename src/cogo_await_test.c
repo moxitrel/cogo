@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unity.h>
 
-COGO_DECLARE(await2, ) {
+COGO_DECLARE(await2) {
 CO_BEGIN:
 
   CO_YIELD;

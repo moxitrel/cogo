@@ -111,10 +111,15 @@ struct cogo_async_sched {
   //  struct cogo_async_sched* run; // running schedulers (idles not in list)
 };
 
-#define COGO_ASYNC_INIT(NAME, DERIVANT) \
-  {.base_await = COGO_AWAIT_INIT(NAME, DERIVANT)}
-#define COGO_ASYNC_SCHED_INIT(COGO) \
-  ((cogo_async_sched_t){.base_await_sched = COGO_AWAIT_SCHED_INIT(COGO)})
+#define COGO_ASYNC_INIT(NAME, DERIVANT)              \
+  {                                                  \
+      .base_await = COGO_AWAIT_INIT(NAME, DERIVANT), \
+  }
+
+#define COGO_ASYNC_SCHED_INIT(COGO)                    \
+  {                                                    \
+      .base_await_sched = COGO_AWAIT_SCHED_INIT(COGO), \
+  }
 
 #undef COGO_AWAIT_OF
 #undef COGO_AWAIT_SCHED_OF
@@ -244,7 +249,7 @@ int cogo_chan_read(cogo_async_t* cogo_this, cogo_chan_t* chan, cogo_msg_t* msg_n
 int cogo_chan_write(cogo_async_t* cogo_this, cogo_chan_t* chan, cogo_msg_t* msg);
 
 #undef COGO_INIT
-#define COGO_INIT COGO_ASYNC_INIT
+#define COGO_INIT(NAME, DERIVANT) COGO_ASYNC_INIT(NAME, DERIVANT)
 
 #undef COGO_RESUME
 #define COGO_RESUME(DERIVANT) cogo_async_resume(COGO_ASYNC_OF(&(DERIVANT)->cogo_self))

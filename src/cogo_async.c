@@ -129,10 +129,8 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
 }
 
 void cogo_async_run(cogo_async_t* const cogo) {
-  cogo_async_sched_t sched;
   COGO_ASSERT(cogo);
-
-  sched = COGO_ASYNC_SCHED_INIT(cogo);
+  cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(cogo);
   while (cogo_async_sched_resume(&sched)) {
   }
 
