@@ -22,8 +22,8 @@ COGO_DEFINE (NAME)   {} : define a declared coroutine which is not defined.
 
 #ifndef COGO_T
   #define COGO_T cogo_yield_t
-typedef struct cogo_yield cogo_yield_t;
 #endif
+typedef struct cogo_yield cogo_yield_t;
 
 #ifdef COGO_USE_COMPUTED_GOTO
   #include "private/cogo_pt_goto.h"
@@ -37,7 +37,6 @@ typedef struct cogo_yield cogo_yield_t;
 extern "C" {
 #endif
 
-typedef struct cogo_yield cogo_yield_t;
 struct cogo_yield {
   // Inherit from cogo_pt_t.
   cogo_pt_t base_pt;

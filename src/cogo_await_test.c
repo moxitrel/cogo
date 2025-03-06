@@ -64,7 +64,7 @@ COGO_DECLARE(static await0, await2_t a2) {
 CO_BEGIN:
 
   COGO_RESUME(&thiz->a2);
-  TEST_ASSERT_NOT_NULL(thiz->a2.cogo_self.sched->top);
+  TEST_ASSERT_NOT_NULL(thiz->a2.cogo_self.anon.sched->top);
 
   CO_AWAIT(&thiz->a2);
   TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_STATUS(&thiz->a2));

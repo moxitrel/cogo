@@ -33,22 +33,19 @@ cogo_await_t    : coroutine type
 
 #ifndef COGO_T
   #define COGO_T cogo_await_t
-typedef struct cogo_await cogo_await_t;
 #endif
+typedef struct cogo_await cogo_await_t;
 
 #ifndef COGO_SCHED_T
   #define COGO_SCHED_T cogo_await_sched_t
-typedef struct cogo_await_sched cogo_await_sched_t;
 #endif
+typedef struct cogo_await_sched cogo_await_sched_t;
 
 #include "cogo_yield.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct cogo_await cogo_await_t;
-typedef struct cogo_await_sched cogo_await_sched_t;
 
 // implement call stack
 struct cogo_await {
@@ -64,7 +61,7 @@ struct cogo_await {
 
     // resume point
     COGO_T* top;
-  };
+  } anon;
 };
 
 struct cogo_await_sched {
@@ -72,10 +69,10 @@ struct cogo_await_sched {
   COGO_T* top;
 };
 
-#define COGO_AWAIT_INIT(NAME, DERIVANT)    \
-  {                                        \
-      .base_yield = COGO_YIELD_INIT(NAME), \
-      .top = &(DERIVANT)->cogo_self,       \
+#define COGO_AWAIT_INIT(NAME, DERIVANT)        \
+  {                                            \
+      .base_yield = COGO_YIELD_INIT(NAME),     \
+      .anon = {.top = &(DERIVANT)->cogo_self}, \
   }
 
 static inline int cogo_await_is_valid(cogo_await_t const* const cogo) {

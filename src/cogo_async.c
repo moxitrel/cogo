@@ -4,7 +4,7 @@
 // Run until yield. Return the next coroutine to be run.
 static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
 #define TOP        (sched->base_await_sched.top)
-#define TOP_SCHED  (COGO_AWAIT_OF(TOP)->sched)
+#define TOP_SCHED  (COGO_AWAIT_OF(TOP)->anon.sched)
 #define TOP_CALLER (COGO_AWAIT_OF(TOP)->caller)
 #define TOP_FUNC   (COGO_YIELD_OF(TOP)->func)
   COGO_ASSERT(sched);
@@ -40,7 +40,7 @@ exit:
 }
 
 int cogo_chan_read(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
-#define SCHED     (cogo_this->base_await.sched)
+#define SCHED     (cogo_this->base_await.anon.sched)
 #define SCHED_TOP (SCHED->base_await_sched.top)
   ptrdiff_t chan_size;
   COGO_ASSERT(cogo_this && chan && chan->capacity >= 0 && chan->size > PTRDIFF_MIN && msg_next);
@@ -67,7 +67,7 @@ int cogo_chan_read(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_
 }
 
 int cogo_chan_write(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_msg_t* const msg) {
-#define SCHED     (cogo_this->base_await.sched)
+#define SCHED     (cogo_this->base_await.anon.sched)
 #define SCHED_TOP (SCHED->base_await_sched.top)
   ptrdiff_t chan_size;
 
@@ -106,7 +106,7 @@ cogo_async_t* cogo_async_sched_remove(cogo_async_sched_t* const sched) {
 
 // run until yield, return the next coroutine will be run
 cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
-#define TOP (COGO_AWAIT_OF(cogo)->top)
+#define TOP (COGO_AWAIT_OF(cogo)->anon.top)
   COGO_ASSERT(cogo);
   if (TOP) {
     cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(TOP);
