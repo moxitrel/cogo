@@ -96,25 +96,27 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
   }
 
 /// @hideinitializer Define the coroutine.
-/// @param NAME The same identifier passed to the first argument of `COGO_DECLARE`.
+/// @param[in] NAME The coroutine name.
+/// @pre `NAME` must be the same identifier that is passed as the first argument to `COGO_DECLARE(NAME, ...)`.
 #define COGO_DEFINE(NAME)         COGO_DO1_DEFINE(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME)
 #define COGO_DO1_DEFINE(...)      COGO_DO2_DEFINE(__VA_ARGS__)
 #define COGO_DO2_DEFINE(N, ...)   COGO_DO3_DEFINE_##N(__VA_ARGS__)
 #define COGO_DO3_DEFINE_0(NAME)   void NAME##_func(COGO_T* const cogo_this)                      // NAME: name
 #define COGO_DO3_DEFINE_1(NAME)   static void COGO_BLANK_##NAME##_func(COGO_T* const cogo_this)  // NAME: static name
 
-/// @hideinitializer Get the coroutine running status.
-/// @pre `DERIVANT != nullptr`.
+/// @hideinitializer Get the current running status of the coroutine.
+/// @param[in] DERIVANT
+/// @pre `DERIVANT != NULL`.
 #define COGO_STATUS(DERIVANT)     COGO_PC(&(DERIVANT)->cogo_self)
 
 /// @hideinitializer The initializer of `COGO_T` type.
-/// @param NAME The same identifier passed to the first argument of `COGO_DECLARE`.
-/// @param DERIVANT
+/// @param[in] NAME The same identifier passed to the first argument of `COGO_DECLARE(NAME, ...)`.
+/// @param[in] DERIVANT
 #define COGO_INIT(NAME, DERIVANT) COGO_YIELD_INIT(NAME)
 
 /// @hideinitializer Continue to run a suspended coroutine until yield or finished.
-/// @param DERIVANT
-/// @pre `DERIVANT != nullptr`.
+/// @param[in] DERIVANT
+/// @pre `DERIVANT != NULL`.
 #define COGO_RESUME(DERIVANT)     cogo_yield_resume(COGO_YIELD_OF(&(DERIVANT)->cogo_self))
 cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo_this);
 

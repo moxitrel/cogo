@@ -114,6 +114,10 @@ struct cogo_async_sched {
       .base_await = COGO_AWAIT_INIT(NAME, DERIVANT), \
   }
 
+static inline int cogo_async_is_valid(cogo_async_t const* const cogo) {
+  return cogo && cogo_await_is_valid(&cogo->base_await);
+}
+
 #define COGO_ASYNC_SCHED_INIT(COGO)                    \
   {                                                    \
       .base_await_sched = COGO_AWAIT_SCHED_INIT(COGO), \

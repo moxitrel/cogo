@@ -105,13 +105,13 @@ typedef struct cogo_pt {
 #define COGO_PT_OF(PT) (PT)
 
 /// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
-/// @pre `COGO != nullptr`.
+/// @pre `COGO != NULL`.
 #define COGO_PC(COGO)  (+COGO_PT_OF(COGO)->pc)
 
 /// @hideinitializer A label-like macro marks the start of the coroutine.
 /// @param[in] COGO The coroutine object pointer.
-/// @pre `COGO != nullptr`.
-/// @pre `COGO` should have no side effects, e.g., `e++`; otherwise, its behavior is undefined.
+/// @pre `COGO != NULL`.
+/// @pre The expanded expression of `COGO` should have no side effects, e.g., `e++`; otherwise, its behavior is undefined.
 /// @pre There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
 /// @pre There should be only one `COGO_BEGIN()` and `COGO_END()` in a function.
 /// @post If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked first, and then the coroutine continues its execution.
@@ -135,7 +135,7 @@ typedef struct cogo_pt {
 /// @hideinitializer Jump to `COGO_END`, and the next run will start from here.
 /// - Undefined behavior if `COGO_YIELD` used in the **case** statements.
 /// @param[in] COGO The coroutine object pointer that has the type of `cogo_pt_t*`.
-/// @pre `COGO != nullptr`
+/// @pre `COGO != NULL`
 /// @pre `COGO` should has no side effects, or the behavior is undefined (e.g. e++, e -= v).
 /// @pre `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
 /// @post `COGO_ON_YIELD` is called if it's defined before yield.
@@ -159,7 +159,7 @@ typedef struct cogo_pt {
 /// When a coroutine is finished, the coroutine body (between COGO_BEGIN and COGO_END) will be skipped if run again.
 /// @param[in] COGO The value of COGO should point to an object which inherit from cogo_pt_t.
 /// And the object referenced by COGO must be the same one as passed to COGO_BEGIN and COGO_END.
-/// It must not be nullptr.
+/// It must not be NULL.
 /// The expression of COGO must have no side effects (e.g. e++, e -= v) which may cause undefined behavior.
 #define COGO_RETURN(COGO)                    \
   do {                                       \
@@ -168,13 +168,13 @@ typedef struct cogo_pt {
     goto cogo_return; /* end coroutine */    \
   } while (0)
 
-/// @hideinitializer A label like macro marks the end of coroutine function.
+/// @hideinitializer A label-like macro marks the end of the coroutine.
 /// There must be a corresponding @ref COGO_BEGIN before in the same function.
 /// And there should be only one COGO_BEGIN and COGO_END in a function.
 /// @param[in] COGO The value of COGO should point to an object which inherit from cogo_pt_t.
-/// And the object referenced by COGO must be the same one as passed to COGO_BEGIN.
-/// It must not be nullptr.
-/// The expression of COGO must have no side effects (e.g., e++) which may cause undefined behavior.
+/// @pre `COGO != NULL`.
+/// @pre The expanded expression of `COGO` should have no side effects, e.g., `e++`; otherwise, its behavior is undefined.
+/// @pre The object referenced by `COGO` must be the same one that was passed to `COGO_BEGIN`.
 #define COGO_END(COGO)                     \
 cogo_return:                               \
   COGO_ASSERT((COGO) == (COGO) && (COGO)); \

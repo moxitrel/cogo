@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.10)
 project(cogo
   VERSION 2.0.0
   HOMEPAGE_URL "https://github.com/moxitrel/cogo"
@@ -113,6 +113,12 @@ if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
   target_compile_options(cogo PRIVATE
     ${_compile_options}
   )
+  target_compile_features(cogo PRIVATE
+    c_std_90
+  )
+  set_target_properties(cogo PROPERTIES
+    C_EXTENSIONS N
+  )
 
   check_c_compiler_flag(-Wno-pre-c11-compat _Wno_pre_c11_compat)
   target_compile_options(unity PUBLIC
@@ -154,10 +160,10 @@ if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
   add_executable(test_async src/cogo_async_test.c)
   add_test(NAME test_async COMMAND test_async)
 
-  add_custom_target(RunTests ALL VERBATIM
+  add_custom_target(_RunTests ALL VERBATIM
     COMMAND ctest --output-on-failure --schedule-random -T MemCheck -j2
   )
-  add_dependencies(RunTests
+  add_dependencies(_RunTests
     test_pt
     test_yield
     test_await

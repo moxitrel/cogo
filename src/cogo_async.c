@@ -10,7 +10,7 @@ static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
   COGO_ASSERT(sched);
 
   for (;;) {
-    COGO_ASSERT(TOP && TOP_FUNC);
+    COGO_ASSERT(cogo_async_is_valid(TOP));
     TOP_SCHED = sched;
     TOP_FUNC(TOP);
     if (!TOP) {  // blocking
@@ -43,7 +43,7 @@ int cogo_chan_read(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_
 #define SCHED     (cogo_this->base_await.anon.sched)
 #define SCHED_TOP (SCHED->base_await_sched.top)
   ptrdiff_t chan_size;
-  COGO_ASSERT(cogo_this && chan && chan->capacity >= 0 && chan->size > PTRDIFF_MIN && msg_next);
+  COGO_ASSERT(cogo_async_is_valid(cogo_this) && chan && chan->capacity >= 0 && chan->size > PTRDIFF_MIN && msg_next);
 
   chan_size = chan->size--;
   if (chan_size <= 0) {
@@ -71,7 +71,7 @@ int cogo_chan_write(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo
 #define SCHED_TOP (SCHED->base_await_sched.top)
   ptrdiff_t chan_size;
 
-  COGO_ASSERT(cogo_this && chan && chan->capacity >= 0 && chan->size < PTRDIFF_MAX && msg);
+  COGO_ASSERT(cogo_async_is_valid(cogo_this) && chan && chan->capacity >= 0 && chan->size < PTRDIFF_MAX && msg);
   chan_size = chan->size++;
   if (chan_size < 0) {
     COGO_MQ_POP_NONEMPTY(&chan->mq)->next = msg;
@@ -94,7 +94,7 @@ int cogo_chan_write(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo
 }
 
 int cogo_async_sched_add(cogo_async_sched_t* const sched, cogo_async_t* const cogo) {
-  COGO_ASSERT(sched && cogo);
+  COGO_ASSERT(sched && cogo_async_is_valid(cogo));
   COGO_CQ_PUSH(&sched->q, cogo);
   return 1;  // switch context
 }
@@ -107,7 +107,7 @@ cogo_async_t* cogo_async_sched_remove(cogo_async_sched_t* const sched) {
 // run until yield, return the next coroutine will be run
 cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
 #define TOP (COGO_AWAIT_OF(cogo)->anon.top)
-  COGO_ASSERT(cogo);
+  COGO_ASSERT(cogo_async_is_valid(cogo));
   if (TOP) {
     cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(TOP);
     COGO_CQ_PUSH(&sched.q, TOP->next);
@@ -129,9 +129,11 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
 }
 
 void cogo_async_run(cogo_async_t* const cogo) {
-  COGO_ASSERT(cogo);
-  cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(cogo);
-  while (cogo_async_sched_resume(&sched)) {
+  COGO_ASSERT(cogo_async_is_valid(cogo));
+  {
+    cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(cogo);
+    while (cogo_async_sched_resume(&sched)) {
+    }
   }
 
   /* mt
