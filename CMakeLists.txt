@@ -163,10 +163,10 @@ if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
   add_custom_target(_RunTests ALL VERBATIM
     COMMAND ctest --output-on-failure --schedule-random -T MemCheck -j2
   )
-  # add_dependencies(_RunTests
-  #   test_pt
-  #   test_yield
-  #   test_await
-  #   test_async
-  # )
+  add_dependencies(_RunTests
+    test_pt
+    test_yield
+    test_await
+    test_async
+  )
 endif()
