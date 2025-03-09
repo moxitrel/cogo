@@ -2,8 +2,8 @@
 #include <cogo/cogo_yield.h>
 #include <unity.h>
 
-COGO_DECLARE(/*NAME*/ ng, /*params*/ int v) {
-  ng_t* const thiz = (ng_t*)cogo_this;
+COGO_DECLARE(ng, int v) {
+  ng_t* const thiz = (ng_t*)COGO_THIS;
 CO_BEGIN:
 
   for (;; thiz->v++) {
@@ -15,7 +15,7 @@ CO_END:;
 
 static void test_ng(void) {
   ng_t ng = {
-      .cogo_self = COGO_INIT(ng, &ng),
+      .COGO_V = COGO_INIT(ng, &ng),
       .v = 0,
   };
 

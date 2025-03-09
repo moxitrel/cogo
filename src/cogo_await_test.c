@@ -13,7 +13,7 @@ CO_END:;
 }
 
 COGO_DECLARE(await1, await2_t* a2) {
-  await1_t* const thiz = (await1_t*)cogo_this;
+  await1_t* const thiz = (await1_t*)COGO_THIS;
 CO_BEGIN:
 
   CO_AWAIT(thiz->a2);
@@ -23,10 +23,10 @@ CO_END:;
 
 static void test_resume(void) {
   await2_t a2 = {
-      .cogo_self = COGO_INIT(await2, &a2),
+      .COGO_V = COGO_INIT(await2, &a2),
   };
   await1_t a1 = {
-      .cogo_self = COGO_INIT(await1, &a1),
+      .COGO_V = COGO_INIT(await1, &a1),
       .a2 = &a2,
   };
 
@@ -60,11 +60,11 @@ static void test_resume(void) {
 }
 
 COGO_DECLARE(static await0, await2_t a2) {
-  await0_t* const thiz = (await0_t*)cogo_this;
+  await0_t* const thiz = (await0_t*)COGO_THIS;
 CO_BEGIN:
 
   COGO_RESUME(&thiz->a2);
-  TEST_ASSERT_NOT_NULL(thiz->a2.cogo_self.anon.sched->top);
+  TEST_ASSERT_NOT_NULL(thiz->a2.COGO_V.anon.sched->top);
 
   CO_AWAIT(&thiz->a2);
   TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_STATUS(&thiz->a2));
@@ -74,9 +74,9 @@ CO_END:;
 
 static void test_await_resumed(void) {
   await0_t a0 = {
-      .cogo_self = COGO_INIT(await0, &a0),
+      .COGO_V = COGO_INIT(await0, &a0),
       .a2 = {
-          .cogo_self = COGO_INIT(await2, &a0.a2),
+          .COGO_V = COGO_INIT(await2, &a0.a2),
       },
   };
   COGO_RUN(&a0);
@@ -84,7 +84,7 @@ static void test_await_resumed(void) {
 }
 
 COGO_DECLARE(ng, int v) {
-  ng_t* const thiz = (ng_t*)cogo_this;
+  ng_t* const thiz = (ng_t*)COGO_THIS;
 CO_BEGIN:
 
   for (;; thiz->v++) {
@@ -96,7 +96,7 @@ CO_END:;
 
 static void test_ng(void) {
   ng_t ng = {
-      .cogo_self = COGO_INIT(ng, &ng),
+      .COGO_V = COGO_INIT(ng, &ng),
   };
 
   COGO_RESUME(&ng);
@@ -121,7 +121,7 @@ static int fib(int n) {
 }
 
 COGO_DECLARE(fib, /*arg*/ int n, /*retval*/ int v, /*local*/ fib_t* fib1, /*local*/ fib_t* fib2) {
-  fib_t* const thiz = (fib_t*)cogo_this;
+  fib_t* const thiz = (fib_t*)COGO_THIS;
 CO_BEGIN:
   assert(thiz->n > 0);
 
@@ -133,7 +133,7 @@ CO_BEGIN:
     thiz->fib1 = (fib_t*)malloc(sizeof(*thiz->fib1));
     assert(thiz->fib1);
     *thiz->fib1 = (fib_t){
-        .cogo_self = COGO_INIT(fib, thiz->fib1),
+        .COGO_V = COGO_INIT(fib, thiz->fib1),
         .n = thiz->n - 1,
     };
     CO_AWAIT(thiz->fib1);  // eval f(n-1)
@@ -143,7 +143,7 @@ CO_BEGIN:
     thiz->fib2 = (fib_t*)malloc(sizeof(*thiz->fib2));
     assert(thiz->fib2);
     *thiz->fib2 = (fib_t){
-        .cogo_self = COGO_INIT(fib, thiz->fib2),
+        .COGO_V = COGO_INIT(fib, thiz->fib2),
         .n = thiz->n - 2,
     };
     CO_AWAIT(thiz->fib2);  // eval f(n-2)
@@ -156,15 +156,15 @@ CO_END:;
 
 static void test_fib(void) {
   fib_t f03 = {
-      .cogo_self = COGO_INIT(fib, &f03),
+      .COGO_V = COGO_INIT(fib, &f03),
       .n = 3,
   };
   fib_t f11 = {
-      .cogo_self = COGO_INIT(fib, &f11),
+      .COGO_V = COGO_INIT(fib, &f11),
       .n = 11,
   };
   fib_t f23 = {
-      .cogo_self = COGO_INIT(fib, &f23),
+      .COGO_V = COGO_INIT(fib, &f23),
       .n = 23,
   };
 

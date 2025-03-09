@@ -6,15 +6,17 @@ project(cogo
 )
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
-include(CTest)
 include(cmake/cogoCPack.cmake)
+if(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
+  include(CTest)
+endif()
 
-option(COGO_TEST "Build and run tests."
-  YES
-)
-option(COGO_USE_COMPUTED_GOTO "Use GCC extension (labels as values) to implement the coroutine."
-  NO
-)
+if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING)
+  set(_default_COGO_TEST YES)
+endif()
+
+option(COGO_TEST "Build and run tests." ${_default_COGO_TEST})
+option(COGO_USE_COMPUTED_GOTO "Use GCC extension (labels as values) to implement the coroutine.")
 
 file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS
   include/*.h
@@ -71,7 +73,7 @@ install(
 
 include(cmake/run_doxygen.cmake)
 
-if(COGO_TEST OR(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING))
+if(COGO_TEST)
   include(CheckCCompilerFlag)
   include(cmake/unity.cmake)
 

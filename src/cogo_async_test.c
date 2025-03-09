@@ -3,7 +3,7 @@
 #include <unity.h>
 
 COGO_DECLARE(ng, int v) {
-  ng_t* const thiz = (ng_t*)cogo_this;
+  ng_t* const thiz = (ng_t*)COGO_THIS;
 CO_BEGIN:
 
   for (;; thiz->v++) {
@@ -15,7 +15,7 @@ CO_END:;
 
 static void test_ng(void) {
   ng_t ng = {
-      .cogo_self = COGO_INIT(ng, &ng),
+      .COGO_V = COGO_INIT(ng, &ng),
   };
   COGO_RESUME(&ng);
   TEST_ASSERT_EQUAL_INT(0, ng.v);
@@ -28,7 +28,7 @@ static void test_ng(void) {
 }
 
 COGO_DECLARE(consume, cogo_chan_t* chan, cogo_msg_t msg) {
-  consume_t* const thiz = (consume_t*)cogo_this;
+  consume_t* const thiz = (consume_t*)COGO_THIS;
 CO_BEGIN:
 
   CO_CHAN_READ(thiz->chan, &thiz->msg);
@@ -37,7 +37,7 @@ CO_END:;
 }
 
 COGO_DECLARE(product, cogo_chan_t* chan, cogo_msg_t msg) {
-  product_t* const thiz = (product_t*)cogo_this;
+  product_t* const thiz = (product_t*)COGO_THIS;
 CO_BEGIN:
 
   CO_CHAN_WRITE(thiz->chan, &thiz->msg);
@@ -46,7 +46,7 @@ CO_END:;
 }
 
 COGO_DECLARE(entry, consume_t* r, product_t* w) {
-  entry_t* const thiz = (entry_t*)cogo_this;
+  entry_t* const thiz = (entry_t*)COGO_THIS;
 CO_BEGIN:
 
   CO_ASYNC(thiz->r);
@@ -58,15 +58,15 @@ CO_END:;
 static void test_chan(void) {
   cogo_chan_t c = COGO_CHAN_INIT(0);
   consume_t r = {
-      .cogo_self = COGO_INIT(consume, &r),
+      .COGO_V = COGO_INIT(consume, &r),
       .chan = &c,
   };
   product_t w = {
-      .cogo_self = COGO_INIT(product, &w),
+      .COGO_V = COGO_INIT(product, &w),
       .chan = &c,
   };
   entry_t m = {
-      .cogo_self = COGO_INIT(entry, &m),
+      .COGO_V = COGO_INIT(entry, &m),
       .w = &w,
       .r = &r,
   };

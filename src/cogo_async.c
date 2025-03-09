@@ -39,17 +39,17 @@ exit:
 #undef TOP
 }
 
-int cogo_chan_read(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
-#define SCHED     (cogo_this->base_await.anon.sched)
+int cogo_chan_read(cogo_async_t* const COGO_THIS, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
+#define SCHED     (COGO_THIS->base_await.anon.sched)
 #define SCHED_TOP (SCHED->base_await_sched.top)
   ptrdiff_t chan_size;
-  COGO_ASSERT(cogo_async_is_valid(cogo_this) && chan && chan->capacity >= 0 && chan->size > PTRDIFF_MIN && msg_next);
+  COGO_ASSERT(cogo_async_is_valid(COGO_THIS) && chan && chan->capacity >= 0 && chan->size > PTRDIFF_MIN && msg_next);
 
   chan_size = chan->size--;
   if (chan_size <= 0) {
     COGO_MQ_PUSH(&chan->mq, msg_next);
     // sleep in background
-    COGO_CQ_PUSH(&chan->cq, cogo_this);  // append to blocking queue
+    COGO_CQ_PUSH(&chan->cq, COGO_THIS);  // append to blocking queue
     SCHED_TOP = NULL;                    // remove from scheduler
     return 1;                            // switch context
   } else {
@@ -66,12 +66,12 @@ int cogo_chan_read(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_
 #undef SCHED
 }
 
-int cogo_chan_write(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo_msg_t* const msg) {
-#define SCHED     (cogo_this->base_await.anon.sched)
+int cogo_chan_write(cogo_async_t* const COGO_THIS, cogo_chan_t* const chan, cogo_msg_t* const msg) {
+#define SCHED     (COGO_THIS->base_await.anon.sched)
 #define SCHED_TOP (SCHED->base_await_sched.top)
   ptrdiff_t chan_size;
 
-  COGO_ASSERT(cogo_async_is_valid(cogo_this) && chan && chan->capacity >= 0 && chan->size < PTRDIFF_MAX && msg);
+  COGO_ASSERT(cogo_async_is_valid(COGO_THIS) && chan && chan->capacity >= 0 && chan->size < PTRDIFF_MAX && msg);
   chan_size = chan->size++;
   if (chan_size < 0) {
     COGO_MQ_POP_NONEMPTY(&chan->mq)->next = msg;
@@ -83,7 +83,7 @@ int cogo_chan_write(cogo_async_t* const cogo_this, cogo_chan_t* const chan, cogo
       return 0;
     } else {
       // sleep in background
-      COGO_CQ_PUSH(&chan->cq, cogo_this);
+      COGO_CQ_PUSH(&chan->cq, COGO_THIS);
       SCHED_TOP = NULL;
       return 1;
     }

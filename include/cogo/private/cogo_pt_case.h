@@ -183,13 +183,13 @@ cogo_return:                               \
   } /* switch */                           \
   cogo_end
 
-/// @var COGO_T* cogo_this
+/// @var COGO_T* COGO_THIS
 /// The implicit variable representing the current coroutine object, which is used by CO_* macros (e.g., CO_BEGIN, CO_YIELD, ...).
 
-#define CO_BEGIN  COGO_BEGIN(cogo_this)
-#define CO_END    COGO_END(cogo_this)
-#define CO_YIELD  COGO_YIELD(cogo_this)
-#define CO_RETURN COGO_RETURN(cogo_this)
+#define CO_BEGIN  COGO_BEGIN(COGO_THIS)
+#define CO_END    COGO_END(COGO_THIS)
+#define CO_YIELD  COGO_YIELD(COGO_THIS)
+#define CO_RETURN COGO_RETURN(COGO_THIS)
 
 #ifdef __cplusplus
 }

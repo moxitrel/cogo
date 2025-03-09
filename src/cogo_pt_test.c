@@ -39,8 +39,8 @@ static void test_yield(void) {
 }
 
 typedef struct func_return {
-  int v;
   COGO_T cogo;
+  int v;
 } func_return_t;
 
 static void func_return(func_return_t* param) {
@@ -75,7 +75,7 @@ typedef struct prologue {
   int exit;
 } prologue_t;
 
-static void func_prologue(prologue_t* prologue, COGO_T* cogo_this) {
+static void func_prologue(COGO_T* COGO_THIS, prologue_t* prologue) {
   prologue->enter++;
 CO_BEGIN:
 
@@ -94,12 +94,12 @@ static void test_prologue(void) {
   COGO_T cogo = {0};
 
   while (COGO_PC(&cogo) != COGO_PC_END) {
-    func_prologue(&prologue, &cogo);
+    func_prologue(&cogo, &prologue);
   }
   TEST_ASSERT_EQUAL_INT(3, prologue.enter);
   TEST_ASSERT_EQUAL_INT(3, prologue.exit);
 
-  func_prologue(&prologue, &cogo);
+  func_prologue(&cogo, &prologue);
   TEST_ASSERT_EQUAL_INT(4, prologue.enter);
   TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
@@ -111,7 +111,7 @@ typedef struct ng {
 
 static void ng_func(ng_t* const ng) {
   assert(ng);
-  COGO_T* const cogo_this = &ng->cogo;
+  COGO_T* const COGO_THIS = &ng->cogo;
 CO_BEGIN:
 
   for (;; ng->v++) {
