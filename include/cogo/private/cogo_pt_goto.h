@@ -77,6 +77,11 @@ cogo_return:                 \
 #define COGO_DO1_LABEL(...) COGO_DO2_LABEL(__VA_ARGS__)
 #define COGO_DO2_LABEL(N)   cogo_yield_##N
 
+#define CO_BEGIN            COGO_BEGIN(COGO_THIS)
+#define CO_END              COGO_END(COGO_THIS)
+#define CO_YIELD            COGO_YIELD(COGO_THIS)
+#define CO_RETURN           COGO_RETURN(COGO_THIS)
+
 #ifndef COGO_ON_BEGIN
   #define COGO_ON_BEGIN(PT)
 #endif
@@ -100,11 +105,6 @@ cogo_return:                 \
 #ifndef COGO_T
   #define COGO_T cogo_pt_t
 #endif
-
-#define CO_BEGIN  COGO_BEGIN(COGO_THIS)
-#define CO_END    COGO_END(COGO_THIS)
-#define CO_YIELD  COGO_YIELD(COGO_THIS)
-#define CO_RETURN COGO_RETURN(COGO_THIS)
 
 #ifdef __cplusplus
 }

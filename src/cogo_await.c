@@ -1,17 +1,17 @@
 #include <cogo/cogo_await.h>
 
 // Should be invoked through CO_AWAIT().
-void cogo_await_await(cogo_await_t* const COGO_THIS, cogo_await_t* const cogo_other) {
-#define TOP (COGO_THIS->anon.sched->top)
+void cogo_await_await(cogo_await_t* const cogo_this, cogo_await_t* const cogo_other) {
+#define TOP (cogo_this->anon.sched->top)
 
 #ifdef COGO_DEBUG
   cogo_await_t const* node;
   // No loop in the call chain.
-  for (node = COGO_THIS; node; node = node->caller) {
+  for (node = cogo_this; node; node = node->caller) {
     COGO_ASSERT(cogo_other != node);
   }
 #endif
-  COGO_ASSERT(cogo_await_is_valid(COGO_THIS) && COGO_THIS->anon.sched && cogo_await_is_valid(cogo_other));
+  COGO_ASSERT(cogo_await_is_valid(cogo_this) && cogo_this->anon.sched && cogo_await_is_valid(cogo_other));
 
   cogo_other->caller = TOP;    // call stack push
   TOP = cogo_other->anon.top;  // continue from resume point
@@ -20,15 +20,15 @@ void cogo_await_await(cogo_await_t* const COGO_THIS, cogo_await_t* const cogo_ot
 }
 
 // Run until CO_YIELD().
-cogo_pc_t cogo_await_resume(cogo_await_t* const COGO_THIS) {
+cogo_pc_t cogo_await_resume(cogo_await_t* const cogo) {
 #define TOP        (sched.top)
 #define TOP_SCHED  (COGO_AWAIT_OF(TOP)->anon.sched)
 #define TOP_CALLER (COGO_AWAIT_OF(TOP)->caller)
 #define TOP_FUNC   (COGO_YIELD_OF(TOP)->func)
-  COGO_ASSERT(cogo_await_is_valid(COGO_THIS));
+  COGO_ASSERT(cogo_await_is_valid(cogo));
 
-  if (COGO_PC(COGO_THIS) != COGO_PC_END) {
-    cogo_await_sched_t sched = COGO_AWAIT_SCHED_INIT(COGO_THIS->anon.top);  // Restore the resume point.
+  if (COGO_PC(cogo) != COGO_PC_END) {
+    cogo_await_sched_t sched = COGO_AWAIT_SCHED_INIT(cogo->anon.top);  // Restore the resume point.
     for (;;) {
       COGO_ASSERT(cogo_await_is_valid(TOP));
       TOP_SCHED = &sched;
@@ -46,18 +46,18 @@ cogo_pc_t cogo_await_resume(cogo_await_t* const COGO_THIS) {
       }
     }
   exit:
-    COGO_THIS->anon.top = TOP;  // Save the resume point.
+    cogo->anon.top = TOP;  // Save the resume point.
   }
 
-  return COGO_PC(COGO_THIS);
+  return COGO_PC(cogo);
 #undef TOP_FUNC
 #undef TOP_CALLER
 #undef TOP_SCHED
 #undef TOP
 }
 
-void cogo_await_run(cogo_await_t* const COGO_THIS) {
-  COGO_ASSERT(cogo_await_is_valid(COGO_THIS));
-  while (cogo_await_resume(COGO_THIS) != COGO_PC_END) {
+void cogo_await_run(cogo_await_t* const cogo) {
+  COGO_ASSERT(cogo_await_is_valid(cogo));
+  while (cogo_await_resume(cogo) != COGO_PC_END) {
   }
 }

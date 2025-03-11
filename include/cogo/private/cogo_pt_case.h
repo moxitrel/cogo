@@ -23,6 +23,10 @@
 #ifndef COGO_PT_CASE_H_
 #define COGO_PT_CASE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// @hideinitializer The invalid pc handler, which is invoked when the coroutine's pc value isn't valid.
 /// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
@@ -69,15 +73,6 @@
 /// @note You should define this macro before including the header file, or redefine (`#undef COGO_ON_END` first, and then `#define` again) it after inclusion.
 #ifndef COGO_ON_END
   #define COGO_ON_END(COGO)  // noop
-#endif
-
-/// @hideinitializer An opaque object type that saves the coroutine states.
-#ifndef COGO_T
-  #define COGO_T cogo_pt_t
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 #if defined(COGO_DEBUG) && defined(assert)
@@ -190,6 +185,11 @@ cogo_return:                               \
 #define CO_END    COGO_END(COGO_THIS)
 #define CO_YIELD  COGO_YIELD(COGO_THIS)
 #define CO_RETURN COGO_RETURN(COGO_THIS)
+
+/// @hideinitializer An opaque object type that saves the coroutine states.
+#ifndef COGO_T
+  #define COGO_T cogo_pt_t
+#endif
 
 #ifdef __cplusplus
 }

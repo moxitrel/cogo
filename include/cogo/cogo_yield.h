@@ -20,6 +20,8 @@ COGO_DEFINE (NAME)   {} : define a declared coroutine which is not defined.
 #ifndef COGO_YIELD_H_
 #define COGO_YIELD_H_
 
+#include "private/macro_utils.h"
+
 #ifndef COGO_T
   #define COGO_T cogo_yield_t
 #endif
@@ -30,8 +32,6 @@ typedef struct cogo_yield cogo_yield_t;
 #else
   #include "private/cogo_pt_case.h"
 #endif
-
-#include "private/macro_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,8 +54,8 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
   return cogo && cogo->func;
 }
 
+#define COGO_YIELD_OF(YIELD) (YIELD)
 #undef COGO_PT_OF
-#define COGO_YIELD_OF(COGO)     (COGO)
 #define COGO_PT_OF(COGO)        (&COGO_YIELD_OF(COGO)->base_pt)
 
 /// @hideinitializer Declare the coroutine.
@@ -63,7 +63,7 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 //
 // typedef struct NAME NAME_t;
 // struct NAME {
-//  COGO_T COGO_V;
+//  COGO_T COGO_SELF;
 //  ...
 // };
 // void NAME_func(NAME_t* const COGO_THIS)
@@ -87,12 +87,12 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
   COGO_DO3_STRUCT_##N(NAME, __VA_ARGS__)
 #define COGO_DO3_STRUCT_0(NAME, ...)      \
   struct NAME {                           \
-    COGO_T COGO_V;                        \
+    COGO_T COGO_SELF;                     \
     ZY_MAP1(;, ZY_IDENTITY, __VA_ARGS__); \
   }
 #define COGO_DO3_STRUCT_1(NAME, ...) \
   struct NAME {                      \
-    COGO_T COGO_V;                   \
+    COGO_T COGO_SELF;                \
   }
 
 /// @hideinitializer Define the coroutine.
@@ -119,7 +119,7 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 /// @param[in] DERIVANT
 /// @pre `DERIVANT != NULL`.
 #define COGO_RESUME(DERIVANT)     cogo_yield_resume(COGO_YIELD_OF(&(DERIVANT)->COGO_V))
-cogo_pc_t cogo_yield_resume(cogo_yield_t* COGO_THIS);
+cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo);
 
 #ifdef __cplusplus
 }
