@@ -8,14 +8,14 @@ CO_YIELD
 CO_RETURN
 CO_AWAIT  (CO)  : run another coroutine until finished
 
-COGO_INIT   (CO, NAME, ...)
+COGO_INIT   (TYPE, OBJECT)
 cogo_status_t
 COGO_STATUS (CO)
 COGO_RESUME (CO)
 COGO_RUN    (CO)
 
-CO_DECLARE(NAME, ...){}
-CO_DEFINE (NAME)     {}
+CO_DECLARE(TYPE, ...){}
+CO_DEFINE (TYPE)     {}
 
 cogo_await_t    : coroutine type
 
@@ -69,9 +69,9 @@ struct cogo_await_sched {
   COGO_T* top;
 };
 
-#define COGO_AWAIT_INIT(NAME, DERIVANT)        \
+#define COGO_AWAIT_INIT(TYPE, DERIVANT)        \
   {                                            \
-      .base_yield = COGO_YIELD_INIT(NAME),     \
+      .base_yield = COGO_YIELD_INIT(TYPE),     \
       .anon = {.top = &(DERIVANT)->COGO_THIS}, \
   }
 
@@ -101,7 +101,7 @@ static inline int cogo_await_is_valid(cogo_await_t const* const cogo) {
 void cogo_await_await(cogo_await_t* cogo, cogo_await_t* cogo_other);
 
 #undef COGO_INIT
-#define COGO_INIT(NAME, DERIVANT) COGO_AWAIT_INIT(NAME, DERIVANT)
+#define COGO_INIT(TYPE, DERIVANT) COGO_AWAIT_INIT(TYPE, DERIVANT)
 
 // Continue to run a suspended coroutine until yield or finished.
 #undef COGO_RESUME

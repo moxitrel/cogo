@@ -11,7 +11,7 @@ CO_ASYNC      (COGO)              : run a new coroutine concurrently.
 CO_CHAN_WRITE (CHAN, MSG)       : send a message to channel
 CO_CHAN_READ  (CHAN, MSG_NEXT)  : receive a message from channel, the result stored in cogo_msg_t.next
 
-COGO_INIT       (COGO, FUNC, ...)
+COGO_INIT       (COGO, OBJECT)
 cogo_msg_t      : channel message type
 cogo_chan_t         : channel type
 COGO_CHAN_INIT  (N) : return a channel with capacity size_t
@@ -109,9 +109,9 @@ struct cogo_async_sched {
   //  struct cogo_async_sched* run; // running schedulers (idles not in list)
 };
 
-#define COGO_ASYNC_INIT(NAME, DERIVANT)              \
+#define COGO_ASYNC_INIT(TYPE, DERIVANT)              \
   {                                                  \
-      .base_await = COGO_AWAIT_INIT(NAME, DERIVANT), \
+      .base_await = COGO_AWAIT_INIT(TYPE, DERIVANT), \
   }
 
 static inline int cogo_async_is_valid(cogo_async_t const* const cogo) {
@@ -251,7 +251,7 @@ int cogo_chan_read(cogo_async_t* COGO_THIS, cogo_chan_t* chan, cogo_msg_t* msg_n
 int cogo_chan_write(cogo_async_t* COGO_THIS, cogo_chan_t* chan, cogo_msg_t* msg);
 
 #undef COGO_INIT
-#define COGO_INIT(NAME, DERIVANT) COGO_ASYNC_INIT(NAME, DERIVANT)
+#define COGO_INIT(TYPE, DERIVANT) COGO_ASYNC_INIT(TYPE, DERIVANT)
 
 #undef COGO_RESUME
 #define COGO_RESUME(DERIVANT) cogo_async_resume(COGO_ASYNC_OF(&(DERIVANT)->COGO_THIS))

@@ -11,10 +11,10 @@ COGO_STATUS()       : get the current running status.
   COGO_STATUS_BEGIN : inited
   COGO_STATUS_END   : finished
 
-CO_DECLARE(NAME, ...){} : declare a coroutine.
+CO_DECLARE(TYPE, ...){} : declare a coroutine.
   FUNC_t                : the declared coroutine type.
   FUNC_resume           : the declared coroutine function.
-COGO_DEFINE (NAME)   {} : define a declared coroutine which is not defined.
+COGO_DEFINE (TYPE)   {} : define a declared coroutine which is not defined.
 
 */
 #ifndef COGO_YIELD_H_
@@ -45,9 +45,9 @@ struct cogo_yield {
   void (*func)(COGO_T* COGO_THIS);
 };
 
-#define COGO_YIELD_INIT(NAME) \
+#define COGO_YIELD_INIT(TYPE) \
   {                           \
-      .func = NAME##_func,    \
+      .func = TYPE##_func,    \
   }
 
 static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
@@ -59,50 +59,50 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 #define COGO_PT_OF(COGO)        (&COGO_YIELD_OF(COGO)->base_pt)
 
 /// @hideinitializer Declare the coroutine.
-/// @param NAME The coroutine name.
+/// @param TYPE The coroutine name.
 //
-// typedef struct NAME NAME_t;
-// struct NAME {
+// typedef struct TYPE TYPE;
+// struct TYPE {
 //  COGO_T COGO_THIS;
 //  ...
 // };
-// void NAME_func(NAME_t* const COGO_THIS)
-#define COGO_DECLARE(NAME, ...) COGO_DO1_DECLARE(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME, __VA_ARGS__)
+// void NAME_func(TYPE* const COGO_THIS)
+#define COGO_DECLARE(TYPE, ...) COGO_DO1_DECLARE(ZY_HAS_COMMA(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
 #define COGO_DO1_DECLARE(...)   COGO_DO2_DECLARE(__VA_ARGS__)
-#define COGO_DO2_DECLARE(N, NAME, ...)     \
-  COGO_DO3_DECLARE_##N(NAME, __VA_ARGS__); \
-  COGO_DEFINE(NAME)
-#define COGO_DO3_DECLARE_0(NAME, ...) COGO_STRUCT(NAME, __VA_ARGS__)               // NAME: name
-#define COGO_DO3_DECLARE_1(NAME, ...) COGO_STRUCT(COGO_BLANK_##NAME, __VA_ARGS__)  // NAME: static name
+#define COGO_DO2_DECLARE(N, TYPE, ...)     \
+  COGO_DO3_DECLARE_##N(TYPE, __VA_ARGS__); \
+  COGO_DEFINE(TYPE)
+#define COGO_DO3_DECLARE_0(TYPE, ...) COGO_STRUCT(TYPE, __VA_ARGS__)               // TYPE: name
+#define COGO_DO3_DECLARE_1(TYPE, ...) COGO_STRUCT(COGO_BLANK_##TYPE, __VA_ARGS__)  // TYPE: static name
 
 #define COGO_COMMA_static             ,
 #define COGO_COMMA_extern             ,
 #define COGO_BLANK_static
 #define COGO_BLANK_extern
 
-#define COGO_STRUCT(NAME, ...) COGO_DO1_STRUCT(ZY_IS_EMPTY(__VA_ARGS__), NAME, __VA_ARGS__)
+#define COGO_STRUCT(TYPE, ...) COGO_DO1_STRUCT(ZY_IS_EMPTY(__VA_ARGS__), TYPE, __VA_ARGS__)
 #define COGO_DO1_STRUCT(...)   COGO_DO2_STRUCT(__VA_ARGS__)
-#define COGO_DO2_STRUCT(N, NAME, ...) \
-  typedef struct NAME NAME##_t;       \
-  COGO_DO3_STRUCT_##N(NAME, __VA_ARGS__)
-#define COGO_DO3_STRUCT_0(NAME, ...)      \
-  struct NAME {                           \
+#define COGO_DO2_STRUCT(N, TYPE, ...) \
+  typedef struct TYPE TYPE;           \
+  COGO_DO3_STRUCT_##N(TYPE, __VA_ARGS__)
+#define COGO_DO3_STRUCT_0(TYPE, ...)      \
+  struct TYPE {                           \
     COGO_T COGO_THIS;                     \
     ZY_MAP1(;, ZY_IDENTITY, __VA_ARGS__); \
   }
-#define COGO_DO3_STRUCT_1(NAME, ...) \
-  struct NAME {                      \
+#define COGO_DO3_STRUCT_1(TYPE, ...) \
+  struct TYPE {                      \
     COGO_T COGO_THIS;                \
   }
 
 /// @hideinitializer Define the coroutine.
-/// @param[in] NAME The coroutine name.
-/// @pre `NAME` must be the same identifier that is passed as the first argument to `COGO_DECLARE(NAME, ...)`.
-#define COGO_DEFINE(NAME)         COGO_DO1_DEFINE(ZY_HAS_COMMA(COGO_COMMA_##NAME), NAME)
+/// @param[in] TYPE The coroutine name.
+/// @pre `TYPE` must be the same identifier that is passed as the first argument to `COGO_DECLARE(TYPE, ...)`.
+#define COGO_DEFINE(TYPE)         COGO_DO1_DEFINE(ZY_HAS_COMMA(COGO_COMMA_##TYPE), TYPE)
 #define COGO_DO1_DEFINE(...)      COGO_DO2_DEFINE(__VA_ARGS__)
 #define COGO_DO2_DEFINE(N, ...)   COGO_DO3_DEFINE_##N(__VA_ARGS__)
-#define COGO_DO3_DEFINE_0(NAME)   void NAME##_func(COGO_T* const COGO_THIS)                      // NAME: name
-#define COGO_DO3_DEFINE_1(NAME)   static void COGO_BLANK_##NAME##_func(COGO_T* const COGO_THIS)  // NAME: static name
+#define COGO_DO3_DEFINE_0(TYPE)   void TYPE##_func(COGO_T* const COGO_THIS)                      // TYPE: name
+#define COGO_DO3_DEFINE_1(TYPE)   static void COGO_BLANK_##TYPE##_func(COGO_T* const COGO_THIS)  // TYPE: static name
 
 /// @hideinitializer Get the current running status of the coroutine.
 /// @param[in] DERIVANT
@@ -110,10 +110,10 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 #define COGO_STATUS(DERIVANT)     COGO_PC(&(DERIVANT)->COGO_THIS)
 
 /// @hideinitializer The initializer of `COGO_T` type.
-/// @param[in] NAME The coroutine name.
-/// @param[in] DERIVANT The coroutine instance pointer.
-/// @pre `NAME` must be the same identifier that is passed as the first argument to `COGO_DECLARE(NAME, ...)`.
-#define COGO_INIT(NAME, DERIVANT) COGO_YIELD_INIT(NAME)
+/// @param[in] TYPE The coroutine name.
+/// @param[in] DERIVANT The coroutine object.
+/// @pre `TYPE` must be the same identifier that is passed as the first argument to `COGO_DECLARE(TYPE, ...)`.
+#define COGO_INIT(TYPE, DERIVANT) COGO_YIELD_INIT(TYPE)
 
 /// @hideinitializer Continue to run a suspended coroutine until yield or finished.
 /// @param[in] DERIVANT
