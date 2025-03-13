@@ -107,7 +107,7 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 /// @hideinitializer Get the current running status of the coroutine.
 /// @param[in] DERIVANT
 /// @pre `DERIVANT != NULL`.
-#define COGO_STATUS(DERIVANT)     COGO_PC(&(DERIVANT)->COGO_V)
+#define COGO_STATUS(DERIVANT)     COGO_PC(&(DERIVANT)->COGO_SELF)
 
 /// @hideinitializer The initializer of `COGO_T` type.
 /// @param[in] NAME The coroutine name.
@@ -118,7 +118,7 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 /// @hideinitializer Continue to run a suspended coroutine until yield or finished.
 /// @param[in] DERIVANT
 /// @pre `DERIVANT != NULL`.
-#define COGO_RESUME(DERIVANT)     cogo_yield_resume(COGO_YIELD_OF(&(DERIVANT)->COGO_V))
+#define COGO_RESUME(DERIVANT)     cogo_yield_resume(COGO_YIELD_OF(&(DERIVANT)->COGO_SELF))
 cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo);
 
 #ifdef __cplusplus
