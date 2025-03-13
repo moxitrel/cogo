@@ -72,7 +72,7 @@ struct cogo_await_sched {
 #define COGO_AWAIT_INIT(NAME, DERIVANT)        \
   {                                            \
       .base_yield = COGO_YIELD_INIT(NAME),     \
-      .anon = {.top = &(DERIVANT)->COGO_SELF}, \
+      .anon = {.top = &(DERIVANT)->COGO_THIS}, \
   }
 
 static inline int cogo_await_is_valid(cogo_await_t const* const cogo) {
@@ -94,7 +94,7 @@ static inline int cogo_await_is_valid(cogo_await_t const* const cogo) {
   do {                                                                                       \
     COGO_ASSERT((DERIVANT_OTHER) == (DERIVANT_OTHER) && (DERIVANT_OTHER));                   \
     COGO_PRE_AWAIT((+COGO_THIS), (+(DERIVANT_OTHER)));                                       \
-    cogo_await_await(COGO_AWAIT_OF(COGO_THIS), COGO_AWAIT_OF(&(DERIVANT_OTHER)->COGO_SELF)); \
+    cogo_await_await(COGO_AWAIT_OF(COGO_THIS), COGO_AWAIT_OF(&(DERIVANT_OTHER)->COGO_THIS)); \
     COGO_DO_YIELD(COGO_THIS);                                                                \
     COGO_POST_AWAIT((+COGO_THIS), (+(DERIVANT_OTHER)));                                      \
   } while (0)
@@ -105,10 +105,10 @@ void cogo_await_await(cogo_await_t* cogo, cogo_await_t* cogo_other);
 
 // Continue to run a suspended coroutine until yield or finished.
 #undef COGO_RESUME
-#define COGO_RESUME(DERIVANT) cogo_await_resume(COGO_AWAIT_OF(&(DERIVANT)->COGO_SELF))
+#define COGO_RESUME(DERIVANT) cogo_await_resume(COGO_AWAIT_OF(&(DERIVANT)->COGO_THIS))
 cogo_pc_t cogo_await_resume(cogo_await_t* cogo);
 
-#define COGO_RUN(DERIVANT) cogo_await_run(COGO_AWAIT_OF(&(DERIVANT)->COGO_SELF))
+#define COGO_RUN(DERIVANT) cogo_await_run(COGO_AWAIT_OF(&(DERIVANT)->COGO_THIS))
 void cogo_await_run(cogo_await_t* cogo);
 
 #ifdef __cplusplus

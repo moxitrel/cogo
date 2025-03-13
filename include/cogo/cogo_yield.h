@@ -63,7 +63,7 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 //
 // typedef struct NAME NAME_t;
 // struct NAME {
-//  COGO_T COGO_SELF;
+//  COGO_T COGO_THIS;
 //  ...
 // };
 // void NAME_func(NAME_t* const COGO_THIS)
@@ -87,12 +87,12 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
   COGO_DO3_STRUCT_##N(NAME, __VA_ARGS__)
 #define COGO_DO3_STRUCT_0(NAME, ...)      \
   struct NAME {                           \
-    COGO_T COGO_SELF;                     \
+    COGO_T COGO_THIS;                     \
     ZY_MAP1(;, ZY_IDENTITY, __VA_ARGS__); \
   }
 #define COGO_DO3_STRUCT_1(NAME, ...) \
   struct NAME {                      \
-    COGO_T COGO_SELF;                \
+    COGO_T COGO_THIS;                \
   }
 
 /// @hideinitializer Define the coroutine.
@@ -107,7 +107,7 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 /// @hideinitializer Get the current running status of the coroutine.
 /// @param[in] DERIVANT
 /// @pre `DERIVANT != NULL`.
-#define COGO_STATUS(DERIVANT)     COGO_PC(&(DERIVANT)->COGO_SELF)
+#define COGO_STATUS(DERIVANT)     COGO_PC(&(DERIVANT)->COGO_THIS)
 
 /// @hideinitializer The initializer of `COGO_T` type.
 /// @param[in] NAME The coroutine name.
@@ -118,7 +118,7 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 /// @hideinitializer Continue to run a suspended coroutine until yield or finished.
 /// @param[in] DERIVANT
 /// @pre `DERIVANT != NULL`.
-#define COGO_RESUME(DERIVANT)     cogo_yield_resume(COGO_YIELD_OF(&(DERIVANT)->COGO_SELF))
+#define COGO_RESUME(DERIVANT)     cogo_yield_resume(COGO_YIELD_OF(&(DERIVANT)->COGO_THIS))
 cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo);
 
 #ifdef __cplusplus

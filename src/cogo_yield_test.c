@@ -15,7 +15,7 @@ CO_END:;
 
 static void test_ng(void) {
   ng_t ng = {
-      .COGO_SELF = COGO_INIT(ng, &ng),
+      .COGO_THIS = COGO_INIT(ng, &ng),
       .v = 0,
   };
 
