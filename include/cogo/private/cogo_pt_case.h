@@ -23,6 +23,11 @@
 #ifndef COGO_PT_CASE_H_
 #define COGO_PT_CASE_H_
 
+#ifndef COGO_PC_T
+  #include <stdint.h>
+  #define COGO_PC_T intptr_t
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -82,7 +87,7 @@ extern "C" {
 #endif
 
 /// The position where function has reached.
-typedef int cogo_pc_t;
+typedef COGO_PC_T cogo_pc_t;
 /// @hideinitializer A `cogo_pc_t` value indicates the coroutine has finished running.
 #define COGO_PC_END   (-1)
 /// The zero value of type `cogo_pc_t`, that indicates the coroutine is initialized and ready to run.
