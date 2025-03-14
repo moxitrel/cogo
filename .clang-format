@@ -7,7 +7,10 @@ AlignConsecutiveMacros: AcrossEmptyLinesAndComments
 ColumnLimit: 0
 ReflowComments: false
 IndentPPDirectives: BeforeHash
-# Macros:
-# - COGO_BEGIN(PT)=PT
-# - COGO_END(PT)=PT
+IndentWidth: 4
+ContinuationIndentWidth: 8
+AccessModifierOffset: -4
+Macros:
+  - COGO_BEGIN(COGO)=CO_BEGIN
+  - COGO_END(COGO)=CO_END
 ---

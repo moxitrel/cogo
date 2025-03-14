@@ -3,30 +3,30 @@
 #include <unity.h>
 
 COGO_DECLARE(ng_t, int v) {
-  ng_t* const thiz = (ng_t*)COGO_THIS;
+    ng_t* const thiz = (ng_t*)COGO_THIS;
 CO_BEGIN:
 
-  for (;; thiz->v++) {
-    CO_YIELD;
-  }
+    for (;; thiz->v++) {
+        CO_YIELD;
+    }
 
 CO_END:;
 }
 
 static void test_ng(void) {
-  ng_t ng = {
-      .COGO_THIS = COGO_INIT(ng_t, &ng),
-      .v = 0,
-  };
+    ng_t ng = {
+            .COGO_THIS = COGO_INIT(ng_t, &ng),
+            .v = 0,
+    };
 
-  COGO_RESUME(&ng);
-  TEST_ASSERT_EQUAL_INT(0, ng.v);
+    COGO_RESUME(&ng);
+    TEST_ASSERT_EQUAL_INT(0, ng.v);
 
-  COGO_RESUME(&ng);
-  TEST_ASSERT_EQUAL_INT(1, ng.v);
+    COGO_RESUME(&ng);
+    TEST_ASSERT_EQUAL_INT(1, ng.v);
 
-  COGO_RESUME(&ng);
-  TEST_ASSERT_EQUAL_INT(2, ng.v);
+    COGO_RESUME(&ng);
+    TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 
 void setUp(void) {
@@ -36,9 +36,9 @@ void tearDown(void) {
 }
 
 int main(void) {
-  UNITY_BEGIN();
+    UNITY_BEGIN();
 
-  RUN_TEST(test_ng);
+    RUN_TEST(test_ng);
 
-  return UNITY_END();
+    return UNITY_END();
 }

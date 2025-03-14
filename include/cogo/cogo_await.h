@@ -24,14 +24,14 @@ cogo_await_t    : coroutine type
 #define COGO_AWAIT_H_
 
 #ifndef COGO_T
-  #define COGO_T cogo_await_t
+    #define COGO_T cogo_await_t
 #endif
 typedef struct cogo_await cogo_await_t;
 
 #include "cogo_yield.h"
 
 #ifndef COGO_SCHED_T
-  #define COGO_SCHED_T cogo_await_sched_t
+    #define COGO_SCHED_T cogo_await_sched_t
 #endif
 typedef struct cogo_await_sched cogo_await_sched_t;
 
@@ -40,49 +40,49 @@ extern "C" {
 #endif
 
 #ifndef COGO_PRE_AWAIT
-  #define COGO_PRE_AWAIT(COGO_THIS, DERIVANT_OTHER)  // noop
+    #define COGO_PRE_AWAIT(COGO_THIS, DERIVANT_OTHER)  // noop
 #endif
 
 #ifndef COGO_POST_AWAIT
-  #define COGO_POST_AWAIT(COGO_THIS, DERIVANT_OTHER)  // noop
+    #define COGO_POST_AWAIT(COGO_THIS, DERIVANT_OTHER)  // noop
 #endif
 
 // implement call stack
 struct cogo_await {
-  // inherit from cogo_yield_t
-  cogo_yield_t base_yield;
+    // inherit from cogo_yield_t
+    cogo_yield_t base_yield;
 
-  // build call stack
-  COGO_T* caller;
+    // build call stack
+    COGO_T* caller;
 
-  union {
-    // associated scheduler
-    COGO_SCHED_T* sched;
+    union {
+        // associated scheduler
+        COGO_SCHED_T* sched;
 
-    // resume point
-    COGO_T* top;
-  } anon;
+        // resume point
+        COGO_T* top;
+    } anon;
 };
 
 struct cogo_await_sched {
-  // call stack top
-  COGO_T* top;
+    // call stack top
+    COGO_T* top;
 };
 
-#define COGO_AWAIT_INIT(TYPE, DERIVANT)        \
-  {                                            \
-      .base_yield = COGO_YIELD_INIT(TYPE),     \
-      .anon = {.top = &(DERIVANT)->COGO_THIS}, \
-  }
+#define COGO_AWAIT_INIT(TYPE, DERIVANT)              \
+    {                                                \
+            .base_yield = COGO_YIELD_INIT(TYPE),     \
+            .anon = {.top = &(DERIVANT)->COGO_THIS}, \
+    }
 
 static inline int cogo_await_is_valid(cogo_await_t const* const cogo) {
-  return cogo && cogo_yield_is_valid(&cogo->base_yield);
+    return cogo && cogo_yield_is_valid(&cogo->base_yield);
 }
 
 #define COGO_AWAIT_SCHED_INIT(COGO) \
-  {                                 \
-      .top = (COGO),                \
-  }
+    {                               \
+            .top = (COGO),          \
+    }
 
 #define COGO_AWAIT_OF(AWAIT)             (AWAIT)
 #define COGO_AWAIT_SCHED_OF(AWAIT_SCHED) (AWAIT_SCHED)
@@ -90,14 +90,14 @@ static inline int cogo_await_is_valid(cogo_await_t const* const cogo) {
 #define COGO_YIELD_OF(COGO) (&COGO_AWAIT_OF(COGO)->base_yield)
 
 /// Run another coroutine until finished.
-#define CO_AWAIT(DERIVANT_OTHER)                                                             \
-  do {                                                                                       \
-    COGO_ASSERT((DERIVANT_OTHER) == (DERIVANT_OTHER) && (DERIVANT_OTHER));                   \
-    COGO_PRE_AWAIT((+COGO_THIS), (+(DERIVANT_OTHER)));                                       \
-    cogo_await_await(COGO_AWAIT_OF(COGO_THIS), COGO_AWAIT_OF(&(DERIVANT_OTHER)->COGO_THIS)); \
-    COGO_DO_YIELD(COGO_THIS);                                                                \
-    COGO_POST_AWAIT((+COGO_THIS), (+(DERIVANT_OTHER)));                                      \
-  } while (0)
+#define CO_AWAIT(DERIVANT_OTHER)                                                                 \
+    do {                                                                                         \
+        COGO_ASSERT((DERIVANT_OTHER) == (DERIVANT_OTHER) && (DERIVANT_OTHER));                   \
+        COGO_PRE_AWAIT((+COGO_THIS), (+(DERIVANT_OTHER)));                                       \
+        cogo_await_await(COGO_AWAIT_OF(COGO_THIS), COGO_AWAIT_OF(&(DERIVANT_OTHER)->COGO_THIS)); \
+        COGO_DO_YIELD(COGO_THIS);                                                                \
+        COGO_POST_AWAIT((+COGO_THIS), (+(DERIVANT_OTHER)));                                      \
+    } while (0)
 void cogo_await_await(cogo_await_t* cogo, cogo_await_t* cogo_other);
 
 #undef COGO_INIT

@@ -33,12 +33,12 @@ cogo_async_sched_t         : scheduler type
 #include <stddef.h>
 
 #ifndef COGO_T
-  #define COGO_T cogo_async_t
+    #define COGO_T cogo_async_t
 #endif
 typedef struct cogo_async cogo_async_t;
 
 #ifndef COGO_SCHED_T
-  #define COGO_SCHED_T cogo_async_sched_t
+    #define COGO_SCHED_T cogo_async_sched_t
 #endif
 typedef struct cogo_async_sched cogo_async_sched_t;
 
@@ -49,27 +49,27 @@ extern "C" {
 #endif
 
 #ifndef COGO_PRE_ASYNC
-  #define COGO_PRE_ASYNC(COGO_THIS, DERIVANT_OTHER)  // noop
+    #define COGO_PRE_ASYNC(COGO_THIS, DERIVANT_OTHER)  // noop
 #endif
 
 #ifndef COGO_POST_ASYNC
-  #define COGO_POST_ASYNC(COGO_THIS, DERIVANT_OTHER)  // noop
+    #define COGO_POST_ASYNC(COGO_THIS, DERIVANT_OTHER)  // noop
 #endif
 
 #ifndef COGO_PRE_CHAN_READ
-  #define COGO_PRE_CHAN_READ(COGO_THIS, CHAN, MSG)  // noop
+    #define COGO_PRE_CHAN_READ(COGO_THIS, CHAN, MSG)  // noop
 #endif
 
 #ifndef COGO_POST_CHAN_READ
-  #define COGO_POST_CHAN_READ(COGO_THIS, CHAN, MSG)  // noop
+    #define COGO_POST_CHAN_READ(COGO_THIS, CHAN, MSG)  // noop
 #endif
 
 #ifndef COGO_PRE_CHAN_WRITE
-  #define COGO_PRE_CHAN_WRITE(COGO_THIS, CHAN, MSG)  // noop
+    #define COGO_PRE_CHAN_WRITE(COGO_THIS, CHAN, MSG)  // noop
 #endif
 
 #ifndef COGO_POST_CHAN_WRITE
-  #define COGO_POST_CHAN_WRITE(COGO_THIS, CHAN, MSG)  // noop
+    #define COGO_POST_CHAN_WRITE(COGO_THIS, CHAN, MSG)  // noop
 #endif
 
 typedef struct cogo_chan cogo_chan_t;
@@ -77,11 +77,11 @@ typedef struct cogo_msg cogo_msg_t;
 
 // implement concurrency
 struct cogo_async {
-  // inherit cogo_await_t (with scheduler)
-  cogo_await_t base_await;
+    // inherit cogo_await_t (with scheduler)
+    cogo_await_t base_await;
 
-  // build coroutine list
-  COGO_T* next;
+    // build coroutine list
+    COGO_T* next;
 };
 
 // COGO_QUEUE_T             (cogo_async_t)
@@ -100,28 +100,28 @@ struct cogo_async {
 #define COGO_CQ_POP          COGO_QUEUE_POP(cogo_async_t)
 #define COGO_CQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_async_t)
 struct cogo_async_sched {
-  cogo_await_sched_t base_await_sched;
+    cogo_await_sched_t base_await_sched;
 
-  // other coroutines running concurrently
-  COGO_CQ_T q;
+    // other coroutines running concurrently
+    COGO_CQ_T q;
 
-  // global:
-  //  struct cogo_async_sched* run; // running schedulers (idles not in list)
+    // global:
+    //  struct cogo_async_sched* run; // running schedulers (idles not in list)
 };
 
-#define COGO_ASYNC_INIT(TYPE, DERIVANT)              \
-  {                                                  \
-      .base_await = COGO_AWAIT_INIT(TYPE, DERIVANT), \
-  }
+#define COGO_ASYNC_INIT(TYPE, DERIVANT)                    \
+    {                                                      \
+            .base_await = COGO_AWAIT_INIT(TYPE, DERIVANT), \
+    }
 
 static inline int cogo_async_is_valid(cogo_async_t const* const cogo) {
-  return cogo && cogo_await_is_valid(&cogo->base_await);
+    return cogo && cogo_await_is_valid(&cogo->base_await);
 }
 
-#define COGO_ASYNC_SCHED_INIT(COGO)                    \
-  {                                                    \
-      .base_await_sched = COGO_AWAIT_SCHED_INIT(COGO), \
-  }
+#define COGO_ASYNC_SCHED_INIT(COGO)                          \
+    {                                                        \
+            .base_await_sched = COGO_AWAIT_SCHED_INIT(COGO), \
+    }
 
 #define COGO_ASYNC_OF(ASYNC)             (ASYNC)
 #define COGO_ASYNC_SCHED_OF(ASYNC_SCHED) (ASYNC_SCHED)
@@ -138,26 +138,26 @@ int cogo_async_sched_add(cogo_async_sched_t* sched, cogo_async_t* cogo);
 COGO_T* cogo_async_sched_remove(cogo_async_sched_t* sched);
 
 // CO_ASYNC(cogo_async_t*): start a new coroutine to run concurrently.
-#define CO_ASYNC(DERIVANT_OTHER)                                                                                                    \
-  do {                                                                                                                              \
-    COGO_ASSERT((DERIVANT_OTHER) == (DERIVANT_OTHER) && (DERIVANT_OTHER));                                                          \
-    COGO_PRE_ASYNC((+COGO_THIS), (+(DERIVANT_OTHER)));                                                                              \
-    if (cogo_async_sched_add(COGO_ASYNC_SCHED_OF(COGO_THIS->base_await.anon.sched), COGO_ASYNC_OF(&(DERIVANT_OTHER)->COGO_THIS))) { \
-      COGO_DO_YIELD(COGO_THIS);                                                                                                     \
-    }                                                                                                                               \
-    COGO_POST_ASYNC((+COGO_THIS), (+(DERIVANT_OTHER)));                                                                             \
-  } while (0)
+#define CO_ASYNC(DERIVANT_OTHER)                                                                                                        \
+    do {                                                                                                                                \
+        COGO_ASSERT((DERIVANT_OTHER) == (DERIVANT_OTHER) && (DERIVANT_OTHER));                                                          \
+        COGO_PRE_ASYNC((+COGO_THIS), (+(DERIVANT_OTHER)));                                                                              \
+        if (cogo_async_sched_add(COGO_ASYNC_SCHED_OF(COGO_THIS->base_await.anon.sched), COGO_ASYNC_OF(&(DERIVANT_OTHER)->COGO_THIS))) { \
+            COGO_DO_YIELD(COGO_THIS);                                                                                                   \
+        }                                                                                                                               \
+        COGO_POST_ASYNC((+COGO_THIS), (+(DERIVANT_OTHER)));                                                                             \
+    } while (0)
 
 // channel message
 struct cogo_msg {
-  union {
-    int as_int;
-    ptrdiff_t as_ptrdiff_t;
-    size_t as_size_t;
-    double as_double;
-    void* as_pointer;
-  } data;
-  cogo_msg_t* next;
+    union {
+        int as_int;
+        ptrdiff_t as_ptrdiff_t;
+        size_t as_size_t;
+        double as_double;
+        void* as_pointer;
+    } data;
+    cogo_msg_t* next;
 };
 
 // COGO_QUEUE_T             (cogo_msg_t)
@@ -175,19 +175,19 @@ struct cogo_msg {
 #define COGO_MQ_POP          COGO_QUEUE_POP(cogo_msg_t)
 #define COGO_MQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_msg_t)
 struct cogo_chan {
-  // all coroutines blocked by this channel
-  COGO_CQ_T cq;
+    // all coroutines blocked by this channel
+    COGO_CQ_T cq;
 
-  // message queue
-  COGO_MQ_T mq;
+    // message queue
+    COGO_MQ_T mq;
 
-  // current size
-  // < 0  : some readers blocked
-  // > capacity: some writers blocked
-  ptrdiff_t size;
+    // current size
+    // < 0  : some readers blocked
+    // > capacity: some writers blocked
+    ptrdiff_t size;
 
-  // max size
-  ptrdiff_t capacity;
+    // max size
+    ptrdiff_t capacity;
 };
 
 #define COGO_CHAN_INIT(N) ((cogo_chan_t){.capacity = (N)})
@@ -218,15 +218,15 @@ CO_END:;
 }
  @endcode
 */
-#define CO_CHAN_READ(CHAN, MSG_NEXT)                                    \
-  do {                                                                  \
-    COGO_ASSERT((CHAN) == (CHAN) && (MSG_NEXT) == (MSG_NEXT));          \
-    COGO_PRE_CHAN_READ((+COGO_THIS), (+(CHAN)), (+(MSG_NEXT)));         \
-    if (cogo_chan_read(COGO_ASYNC_OF(COGO_THIS), (CHAN), (MSG_NEXT))) { \
-      COGO_DO_YIELD(COGO_THIS);                                         \
-    }                                                                   \
-    COGO_POST_CHAN_READ((+COGO_THIS), (+(CHAN)), (+(MSG_NEXT)));        \
-  } while (0)
+#define CO_CHAN_READ(CHAN, MSG_NEXT)                                        \
+    do {                                                                    \
+        COGO_ASSERT((CHAN) == (CHAN) && (MSG_NEXT) == (MSG_NEXT));          \
+        COGO_PRE_CHAN_READ((+COGO_THIS), (+(CHAN)), (+(MSG_NEXT)));         \
+        if (cogo_chan_read(COGO_ASYNC_OF(COGO_THIS), (CHAN), (MSG_NEXT))) { \
+            COGO_DO_YIELD(COGO_THIS);                                       \
+        }                                                                   \
+        COGO_POST_CHAN_READ((+COGO_THIS), (+(CHAN)), (+(MSG_NEXT)));        \
+    } while (0)
 // Switch context if return non-zero.
 int cogo_chan_read(cogo_async_t* COGO_THIS, cogo_chan_t* chan, cogo_msg_t* msg_next);
 
@@ -238,15 +238,15 @@ int cogo_chan_read(cogo_async_t* COGO_THIS, cogo_chan_t* chan, cogo_msg_t* msg_n
  @post At the time of writing success (and before any message has been read by other coroutines), the size of channel is increased by 1.
  @invariant the MSG body is not modified.
 */
-#define CO_CHAN_WRITE(CHAN, MSG)                                    \
-  do {                                                              \
-    COGO_ASSERT((CHAN) == (CHAN) && (MSG) == (MSG));                \
-    COGO_PRE_CHAN_WRITE((+COGO_THIS), (+(CHAN)), (+(MSG)));         \
-    if (cogo_chan_write(COGO_ASYNC_OF(COGO_THIS), (CHAN), (MSG))) { \
-      COGO_DO_YIELD(COGO_THIS);                                     \
-    }                                                               \
-    COGO_POST_CHAN_WRITE((+COGO_THIS), (+(CHAN)), (+(MSG)));        \
-  } while (0)
+#define CO_CHAN_WRITE(CHAN, MSG)                                        \
+    do {                                                                \
+        COGO_ASSERT((CHAN) == (CHAN) && (MSG) == (MSG));                \
+        COGO_PRE_CHAN_WRITE((+COGO_THIS), (+(CHAN)), (+(MSG)));         \
+        if (cogo_chan_write(COGO_ASYNC_OF(COGO_THIS), (CHAN), (MSG))) { \
+            COGO_DO_YIELD(COGO_THIS);                                   \
+        }                                                               \
+        COGO_POST_CHAN_WRITE((+COGO_THIS), (+(CHAN)), (+(MSG)));        \
+    } while (0)
 // Switch context if return non-zero.
 int cogo_chan_write(cogo_async_t* COGO_THIS, cogo_chan_t* chan, cogo_msg_t* msg);
 

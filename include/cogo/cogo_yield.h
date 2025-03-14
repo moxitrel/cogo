@@ -23,14 +23,14 @@ COGO_DEFINE (TYPE)   {} : define a declared coroutine which is not defined.
 #include "private/macro_utils.h"
 
 #ifndef COGO_T
-  #define COGO_T cogo_yield_t
+    #define COGO_T cogo_yield_t
 #endif
 typedef struct cogo_yield cogo_yield_t;
 
 #ifdef COGO_USE_COMPUTED_GOTO
-  #include "private/cogo_pt_goto.h"
+    #include "private/cogo_pt_goto.h"
 #else
-  #include "private/cogo_pt_case.h"
+    #include "private/cogo_pt_case.h"
 #endif
 
 #ifdef __cplusplus
@@ -38,20 +38,20 @@ extern "C" {
 #endif
 
 struct cogo_yield {
-  // Inherit from cogo_pt_t.
-  cogo_pt_t base_pt;
+    // Inherit from cogo_pt_t.
+    cogo_pt_t base_pt;
 
-  // The coroutine function.
-  void (*func)(COGO_T* COGO_THIS);
+    // The coroutine function.
+    void (*func)(COGO_T* COGO_THIS);
 };
 
-#define COGO_YIELD_INIT(TYPE) \
-  {                           \
-      .func = TYPE##_func,    \
-  }
+#define COGO_YIELD_INIT(TYPE)    \
+    {                            \
+            .func = TYPE##_func, \
+    }
 
 static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
-  return cogo && cogo->func;
+    return cogo && cogo->func;
 }
 
 #define COGO_YIELD_OF(YIELD) (YIELD)
@@ -69,9 +69,9 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 // void NAME_func(TYPE* const COGO_THIS)
 #define COGO_DECLARE(TYPE, ...) COGO_DO1_DECLARE(ZY_HAS_COMMA(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
 #define COGO_DO1_DECLARE(...)   COGO_DO2_DECLARE(__VA_ARGS__)
-#define COGO_DO2_DECLARE(N, TYPE, ...)     \
-  COGO_DO3_DECLARE_##N(TYPE, __VA_ARGS__); \
-  COGO_DEFINE(TYPE)
+#define COGO_DO2_DECLARE(N, TYPE, ...)       \
+    COGO_DO3_DECLARE_##N(TYPE, __VA_ARGS__); \
+    COGO_DEFINE(TYPE)
 #define COGO_DO3_DECLARE_0(TYPE, ...) COGO_STRUCT(TYPE, __VA_ARGS__)               // TYPE: name
 #define COGO_DO3_DECLARE_1(TYPE, ...) COGO_STRUCT(COGO_BLANK_##TYPE, __VA_ARGS__)  // TYPE: static name
 
@@ -83,17 +83,17 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 #define COGO_STRUCT(TYPE, ...) COGO_DO1_STRUCT(ZY_IS_EMPTY(__VA_ARGS__), TYPE, __VA_ARGS__)
 #define COGO_DO1_STRUCT(...)   COGO_DO2_STRUCT(__VA_ARGS__)
 #define COGO_DO2_STRUCT(N, TYPE, ...) \
-  typedef struct TYPE TYPE;           \
-  COGO_DO3_STRUCT_##N(TYPE, __VA_ARGS__)
-#define COGO_DO3_STRUCT_0(TYPE, ...)      \
-  struct TYPE {                           \
-    COGO_T COGO_THIS;                     \
-    ZY_MAP1(;, ZY_IDENTITY, __VA_ARGS__); \
-  }
+    typedef struct TYPE TYPE;         \
+    COGO_DO3_STRUCT_##N(TYPE, __VA_ARGS__)
+#define COGO_DO3_STRUCT_0(TYPE, ...)          \
+    struct TYPE {                             \
+        COGO_T COGO_THIS;                     \
+        ZY_MAP1(;, ZY_IDENTITY, __VA_ARGS__); \
+    }
 #define COGO_DO3_STRUCT_1(TYPE, ...) \
-  struct TYPE {                      \
-    COGO_T COGO_THIS;                \
-  }
+    struct TYPE {                    \
+        COGO_T COGO_THIS;            \
+    }
 
 /// @hideinitializer Define the coroutine.
 /// @param[in] TYPE The coroutine name.
