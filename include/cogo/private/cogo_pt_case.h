@@ -23,6 +23,7 @@
 #ifndef COGO_PT_CASE_H_
 #define COGO_PT_CASE_H_
 
+/// An integer type representing the position where the coroutine has reached.
 #ifndef COGO_PC_T
     #include <stdint.h>
     #define COGO_PC_T intptr_t

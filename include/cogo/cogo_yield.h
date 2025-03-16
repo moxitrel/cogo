@@ -115,8 +115,8 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 /// @pre `TYPE` must be the same identifier that is passed as the first argument to `COGO_DECLARE(TYPE, ...)`.
 #define COGO_INIT(TYPE, DERIVANT) COGO_YIELD_INIT(TYPE)
 
-/// @hideinitializer Continue to run a suspended coroutine until yield or finished.
-/// @param[in] DERIVANT
+/// @hideinitializer Begin to run an initialized coroutine, or continue to run a suspended coroutine, until yield or finish.
+/// @param[in] DERIVANT A coroutine object pointer.
 /// @pre `DERIVANT != NULL`.
 #define COGO_RESUME(DERIVANT)     cogo_yield_resume(COGO_YIELD_OF(&(DERIVANT)->COGO_THIS))
 cogo_pc_t cogo_yield_resume(cogo_yield_t* cogo);

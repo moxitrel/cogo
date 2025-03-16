@@ -205,7 +205,7 @@ struct cogo_chan {
 
  @par Example
  @code
-CO_DECLARE(coro, cogo_chan_t* chan, cogo_msg_t msg) {
+CO_DECLARE(coro_t, cogo_chan_t* chan, cogo_msg_t msg) {
   coro_t* thiz = (coro_t*)COGO_THIS;
   cogo_chan_t* chan = thiz->chan;
   cogo_msg_t* msg = &thiz->msg;
