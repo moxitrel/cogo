@@ -97,6 +97,7 @@ CO_END:;
 static void test_ng(void) {
     ng_t ng = {
             .COGO_THIS = COGO_INIT(ng_t, &ng),
+            .v = 0,
     };
 
     COGO_RESUME(&ng);
