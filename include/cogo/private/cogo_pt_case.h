@@ -112,13 +112,12 @@ typedef struct cogo_pt {
 /// @hideinitializer A label-like macro marks the start of the coroutine.
 /// @param[in] COGO The coroutine object pointer.
 /// @pre `COGO != NULL`.
-/// @pre The expanded expression of `COGO` should have no side effects, e.g., `e++`; otherwise, its behavior is undefined.
-/// @pre There must be a `COGO_END(COGO)` after `COGO_BEGIN(COGO)`.
-/// @pre There should be only one `COGO_BEGIN()` and `COGO_END()` in a function.
-/// @post If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked first, and then the coroutine continues its execution.
-/// @post If the coroutine is reentered after a yield, the execution will jump to the last `COGO_YIELD()`.
-/// @post If the coroutine has finished running, the execution will jump to the `COGO_END()` label.
-/// @post If the resume point is invalid, `COGO_ON_EPC(COGO)` is invoked first, and then jump to `COGO_END()`.
+/// @pre `COGO` should have no side effects, e.g., `e++`; otherwise, its behavior is undefined.
+/// @pre There should be one and only one `COGO_END(COGO)` after the `COGO_BEGIN(COGO)` in a function.
+/// @post If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked first, and then continues its execution.
+/// @post If the coroutine is reentered after a yield, the execution will jump to the last `COGO_YIELD(COGO)`.
+/// @post If the coroutine has finished running, the execution will jump to the `COGO_END(COGO)` label.
+/// @post If the resume point is invalid, `COGO_ON_EPC(COGO)` is invoked, and then jump to the `COGO_END(COGO)` label.
 #define COGO_BEGIN(COGO)                                                                            \
     COGO_ASSERT((COGO) == (COGO) && (COGO)); /* `COGO` must have no side effects and not `NULL`. */ \
     switch (COGO_PC(COGO)) {                                                                        \
