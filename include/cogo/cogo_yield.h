@@ -37,6 +37,8 @@ typedef struct cogo_yield cogo_yield_t;
 extern "C" {
 #endif
 
+/// Implement yield.
+/// @extends cogo_pt_t
 struct cogo_yield {
     // Inherit from cogo_pt_t.
     cogo_pt_t base_pt;
@@ -75,13 +77,8 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 #define COGO_DO3_DECLARE_0(TYPE, ...) COGO_STRUCT(TYPE, __VA_ARGS__)               // TYPE: name
 #define COGO_DO3_DECLARE_1(TYPE, ...) COGO_STRUCT(COGO_BLANK_##TYPE, __VA_ARGS__)  // TYPE: static name
 
-#define COGO_COMMA_static             ,
-#define COGO_COMMA_extern             ,
-#define COGO_BLANK_static
-#define COGO_BLANK_extern
-
-#define COGO_STRUCT(TYPE, ...) COGO_DO1_STRUCT(ZY_IS_EMPTY(__VA_ARGS__), TYPE, __VA_ARGS__)
-#define COGO_DO1_STRUCT(...)   COGO_DO2_STRUCT(__VA_ARGS__)
+#define COGO_STRUCT(TYPE, ...)        COGO_DO1_STRUCT(ZY_IS_EMPTY(__VA_ARGS__), TYPE, __VA_ARGS__)
+#define COGO_DO1_STRUCT(...)          COGO_DO2_STRUCT(__VA_ARGS__)
 #define COGO_DO2_STRUCT(N, TYPE, ...) \
     typedef struct TYPE TYPE;         \
     COGO_DO3_STRUCT_##N(TYPE, __VA_ARGS__)
@@ -94,6 +91,11 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
     struct TYPE {                    \
         COGO_T COGO_THIS;            \
     }
+
+#define COGO_COMMA_static ,
+#define COGO_COMMA_extern ,
+#define COGO_BLANK_static
+#define COGO_BLANK_extern
 
 /// @hideinitializer Define the coroutine.
 /// @param[in] TYPE The coroutine name.

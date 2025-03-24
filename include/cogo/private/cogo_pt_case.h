@@ -23,6 +23,11 @@
 #ifndef COGO_PT_CASE_H_
 #define COGO_PT_CASE_H_
 
+/// Header to be included, e.g., `<stdint.h>`.
+#ifdef COGO_EXTRA_HEADER
+    #include COGO_EXTRA_HEADER
+#endif
+
 /// An integer type representing the position where the coroutine has reached.
 #ifndef COGO_PC_T
     #include <stdint.h>
@@ -110,14 +115,14 @@ typedef struct cogo_pt {
 #define COGO_PC(COGO)  (+COGO_PT_OF(COGO)->pc)
 
 /// @hideinitializer A label-like macro marks the start of the coroutine.
+/// - If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked, and then continues its execution.
+/// - If the coroutine is reentered after a yield, the execution will jump to the next line of last `COGO_YIELD(COGO)`.
+/// - If the coroutine has finished running, the execution will jump to the `COGO_END(COGO)` label.
+/// - If the resume point is invalid, `COGO_ON_EPC(COGO)` is invoked, and then jump to the `COGO_END(COGO)` label.
 /// @param[in] COGO The coroutine object pointer.
 /// @pre `COGO != NULL`.
 /// @pre `COGO` should have no side effects, e.g., `e++`; otherwise, its behavior is undefined.
 /// @pre There should be one and only one `COGO_END(COGO)` after the `COGO_BEGIN(COGO)` in a function.
-/// @post If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked first, and then continues its execution.
-/// @post If the coroutine is reentered after a yield, the execution will jump to the last `COGO_YIELD(COGO)`.
-/// @post If the coroutine has finished running, the execution will jump to the `COGO_END(COGO)` label.
-/// @post If the resume point is invalid, `COGO_ON_EPC(COGO)` is invoked, and then jump to the `COGO_END(COGO)` label.
 #define COGO_BEGIN(COGO)                                                                            \
     COGO_ASSERT((COGO) == (COGO) && (COGO)); /* `COGO` must have no side effects and not `NULL`. */ \
     switch (COGO_PC(COGO)) {                                                                        \
@@ -183,9 +188,7 @@ cogo_return:                                 \
     } /* switch */                           \
     cogo_end
 
-/// @var COGO_T* COGO_THIS
-/// The implicit variable representing the current coroutine object, which is used by CO_* macros (e.g., CO_BEGIN, CO_YIELD, ...).
-
+/// @param COGO_THIS The implicit variable representing the current coroutine object, which is used by CO_* macros (e.g., CO_BEGIN, CO_YIELD, ...).
 #define CO_BEGIN  COGO_BEGIN(COGO_THIS)
 #define CO_END    COGO_END(COGO_THIS)
 #define CO_YIELD  COGO_YIELD(COGO_THIS)

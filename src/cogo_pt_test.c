@@ -7,12 +7,12 @@
     #include "cogo/private/cogo_pt_case.h"
 #endif
 
-static void func_yield(COGO_T* cogo, int* retval) {
+static void func_yield(COGO_T* cogo, int* v) {
 COGO_BEGIN(cogo):
 
-    (*retval)++;
+    (*v)++;
     COGO_YIELD(cogo);
-    (*retval)++;
+    (*v)++;
 
 COGO_END(cogo):;
 }
@@ -75,14 +75,14 @@ typedef struct prologue {
     int exit;
 } prologue_t;
 
-static void func_prologue(COGO_T* COGO_THIS, prologue_t* prologue) {
+static void func_prologue(prologue_t* prologue, COGO_T* COGO_THIS) {
     prologue->enter++;
-CO_BEGIN:
+CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
 
-    CO_YIELD;
+    CO_YIELD;  // COGO_YIELD(COGO_THIS);
     CO_YIELD;
 
-CO_END:
+CO_END:  // COGO_END(COGO_THIS):
     prologue->exit++;
 }
 
@@ -94,31 +94,31 @@ static void test_prologue(void) {
     COGO_T cogo = {0};
 
     while (COGO_PC(&cogo) != COGO_PC_END) {
-        func_prologue(&cogo, &prologue);
+        func_prologue(&prologue, &cogo);
     }
     TEST_ASSERT_EQUAL_INT(3, prologue.enter);
     TEST_ASSERT_EQUAL_INT(3, prologue.exit);
 
-    func_prologue(&cogo, &prologue);
+    func_prologue(&prologue, &cogo);
     TEST_ASSERT_EQUAL_INT(4, prologue.enter);
     TEST_ASSERT_EQUAL_INT(4, prologue.exit);
 }
 
 typedef struct ng {
-    COGO_T cogo;
     int v;
+    COGO_T cogo;
 } ng_t;
 
 static void ng_func(ng_t* const ng) {
     assert(ng);
     COGO_T* const COGO_THIS = &ng->cogo;
-CO_BEGIN:
+CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
 
     for (;; ng->v++) {
-        CO_YIELD;
+        CO_YIELD;  // COGO_YIELD(COGO_THIS);
     }
 
-CO_END:;
+CO_END:;  // COGO_END(COGO_THIS):;
 }
 
 static void test_ng(void) {

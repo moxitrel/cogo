@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unity.h>
 
-COGO_DECLARE(await2_t, ) {
+COGO_DECLARE(static await2_t, ) {
 CO_BEGIN:
 
     CO_YIELD;
@@ -12,7 +12,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-COGO_DECLARE(await1_t, await2_t* a2) {
+COGO_DECLARE(static await1_t, await2_t* a2) {
     await1_t* const thiz = (await1_t*)COGO_THIS;
 CO_BEGIN:
 
@@ -83,7 +83,7 @@ static void test_await_resumed(void) {
     TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_STATUS(&a0));
 }
 
-COGO_DECLARE(ng_t, int v) {
+COGO_DECLARE(static ng_t, int v) {
     ng_t* const thiz = (ng_t*)COGO_THIS;
 CO_BEGIN:
 

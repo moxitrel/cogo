@@ -75,7 +75,8 @@ extern "C" {
 typedef struct cogo_chan cogo_chan_t;
 typedef struct cogo_msg cogo_msg_t;
 
-// implement concurrency
+/// Implement concurrency.
+/// @extends cogo_await_t
 struct cogo_async {
     // inherit cogo_await_t (with scheduler)
     cogo_await_t base_await;

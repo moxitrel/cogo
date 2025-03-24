@@ -47,7 +47,8 @@ extern "C" {
     #define COGO_POST_AWAIT(COGO_THIS, DERIVANT_OTHER)  // noop
 #endif
 
-// implement call stack
+/// Implement call stack.
+/// @extends cogo_yield_t
 struct cogo_await {
     // inherit from cogo_yield_t
     cogo_yield_t base_yield;
