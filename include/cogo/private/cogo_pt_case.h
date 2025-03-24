@@ -24,18 +24,14 @@
 #define COGO_PT_CASE_H_
 
 /// Header to be included, e.g., `<stdint.h>`.
-#ifdef COGO_EXTRA_HEADER
-    #include COGO_EXTRA_HEADER
+#ifdef COGO_INCLUDE
+    #include COGO_INCLUDE
 #endif
 
 /// An integer type representing the position where the coroutine has reached.
 #ifndef COGO_PC_T
     #include <stdint.h>
     #define COGO_PC_T intptr_t
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /// @hideinitializer The invalid pc handler, which is invoked when the coroutine's pc value isn't valid.
@@ -84,6 +80,10 @@ extern "C" {
 /// @note You should define this macro before including the header file, or redefine (`#undef COGO_ON_END` first, and then `#define` again) it after inclusion.
 #ifndef COGO_ON_END
     #define COGO_ON_END(COGO)  // noop
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #if defined(COGO_DEBUG) && defined(assert)
