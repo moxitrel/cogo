@@ -57,7 +57,7 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 
 #define COGO_YIELD_OF(YIELD) (YIELD)
 #undef COGO_PT_OF
-#define COGO_PT_OF(COGO)                (&COGO_YIELD_OF(COGO)->base_pt)
+#define COGO_PT_OF(COGO)              (&COGO_YIELD_OF(COGO)->base_pt)
 
 /// @hideinitializer Declare the coroutine.
 /// @param TYPE The coroutine name.
@@ -68,31 +68,35 @@ static inline int cogo_yield_is_valid(cogo_yield_t const* const cogo) {
 //  ...
 // };
 // void NAME_func(TYPE* const COGO_THIS)
-#define COGO_DECLARE(...)               COGO_DO1_DECLARE(ZY_HAS_COMMA(__VA_ARGS__), __VA_ARGS__)
-#define COGO_DO1_DECLARE(...)           COGO_DO2_DECLARE(__VA_ARGS__)
-#define COGO_DO2_DECLARE(N, ...)        COGO_DO3_DECLARE_##N(__VA_ARGS__)
-#define COGO_DO3_DECLARE_0(TYPE)        COGO_DO4_DECLARE_0(TYPE)
-#define COGO_DO3_DECLARE_1(TYPE, ...)   COGO_DO4_DECLARE_1(TYPE, __VA_ARGS__)
+#define COGO_DECLARE(...)             COGO_DO1_DECLARE(ZY_HAS_COMMA(__VA_ARGS__), __VA_ARGS__)
+#define COGO_DO1_DECLARE(...)         COGO_DO2_DECLARE(__VA_ARGS__)
+#define COGO_DO2_DECLARE(N, ...)      COGO_DO3_DECLARE_##N(__VA_ARGS__)
+#define COGO_DO3_DECLARE_0(TYPE)      COGO_DO4_DECLARE_0(TYPE)
+#define COGO_DO3_DECLARE_1(TYPE, ...) COGO_DO4_DECLARE_1(TYPE, __VA_ARGS__)
 
-#define COGO_DO4_DECLARE_0(TYPE)        COGO_DO5_DECLARE_0(ZY_HAS_COMMA(COGO_COMMA_##TYPE), TYPE)
-#define COGO_DO5_DECLARE_0(...)         COGO_DO6_DECLARE_0(__VA_ARGS__)
-#define COGO_DO6_DECLARE_0(N, TYPE)     COGO_DO7_DECLARE_0_##N(TYPE)
-#define COGO_DO7_DECLARE_0_0(TYPE)      COGO_STRUCT(TYPE)
-#define COGO_DO7_DECLARE_0_1(TYPE, ...) COGO_STRUCT(COGO_COMMA_##TYPE, __VA_ARGS__)
-
-#define COGO_DO4_DECLARE_1(...)         COGO_DO4_DECLARE_1(__VA_ARGS__)
-
-#define COGO_DECLARE(TYPE, ...)         COGO_DO1_DECLARE(ZY_HAS_COMMA(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
-#define COGO_DO1_DECLARE(...)           COGO_DO2_DECLARE(__VA_ARGS__)
-#define COGO_DO2_DECLARE(N, TYPE, ...)       \
-    COGO_DO3_DECLARE_##N(TYPE, __VA_ARGS__); \
+#define COGO_DO4_DECLARE_0(TYPE)      COGO_DO5_DECLARE_0(ZY_HAS_COMMA(COGO_COMMA_##TYPE), TYPE)
+#define COGO_DO5_DECLARE_0(...)       COGO_DO6_DECLARE_0(__VA_ARGS__)
+#define COGO_DO6_DECLARE_0(N, TYPE)   COGO_DO7_DECLARE_0_##N(TYPE)
+#define COGO_DO7_DECLARE_0_0(TYPE) \
+    COGO_STRUCT(TYPE);             \
     COGO_DEFINE(TYPE)
-#define COGO_DO3_DECLARE_0(TYPE, ...) COGO_STRUCT(TYPE, __VA_ARGS__)               // TYPE: name
-#define COGO_DO3_DECLARE_1(TYPE, ...) COGO_STRUCT(COGO_BLANK_##TYPE, __VA_ARGS__)  // TYPE: static name
+#define COGO_DO7_DECLARE_0_1(TYPE)  \
+    COGO_STRUCT(COGO_BLANK_##TYPE); \
+    COGO_DEFINE(COGO_BLANK_##TYPE)
 
-#define COGO_STRUCT(...)              COGO_DO1_STRUCT(ZY_HAS_COMMA(__VA_ARGS__), __VA_ARGS__)
-#define COGO_DO1_STRUCT(...)          COGO_DO2_STRUCT(__VA_ARGS__)
-#define COGO_DO2_STRUCT(N, ...)       COGO_DO3_STRUCT_##N(__VA_ARGS__)
+#define COGO_DO4_DECLARE_1(TYPE, ...) COGO_DO5_DECLARE_1(ZY_HAS_COMMA(COGO_COMMA_##TYPE), TYPE, __VA_ARGS__)
+#define COGO_DO5_DECLARE_1(...)       COGO_DO6_DECLARE_1(__VA_ARGS__)
+#define COGO_DO6_DECLARE_1(N, ...)    COGO_DO7_DECLARE_1_##N(__VA_ARGS__)
+#define COGO_DO7_DECLARE_1_0(TYPE, ...) \
+    COGO_STRUCT(TYPE, __VA_ARGS__);     \
+    COGO_DEFINE(TYPE)
+#define COGO_DO7_DECLARE_1_1(TYPE, ...)          \
+    COGO_STRUCT(COGO_BLANK_##TYPE, __VA_ARGS__); \
+    COGO_DEFINE(COGO_BLANK_##TYPE)
+
+#define COGO_STRUCT(...)        COGO_DO1_STRUCT(ZY_HAS_COMMA(__VA_ARGS__), __VA_ARGS__)
+#define COGO_DO1_STRUCT(...)    COGO_DO2_STRUCT(__VA_ARGS__)
+#define COGO_DO2_STRUCT(N, ...) COGO_DO3_STRUCT_##N(__VA_ARGS__)
 #define COGO_DO3_STRUCT_0(TYPE) \
     typedef struct TYPE TYPE;   \
     struct TYPE {               \
