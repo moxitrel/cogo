@@ -11,12 +11,11 @@ if(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
   include(CTest)
 endif()
 
-if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING)
+if(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME AND BUILD_TESTING)
   set(_default_COGO_TEST YES)
 endif()
 
 option(COGO_TEST "Build and run tests." ${_default_COGO_TEST})
-option(COGO_USE_COMPUTED_GOTO "Use GCC extension (labels as values) to implement the coroutine.")
 
 file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS
   include/*.h
@@ -38,7 +37,6 @@ target_include_directories(cogo PUBLIC
 )
 target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
-  $<$<BOOL:${COGO_USE_COMPUTED_GOTO}>:COGO_USE_COMPUTED_GOTO>
   $<$<CONFIG:Debug>:COGO_DEBUG>
   COGO_MP=1 # multithreaded scheduler
 )
@@ -60,10 +58,10 @@ install(EXPORT cogoTargets
 )
 install(
   FILES
-    ${PROJECT_BINARY_DIR}/cogoConfig.cmake
-    ${PROJECT_BINARY_DIR}/cogoConfigVersion.cmake
+  ${PROJECT_BINARY_DIR}/cogoConfig.cmake
+  ${PROJECT_BINARY_DIR}/cogoConfigVersion.cmake
   DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
+  ${CMAKE_INSTALL_LIBDIR}/cmake/cogo
 )
 configure_file(cmake/cogo.pc.in cogo.pc @ONLY)
 install(
@@ -77,7 +75,6 @@ if(COGO_TEST)
   include(CheckCCompilerFlag)
   include(cmake/unity.cmake)
 
-  message(STATUS "COGO_USE_COMPUTED_GOTO : ${COGO_USE_COMPUTED_GOTO}")
   message(STATUS "CMAKE_C_COMPILER       : ${CMAKE_C_COMPILER}")
 
   check_c_compiler_flag(-Wc++-compat _Wcpp_compat)
@@ -99,8 +96,8 @@ if(COGO_TEST)
     $<$<BOOL:${_Wcpp_compat}>:-Wc++-compat>
     $<$<BOOL:${_Wno_padded}>:-Wno-padded>
     $<$<BOOL:${_Wno_unsafe_buffer_usage}>:-Wno-unsafe-buffer-usage>
-    $<$<AND:$<NOT:$<BOOL:${COGO_USE_COMPUTED_GOTO}>>,$<BOOL:${_Wpedantic}>>:-Wpedantic>
-    $<$<AND:$<BOOL:${COGO_USE_COMPUTED_GOTO}>,$<BOOL:${_Wno_gnu_label_as_value}>>:-Wno-gnu-label-as-value>
+    $<$<BOOL:${_Wpedantic}>:-Wpedantic>
+    $<$<BOOL:${_Wno_gnu_label_as_value}>:-Wno-gnu-label-as-value>
     $<$<BOOL:${_Werror}>:-Werror>
     $<$<BOOL:${_Weverything}>:-Weverything>
     $<$<BOOL:${_Wall}>:-Wall>

@@ -20,8 +20,8 @@
 /// @endcode
 ///
 /// @warning Undefined behavior if COGO_YIELD used in the **case** statement.
-#ifndef COGO_PT_CASE_H_
-#define COGO_PT_CASE_H_
+#ifndef COGO_PT_H_
+#define COGO_PT_H_
 
 /// Header to be included, e.g., `<stdint.h>`.
 #ifdef COGO_INCLUDE
@@ -202,4 +202,4 @@ cogo_return:                                 \
 #ifdef __cplusplus
 }
 #endif
-#endif  // COGO_PT_CASE_H_
+#endif  // COGO_PT_H_

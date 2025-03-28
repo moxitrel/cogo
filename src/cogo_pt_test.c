@@ -1,11 +1,7 @@
+#include "cogo/private/cogo_pt.h"
+
 #include <assert.h>
 #include <unity.h>
-
-#ifdef COGO_USE_COMPUTED_GOTO
-    #include "cogo/private/cogo_pt_goto.h"
-#else
-    #include "cogo/private/cogo_pt_case.h"
-#endif
 
 static void func_yield(COGO_T* cogo, int* v) {
 COGO_BEGIN(cogo):

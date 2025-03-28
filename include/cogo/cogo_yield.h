@@ -27,11 +27,7 @@ COGO_DEFINE (TYPE)   {} : define a declared coroutine which is not defined.
 #endif
 typedef struct cogo_yield cogo_yield_t;
 
-#ifdef COGO_USE_COMPUTED_GOTO
-    #include "private/cogo_pt_goto.h"
-#else
-    #include "private/cogo_pt_case.h"
-#endif
+#include "private/cogo_pt.h"
 
 #ifdef __cplusplus
 extern "C" {
