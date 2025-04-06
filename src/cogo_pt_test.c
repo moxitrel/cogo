@@ -106,7 +106,6 @@ typedef struct ng {
 } ng_t;
 
 static void ng_func(ng_t* const ng) {
-    assert(ng);
     COGO_T* const COGO_THIS = &ng->cogo;
 CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
 
