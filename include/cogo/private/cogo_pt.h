@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2024 Moxi Color
+// Copyright (c) 2018-2025 Moxi Color
 //
 // Use of this source code is governed by a MIT-style license
 // that can be found in the LICENSE file or at https://opensource.org/licenses/MIT
@@ -23,13 +23,13 @@
 #ifndef COGO_PT_H_
 #define COGO_PT_H_
 
+/// Extra header needed by user defined types when customize `COGO_PC_T`.
+#ifdef COGO_INCLUDE
+    #include COGO_INCLUDE
+#endif
+
 /// An integer type representing the position where the coroutine has reached.
-#ifdef COGO_PC_T
-    /// Header needed by user defined `COGO_PC_T`, e.g., `<stdint.h>`.
-    #ifdef COGO_INCLUDE
-        #include COGO_INCLUDE
-    #endif
-#else
+#ifndef COGO_PC_T
     #define COGO_PC_T int
 #endif
 
