@@ -23,15 +23,14 @@
 #ifndef COGO_PT_H_
 #define COGO_PT_H_
 
-/// Header to be included, e.g., `<stdint.h>`.
-#ifdef COGO_INCLUDE
-    #include COGO_INCLUDE
-#endif
-
 /// An integer type representing the position where the coroutine has reached.
-#ifndef COGO_PC_T
-    #include <stdint.h>
-    #define COGO_PC_T intptr_t
+#ifdef COGO_PC_T
+    /// Header needed by user defined `COGO_PC_T`, e.g., `<stdint.h>`.
+    #ifdef COGO_INCLUDE
+        #include COGO_INCLUDE
+    #endif
+#else
+    #define COGO_PC_T int
 #endif
 
 /// @hideinitializer The invalid pc handler, which is invoked when the coroutine's pc value isn't valid.
