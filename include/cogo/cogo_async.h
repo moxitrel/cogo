@@ -49,11 +49,11 @@ extern "C" {
 #endif
 
 #ifndef COGO_PRE_ASYNC
-    #define COGO_PRE_ASYNC(COGO_THIS, DERIVANT_OTHER)  // noop
+    #define COGO_PRE_ASYNC(COGO_THIS, COGO_OTHER)  // noop
 #endif
 
 #ifndef COGO_POST_ASYNC
-    #define COGO_POST_ASYNC(COGO_THIS, DERIVANT_OTHER)  // noop
+    #define COGO_POST_ASYNC(COGO_THIS, COGO_OTHER)  // noop
 #endif
 
 #ifndef COGO_PRE_CHAN_READ
@@ -139,14 +139,14 @@ int cogo_async_sched_add(cogo_async_sched_t* sched, cogo_async_t* cogo);
 COGO_T* cogo_async_sched_remove(cogo_async_sched_t* sched);
 
 // CO_ASYNC(cogo_async_t*): start a new coroutine to run concurrently.
-#define CO_ASYNC(DERIVANT_OTHER)                                                                                                        \
-    do {                                                                                                                                \
-        COGO_ASSERT((DERIVANT_OTHER) == (DERIVANT_OTHER) && (DERIVANT_OTHER));                                                          \
-        COGO_PRE_ASYNC((+COGO_THIS), (+(DERIVANT_OTHER)));                                                                              \
-        if (cogo_async_sched_add(COGO_ASYNC_SCHED_OF(COGO_THIS->base_await.anon.sched), COGO_ASYNC_OF(&(DERIVANT_OTHER)->COGO_THIS))) { \
-            COGO_DO_YIELD(COGO_THIS);                                                                                                   \
-        }                                                                                                                               \
-        COGO_POST_ASYNC((+COGO_THIS), (+(DERIVANT_OTHER)));                                                                             \
+#define CO_ASYNC(COGO_OTHER)                                                                                          \
+    do {                                                                                                              \
+        COGO_ASSERT((COGO_OTHER) == (COGO_OTHER) && (COGO_OTHER));                                                    \
+        COGO_PRE_ASYNC((+COGO_THIS), (+(COGO_OTHER)));                                                                \
+        if (cogo_async_sched_add(COGO_ASYNC_SCHED_OF(COGO_THIS->base_await.anon.sched), COGO_ASYNC_OF(COGO_OTHER))) { \
+            COGO_DO_YIELD(COGO_THIS);                                                                                 \
+        }                                                                                                             \
+        COGO_POST_ASYNC((+COGO_THIS), (+(COGO_OTHER)));                                                               \
     } while (0)
 
 // channel message
@@ -255,11 +255,11 @@ int cogo_chan_write(cogo_async_t* COGO_THIS, cogo_chan_t* chan, cogo_msg_t* msg)
 #define COGO_INIT(TYPE, DERIVANT) COGO_ASYNC_INIT(TYPE, DERIVANT)
 
 #undef COGO_RESUME
-#define COGO_RESUME(DERIVANT) cogo_async_resume(COGO_ASYNC_OF(&(DERIVANT)->COGO_THIS))
+#define COGO_RESUME(COGO) cogo_async_resume(COGO_ASYNC_OF(COGO))
 cogo_pc_t cogo_async_resume(cogo_async_t* COGO_THIS);
 
 #undef COGO_RUN
-#define COGO_RUN(DERIVANT) cogo_async_run(COGO_ASYNC_OF(&(DERIVANT)->COGO_THIS))
+#define COGO_RUN(COGO) cogo_async_run(COGO_ASYNC_OF(COGO))
 void cogo_async_run(cogo_async_t* COGO_THIS);
 
 #ifdef __cplusplus

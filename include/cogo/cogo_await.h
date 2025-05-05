@@ -28,7 +28,7 @@ cogo_await_t    : coroutine type
 #endif
 typedef struct cogo_await cogo_await_t;
 
-#include "cogo_yield.h"
+#include "cogo_pt.h"
 
 #ifndef COGO_SCHED_T
     #define COGO_SCHED_T cogo_await_sched_t
@@ -40,28 +40,30 @@ extern "C" {
 #endif
 
 #ifndef COGO_PRE_AWAIT
-    #define COGO_PRE_AWAIT(COGO_THIS, DERIVANT_OTHER)  // noop
+    #define COGO_PRE_AWAIT(COGO, COGO_AWAITEE)  // noop
 #endif
 
 #ifndef COGO_POST_AWAIT
-    #define COGO_POST_AWAIT(COGO_THIS, DERIVANT_OTHER)  // noop
+    #define COGO_POST_AWAIT(COGO, COGO_AWAITEE)  // noop
 #endif
 
 /// Implement call stack.
 /// @extends cogo_yield_t
 struct cogo_await {
-    // inherit from cogo_yield_t
-    cogo_yield_t base_yield;
+    cogo_pt_t pt;
+
+    // The coroutine function.
+    void (*func)(COGO_T*);
 
     // build call stack
-    COGO_T* caller;
+    COGO_T* awaiter;
 
     union {
-        // associated scheduler
-        COGO_SCHED_T* sched;
-
         // resume point
         COGO_T* top;
+
+        // associated scheduler
+        COGO_SCHED_T* sched;
     } anon;
 };
 
@@ -70,47 +72,61 @@ struct cogo_await_sched {
     COGO_T* top;
 };
 
-#define COGO_AWAIT_INIT(TYPE, DERIVANT)              \
-    {                                                \
-            .base_yield = COGO_YIELD_INIT(TYPE),     \
-            .anon = {.top = &(DERIVANT)->COGO_THIS}, \
+#define COGO_AWAIT_INIT(FUNC, COGO)  \
+    {                                \
+            /*.pt=*/{0},             \
+            /*.func=*/(FUNC),        \
+            /*.awaiter=*/0,          \
+            /*.anon=*/{              \
+                    /*.top=*/(COGO), \
+            },                       \
     }
 
-static inline int cogo_await_is_valid(cogo_await_t const* const cogo) {
-    return cogo && cogo_yield_is_valid(&cogo->base_yield);
+static inline int cogo_await_is_valid(cogo_await_t const* const await) {
+    return await && await->func;
 }
 
 #define COGO_AWAIT_SCHED_INIT(COGO) \
     {                               \
-            .top = (COGO),          \
+            /*.top=*/(COGO),        \
     }
 
 #define COGO_AWAIT_OF(AWAIT)             (AWAIT)
 #define COGO_AWAIT_SCHED_OF(AWAIT_SCHED) (AWAIT_SCHED)
-#undef COGO_YIELD_OF
-#define COGO_YIELD_OF(COGO) (&COGO_AWAIT_OF(COGO)->base_yield)
+#undef COGO_PT_OF
+#define COGO_PT_OF(COGO)       (&COGO_AWAIT_OF(COGO)->pt)
 
 /// Run another coroutine until finished.
-#define CO_AWAIT(DERIVANT_OTHER)                                                                 \
-    do {                                                                                         \
-        COGO_ASSERT((DERIVANT_OTHER) == (DERIVANT_OTHER) && (DERIVANT_OTHER));                   \
-        COGO_PRE_AWAIT((+COGO_THIS), (+(DERIVANT_OTHER)));                                       \
-        cogo_await_await(COGO_AWAIT_OF(COGO_THIS), COGO_AWAIT_OF(&(DERIVANT_OTHER)->COGO_THIS)); \
-        COGO_DO_YIELD(COGO_THIS);                                                                \
-        COGO_POST_AWAIT((+COGO_THIS), (+(DERIVANT_OTHER)));                                      \
+#define CO_AWAIT(COGO_AWAITEE) COGO_AWAIT(COGO_THIS, COGO_AWAITEE)
+#define COGO_AWAIT(COGO, COGO_AWAITEE)                                                                 \
+    do {                                                                                               \
+        COGO_ASSERT((COGO) == (COGO) && (COGO) && (COGO_AWAITEE) == (COGO_AWAITEE) && (COGO_AWAITEE)); \
+        COGO_PRE_AWAIT((+(COGO)), (+(COGO_AWAITEE)));                                                  \
+        cogo_await_await(COGO_AWAIT_OF(COGO), COGO_AWAIT_OF(COGO_AWAITEE));                            \
+        COGO_DO_YIELD(COGO);                                                                           \
+        COGO_POST_AWAIT((+(COGO)), (+(COGO_AWAITEE)));                                                 \
     } while (0)
-void cogo_await_await(cogo_await_t* cogo, cogo_await_t* cogo_other);
+void cogo_await_await(cogo_await_t* await, cogo_await_t* awaitee);
 
 #undef COGO_INIT
-#define COGO_INIT(TYPE, DERIVANT) COGO_AWAIT_INIT(TYPE, DERIVANT)
+#define COGO_INIT(FUNC, AWAIT) COGO_AWAIT_INIT(FUNC, AWAIT)
 
-// Continue to run a suspended coroutine until yield or finished.
-#undef COGO_RESUME
-#define COGO_RESUME(DERIVANT) cogo_await_resume(COGO_AWAIT_OF(&(DERIVANT)->COGO_THIS))
-cogo_pc_t cogo_await_resume(cogo_await_t* cogo);
+/*
+#undef COGO_BEGIN
+#define COGO_BEGIN(COGO)                     \
+    COGO_ASSERT((COGO) == (COGO) && (COGO)); \
+    if (0 && (COGO) != (COGO)->anon.top) {   \
+        cogo_await_resume(COGO);             \
+        return;                              \
+    } else                                   \
+        COGO_DO_BEGIN(COGO)
+*/
 
-#define COGO_RUN(DERIVANT) cogo_await_run(COGO_AWAIT_OF(&(DERIVANT)->COGO_THIS))
-void cogo_await_run(cogo_await_t* cogo);
+#define COGO_RESUME(AWAIT)     cogo_await_resume(AWAIT)
+cogo_pc_t cogo_await_resume(cogo_await_t* await);
+
+#define COGO_RUN(AWAIT) cogo_await_run(AWAIT)
+void cogo_await_run(cogo_await_t* await);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(cogo
-  VERSION 2.0.0
+  VERSION 3.0.0
   HOMEPAGE_URL "https://github.com/moxitrel/cogo"
   LANGUAGES C
 )
@@ -22,9 +22,8 @@ file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS
 )
 
 add_library(cogo
-  src/cogo_async.c
   src/cogo_await.c
-  src/cogo_yield.c
+  src/cogo_async.c
 )
 target_sources(cogo INTERFACE
   FILE_SET HEADERS
@@ -147,11 +146,7 @@ if(COGO_TEST)
   add_executable(test_pt src/cogo_pt_test.c)
   add_test(NAME test_pt COMMAND test_pt)
 
-  # yield
-  add_executable(test_yield src/cogo_yield_test.c)
-  add_test(NAME test_yield COMMAND test_yield)
-
-  # await
+  # # await
   add_executable(test_await src/cogo_await_test.c)
   add_test(NAME test_await COMMAND test_await)
 
@@ -164,7 +159,6 @@ if(COGO_TEST)
   )
   add_dependencies(_RunTests
     test_pt
-    test_yield
     test_await
     test_async
   )

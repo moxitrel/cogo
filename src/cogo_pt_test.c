@@ -1,4 +1,4 @@
-#include "cogo/private/cogo_pt.h"
+#include "cogo/cogo_pt.h"
 
 #include <assert.h>
 #include <unity.h>
@@ -105,8 +105,8 @@ typedef struct ng {
     COGO_T cogo;
 } ng_t;
 
-static void ng_func(ng_t* const ng) {
-    COGO_T* const COGO_THIS = &ng->cogo;
+static void func_ng(ng_t* ng) {
+    COGO_T* COGO_THIS = &ng->cogo;
 CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
 
     for (;; ng->v++) {
@@ -121,13 +121,13 @@ static void test_ng(void) {
             .v = 0,
     };
 
-    ng_func(&ng);
+    func_ng(&ng);
     TEST_ASSERT_EQUAL_INT(0, ng.v);
 
-    ng_func(&ng);
+    func_ng(&ng);
     TEST_ASSERT_EQUAL_INT(1, ng.v);
 
-    ng_func(&ng);
+    func_ng(&ng);
     TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 
