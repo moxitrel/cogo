@@ -64,7 +64,7 @@ struct cogo_await {
 
         // associated scheduler
         COGO_SCHED_T* sched;
-    } anon;
+    } a;
 };
 
 struct cogo_await_sched {
@@ -77,14 +77,14 @@ struct cogo_await_sched {
             /*.pt=*/{0},             \
             /*.func=*/(FUNC),        \
             /*.awaiter=*/0,          \
-            /*.anon=*/{              \
+            /*.a=*/{                 \
                     /*.top=*/(COGO), \
             },                       \
     }
 
 static inline int cogo_await_is_valid(cogo_await_t const* const await) {
     return await && await->func;
-}
+    }
 
 #define COGO_AWAIT_SCHED_INIT(COGO) \
     {                               \
@@ -97,7 +97,6 @@ static inline int cogo_await_is_valid(cogo_await_t const* const await) {
 #define COGO_PT_OF(COGO)       (&COGO_AWAIT_OF(COGO)->pt)
 
 /// Run another coroutine until finished.
-#define CO_AWAIT(COGO_AWAITEE) COGO_AWAIT(COGO_THIS, COGO_AWAITEE)
 #define COGO_AWAIT(COGO, COGO_AWAITEE)                                                                 \
     do {                                                                                               \
         COGO_ASSERT((COGO) == (COGO) && (COGO) && (COGO_AWAITEE) == (COGO_AWAITEE) && (COGO_AWAITEE)); \
@@ -106,16 +105,27 @@ static inline int cogo_await_is_valid(cogo_await_t const* const await) {
         COGO_DO_YIELD(COGO);                                                                           \
         COGO_POST_AWAIT((+(COGO)), (+(COGO_AWAITEE)));                                                 \
     } while (0)
-void cogo_await_await(cogo_await_t* await, cogo_await_t* awaitee);
+static inline void cogo_await_await(cogo_await_t* const await, cogo_await_t* const awaitee) {
+// #ifdef COGO_DEBUG
+//     cogo_await_t const* node;
+//     // No loop in the call chain.
+//     for (node = await; node; node = node->awaiter) {
+//         COGO_ASSERT(awaitee != node);
+//     }
+// #endif
+//     COGO_ASSERT(cogo_await_is_valid(cogo_this) && cogo_this->a.sched && cogo_await_is_valid(awaitee));
 
-#undef COGO_INIT
+    awaitee->awaiter = COGO_AWAIT_SCHED_OF(await->a.sched)->top;  // call stack push
+    COGO_AWAIT_SCHED_OF(await->a.sched)->top = awaitee->a.top;    // continue from resume point
+}
+
 #define COGO_INIT(FUNC, AWAIT) COGO_AWAIT_INIT(FUNC, AWAIT)
 
 /*
 #undef COGO_BEGIN
 #define COGO_BEGIN(COGO)                     \
     COGO_ASSERT((COGO) == (COGO) && (COGO)); \
-    if (0 && (COGO) != (COGO)->anon.top) {   \
+    if (0 && (COGO) != (COGO)->a.top) {   \
         cogo_await_resume(COGO);             \
         return;                              \
     } else                                   \
@@ -126,7 +136,13 @@ void cogo_await_await(cogo_await_t* await, cogo_await_t* awaitee);
 cogo_pc_t cogo_await_resume(cogo_await_t* await);
 
 #define COGO_RUN(AWAIT) cogo_await_run(AWAIT)
-void cogo_await_run(cogo_await_t* await);
+static inline void cogo_await_run(cogo_await_t* const await) {
+    COGO_ASSERT(cogo_await_is_valid(await));
+    while (cogo_await_resume(await) != COGO_PC_END) {
+    }
+}
+
+#define CO_AWAIT(COGO_AWAITEE) COGO_AWAIT(COGO_THIS, COGO_AWAITEE)
 
 #ifdef __cplusplus
 }

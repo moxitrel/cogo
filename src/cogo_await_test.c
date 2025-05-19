@@ -85,7 +85,7 @@ CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
 
     // await2_run(&a0->a2.cogo);
     COGO_RESUME(&a0->a2.cogo);
-    TEST_ASSERT_NOT_NULL(COGO_THIS->anon.sched->top);
+    TEST_ASSERT_NOT_NULL(COGO_THIS->a.sched->top);
 
     CO_AWAIT(&a0->a2.cogo);  // COGO_AWAIT(COGO_THIS, &a0->a2);
     TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a0->a2.cogo));
