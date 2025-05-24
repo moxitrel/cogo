@@ -3,10 +3,10 @@
 
 // Run until yield. Return the next coroutine to be run.
 static cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
-#define TOP         (sched->base_await_sched.top)
-#define TOP_SCHED   (COGO_AWAIT_OF(TOP)->a.sched)
-#define TOP_AWAITER (COGO_AWAIT_OF(TOP)->awaiter)
-#define TOP_FUNC    (COGO_AWAIT_OF(TOP)->func)
+#define TOP         (sched->base_await_sched.cogo_top)
+#define TOP_SCHED   (COGO_CALL_OF(TOP)->cogo_union.sched)
+#define TOP_AWAITER (COGO_CALL_OF(TOP)->cogo_caller)
+#define TOP_FUNC    (COGO_CALL_OF(TOP)->cogo_func)
     COGO_ASSERT(sched);
 
     for (;;) {
@@ -40,8 +40,8 @@ exit:
 }
 
 int cogo_chan_read(cogo_async_t* const COGO_THIS, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
-#define SCHED     (COGO_THIS->base_await.a.sched)
-#define SCHED_TOP (SCHED->base_await_sched.top)
+#define SCHED     (COGO_THIS->base_await.cogo_union.sched)
+#define SCHED_TOP (SCHED->base_await_sched.cogo_top)
     ptrdiff_t chan_size;
     COGO_ASSERT(cogo_async_is_valid(COGO_THIS) && chan && chan->capacity >= 0 && chan->size > PTRDIFF_MIN && msg_next);
 
@@ -67,8 +67,8 @@ int cogo_chan_read(cogo_async_t* const COGO_THIS, cogo_chan_t* const chan, cogo_
 }
 
 int cogo_chan_write(cogo_async_t* const COGO_THIS, cogo_chan_t* const chan, cogo_msg_t* const msg) {
-#define SCHED     (COGO_THIS->base_await.a.sched)
-#define SCHED_TOP (SCHED->base_await_sched.top)
+#define SCHED     (COGO_THIS->base_await.cogo_union.sched)
+#define SCHED_TOP (SCHED->base_await_sched.cogo_top)
     ptrdiff_t chan_size;
 
     COGO_ASSERT(cogo_async_is_valid(COGO_THIS) && chan && chan->capacity >= 0 && chan->size < PTRDIFF_MAX && msg);
@@ -106,7 +106,7 @@ cogo_async_t* cogo_async_sched_remove(cogo_async_sched_t* const sched) {
 
 // run until yield, return the next coroutine will be run
 cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
-#define TOP (COGO_AWAIT_OF(cogo)->a.top)
+#define TOP (COGO_CALL_OF(cogo)->cogo_union.top)
     COGO_ASSERT(cogo_async_is_valid(cogo));
     if (TOP) {
         cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(TOP);
@@ -138,7 +138,7 @@ void cogo_async_run(cogo_async_t* const cogo) {
 
     /* mt
   for (;;) {
-    if (func(&sched)) {
+    if (cogo_func(&sched)) {
       wait.wake
     } else {
       if (steal_coroutine() == 0) {

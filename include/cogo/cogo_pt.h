@@ -106,7 +106,7 @@ typedef struct cogo_pt {
 
 /// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
 /// @pre `COGO != NULL`.
-#define COGO_PC(COGO) (+COGO_PT_OF(COGO)->cogo_pc)
+#define COGO_PC(COGO)  (+COGO_PT_OF(COGO)->cogo_pc)
 
 /// @hideinitializer A label-like macro marks the start of the coroutine.
 /// - If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked, and then continues its execution.

@@ -1,17 +1,17 @@
-#include <cogo/cogo_await.h>
+#include <cogo/cogo_call.h>
 
 // Run until CO_YIELD().
-cogo_pc_t cogo_await_resume(cogo_await_t* const await) {
-#define TOP         (sched.top)
-#define TOP_SCHED   (COGO_AWAIT_OF(TOP)->a.sched)
-#define TOP_AWAITER (COGO_AWAIT_OF(TOP)->awaiter)
-#define TOP_FUNC    (COGO_AWAIT_OF(TOP)->func)
-    COGO_ASSERT(cogo_await_is_valid(await));
+cogo_pc_t cogo_call_resume(cogo_call_t* const await) {
+#define TOP         (sched.cogo_top)
+#define TOP_SCHED   (COGO_CALL_OF(TOP)->cogo_union.sched)
+#define TOP_AWAITER (COGO_CALL_OF(TOP)->cogo_caller)
+#define TOP_FUNC    (COGO_CALL_OF(TOP)->cogo_func)
+    COGO_ASSERT(cogo_call_is_valid(await));
 
     if (COGO_PC(await) != COGO_PC_END) {
-        cogo_await_sched_t sched = COGO_AWAIT_SCHED_INIT(await->a.top);  // Restore the resume point.
+        cogo_call_sched_t sched = COGO_CALL_SCHED_INIT(await->cogo_union.top);  // Restore the resume point.
         for (;;) {
-            COGO_ASSERT(cogo_await_is_valid(TOP));
+            COGO_ASSERT(cogo_call_is_valid(TOP));
             TOP_SCHED = &sched;
             TOP_FUNC(TOP);
             switch (COGO_PC(TOP)) {
@@ -27,7 +27,7 @@ cogo_pc_t cogo_await_resume(cogo_await_t* const await) {
             }
         }
     exit:
-        await->a.top = TOP;  // Save the resume point.
+        await->cogo_union.top = TOP;  // Save the resume point.
     }
 
     return COGO_PC(await);

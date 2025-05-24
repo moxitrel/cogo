@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <cogo/cogo_await.h>
+#include <cogo/cogo_call.h>
 #include <stdlib.h>
 #include <unity.h>
 
@@ -34,10 +34,10 @@ COGO_END(cogo):;
 
 static void test_resume(void) {
     await2_t a2 = {
-            .cogo = COGO_INIT(await2_run, &a2.cogo),
+            .cogo = COGO_INIT(&a2.cogo, await2_run),
     };
     await1_t a1 = {
-            .cogo = COGO_INIT(await1_run, &a1.cogo),
+            .cogo = COGO_INIT(&a1.cogo, await1_run),
             .a2 = &a2,
     };
 
@@ -85,7 +85,7 @@ CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
 
     // await2_run(&a0->a2.cogo);
     COGO_RESUME(&a0->a2.cogo);
-    TEST_ASSERT_NOT_NULL(COGO_THIS->a.sched->top);
+    TEST_ASSERT_NOT_NULL(COGO_THIS->cogo_union.sched->cogo_top);
 
     CO_AWAIT(&a0->a2.cogo);  // COGO_AWAIT(COGO_THIS, &a0->a2);
     TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a0->a2.cogo));
@@ -95,9 +95,9 @@ CO_END:;  // COGO_END(COGO_THIS):;
 
 static void test_await_resumed(void) {
     await0_t a0 = {
-            .cogo = COGO_INIT(await0_run, &a0.cogo),
+            .cogo = COGO_INIT(&a0.cogo, await0_run),
             .a2 = {
-                    .cogo = COGO_INIT(await2_run, &a0.a2.cogo),
+                    .cogo = COGO_INIT(&a0.a2.cogo, await2_run),
             },
     };
     COGO_RUN(&a0.cogo);
@@ -122,7 +122,7 @@ CO_END:;  // COGO_END(COGO_THIS):;
 
 static void test_ng(void) {
     ng_t ng = {
-            .cogo = COGO_INIT(ng_run, &ng.cogo),
+            .cogo = COGO_INIT(&ng.cogo, ng_run),
             .v = 0,
     };
 
@@ -170,7 +170,7 @@ CO_BEGIN:
         fib->fib1 = (fib_t*)malloc(sizeof(*fib->fib1));
         assert(fib->fib1);
         *fib->fib1 = (fib_t){
-                .cogo = COGO_INIT(fib_run, &fib->fib1->cogo),
+                .cogo = COGO_INIT(&fib->fib1->cogo, fib_run),
                 .n = fib->n - 1,
         };
         CO_AWAIT(&fib->fib1->cogo);  // eval f(n-1)
@@ -180,7 +180,7 @@ CO_BEGIN:
         fib->fib2 = (fib_t*)malloc(sizeof(*fib->fib2));
         assert(fib->fib2);
         *fib->fib2 = (fib_t){
-                .cogo = COGO_INIT(fib_run, &fib->fib2->cogo),
+                .cogo = COGO_INIT(&fib->fib2->cogo, fib_run),
                 .n = fib->n - 2,
         };
         CO_AWAIT(&fib->fib2->cogo);  // eval f(n-2)
@@ -193,15 +193,15 @@ CO_END:;
 
 static void test_fib(void) {
     fib_t f03 = {
-            .cogo = COGO_INIT(fib_run, &f03.cogo),
+            .cogo = COGO_INIT(&f03.cogo, fib_run),
             .n = 3,
     };
     fib_t f11 = {
-            .cogo = COGO_INIT(fib_run, &f11.cogo),
+            .cogo = COGO_INIT(&f11.cogo, fib_run),
             .n = 11,
     };
     fib_t f23 = {
-            .cogo = COGO_INIT(fib_run, &f23.cogo),
+            .cogo = COGO_INIT(&f23.cogo, fib_run),
             .n = 23,
     };
 
