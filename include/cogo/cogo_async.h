@@ -149,8 +149,11 @@ COGO_T* cogo_async_sched_remove(cogo_async_sched_t* sched);
 typedef struct cogo_msg {
     struct cogo_msg* next;
     union {
+        char as_char;
+        short as_short;
         int as_int;
         long as_long;
+        float as_float;
         double as_double;
         void* as_pointer;
     } data;
