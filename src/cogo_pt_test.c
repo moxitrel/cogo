@@ -16,22 +16,22 @@ COGO_END(cogo):;
 static void test_yield(void) {
     COGO_T cogo = {0};
     int v = 0;
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&cogo));  // begin
     TEST_ASSERT_EQUAL_INT(0, v);
+    TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&cogo));
 
     func_yield(&cogo, &v);
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&cogo));  // running
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_PC_END, COGO_PC(&cogo));    // running
     TEST_ASSERT_EQUAL_INT(1, v);
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&cogo));
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_PC_END, COGO_PC(&cogo));
 
     func_yield(&cogo, &v);
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&cogo));  // end
     TEST_ASSERT_EQUAL_INT(2, v);
-
-    // noop when coroutine end
-    func_yield(&cogo, &v);
     TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&cogo));
+
+    // Noop if coroutine end.
+    func_yield(&cogo, &v);
     TEST_ASSERT_EQUAL_INT(2, v);
+    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&cogo));
 }
 
 typedef struct func_return {
@@ -53,17 +53,17 @@ static void test_return(void) {
     func_return_t args = {
             .v = 0,
     };
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&args.cogo));  // begin
     TEST_ASSERT_EQUAL_INT(0, args.v);
+    TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&args.cogo));
 
     func_return(&args);
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&args.cogo));  // end
     TEST_ASSERT_EQUAL_INT(1, args.v);
-
-    // noop when coroutine end
-    func_return(&args);
     TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&args.cogo));
+
+    // Noop if coroutine end.
+    func_return(&args);
     TEST_ASSERT_EQUAL_INT(1, args.v);
+    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&args.cogo));
 }
 
 typedef struct prologue {
@@ -105,7 +105,7 @@ typedef struct ng {
     COGO_T cogo;
 } ng_t;
 
-static void func_ng(ng_t* ng) {
+static int func_ng(ng_t* ng) {
     COGO_T* COGO_THIS = &ng->cogo;
 CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
 
@@ -113,22 +113,17 @@ CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
         CO_YIELD;  // COGO_YIELD(COGO_THIS);
     }
 
-CO_END:;  // COGO_END(COGO_THIS):;
+CO_END:  // COGO_END(COGO_THIS):
+    return ng->v;
 }
 
 static void test_ng(void) {
     ng_t ng = {
             .v = 0,
     };
-
-    func_ng(&ng);
-    TEST_ASSERT_EQUAL_INT(0, ng.v);
-
-    func_ng(&ng);
-    TEST_ASSERT_EQUAL_INT(1, ng.v);
-
-    func_ng(&ng);
-    TEST_ASSERT_EQUAL_INT(2, ng.v);
+    TEST_ASSERT_EQUAL_INT(0, func_ng(&ng));
+    TEST_ASSERT_EQUAL_INT(1, func_ng(&ng));
+    TEST_ASSERT_EQUAL_INT(2, func_ng(&ng));
 }
 
 void setUp(void) {

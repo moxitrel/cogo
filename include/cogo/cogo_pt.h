@@ -23,15 +23,6 @@
 #ifndef COGO_PT_H_
 #define COGO_PT_H_
 
-/// An integer type representing the position where the coroutine has reached.
-#ifndef COGO_PC_T
-    #define COGO_PC_T int
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /// @hideinitializer The coroutine start handler, which is invoked when the coroutine function reaches the `COGO_BEGIN` label for the first time during its execution.
 /// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
@@ -80,6 +71,10 @@ extern "C" {
     #define COGO_ON_EPC(COGO)  // noop
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(COGO_DEBUG) && defined(assert)
     #define COGO_ASSERT(...) assert(__VA_ARGS__)
 #else
@@ -87,7 +82,7 @@ extern "C" {
 #endif
 
 /// The position where function has reached.
-typedef COGO_PC_T cogo_pc_t;
+typedef int cogo_pc_t;
 /// @hideinitializer A `cogo_pc_t` value indicates the coroutine has finished running.
 #define COGO_PC_END   (-1)
 /// The zero value of type `cogo_pc_t`, that indicates the coroutine is initialized and ready to run.
@@ -98,15 +93,15 @@ typedef COGO_PC_T cogo_pc_t;
 typedef struct cogo_pt {
     // The source line where function continues to run when reentered.
     // It is initialized to `COGO_PC_BEGIN`, set to `__LINE__` when yield, or set to `COGO_PC_END` if finished running.
-    cogo_pc_t cogo_pc;
+    cogo_pc_t pc;
 } cogo_pt_t;
 
-// Get the cogo_pt_t object pointer from derivant.
-#define COGO_PT_OF(PT) (PT)
-
-/// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
-/// @pre `COGO != NULL`.
-#define COGO_PC(COGO)  (+COGO_PT_OF(COGO)->cogo_pc)
+// Initialize `cogo_pt_t` object.
+#define COGO_PT_INIT()   {0}
+// Get the `cogo_pt_t` object pointer.
+#define COGO_PT_OF(PT)   (PT)
+// Get the `pc` field.
+#define COGO_PC_OF(COGO) (COGO_PT_OF(COGO)->pc)
 
 /// @hideinitializer A label-like macro marks the start of the coroutine.
 /// - If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked, and then continues its execution.
@@ -119,7 +114,7 @@ typedef struct cogo_pt {
 /// @pre There should be one and only one `COGO_END(COGO)` after the `COGO_BEGIN(COGO)` in a function.
 #define COGO_BEGIN(COGO)                                                                            \
     COGO_ASSERT((COGO) == (COGO) && (COGO)); /* `COGO` must have no side effects and not `NULL`. */ \
-    switch (COGO_PC(COGO)) {                                                                        \
+    switch (COGO_PC_OF(COGO)) {                                                                     \
         default:                    /* Invalid pc */                                                \
             COGO_ON_EPC((+(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */         \
             goto cogo_end;                                                                          \
@@ -146,12 +141,11 @@ typedef struct cogo_pt {
         COGO_DO_YIELD(COGO);                     \
         COGO_ON_RESUME((+(COGO)));               \
     } while (0)
-
-#define COGO_DO_YIELD(COGO)                                                                   \
-    do {                                                                                      \
-        COGO_PT_OF(COGO)->cogo_pc = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
-        goto cogo_end;                        /* 2. return */                                 \
-        case __LINE__:;                       /* 3. resume point */                           \
+#define COGO_DO_YIELD(COGO)                                                          \
+    do {                                                                             \
+        COGO_PC_OF(COGO) = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
+        goto cogo_end;               /* 2. return */                                 \
+        case __LINE__:;              /* 3. resume point */                           \
     } while (0)
 
 /// @hideinitializer Jump to COGO_END, and finish the coroutine.
@@ -178,19 +172,26 @@ typedef struct cogo_pt {
 cogo_return:                                 \
     COGO_ASSERT((COGO) == (COGO) && (COGO)); \
     COGO_ON_END((+(COGO)));                  \
-    COGO_PT_OF(COGO)->cogo_pc = COGO_PC_END; \
+    COGO_PC_OF(COGO) = COGO_PC_END;          \
     } /* switch */                           \
     cogo_end
-
-#define CO_BEGIN  COGO_BEGIN(COGO_THIS)
-#define CO_YIELD  COGO_YIELD(COGO_THIS)
-#define CO_RETURN COGO_RETURN(COGO_THIS)
-#define CO_END    COGO_END(COGO_THIS)
 
 /// @hideinitializer An opaque object type that saves the coroutine states.
 #ifndef COGO_T
     #define COGO_T cogo_pt_t
 #endif
+
+// `COGO_T` initializer.
+#define COGO_INIT(PT, FUNC) COGO_PT_INIT()
+
+/// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
+/// @pre `COGO != NULL`.
+#define COGO_PC(COGO)       (+COGO_PC_OF(COGO))
+
+#define CO_BEGIN            COGO_BEGIN(COGO_THIS)
+#define CO_YIELD            COGO_YIELD(COGO_THIS)
+#define CO_RETURN           COGO_RETURN(COGO_THIS)
+#define CO_END              COGO_END(COGO_THIS)
 
 #ifdef __cplusplus
 }
