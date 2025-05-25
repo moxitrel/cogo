@@ -20,7 +20,7 @@ CO_END:;
 
 static void test_ng(void) {
     ng_t ng = {
-            .cogo = COGO_INIT(ng_run, &ng.cogo),
+            .cogo = COGO_INIT(&ng.cogo, ng_run),
             .v = 0,
     };
     COGO_RESUME(&ng.cogo);
@@ -82,15 +82,15 @@ CO_END:;
 static void test_chan(void) {
     cogo_chan_t c = COGO_CHAN_INIT(0);
     consume_t r = {
-            .cogo = COGO_INIT(consume_run, &r.cogo),
+            .cogo = COGO_INIT(&r.cogo, consume_run),
             .chan = &c,
     };
     product_t w = {
-            .cogo = COGO_INIT(product_run, &w.cogo),
+            .cogo = COGO_INIT(&w.cogo, product_run),
             .chan = &c,
     };
     entry_t m = {
-            .cogo = COGO_INIT(entry_run, &m.cogo),
+            .cogo = COGO_INIT(&m.cogo, entry_run),
             .w = &w,
             .r = &r,
     };

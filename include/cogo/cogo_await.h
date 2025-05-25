@@ -103,6 +103,7 @@ static inline int cogo_await_is_valid(cogo_await_t const* const await) {
 }
 
 /// Run another coroutine until finished.
+#define CO_AWAIT(COGO_AWAITEE) COGO_AWAIT(COGO_THIS, COGO_AWAITEE)
 #define COGO_AWAIT(COGO, COGO_AWAITEE)                                                                       \
     do {                                                                                                     \
         COGO_ASSERT((COGO) == (COGO) && (COGO) && (COGO_AWAITEE) == (COGO_AWAITEE) && (COGO_AWAITEE));       \
@@ -119,21 +120,8 @@ static inline int cogo_await_is_valid(cogo_await_t const* const await) {
 #define COGO_INIT(AWAIT, FUNC) COGO_AWAIT_INIT(AWAIT, FUNC)
 #define COGO_SCHED_INIT(AWAIT) COGO_AWAIT_SCHED_INIT(AWAIT)
 
-/*
-#undef COGO_BEGIN
-#define COGO_BEGIN(COGO)                     \
-    COGO_ASSERT((COGO) == (COGO) && (COGO)); \
-    if (0 && (COGO) != (COGO)->a.top) {   \
-        cogo_await_resume(COGO);             \
-        return;                              \
-    } else                                   \
-        COGO_DO_BEGIN(COGO)
-*/
-
 #define COGO_RESUME(AWAIT)     cogo_await_resume(AWAIT)
 cogo_pc_t cogo_await_resume(cogo_await_t* await);
-
-#define CO_AWAIT(COGO_AWAITEE) COGO_AWAIT(COGO_THIS, COGO_AWAITEE)
 
 #ifdef __cplusplus
 }
