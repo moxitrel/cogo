@@ -1,6 +1,6 @@
-#include "cogo/cogo_pt.h"
 
 #include <assert.h>
+#include <cogo/cogo_pt.h>
 #include <unity.h>
 
 static void func_yield(COGO_T* cogo, int* v) {

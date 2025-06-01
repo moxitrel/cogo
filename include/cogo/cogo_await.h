@@ -36,11 +36,11 @@ typedef struct cogo_await cogo_await_t;
 typedef struct cogo_await_sched cogo_await_sched_t;
 
 #ifndef COGO_PRE_AWAIT
-    #define COGO_PRE_AWAIT(COGO, COGO_AWAITEE)  // noop
+    #define COGO_PRE_AWAIT(COGO, COGO_OTHER)  // noop
 #endif
 
 #ifndef COGO_POST_AWAIT
-    #define COGO_POST_AWAIT(COGO, COGO_AWAITEE)  // noop
+    #define COGO_POST_AWAIT(COGO, COGO_OTHER)  // noop
 #endif
 
 #ifdef __cplusplus
@@ -67,6 +67,8 @@ struct cogo_await {
     } a;
 };
 
+#undef COGO_INIT
+#define COGO_INIT(AWAIT, FUNC) COGO_AWAIT_INIT(AWAIT, FUNC)
 #define COGO_AWAIT_INIT(COGO, FUNC)  \
     {                                \
             /*.pt=*/COGO_PT_INIT(),  \
@@ -85,42 +87,42 @@ struct cogo_await {
 #define COGO_TOP_OF(COGO)     (COGO_AWAIT_OF(COGO)->a.top)
 #define COGO_SCHED_OF(COGO)   (COGO_AWAIT_OF(COGO)->a.sched)
 
+#undef COGO_IS_VALID
+#define COGO_IS_VALID(AWAIT)      COGO_AWAIT_IS_VALID(AWAIT)
+#define COGO_AWAIT_IS_VALID(COGO) ((COGO) == (COGO) && (COGO) && COGO_PT_IS_VALID(COGO) && COGO_FUNC_OF(COGO))
+
 struct cogo_await_sched {
     // call stack top
     COGO_T* top;
 };
 
-#define COGO_AWAIT_SCHED_INIT(COGO)          \
-    {                                        \
-            /*.cogo_top=*/COGO_TOP_OF(COGO), \
+#define COGO_SCHED_INIT(AWAIT) COGO_AWAIT_SCHED_INIT(AWAIT)
+#define COGO_AWAIT_SCHED_INIT(COGO)     \
+    {                                   \
+            /*.top=*/COGO_TOP_OF(COGO), \
     }
 
 #define COGO_AWAIT_SCHED_OF(AWAIT_SCHED) (AWAIT_SCHED)
 #define COGO_SCHED_TOP_OF(SCHED)         (COGO_AWAIT_SCHED_OF(SCHED)->top)
 
-static inline int cogo_await_is_valid(cogo_await_t const* const await) {
-    return await && await->func;
-}
+#define COGO_SCHED_IS_VALID(AWAIT_SCHED) COGO_AWAIT_SCHED_IS_VALID(AWAIT_SCHED)
+#define COGO_AWAIT_SCHED_IS_VALID(SCHED) ((SCHED) == (SCHED) && (SCHED) && COGO_IS_VALID(COGO_SCHED_TOP_OF(SCHED)))
 
 /// Run another coroutine until finished.
-#define CO_AWAIT(COGO_AWAITEE) COGO_AWAIT(COGO_THIS, COGO_AWAITEE)
-#define COGO_AWAIT(COGO, COGO_AWAITEE)                                                                       \
-    do {                                                                                                     \
-        COGO_ASSERT((COGO) == (COGO) && (COGO) && (COGO_AWAITEE) == (COGO_AWAITEE) && (COGO_AWAITEE));       \
-        COGO_PRE_AWAIT((+(COGO)), (+(COGO_AWAITEE)));                                                        \
-                                                                                                             \
-        COGO_AWAITER_OF(COGO_AWAITEE) = (COGO);                             /* call stack push */            \
-        COGO_SCHED_TOP_OF(COGO_SCHED_OF(COGO)) = COGO_TOP_OF(COGO_AWAITEE); /* continue from resume point */ \
-        COGO_DO_YIELD(COGO);                                                                                 \
-                                                                                                             \
-        COGO_POST_AWAIT((+(COGO)), (+(COGO_AWAITEE)));                                                       \
+#define CO_AWAIT(COGO_OTHER)             COGO_AWAIT(COGO_THIS, COGO_OTHER)
+#define COGO_AWAIT(COGO, COGO_OTHER)                                                                       \
+    do {                                                                                                   \
+        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER));                                     \
+        COGO_PRE_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                        \
+                                                                                                           \
+        COGO_AWAITER_OF(COGO_OTHER) = (COGO);                             /* call stack push */            \
+        COGO_SCHED_TOP_OF(COGO_SCHED_OF(COGO)) = COGO_TOP_OF(COGO_OTHER); /* continue from resume point */ \
+        COGO_DO_YIELD(COGO);                                                                               \
+                                                                                                           \
+        COGO_POST_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                       \
     } while (0)
 
-#undef COGO_INIT
-#define COGO_INIT(AWAIT, FUNC) COGO_AWAIT_INIT(AWAIT, FUNC)
-#define COGO_SCHED_INIT(AWAIT) COGO_AWAIT_SCHED_INIT(AWAIT)
-
-#define COGO_RESUME(AWAIT)     cogo_await_resume(AWAIT)
+#define COGO_RESUME(AWAIT) cogo_await_resume(AWAIT)
 cogo_pc_t cogo_await_resume(cogo_await_t* await);
 
 #ifdef __cplusplus

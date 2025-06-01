@@ -43,11 +43,11 @@ typedef struct cogo_async_sched cogo_async_sched_t;
 #include "cogo_await.h"
 
 #ifndef COGO_PRE_ASYNC
-    #define COGO_PRE_ASYNC(COGO_THIS, COGO_ASYNCEE)  // noop
+    #define COGO_PRE_ASYNC(COGO_THIS, COGO_OTHER)  // noop
 #endif
 
 #ifndef COGO_POST_ASYNC
-    #define COGO_POST_ASYNC(COGO_THIS, COGO_ASYNCEE)  // noop
+    #define COGO_POST_ASYNC(COGO_THIS, COGO_OTHER)  // noop
 #endif
 
 #ifndef COGO_PRE_CHAN_READ
@@ -80,6 +80,8 @@ struct cogo_async {
     COGO_T* next;
 };
 
+#undef COGO_INIT
+#define COGO_INIT(ASYNC, FUNC) COGO_ASYNC_INIT(ASYNC, FUNC)
 #define COGO_ASYNC_INIT(COGO, FUNC)                 \
     {                                               \
             /*.await=*/COGO_AWAIT_INIT(COGO, FUNC), \
@@ -88,10 +90,15 @@ struct cogo_async {
 
 #define COGO_ASYNC_OF(ASYNC) (ASYNC)
 #undef COGO_AWAIT_OF
-#define COGO_AWAIT_OF(COGO)    (&COGO_ASYNC_OF(COGO)->await)
+#define COGO_AWAIT_OF(COGO) (&COGO_ASYNC_OF(COGO)->await)
+#define COGO_NEXT_OF(COGO)  (&COGO_ASYNC_OF(COGO)->next)
 
-#define COGO_QUEUE_VALUE_T     cogo_async_t
-#define COGO_QUEUE_NEXT(ASYNC) ((ASYNC)->next)
+#undef COGO_IS_VALID
+#define COGO_IS_VALID(ASYNC)      COGO_ASYNC_IS_VALID(ASYNC)
+#define COGO_ASYNC_IS_VALID(COGO) COGO_AWAIT_IS_VALID(COGO)
+
+#define COGO_QUEUE_VALUE_T        cogo_async_t
+#define COGO_QUEUE_NEXT(ASYNC)    ((ASYNC)->next)
 #include "private/cogo_queue_template.h"
 #undef COGO_QUEUE_VALUE_T
 #undef COGO_QUEUE_NEXT
@@ -111,6 +118,8 @@ struct cogo_async_sched {
     //  struct cogo_async_sched* run; // running schedulers (idles not in list)
 };
 
+#undef COGO_SCHED_INIT
+#define COGO_SCHED_INIT(ASYNC) COGO_ASYNC_SCHED_INIT(ASYNC)
 #define COGO_ASYNC_SCHED_INIT(COGO)                       \
     {                                                     \
             /*.await_sched=*/COGO_AWAIT_SCHED_INIT(COGO), \
@@ -122,10 +131,6 @@ struct cogo_async_sched {
 #define COGO_AWAIT_SCHED_OF(SCHED) (&COGO_ASYNC_SCHED_OF(SCHED)->await_sched)
 #define COGO_SCHED_CQ_OF(SCHED)    (&COGO_ASYNC_SCHED_OF(SCHED)->q)
 
-static inline int cogo_async_is_valid(cogo_async_t const* const cogo) {
-    return cogo && cogo_await_is_valid(&cogo->await);
-}
-
 // Add coroutine to the concurrent queue.
 // Switch context if return non-zero.
 int cogo_async_sched_add(cogo_async_sched_t* sched, cogo_async_t* cogo);
@@ -134,15 +139,15 @@ int cogo_async_sched_add(cogo_async_sched_t* sched, cogo_async_t* cogo);
 COGO_T* cogo_async_sched_remove(cogo_async_sched_t* sched);
 
 /// Start a new coroutine to run concurrently.
-#define CO_ASYNC(COGO_ASYNCEE) COGO_ASYNC(COGO_THIS, COGO_ASYNCEE)
-#define COGO_ASYNC(COGO, COGO_ASYNCEE)                                                                     \
-    do {                                                                                                   \
-        COGO_ASSERT((COGO_ASYNCEE) == (COGO_ASYNCEE) && (COGO_ASYNCEE));                                   \
-        COGO_PRE_ASYNC((+(COGO)), (+(COGO_ASYNCEE)));                                                      \
-        if (cogo_async_sched_add(COGO_ASYNC_SCHED_OF(COGO_SCHED_OF(COGO)), COGO_ASYNC_OF(COGO_ASYNCEE))) { \
-            COGO_DO_YIELD(COGO);                                                                           \
-        }                                                                                                  \
-        COGO_POST_ASYNC((+(COGO)), (+(COGO_ASYNCEE)));                                                     \
+#define CO_ASYNC(COGO_OTHER) COGO_ASYNC(COGO_THIS, COGO_OTHER)
+#define COGO_ASYNC(COGO, COGO_OTHER)                                                                     \
+    do {                                                                                                 \
+        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER));                                   \
+        COGO_PRE_ASYNC((+(COGO)), (+(COGO_OTHER)));                                                      \
+        if (cogo_async_sched_add(COGO_ASYNC_SCHED_OF(COGO_SCHED_OF(COGO)), COGO_ASYNC_OF(COGO_OTHER))) { \
+            COGO_DO_YIELD(COGO);                                                                         \
+        }                                                                                                \
+        COGO_POST_ASYNC((+(COGO)), (+(COGO_OTHER)));                                                     \
     } while (0)
 
 // channel message
@@ -252,11 +257,6 @@ int cogo_chan_read(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg_next)
     } while (0)
 // Switch context if return non-zero.
 int cogo_chan_write(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg);
-
-#undef COGO_INIT
-#define COGO_INIT(ASYNC, FUNC) COGO_ASYNC_INIT(ASYNC, FUNC)
-#undef COGO_SCHED_INIT
-#define COGO_SCHED_INIT(ASYNC) COGO_ASYNC_SCHED_INIT(ASYNC)
 
 #undef COGO_RESUME
 #define COGO_RESUME(ASYNC) cogo_async_resume(ASYNC)

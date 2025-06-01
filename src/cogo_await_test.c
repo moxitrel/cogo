@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <unity.h>
 
-#include "cogo/cogo_pt.h"
-
 typedef struct await2 {
     COGO_T cogo;
 } await2_t;
@@ -94,8 +92,7 @@ static void test_await_resumed(void) {
                     .cogo = COGO_INIT(&a0.a2.cogo, await2_run),
             },
     };
-    // COGO_RUN(&a0.cogo);
-    while (cogo_await_resume(&a0.cogo) != COGO_PC_END) {
+    while (COGO_RESUME(&a0.cogo) != COGO_PC_END) {
     }
     TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a0.cogo));
 }
@@ -105,7 +102,7 @@ typedef struct ng {
     int v;
 } ng_t;
 
-static void ng_run(COGO_T* COGO_THIS) {
+static void ng_func(COGO_T* COGO_THIS) {
     ng_t* ng = (ng_t*)COGO_THIS;
 CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
 
@@ -116,20 +113,18 @@ CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
 CO_END:;  // COGO_END(COGO_THIS):;
 }
 
+#define NG_INIT(NG, V) {                         \
+        .cogo = COGO_INIT(&(NG)->cogo, ng_func), \
+        .v = (V),                                \
+}
+#define NG_RESUME(NG) (COGO_RESUME(&(NG)->cogo), (NG)->v)
+
 static void test_ng(void) {
-    ng_t ng = {
-            .cogo = COGO_INIT(&ng.cogo, ng_run),
-            .v = 0,
-    };
+    ng_t ng = NG_INIT(&ng, 0);
 
-    COGO_RESUME(&ng.cogo);
-    TEST_ASSERT_EQUAL_INT(0, ng.v);
-
-    COGO_RESUME(&ng.cogo);
-    TEST_ASSERT_EQUAL_INT(1, ng.v);
-
-    COGO_RESUME(&ng.cogo);
-    TEST_ASSERT_EQUAL_INT(2, ng.v);
+    TEST_ASSERT_EQUAL_INT(0, NG_RESUME(&ng));
+    TEST_ASSERT_EQUAL_INT(1, NG_RESUME(&ng));
+    TEST_ASSERT_EQUAL_INT(2, NG_RESUME(&ng));
 }
 
 static int fib(int n) {
@@ -151,7 +146,12 @@ typedef struct fib {
     struct fib* fib2;
 } fib_t;
 
-static void fib_run(COGO_T* COGO_THIS) {
+#define FIB_INIT(FIB, N) {                         \
+        .cogo = COGO_INIT(&(FIB)->cogo, fib_func), \
+        .n = (N),                                  \
+}
+
+static void fib_func(COGO_T* COGO_THIS) {
     fib_t* fib = (fib_t*)COGO_THIS;
 CO_BEGIN:
 
@@ -162,20 +162,14 @@ CO_BEGIN:
 
         fib->fib1 = (fib_t*)malloc(sizeof(*fib->fib1));
         assert(fib->fib1);
-        *fib->fib1 = (fib_t){
-                .cogo = COGO_INIT(&fib->fib1->cogo, fib_run),
-                .n = fib->n - 1,
-        };
+        *fib->fib1 = (fib_t)FIB_INIT(fib->fib1, fib->n - 1);
         CO_AWAIT(&fib->fib1->cogo);  // eval f(n-1)
         fib->v += fib->fib1->v;
         free(fib->fib1);
 
         fib->fib2 = (fib_t*)malloc(sizeof(*fib->fib2));
         assert(fib->fib2);
-        *fib->fib2 = (fib_t){
-                .cogo = COGO_INIT(&fib->fib2->cogo, fib_run),
-                .n = fib->n - 2,
-        };
+        *fib->fib2 = (fib_t)FIB_INIT(fib->fib2, fib->n - 2);
         CO_AWAIT(&fib->fib2->cogo);  // eval f(n-2)
         fib->v += fib->fib2->v;
         free(fib->fib2);
@@ -185,18 +179,9 @@ CO_END:;
 }
 
 static void test_fib(void) {
-    fib_t f03 = {
-            .cogo = COGO_INIT(&f03.cogo, fib_run),
-            .n = 3,
-    };
-    fib_t f11 = {
-            .cogo = COGO_INIT(&f11.cogo, fib_run),
-            .n = 11,
-    };
-    fib_t f23 = {
-            .cogo = COGO_INIT(&f23.cogo, fib_run),
-            .n = 23,
-    };
+    fib_t f03 = FIB_INIT(&f03, 3);
+    fib_t f11 = FIB_INIT(&f11, 11);
+    fib_t f23 = FIB_INIT(&f23, 23);
 
     struct {
         fib_t* fib;
@@ -208,8 +193,7 @@ static void test_fib(void) {
     };
 
     for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); i++) {
-        // COGO_RUN(&test_cases[i].fib->cogo);
-        while (cogo_await_resume(&test_cases[i].fib->cogo) != COGO_PC_END) {
+        while (COGO_RESUME(&test_cases[i].fib->cogo) != COGO_PC_END) {
         }
         TEST_ASSERT_EQUAL_INT(test_cases[i].fib->v, test_cases[i].v);
     }

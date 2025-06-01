@@ -96,8 +96,6 @@ typedef struct cogo_pt {
     cogo_pc_t pc;
 } cogo_pt_t;
 
-// Initialize `cogo_pt_t` object.
-#define COGO_PT_INIT()   {0}
 // Get the `cogo_pt_t` object pointer.
 #define COGO_PT_OF(PT)   (PT)
 // Get the `pc` field.
@@ -141,6 +139,7 @@ typedef struct cogo_pt {
         COGO_DO_YIELD(COGO);                     \
         COGO_ON_RESUME((+(COGO)));               \
     } while (0)
+
 #define COGO_DO_YIELD(COGO)                                                          \
     do {                                                                             \
         COGO_PC_OF(COGO) = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
@@ -181,17 +180,21 @@ cogo_return:                                 \
     #define COGO_T cogo_pt_t
 #endif
 
-// `COGO_T` initializer.
-#define COGO_INIT(PT, FUNC) COGO_PT_INIT()
-
 /// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
 /// @pre `COGO != NULL`.
-#define COGO_PC(COGO)       (+COGO_PC_OF(COGO))
+#define COGO_PC(COGO)          (+COGO_PC_OF(COGO))
 
-#define CO_BEGIN            COGO_BEGIN(COGO_THIS)
-#define CO_YIELD            COGO_YIELD(COGO_THIS)
-#define CO_RETURN           COGO_RETURN(COGO_THIS)
-#define CO_END              COGO_END(COGO_THIS)
+#define CO_BEGIN               COGO_BEGIN(COGO_THIS)
+#define CO_YIELD               COGO_YIELD(COGO_THIS)
+#define CO_RETURN              COGO_RETURN(COGO_THIS)
+#define CO_END                 COGO_END(COGO_THIS)
+
+// `COGO_T` initializer.
+#define COGO_INIT(PT, FUNC)    COGO_PT_INIT()
+#define COGO_PT_INIT()         {0}
+
+#define COGO_IS_VALID(PT)      COGO_PT_IS_VALID(PT)
+#define COGO_PT_IS_VALID(COGO) (COGO_PC_OF(COGO) >= COGO_PC_END)
 
 #ifdef __cplusplus
 }
