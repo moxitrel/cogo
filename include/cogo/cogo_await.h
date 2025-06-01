@@ -89,7 +89,7 @@ struct cogo_await {
 
 #undef COGO_IS_VALID
 #define COGO_IS_VALID(AWAIT)      COGO_AWAIT_IS_VALID(AWAIT)
-#define COGO_AWAIT_IS_VALID(COGO) ((COGO) == (COGO) && (COGO) && COGO_PT_IS_VALID(COGO) && COGO_FUNC_OF(COGO))
+#define COGO_AWAIT_IS_VALID(COGO) ((COGO) == (COGO) && (COGO) && COGO_PT_IS_VALID(COGO) && COGO_FUNC_OF(COGO) && COGO_TOP_OF(COGO))
 
 struct cogo_await_sched {
     // call stack top

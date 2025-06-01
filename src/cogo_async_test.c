@@ -7,30 +7,34 @@ typedef struct ng {
     int v;
 } ng_t;
 
-static void ng_run(COGO_T* const COGO_THIS) {
-    ng_t* const ng_this = (ng_t*)COGO_THIS;
+static void ng_func(COGO_T* COGO_THIS) {
+    ng_t* thiz = (ng_t*)COGO_THIS;
 CO_BEGIN:
 
-    for (;; ng_this->v++) {
+    for (;; thiz->v++) {
         CO_YIELD;
     }
 
 CO_END:;
 }
 
+static ng_t ng_init(ng_t* thiz, int v) {
+    return *thiz = (ng_t){
+                   .cogo = COGO_INIT(&thiz->cogo, ng_func),
+                   .v = v,
+           };
+}
+
+static int ng_resume(ng_t* thiz) {
+    COGO_RESUME(&thiz->cogo);
+    return thiz->v;
+}
+
 static void test_ng(void) {
-    ng_t ng = {
-            .cogo = COGO_INIT(&ng.cogo, ng_run),
-            .v = 0,
-    };
-    COGO_RESUME(&ng.cogo);
-    TEST_ASSERT_EQUAL_INT(0, ng.v);
-
-    COGO_RESUME(&ng.cogo);
-    TEST_ASSERT_EQUAL_INT(1, ng.v);
-
-    COGO_RESUME(&ng.cogo);
-    TEST_ASSERT_EQUAL_INT(2, ng.v);
+    ng_t ng = ng_init(&ng, 0);
+    TEST_ASSERT_EQUAL_INT(0, ng_resume(&ng));
+    TEST_ASSERT_EQUAL_INT(1, ng_resume(&ng));
+    TEST_ASSERT_EQUAL_INT(2, ng_resume(&ng));
 }
 
 typedef struct consume {
@@ -39,13 +43,20 @@ typedef struct consume {
     cogo_msg_t msg;
 } consume_t;
 
-static void consume_run(COGO_T* const COGO_THIS) {
-    consume_t* const consume_thiz = (consume_t*)COGO_THIS;
+static void consume_func(COGO_T* COGO_THIS) {
+    consume_t* thiz = (consume_t*)COGO_THIS;
 CO_BEGIN:
 
-    CO_CHAN_READ(consume_thiz->chan, &consume_thiz->msg);
+    CO_CHAN_READ(thiz->chan, &thiz->msg);
 
 CO_END:;
+}
+
+static consume_t consume_init(consume_t* thiz, cogo_chan_t* chan) {
+    return *thiz = (consume_t){
+                   .cogo = COGO_INIT(&thiz->cogo, consume_func),
+                   .chan = chan,
+           };
 }
 
 typedef struct product {
@@ -54,13 +65,20 @@ typedef struct product {
     cogo_msg_t msg;
 } product_t;
 
-static void product_run(COGO_T* const COGO_THIS) {
-    product_t* const product_thiz = (product_t*)COGO_THIS;
+static void product_func(COGO_T* COGO_THIS) {
+    product_t* thiz = (product_t*)COGO_THIS;
 CO_BEGIN:
 
-    CO_CHAN_WRITE(product_thiz->chan, &product_thiz->msg);
+    CO_CHAN_WRITE(thiz->chan, &thiz->msg);
 
 CO_END:;
+}
+
+static product_t product_init(product_t* thiz, cogo_chan_t* chan) {
+    return *thiz = (product_t){
+                   .cogo = COGO_INIT(&thiz->cogo, product_func),
+                   .chan = chan,
+           };
 }
 
 typedef struct entry {
@@ -69,31 +87,29 @@ typedef struct entry {
     product_t* w;
 } entry_t;
 
-static void entry_run(COGO_T* const COGO_THIS) {
-    entry_t* const entry_thiz = (entry_t*)COGO_THIS;
+static void entry_func(COGO_T* COGO_THIS) {
+    entry_t* thiz = (entry_t*)COGO_THIS;
 CO_BEGIN:
 
-    CO_ASYNC(&entry_thiz->r->cogo);
-    CO_ASYNC(&entry_thiz->w->cogo);
+    CO_ASYNC(&thiz->r->cogo);
+    CO_ASYNC(&thiz->w->cogo);
 
 CO_END:;
 }
 
+static entry_t entry_init(entry_t* thiz, consume_t* r, product_t* w) {
+    return *thiz = (entry_t){
+                   .cogo = COGO_INIT(&thiz->cogo, entry_func),
+                   .r = r,
+                   .w = w,
+           };
+}
+
 static void test_chan(void) {
     cogo_chan_t c = COGO_CHAN_INIT(0);
-    consume_t r = {
-            .cogo = COGO_INIT(&r.cogo, consume_run),
-            .chan = &c,
-    };
-    product_t w = {
-            .cogo = COGO_INIT(&w.cogo, product_run),
-            .chan = &c,
-    };
-    entry_t m = {
-            .cogo = COGO_INIT(&m.cogo, entry_run),
-            .w = &w,
-            .r = &r,
-    };
+    consume_t r = consume_init(&r, &c);
+    product_t w = product_init(&w, &c);
+    entry_t m = entry_init(&m, &r, &w);
     COGO_RUN(&m.cogo);
     TEST_ASSERT_EQUAL_PTR(&w.msg, r.msg.next);
 }

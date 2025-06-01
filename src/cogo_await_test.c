@@ -7,7 +7,7 @@ typedef struct await2 {
     COGO_T cogo;
 } await2_t;
 
-static void await2_run(COGO_T* COGO_THIS) {
+static void await2_func(COGO_T* COGO_THIS) {
 CO_BEGIN:
 
     CO_YIELD;
@@ -21,7 +21,7 @@ typedef struct await1 {
     await2_t* a2;
 } await1_t;
 
-static void await1_run(COGO_T* COGO_THIS) {
+static void await1_func(COGO_T* COGO_THIS) {
     await1_t* a1 = (await1_t*)COGO_THIS;
 CO_BEGIN:
 
@@ -32,10 +32,10 @@ CO_END:;
 
 static void test_resume(void) {
     await2_t a2 = {
-            .cogo = COGO_INIT(&a2.cogo, await2_run),
+            .cogo = COGO_INIT(&a2.cogo, await2_func),
     };
     await1_t a1 = {
-            .cogo = COGO_INIT(&a1.cogo, await1_run),
+            .cogo = COGO_INIT(&a1.cogo, await1_func),
             .a2 = &a2,
     };
 
@@ -72,7 +72,7 @@ typedef struct await0 {
     await2_t a2;
 } await0_t;
 
-static void await0_run(COGO_T* COGO_THIS) {
+static void await0_func(COGO_T* COGO_THIS) {
     await0_t* a0 = (await0_t*)COGO_THIS;
 CO_BEGIN:
 
@@ -87,9 +87,9 @@ CO_END:;
 
 static void test_await_resumed(void) {
     await0_t a0 = {
-            .cogo = COGO_INIT(&a0.cogo, await0_run),
+            .cogo = COGO_INIT(&a0.cogo, await0_func),
             .a2 = {
-                    .cogo = COGO_INIT(&a0.a2.cogo, await2_run),
+                    .cogo = COGO_INIT(&a0.a2.cogo, await2_func),
             },
     };
     while (COGO_RESUME(&a0.cogo) != COGO_PC_END) {
@@ -103,28 +103,29 @@ typedef struct ng {
 } ng_t;
 
 static void ng_func(COGO_T* COGO_THIS) {
-    ng_t* ng = (ng_t*)COGO_THIS;
-CO_BEGIN:  // COGO_BEGIN(COGO_THIS):
+    ng_t* ng_this = (ng_t*)COGO_THIS;
+CO_BEGIN:
 
-    for (;; ng->v++) {
-        CO_YIELD;  // COGO_YIELD(COGO_THIS);
+    for (;; ng_this->v++) {
+        CO_YIELD;
     }
 
-CO_END:;  // COGO_END(COGO_THIS):;
+CO_END:;
 }
-
-#define NG_INIT(NG, V) {                         \
-        .cogo = COGO_INIT(&(NG)->cogo, ng_func), \
-        .v = (V),                                \
-}
-#define NG_RESUME(NG) (COGO_RESUME(&(NG)->cogo), (NG)->v)
 
 static void test_ng(void) {
-    ng_t ng = NG_INIT(&ng, 0);
+    ng_t ng = {
+            .cogo = COGO_INIT(&ng.cogo, ng_func),
+            .v = 0,
+    };
+    COGO_RESUME(&ng.cogo);
+    TEST_ASSERT_EQUAL_INT(0, ng.v);
 
-    TEST_ASSERT_EQUAL_INT(0, NG_RESUME(&ng));
-    TEST_ASSERT_EQUAL_INT(1, NG_RESUME(&ng));
-    TEST_ASSERT_EQUAL_INT(2, NG_RESUME(&ng));
+    COGO_RESUME(&ng.cogo);
+    TEST_ASSERT_EQUAL_INT(1, ng.v);
+
+    COGO_RESUME(&ng.cogo);
+    TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 
 static int fib(int n) {
@@ -146,11 +147,6 @@ typedef struct fib {
     struct fib* fib2;
 } fib_t;
 
-#define FIB_INIT(FIB, N) {                         \
-        .cogo = COGO_INIT(&(FIB)->cogo, fib_func), \
-        .n = (N),                                  \
-}
-
 static void fib_func(COGO_T* COGO_THIS) {
     fib_t* fib = (fib_t*)COGO_THIS;
 CO_BEGIN:
@@ -162,14 +158,20 @@ CO_BEGIN:
 
         fib->fib1 = (fib_t*)malloc(sizeof(*fib->fib1));
         assert(fib->fib1);
-        *fib->fib1 = (fib_t)FIB_INIT(fib->fib1, fib->n - 1);
+        *fib->fib1 = (fib_t){
+                .cogo = COGO_INIT(&fib->fib1->cogo, fib_func),
+                .n = fib->n - 1,
+        };
         CO_AWAIT(&fib->fib1->cogo);  // eval f(n-1)
         fib->v += fib->fib1->v;
         free(fib->fib1);
 
         fib->fib2 = (fib_t*)malloc(sizeof(*fib->fib2));
         assert(fib->fib2);
-        *fib->fib2 = (fib_t)FIB_INIT(fib->fib2, fib->n - 2);
+        *fib->fib2 = (fib_t){
+                .cogo = COGO_INIT(&fib->fib2->cogo, fib_func),
+                .n = fib->n - 2,
+        };
         CO_AWAIT(&fib->fib2->cogo);  // eval f(n-2)
         fib->v += fib->fib2->v;
         free(fib->fib2);
@@ -179,9 +181,18 @@ CO_END:;
 }
 
 static void test_fib(void) {
-    fib_t f03 = FIB_INIT(&f03, 3);
-    fib_t f11 = FIB_INIT(&f11, 11);
-    fib_t f23 = FIB_INIT(&f23, 23);
+    fib_t f03 = {
+            .cogo = COGO_INIT(&f03.cogo, fib_func),
+            .n = 3,
+    };
+    fib_t f11 = {
+            .cogo = COGO_INIT(&f11.cogo, fib_func),
+            .n = 11,
+    };
+    fib_t f23 = {
+            .cogo = COGO_INIT(&f23.cogo, fib_func),
+            .n = 23,
+    };
 
     struct {
         fib_t* fib;

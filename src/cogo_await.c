@@ -16,13 +16,14 @@ cogo_pc_t cogo_await_resume(cogo_await_t* const await) {
             TOP_FUNC(TOP);
             switch (TOP_PC) {
                 case COGO_PC_END:
-                    if (!(TOP = TOP_AWAITER)) {  // end
+                    if (!TOP_AWAITER) {  // end
                         goto exit;
                     }
+                    TOP = TOP_AWAITER;
                     continue;        // awaited
                 case COGO_PC_BEGIN:  // awaiting
                     continue;
-                default:  // yielding
+                default:  // yield
                     goto exit;
             }
         }
