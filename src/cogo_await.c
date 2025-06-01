@@ -29,12 +29,13 @@ cogo_pc_t cogo_await_resume(cogo_await_t* const await) {
         }
     exit:
         COGO_TOP_OF(await) = TOP;  // Save the resume point.
+    }
+
+    return COGO_PC(await);
+
 #undef TOP_AWAITER
 #undef TOP_FUNC
 #undef TOP_SCHED
 #undef TOP_PC
 #undef TOP
-    }
-
-    return COGO_PC(await);
 }
