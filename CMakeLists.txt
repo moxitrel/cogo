@@ -34,10 +34,8 @@ target_include_directories(cogo PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_compile_features(cogo PUBLIC c_std_99)
 target_compile_definitions(cogo PUBLIC
   $<$<CONFIG:Debug>:COGO_DEBUG>
-  COGO_MP=1 # multithreaded scheduler
 )
 install(TARGETS cogo EXPORT cogoTargets
   ARCHIVE
@@ -73,43 +71,14 @@ include(cmake/run_doxygen.cmake)
 if(COGO_TEST)
   include(CheckCCompilerFlag)
   include(cmake/unity.cmake)
+  include(cmake/compile_options.cmake)
 
   message(STATUS "CMAKE_C_COMPILER       : ${CMAKE_C_COMPILER}")
 
-  check_c_compiler_flag(-Wc++-compat _Wcpp_compat)
-  check_c_compiler_flag(-Wpedantic _Wpedantic)
-  check_c_compiler_flag(-Wno-padded _Wno_padded)
-  check_c_compiler_flag(-Wno-unsafe-buffer-usage _Wno_unsafe_buffer_usage)
-  check_c_compiler_flag(-Wno-gnu-label-as-value _Wno_gnu_label_as_value)
-  check_c_compiler_flag(-Werror _Werror)
-  check_c_compiler_flag(-Weverything _Weverything)
-  check_c_compiler_flag(-Wall _Wall)
-  check_c_compiler_flag(-Wextra _Wextra)
-  check_c_compiler_flag(-Wconversion _Wconversion)
-  check_c_compiler_flag(-Wsign-conversion _Wsign_conversion)
-  check_c_compiler_flag(-Warith-conversion _Warith_conversion)
-  check_c_compiler_flag(-Wcast-qual _Wcast_qual)
-  check_c_compiler_flag(-Wcast-align=strict _Wcast_align_strict)
-  check_c_compiler_flag(-fanalyzer _fanalyzer)
-  set(_compile_options
-    $<$<BOOL:${_Wcpp_compat}>:-Wc++-compat>
-    $<$<BOOL:${_Wno_padded}>:-Wno-padded>
-    $<$<BOOL:${_Wno_unsafe_buffer_usage}>:-Wno-unsafe-buffer-usage>
-    $<$<BOOL:${_Wpedantic}>:-Wpedantic>
-    $<$<BOOL:${_Wno_gnu_label_as_value}>:-Wno-gnu-label-as-value>
-    $<$<BOOL:${_Werror}>:-Werror>
-    $<$<BOOL:${_Weverything}>:-Weverything>
-    $<$<BOOL:${_Wall}>:-Wall>
-    $<$<BOOL:${_Wextra}>:-Wextra>
-    $<$<BOOL:${_Wconversion}>:-Wconversion>
-    $<$<BOOL:${_Wsign_conversion}>:-Wsign-conversion>
-    $<$<BOOL:${_Warith_conversion}>:-Warith-conversion>
-    $<$<BOOL:${_Wcast_qual}>:-Wcast-qual>
-    $<$<BOOL:${_Wcast_align_strict}>:-Wcast-align=strict>
-    $<$<BOOL:${_fanalyzer}>:-fanalyzer>
-  )
   target_compile_options(cogo PRIVATE
-    ${_compile_options}
+    ${ZY_COMPILE_OPTIONS_DIAGNOSTIC}
+    -Wno-padded
+    -Wno-unsafe-buffer-usage
   )
   target_compile_features(cogo PRIVATE
     c_std_90
@@ -123,21 +92,10 @@ if(COGO_TEST)
     $<$<BOOL:${_Wno_pre_c11_compat}>:-Wno-pre-c11-compat>
   )
 
-  check_c_compiler_flag(-Wno-declaration-after-statement _Wno_declaration_after_statement)
-  check_c_compiler_flag(-Wno-missing-prototypes _Wno_missing_prototypes)
-  check_c_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments _Wno_gnu_zero_variadic_macro_arguments)
-  check_c_compiler_flag(-Wno-unreachable-code _Wno_unreachable_code)
-  check_c_compiler_flag(-Wno-missing-field-initializers _Wno_missing_field_initializers)
-  check_c_compiler_flag(-Wno-gnu-empty-initializer _Wno_gnu_empty_initializer)
   add_compile_options(
-    ${_compile_options}
-    $<$<BOOL:${_Wno_declaration_after_statement}>:-Wno-declaration-after-statement>
-    $<$<BOOL:${_Wno_missing_prototypes}>:-Wno-missing-prototypes>
-
-    # $<$<BOOL:${_Wno_gnu_zero_variadic_macro_arguments}>:-Wno-gnu-zero-variadic-macro-arguments>
-    # $<$<BOOL:${_Wno_missing_field_initializers}>:-Wno-missing-field-initializers>
-    # $<$<BOOL:${_Wno_unreachable_code}>:-Wno-unreachable-code>
-    # $<$<BOOL:${_Wno_gnu_empty_initializer}>:-Wno-gnu-empty-initializer>
+    ${ZY_COMPILE_OPTIONS_DIAGNOSTIC}
+    -Wno-padded
+    -Wno-unsafe-buffer-usage
   )
 
   link_libraries(cogo unity)
