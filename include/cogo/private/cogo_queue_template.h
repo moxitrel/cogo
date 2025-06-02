@@ -65,15 +65,13 @@ static inline COGO_QUEUE_VALUE_T* COGO_Q_POP(COGO_Q_T* const q) {
 
 // enqueue
 static inline void COGO_Q_PUSH(COGO_Q_T* const q, COGO_QUEUE_VALUE_T* const node) {
-    if (node) {
-        if (COGO_Q_IS_EMPTY(q)) {
-            q->head = node;
-        } else {
-            COGO_QUEUE_NEXT(q->tail) = node;
-        }
-        q->tail = node;
-        COGO_QUEUE_NEXT(node) = 0;
+    if (COGO_Q_IS_EMPTY(q)) {
+        q->head = node;
+    } else {
+        COGO_QUEUE_NEXT(q->tail) = node;
     }
+    q->tail = node;
+    COGO_QUEUE_NEXT(node) = 0;
 }
 
 static inline COGO_QUEUE_VALUE_T* COGO_Q_POP_NONEMPTY(COGO_Q_T* const q) {

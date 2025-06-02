@@ -10,8 +10,8 @@ COGO_T const* cogo_async_sched_resume(COGO_SCHED_T* const sched) {
     COGO_ASSERT(COGO_SCHED_IS_VALID(sched));
 
     for (;;) {
-        if (!TOP) {                                         // blocked | end
-            if (!(TOP = cogo_async_sched_remove(sched))) {  // over
+        if (!TOP) {                                   // blocked | end
+            if (!(TOP = COGO_SCHED_REMOVE(sched))) {  // over
                 goto exit;
             }
         }
@@ -27,16 +27,16 @@ COGO_T const* cogo_async_sched_resume(COGO_SCHED_T* const sched) {
                 case COGO_PC_BEGIN:  // awaiting
                     continue;
                 default:  // yield
-                    cogo_async_sched_add(sched, TOP);
+                    COGO_SCHED_ADD(sched, TOP);
                     goto exit;
             }
         }
     }
 
 exit: {
-    COGO_T const* top0 = TOP;
-    TOP = cogo_async_sched_remove(sched);
-    return top0;
+    COGO_T const* y = TOP;
+    TOP = COGO_SCHED_REMOVE(sched);
+    return y;
 }
 
 #undef TOP_SCHED
@@ -46,26 +46,26 @@ exit: {
 #undef TOP
 }
 
-int cogo_chan_read(cogo_async_t* const async, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
-#define SCHED     COGO_SCHED_OF(async)
+int cogo_chan_read(COGO_T* const cogo, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
+#define SCHED     COGO_SCHED_OF(cogo)
 #define SCHED_TOP COGO_SCHED_TOP_OF(SCHED)
     long chan_size;
-    COGO_ASSERT(COGO_IS_VALID(async) && COGO_CHAN_IS_VALID(chan) && msg_next);
+    COGO_ASSERT(COGO_IS_VALID(cogo) && COGO_CHAN_IS_VALID(chan) && msg_next);
 
     chan_size = chan->size--;
     if (chan_size <= 0) {
         COGO_MQ_PUSH(&chan->mq, msg_next);
         // sleep in background
-        COGO_CQ_PUSH(&chan->cq, async);  // append to blocking queue
-        SCHED_TOP = 0;                   // remove from scheduler
-        return 1;                        // switch context
+        COGO_CQ_PUSH(&chan->cq, cogo);  // append to blocking queue
+        SCHED_TOP = 0;                  // remove from scheduler
+        return 1;                       // switch context
     } else {
         msg_next->next = COGO_MQ_POP_NONEMPTY(&chan->mq);
         if (chan_size <= chan->capacity) {
             return 0;
         } else {
             // wake up a writer
-            return cogo_async_sched_add(SCHED, COGO_CQ_POP_NONEMPTY(&chan->cq));
+            return COGO_SCHED_ADD(SCHED, COGO_CQ_POP_NONEMPTY(&chan->cq));
         }
     }
 
@@ -73,24 +73,24 @@ int cogo_chan_read(cogo_async_t* const async, cogo_chan_t* const chan, cogo_msg_
 #undef SCHED
 }
 
-int cogo_chan_write(cogo_async_t* const async, cogo_chan_t* const chan, cogo_msg_t* const msg) {
-#define SCHED     (async->await.a.sched)
-#define SCHED_TOP (SCHED->await_sched.top)
+int cogo_chan_write(COGO_T* const cogo, cogo_chan_t* const chan, cogo_msg_t* const msg) {
+#define SCHED     COGO_SCHED_OF(cogo)
+#define SCHED_TOP COGO_SCHED_TOP_OF(SCHED)
     long chan_size;
-    COGO_ASSERT(COGO_IS_VALID(async) && COGO_CHAN_IS_VALID(chan) && msg);
+    COGO_ASSERT(COGO_IS_VALID(cogo) && COGO_CHAN_IS_VALID(chan) && msg);
 
     chan_size = chan->size++;
     if (chan_size < 0) {
         COGO_MQ_POP_NONEMPTY(&chan->mq)->next = msg;
         // wake up a reader
-        return cogo_async_sched_add(SCHED, COGO_CQ_POP_NONEMPTY(&chan->cq));
+        return COGO_SCHED_ADD(SCHED, COGO_CQ_POP_NONEMPTY(&chan->cq));
     } else {
         COGO_MQ_PUSH(&chan->mq, msg);
         if (chan_size < chan->capacity) {
             return 0;
         } else {
             // sleep in background
-            COGO_CQ_PUSH(&chan->cq, async);
+            COGO_CQ_PUSH(&chan->cq, cogo);
             SCHED_TOP = 0;
             return 1;
         }
@@ -100,21 +100,10 @@ int cogo_chan_write(cogo_async_t* const async, cogo_chan_t* const chan, cogo_msg
 #undef SCHED
 }
 
-int cogo_async_sched_add(cogo_async_sched_t* const sched, cogo_async_t* const cogo) {
-    COGO_ASSERT(COGO_SCHED_IS_VALID(sched) && COGO_IS_VALID(cogo));
-    COGO_CQ_PUSH(&sched->cq, cogo);
-    return 1;  // switch context
-}
-
-cogo_async_t* cogo_async_sched_remove(cogo_async_sched_t* const sched) {
-    COGO_ASSERT(COGO_SCHED_IS_VALID(sched));
-    return COGO_CQ_POP(&sched->cq);
-}
-
 // run until yield, return the next coroutine will be run
 COGO_T const* cogo_async_resume(COGO_T* const cogo) {
     // COGO_ASSERT(COGO_IS_VALID(cogo));
-    COGO_T const* top0;
+    COGO_T const* y;
     COGO_SCHED_T sched = COGO_SCHED_INIT(COGO_TOP_OF(cogo));
     if (cogo->next) {
         sched.cq.head = cogo->next;
@@ -124,19 +113,19 @@ COGO_T const* cogo_async_resume(COGO_T* const cogo) {
         }
     }
 
-    top0 = cogo_async_sched_resume(&sched);
+    y = COGO_SCHED_RESUME(&sched);
 
     if (sched.cq.head) {
         cogo->next = sched.cq.head;
     }
     COGO_TOP_OF(cogo) = COGO_SCHED_TOP_OF(&sched);
-    return top0;
+    return y;
 }
 
-void cogo_async_run(cogo_async_t* const cogo) {
+void cogo_async_run(COGO_T* const cogo) {
     // COGO_ASSERT(COGO_IS_VALID(cogo));
-    cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(cogo);
-    while (cogo_async_sched_resume(&sched)) {
+    COGO_SCHED_T sched = COGO_SCHED_INIT(COGO_TOP_OF(cogo));
+    while (COGO_SCHED_RESUME(&sched)) {
     }
 
     /* mt
@@ -150,4 +139,15 @@ void cogo_async_run(cogo_async_t* const cogo) {
     }
   }
   */
+}
+
+int cogo_async_sched_add(COGO_SCHED_T* const sched, COGO_T* const cogo) {
+    COGO_ASSERT(COGO_SCHED_IS_VALID(sched) && COGO_IS_VALID(cogo));
+    COGO_CQ_PUSH(&sched->cq, cogo);
+    return 1;  // switch context
+}
+
+COGO_T* cogo_async_sched_remove(COGO_SCHED_T* const sched) {
+    COGO_ASSERT(COGO_SCHED_IS_VALID(sched));
+    return COGO_CQ_POP(&sched->cq);
 }

@@ -42,6 +42,19 @@ typedef struct cogo_async_sched cogo_async_sched_t;
 
 #include "cogo_await.h"
 
+// Add coroutine to the concurrent queue.
+// Switch context if return non-zero.
+#ifndef COGO_SCHED_ADD
+    #define COGO_SCHED_ADD(SCHED, COGO) cogo_async_sched_add((SCHED), (COGO))
+int cogo_async_sched_add(cogo_async_sched_t* sched, cogo_async_t* cogo);
+#endif
+
+// return the next coroutine to be run, and remove it from the queue
+#ifndef COGO_SCHED_REMOVE
+    #define COGO_SCHED_REMOVE(SCHED) cogo_async_sched_remove(SCHED)
+COGO_T* cogo_async_sched_remove(cogo_async_sched_t* sched);
+#endif
+
 #ifndef COGO_PRE_ASYNC
     #define COGO_PRE_ASYNC(COGO_THIS, COGO_OTHER)  // noop
 #endif
@@ -65,10 +78,6 @@ typedef struct cogo_async_sched cogo_async_sched_t;
 #ifndef COGO_POST_CHAN_WRITE
     #define COGO_POST_CHAN_WRITE(COGO_THIS, CHAN, MSG)  // noop
 #endif
-
-// #ifndef COGO_ON_ENWAKE
-//     #define COGO_ON_NWAKE(COGO_THIS, CHAN, MSG)  // noop
-// #endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -98,8 +107,8 @@ struct cogo_async {
 #define COGO_NEXT_OF(COGO)  (&COGO_ASYNC_OF(COGO)->next)
 
 #undef COGO_IS_VALID
-#define COGO_IS_VALID(ASYNC)      ((ASYNC) == (ASYNC) && (ASYNC) && COGO_IS_ASYNC_VALID(ASYNC))
-#define COGO_IS_ASYNC_VALID(COGO) COGO_IS_AWAIT_VALID(COGO)
+#define COGO_IS_VALID(ASYNC)      ((ASYNC) == (ASYNC) && (ASYNC) && COGO_ASYNC_IS_VALID(ASYNC))
+#define COGO_ASYNC_IS_VALID(COGO) COGO_AWAIT_IS_VALID(COGO)
 
 #define COGO_QUEUE_VALUE_T        cogo_async_t
 #define COGO_QUEUE_NEXT(ASYNC)    ((ASYNC)->next)
@@ -136,26 +145,19 @@ struct cogo_async_sched {
 #define COGO_SCHED_CQ_OF(SCHED)    (&COGO_ASYNC_SCHED_OF(SCHED)->q)
 
 #undef COGO_SCHED_IS_VALID
-#define COGO_SCHED_IS_VALID(ASYNC_SCHED)       ((ASYNC_SCHED) == (ASYNC_SCHED) && (ASYNC_SCHED) && COGO_SCHED_IS_ASYNC_SCHED_VALID(ASYNC_SCHED))
-#define COGO_SCHED_IS_ASYNC_SCHED_VALID(SCHED) COGO_SCHED_IS_AWAIT_SCHED_VALID(SCHED)
-
-// Add coroutine to the concurrent queue.
-// Switch context if return non-zero.
-int cogo_async_sched_add(cogo_async_sched_t* sched, cogo_async_t* cogo);
-
-// return the next coroutine to be run, and remove it from the queue
-COGO_T* cogo_async_sched_remove(cogo_async_sched_t* sched);
+#define COGO_SCHED_IS_VALID(ASYNC_SCHED) ((ASYNC_SCHED) == (ASYNC_SCHED) && (ASYNC_SCHED) && COGO_ASYNC_SCHED_IS_VALID(ASYNC_SCHED))
+#define COGO_ASYNC_SCHED_IS_VALID(SCHED) COGO_AWAIT_SCHED_IS_VALID(SCHED)
 
 /// Start a new coroutine to run concurrently.
-#define CO_ASYNC(COGO_OTHER) COGO_ASYNC(COGO_THIS, COGO_OTHER)
-#define COGO_ASYNC(COGO, COGO_OTHER)                                                                     \
-    do {                                                                                                 \
-        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER));                                   \
-        COGO_PRE_ASYNC((+(COGO)), (+(COGO_OTHER)));                                                      \
-        if (cogo_async_sched_add(COGO_ASYNC_SCHED_OF(COGO_SCHED_OF(COGO)), COGO_ASYNC_OF(COGO_OTHER))) { \
-            COGO_DO_YIELD(COGO);                                                                         \
-        }                                                                                                \
-        COGO_POST_ASYNC((+(COGO)), (+(COGO_OTHER)));                                                     \
+#define CO_ASYNC(COGO_OTHER)             COGO_ASYNC(COGO_THIS, COGO_OTHER)
+#define COGO_ASYNC(COGO, COGO_OTHER)                                   \
+    do {                                                               \
+        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER)); \
+        COGO_PRE_ASYNC((+(COGO)), (+(COGO_OTHER)));                    \
+        if (COGO_SCHED_ADD(COGO_SCHED_OF(COGO), COGO_OTHER)) {         \
+            COGO_DO_YIELD(COGO);                                       \
+        }                                                              \
+        COGO_POST_ASYNC((+(COGO)), (+(COGO_OTHER)));                   \
     } while (0)
 
 // channel message
@@ -236,14 +238,14 @@ CO_END:;
  @endcode
 */
 #define CO_CHAN_READ(CHAN, MSG_NEXT) COGO_CHAN_READ(COGO_THIS, CHAN, MSG_NEXT)
-#define COGO_CHAN_READ(COGO, CHAN, MSG_NEXT)                                                                      \
-    do {                                                                                                          \
-        COGO_ASSERT(COGO_IS_VALID(COGO) && (CHAN) == (CHAN) && (CHAN) && (MSG_NEXT) == (MSG_NEXT) && (MSG_NEXT)); \
-        COGO_PRE_CHAN_READ((+(COGO)), (+(CHAN)), (+(MSG_NEXT)));                                                  \
-        if (cogo_chan_read(COGO_ASYNC_OF(COGO), (CHAN), (MSG_NEXT))) {                                            \
-            COGO_DO_YIELD(COGO);                                                                                  \
-        }                                                                                                         \
-        COGO_POST_CHAN_READ((+(COGO)), (+(CHAN)), (+(MSG_NEXT)));                                                 \
+#define COGO_CHAN_READ(COGO, CHAN, MSG_NEXT)                                                                    \
+    do {                                                                                                        \
+        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_CHAN_IS_VALID(CHAN) && (MSG_NEXT) == (MSG_NEXT) && (MSG_NEXT)); \
+        COGO_PRE_CHAN_READ((+(COGO)), (+(CHAN)), (+(MSG_NEXT)));                                                \
+        if (cogo_chan_read(COGO_ASYNC_OF(COGO), (CHAN), (MSG_NEXT))) {                                          \
+            COGO_DO_YIELD(COGO);                                                                                \
+        }                                                                                                       \
+        COGO_POST_CHAN_READ((+(COGO)), (+(CHAN)), (+(MSG_NEXT)));                                               \
     } while (0)
 // Switch context if return non-zero.
 int cogo_chan_read(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg_next);
@@ -257,14 +259,14 @@ int cogo_chan_read(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg_next)
  @invariant the MSG body is not modified.
 */
 #define CO_CHAN_WRITE(CHAN, MSG) COGO_CHAN_WRITE(COGO_THIS, CHAN, MSG)
-#define COGO_CHAN_WRITE(COGO, CHAN, MSG)                                                           \
-    do {                                                                                           \
-        COGO_ASSERT(COGO_IS_VALID(COGO) && (CHAN) == (CHAN) && (CHAN) && (MSG) == (MSG) && (MSG)); \
-        COGO_PRE_CHAN_WRITE((+(COGO)), (+(CHAN)), (+(MSG)));                                       \
-        if (cogo_chan_write(COGO_ASYNC_OF(COGO), (CHAN), (MSG))) {                                 \
-            COGO_DO_YIELD(COGO);                                                                   \
-        }                                                                                          \
-        COGO_POST_CHAN_WRITE((+(COGO)), (+(CHAN)), (+(MSG)));                                      \
+#define COGO_CHAN_WRITE(COGO, CHAN, MSG)                                                         \
+    do {                                                                                         \
+        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_CHAN_IS_VALID(CHAN) && (MSG) == (MSG) && (MSG)); \
+        COGO_PRE_CHAN_WRITE((+(COGO)), (+(CHAN)), (+(MSG)));                                     \
+        if (cogo_chan_write(COGO_ASYNC_OF(COGO), (CHAN), (MSG))) {                               \
+            COGO_DO_YIELD(COGO);                                                                 \
+        }                                                                                        \
+        COGO_POST_CHAN_WRITE((+(COGO)), (+(CHAN)), (+(MSG)));                                    \
     } while (0)
 // Switch context if return non-zero.
 int cogo_chan_write(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg);

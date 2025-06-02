@@ -81,11 +81,9 @@ extern "C" {
     #define COGO_ASSERT(...)  // noop
 #endif
 
-/// The position where function has reached.
-typedef int cogo_pc_t;
-/// @hideinitializer A `cogo_pc_t` value indicates the coroutine has finished running.
+/// @hideinitializer An integer value indicates the coroutine has finished running.
 #define COGO_PC_END   (-1)
-/// The zero value of type `cogo_pc_t`, that indicates the coroutine is initialized and ready to run.
+/// The zero value that indicates the coroutine is initialized and ready to run.
 #define COGO_PC_BEGIN 0
 
 // The coroutine context type implement yield.
@@ -93,7 +91,7 @@ typedef int cogo_pc_t;
 typedef struct cogo_pt {
     // The source line where function continues to run when reentered.
     // It is initialized to `COGO_PC_BEGIN`, set to `__LINE__` when yield, or set to `COGO_PC_END` if finished running.
-    cogo_pc_t pc;
+    int pc;
 } cogo_pt_t;
 
 // Get the `cogo_pt_t` object pointer.
@@ -191,10 +189,10 @@ cogo_return:                                 \
 
 // `COGO_T` initializer.
 #define COGO_INIT(PT, FUNC)    COGO_PT_INIT()
-#define COGO_PT_INIT()         {0}
+#define COGO_PT_INIT()         {/*pc=*/0}
 
-#define COGO_IS_VALID(PT)      ((PT) == (PT) && (PT) && COGO_IS_PT_VALID(PT))
-#define COGO_IS_PT_VALID(COGO) (COGO_PC_OF(COGO) >= COGO_PC_END)
+#define COGO_IS_VALID(PT)      ((PT) == (PT) && (PT) && COGO_PT_IS_VALID(PT))
+#define COGO_PT_IS_VALID(COGO) (COGO_PC_OF(COGO) >= COGO_PC_END)
 
 #ifdef __cplusplus
 }

@@ -22,8 +22,8 @@ CO_END:;
 static ng_t ng_init(ng_t* thiz, int v) {
     return *thiz = (ng_t){
                    .cogo = COGO_INIT(&thiz->cogo, ng_func),
-                   .v = v,
                    .sched = COGO_SCHED_INIT(&thiz->cogo),
+                   .v = v,
            };
 }
 
