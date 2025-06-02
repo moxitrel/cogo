@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <unity.h>
 
-typedef struct await2 {
+typedef struct yield2 {
     COGO_T cogo;
-} await2_t;
+} yield2_t;
 
-static void await2_func(COGO_T* COGO_THIS) {
+static void yield2_func(COGO_T* COGO_THIS) {
 CO_BEGIN:
 
     CO_YIELD;
@@ -18,7 +18,7 @@ CO_END:;
 
 typedef struct await1 {
     COGO_T cogo;
-    await2_t* a2;
+    yield2_t* a2;
 } await1_t;
 
 static void await1_func(COGO_T* COGO_THIS) {
@@ -31,8 +31,8 @@ CO_END:;
 }
 
 static void test_resume(void) {
-    await2_t a2 = {
-            .cogo = COGO_INIT(&a2.cogo, await2_func),
+    yield2_t a2 = {
+            .cogo = COGO_INIT(&a2.cogo, yield2_func),
     };
     await1_t a1 = {
             .cogo = COGO_INIT(&a1.cogo, await1_func),
@@ -42,14 +42,14 @@ static void test_resume(void) {
     TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&a1.cogo));
     TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&a2.cogo));
 
-    // await2 yield: stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
+    // yield2 yield: stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
     COGO_RESUME(&a1.cogo);
     TEST_ASSERT_GREATER_THAN_INT64(COGO_PC_BEGIN, COGO_PC(&a2.cogo));
     TEST_ASSERT_LESS_THAN_UINT64(COGO_PC_END, COGO_PC(&a2.cogo));
     TEST_ASSERT_GREATER_THAN_INT64(COGO_PC_BEGIN, COGO_PC(&a1.cogo));
     TEST_ASSERT_LESS_THAN_UINT64(COGO_PC_END, COGO_PC(&a1.cogo));
 
-    // await2 yield
+    // yield2 yield
     COGO_RESUME(&a1.cogo);
     TEST_ASSERT_GREATER_THAN_INT64(COGO_PC_BEGIN, COGO_PC(&a2.cogo));
     TEST_ASSERT_LESS_THAN_UINT64(COGO_PC_END, COGO_PC(&a2.cogo));
@@ -67,13 +67,13 @@ static void test_resume(void) {
     TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a1.cogo));
 }
 
-typedef struct await0 {
+typedef struct resumed {
     COGO_T cogo;
-    await2_t a2;
-} await0_t;
+    yield2_t a2;
+} resumed_t;
 
-static void await0_func(COGO_T* COGO_THIS) {
-    await0_t* a0 = (await0_t*)COGO_THIS;
+static void resumed_func(COGO_T* COGO_THIS) {
+    resumed_t* a0 = (resumed_t*)COGO_THIS;
 CO_BEGIN:
 
     COGO_RESUME(&a0->a2.cogo);
@@ -86,10 +86,10 @@ CO_END:;
 }
 
 static void test_await_resumed(void) {
-    await0_t a0 = {
-            .cogo = COGO_INIT(&a0.cogo, await0_func),
+    resumed_t a0 = {
+            .cogo = COGO_INIT(&a0.cogo, resumed_func),
             .a2 = {
-                    .cogo = COGO_INIT(&a0.a2.cogo, await2_func),
+                    .cogo = COGO_INIT(&a0.a2.cogo, yield2_func),
             },
     };
     while (COGO_RESUME(&a0.cogo)) {
@@ -103,10 +103,10 @@ typedef struct ng {
 } ng_t;
 
 static void ng_func(COGO_T* COGO_THIS) {
-    ng_t* ng_this = (ng_t*)COGO_THIS;
+    ng_t* thiz = (ng_t*)COGO_THIS;
 CO_BEGIN:
 
-    for (;; ng_this->v++) {
+    for (;; thiz->v++) {
         CO_YIELD;
     }
 
@@ -149,6 +149,7 @@ typedef struct fib {
 
 static void fib_func(COGO_T* COGO_THIS) {
     fib_t* fib = (fib_t*)COGO_THIS;
+    assert(fib->n > 0);
 CO_BEGIN:
 
     if (fib->n == 1 || fib->n == 2) {  // f(1) = 1, f(2) = 1
