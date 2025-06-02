@@ -44,7 +44,7 @@ int cogo_chan_read(cogo_async_t* const async, cogo_chan_t* const chan, cogo_msg_
 #define SCHED     COGO_SCHED_OF(async)
 #define SCHED_TOP COGO_SCHED_TOP_OF(SCHED)
     long chan_size;
-    COGO_ASSERT(COGO_ASYNC_IS_VALID(async) && COGO_CHAN_IS_VALID(chan) && msg_next);
+    COGO_ASSERT(COGO_IS_VALID(async) && COGO_CHAN_IS_VALID(chan) && msg_next);
 
     chan_size = chan->size--;
     if (chan_size <= 0) {
@@ -71,7 +71,7 @@ int cogo_chan_write(cogo_async_t* const async, cogo_chan_t* const chan, cogo_msg
 #define SCHED     (async->await.a.sched)
 #define SCHED_TOP (SCHED->await_sched.top)
     long chan_size;
-    COGO_ASSERT(COGO_ASYNC_IS_VALID(async) && COGO_CHAN_IS_VALID(chan) && msg);
+    COGO_ASSERT(COGO_IS_VALID(async) && COGO_CHAN_IS_VALID(chan) && msg);
 
     chan_size = chan->size++;
     if (chan_size < 0) {
@@ -95,20 +95,20 @@ int cogo_chan_write(cogo_async_t* const async, cogo_chan_t* const chan, cogo_msg
 }
 
 int cogo_async_sched_add(cogo_async_sched_t* const sched, cogo_async_t* const cogo) {
-    COGO_ASSERT(COGO_ASYNC_SCHED_IS_VALID(sched) && COGO_ASYNC_IS_VALID(cogo));
+    COGO_ASSERT(COGO_SCHED_IS_VALID(sched) && COGO_IS_VALID(cogo));
     COGO_CQ_PUSH(&sched->cq, cogo);
     return 1;  // switch context
 }
 
 cogo_async_t* cogo_async_sched_remove(cogo_async_sched_t* const sched) {
-    COGO_ASSERT(COGO_ASYNC_SCHED_IS_VALID(sched));
+    COGO_ASSERT(COGO_SCHED_IS_VALID(sched));
     return COGO_CQ_POP(&sched->cq);
 }
 
 // run until yield, return the next coroutine will be run
 cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
 #define TOP COGO_TOP_OF(cogo)
-    // COGO_ASSERT(COGO_ASYNC_IS_VALID(cogo));
+    // COGO_ASSERT(COGO_IS_VALID(cogo));
     cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(TOP);
     COGO_CQ_PUSH(&sched.cq, TOP->next);
     if (!COGO_CQ_IS_EMPTY(&sched.cq)) {
@@ -128,7 +128,7 @@ cogo_pc_t cogo_async_resume(cogo_async_t* const cogo) {
 }
 
 void cogo_async_run(cogo_async_t* const cogo) {
-    // COGO_ASSERT(COGO_ASYNC_IS_VALID(cogo));
+    // COGO_ASSERT(COGO_IS_VALID(cogo));
     cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(cogo);
     while (cogo_async_sched_resume(&sched)) {
     }

@@ -94,8 +94,8 @@ struct cogo_async {
 #define COGO_NEXT_OF(COGO)  (&COGO_ASYNC_OF(COGO)->next)
 
 #undef COGO_IS_VALID
-#define COGO_IS_VALID(ASYNC)      COGO_ASYNC_IS_VALID(ASYNC)
-#define COGO_ASYNC_IS_VALID(COGO) COGO_AWAIT_IS_VALID(COGO)
+#define COGO_IS_VALID(ASYNC)      COGO_IS_ASYNC_VALID(ASYNC)
+#define COGO_IS_ASYNC_VALID(COGO) COGO_IS_AWAIT_VALID(COGO)
 
 #define COGO_QUEUE_VALUE_T        cogo_async_t
 #define COGO_QUEUE_NEXT(ASYNC)    ((ASYNC)->next)
@@ -132,8 +132,8 @@ struct cogo_async_sched {
 #define COGO_SCHED_CQ_OF(SCHED)    (&COGO_ASYNC_SCHED_OF(SCHED)->q)
 
 #undef COGO_SCHED_IS_VALID
-#define COGO_SCHED_IS_VALID(ASYNC_SCHED) COGO_ASYNC_SCHED_IS_VALID(ASYNC_SCHED)
-#define COGO_ASYNC_SCHED_IS_VALID(SCHED) COGO_AWAIT_SCHED_IS_VALID(SCHED)
+#define COGO_SCHED_IS_VALID(ASYNC_SCHED)       COGO_SCHED_IS_ASYNC_SCHED_VALID(ASYNC_SCHED)
+#define COGO_SCHED_IS_ASYNC_SCHED_VALID(SCHED) COGO_SCHED_IS_AWAIT_SCHED_VALID(SCHED)
 
 // Add coroutine to the concurrent queue.
 // Switch context if return non-zero.
@@ -175,6 +175,7 @@ typedef struct cogo_msg {
 #undef COGO_QUEUE_NEXT
 #define COGO_MQ_T            COGO_QUEUE_T(cogo_msg_t)
 #define COGO_MQ_MAKE         COGO_QUEUE_MAKE(cogo_msg_t)
+#define COGO_MQ_IS_EMPTY     COGO_QUEUE_IS_EMPTY(cogo_msg_t)
 #define COGO_MQ_PUSH         COGO_QUEUE_PUSH(cogo_msg_t)
 #define COGO_MQ_POP          COGO_QUEUE_POP(cogo_msg_t)
 #define COGO_MQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_msg_t)

@@ -73,8 +73,6 @@ if(COGO_TEST)
   include(cmake/unity.cmake)
   include(cmake/compile_options.cmake)
 
-  message(STATUS "CMAKE_C_COMPILER       : ${CMAKE_C_COMPILER}")
-
   target_compile_options(cogo PRIVATE
     ${ZY_COMPILE_OPTIONS_DIAGNOSTIC}
     -Wno-padded

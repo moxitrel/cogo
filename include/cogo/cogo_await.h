@@ -88,8 +88,8 @@ struct cogo_await {
 #define COGO_SCHED_OF(COGO)   (COGO_AWAIT_OF(COGO)->a.sched)
 
 #undef COGO_IS_VALID
-#define COGO_IS_VALID(AWAIT)      COGO_AWAIT_IS_VALID(AWAIT)
-#define COGO_AWAIT_IS_VALID(COGO) ((COGO) == (COGO) && (COGO) && COGO_PT_IS_VALID(COGO) && COGO_FUNC_OF(COGO) && COGO_TOP_OF(COGO))
+#define COGO_IS_VALID(AWAIT)      COGO_IS_AWAIT_VALID(AWAIT)
+#define COGO_IS_AWAIT_VALID(COGO) ((COGO) == (COGO) && (COGO) && COGO_IS_PT_VALID(COGO) && COGO_FUNC_OF(COGO) && COGO_TOP_OF(COGO))
 
 struct cogo_await_sched {
     // call stack top
@@ -102,14 +102,14 @@ struct cogo_await_sched {
             /*.top=*/COGO_TOP_OF(COGO), \
     }
 
-#define COGO_AWAIT_SCHED_OF(AWAIT_SCHED) (AWAIT_SCHED)
-#define COGO_SCHED_TOP_OF(SCHED)         (COGO_AWAIT_SCHED_OF(SCHED)->top)
+#define COGO_AWAIT_SCHED_OF(AWAIT_SCHED)       (AWAIT_SCHED)
+#define COGO_SCHED_TOP_OF(SCHED)               (COGO_AWAIT_SCHED_OF(SCHED)->top)
 
-#define COGO_SCHED_IS_VALID(AWAIT_SCHED) COGO_AWAIT_SCHED_IS_VALID(AWAIT_SCHED)
-#define COGO_AWAIT_SCHED_IS_VALID(SCHED) ((SCHED) == (SCHED) && (SCHED) && COGO_IS_VALID(COGO_SCHED_TOP_OF(SCHED)))
+#define COGO_SCHED_IS_VALID(AWAIT_SCHED)       COGO_SCHED_IS_AWAIT_SCHED_VALID(AWAIT_SCHED)
+#define COGO_SCHED_IS_AWAIT_SCHED_VALID(SCHED) ((SCHED) == (SCHED) && (SCHED) && COGO_IS_VALID(COGO_SCHED_TOP_OF(SCHED)))
 
 /// Run another coroutine until finished.
-#define CO_AWAIT(COGO_OTHER)             COGO_AWAIT(COGO_THIS, COGO_OTHER)
+#define CO_AWAIT(COGO_OTHER)                   COGO_AWAIT(COGO_THIS, COGO_OTHER)
 #define COGO_AWAIT(COGO, COGO_OTHER)                                                                       \
     do {                                                                                                   \
         COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER));                                     \
