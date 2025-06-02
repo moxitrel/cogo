@@ -4,6 +4,7 @@
 
 typedef struct ng {
     COGO_T cogo;
+    COGO_SCHED_T sched;
     int v;
 } ng_t;
 
@@ -22,12 +23,12 @@ static ng_t ng_init(ng_t* thiz, int v) {
     return *thiz = (ng_t){
                    .cogo = COGO_INIT(&thiz->cogo, ng_func),
                    .v = v,
+                   .sched = COGO_SCHED_INIT(&thiz->cogo),
            };
 }
 
 static int ng_resume(ng_t* thiz) {
-    COGO_RESUME(&thiz->cogo);
-    return thiz->v;
+    return ((ng_t const*)COGO_SCHED_RESUME(&thiz->sched))->v;
 }
 
 static void test_ng(void) {

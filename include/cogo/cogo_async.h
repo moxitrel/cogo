@@ -66,6 +66,10 @@ typedef struct cogo_async_sched cogo_async_sched_t;
     #define COGO_POST_CHAN_WRITE(COGO_THIS, CHAN, MSG)  // noop
 #endif
 
+// #ifndef COGO_ON_ENWAKE
+//     #define COGO_ON_NWAKE(COGO_THIS, CHAN, MSG)  // noop
+// #endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,7 +98,7 @@ struct cogo_async {
 #define COGO_NEXT_OF(COGO)  (&COGO_ASYNC_OF(COGO)->next)
 
 #undef COGO_IS_VALID
-#define COGO_IS_VALID(ASYNC)      COGO_IS_ASYNC_VALID(ASYNC)
+#define COGO_IS_VALID(ASYNC)      ((ASYNC) == (ASYNC) && (ASYNC) && COGO_IS_ASYNC_VALID(ASYNC))
 #define COGO_IS_ASYNC_VALID(COGO) COGO_IS_AWAIT_VALID(COGO)
 
 #define COGO_QUEUE_VALUE_T        cogo_async_t
@@ -132,7 +136,7 @@ struct cogo_async_sched {
 #define COGO_SCHED_CQ_OF(SCHED)    (&COGO_ASYNC_SCHED_OF(SCHED)->q)
 
 #undef COGO_SCHED_IS_VALID
-#define COGO_SCHED_IS_VALID(ASYNC_SCHED)       COGO_SCHED_IS_ASYNC_SCHED_VALID(ASYNC_SCHED)
+#define COGO_SCHED_IS_VALID(ASYNC_SCHED)       ((ASYNC_SCHED) == (ASYNC_SCHED) && (ASYNC_SCHED) && COGO_SCHED_IS_ASYNC_SCHED_VALID(ASYNC_SCHED))
 #define COGO_SCHED_IS_ASYNC_SCHED_VALID(SCHED) COGO_SCHED_IS_AWAIT_SCHED_VALID(SCHED)
 
 // Add coroutine to the concurrent queue.
@@ -266,8 +270,12 @@ int cogo_chan_read(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg_next)
 int cogo_chan_write(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg);
 
 #undef COGO_RESUME
-#define COGO_RESUME(ASYNC) cogo_async_resume(ASYNC)
-cogo_pc_t cogo_async_resume(cogo_async_t* async);
+// #define COGO_RESUME(ASYNC) cogo_async_resume(ASYNC)
+// cogo_async_t const* cogo_async_resume(cogo_async_t* async);
+
+#undef COGO_SCHED_RESUME
+#define COGO_SCHED_RESUME(ASYNC_SCHED) cogo_async_sched_resume(ASYNC_SCHED)
+cogo_async_t const* cogo_async_sched_resume(cogo_async_sched_t* sched);
 
 #define COGO_RUN(ASYNC) cogo_async_run(ASYNC)
 void cogo_async_run(cogo_async_t* async);

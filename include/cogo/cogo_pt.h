@@ -193,7 +193,7 @@ cogo_return:                                 \
 #define COGO_INIT(PT, FUNC)    COGO_PT_INIT()
 #define COGO_PT_INIT()         {0}
 
-#define COGO_IS_VALID(PT)      COGO_IS_PT_VALID(PT)
+#define COGO_IS_VALID(PT)      ((PT) == (PT) && (PT) && COGO_IS_PT_VALID(PT))
 #define COGO_IS_PT_VALID(COGO) (COGO_PC_OF(COGO) >= COGO_PC_END)
 
 #ifdef __cplusplus

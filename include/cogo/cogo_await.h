@@ -88,8 +88,8 @@ struct cogo_await {
 #define COGO_SCHED_OF(COGO)   (COGO_AWAIT_OF(COGO)->a.sched)
 
 #undef COGO_IS_VALID
-#define COGO_IS_VALID(AWAIT)      COGO_IS_AWAIT_VALID(AWAIT)
-#define COGO_IS_AWAIT_VALID(COGO) ((COGO) == (COGO) && (COGO) && COGO_IS_PT_VALID(COGO) && COGO_FUNC_OF(COGO) && COGO_TOP_OF(COGO))
+#define COGO_IS_VALID(AWAIT)      ((AWAIT) == (AWAIT) && (AWAIT) && COGO_IS_AWAIT_VALID(AWAIT))
+#define COGO_IS_AWAIT_VALID(COGO) (COGO_IS_PT_VALID(COGO) && COGO_FUNC_OF(COGO) && ((COGO_TOP_OF(COGO) && COGO_PC(COGO) != COGO_PC_END) || (!COGO_TOP_OF(COGO) && COGO_PC(COGO) == COGO_PC_END)))
 
 struct cogo_await_sched {
     // call stack top
@@ -97,16 +97,16 @@ struct cogo_await_sched {
 };
 
 #define COGO_SCHED_INIT(AWAIT) COGO_AWAIT_SCHED_INIT(AWAIT)
-#define COGO_AWAIT_SCHED_INIT(COGO)     \
-    {                                   \
-            /*.top=*/COGO_TOP_OF(COGO), \
+#define COGO_AWAIT_SCHED_INIT(COGO) \
+    {                               \
+            /*.top=*/(COGO),        \
     }
 
 #define COGO_AWAIT_SCHED_OF(AWAIT_SCHED)       (AWAIT_SCHED)
 #define COGO_SCHED_TOP_OF(SCHED)               (COGO_AWAIT_SCHED_OF(SCHED)->top)
 
-#define COGO_SCHED_IS_VALID(AWAIT_SCHED)       COGO_SCHED_IS_AWAIT_SCHED_VALID(AWAIT_SCHED)
-#define COGO_SCHED_IS_AWAIT_SCHED_VALID(SCHED) ((SCHED) == (SCHED) && (SCHED) && COGO_IS_VALID(COGO_SCHED_TOP_OF(SCHED)))
+#define COGO_SCHED_IS_VALID(AWAIT_SCHED)       ((AWAIT_SCHED) == (AWAIT_SCHED) && (AWAIT_SCHED) && COGO_SCHED_IS_AWAIT_SCHED_VALID(AWAIT_SCHED))
+#define COGO_SCHED_IS_AWAIT_SCHED_VALID(SCHED) (COGO_SCHED_TOP_OF(SCHED) && COGO_IS_VALID(COGO_SCHED_TOP_OF(SCHED)) || !COGO_SCHED_TOP_OF(SCHED))
 
 /// Run another coroutine until finished.
 #define CO_AWAIT(COGO_OTHER)                   COGO_AWAIT(COGO_THIS, COGO_OTHER)
@@ -123,7 +123,7 @@ struct cogo_await_sched {
     } while (0)
 
 #define COGO_RESUME(AWAIT) cogo_await_resume(AWAIT)
-cogo_pc_t cogo_await_resume(cogo_await_t* await);
+cogo_await_t const* cogo_await_resume(cogo_await_t* await);
 
 #ifdef __cplusplus
 }

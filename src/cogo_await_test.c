@@ -92,7 +92,7 @@ static void test_await_resumed(void) {
                     .cogo = COGO_INIT(&a0.a2.cogo, await2_func),
             },
     };
-    while (COGO_RESUME(&a0.cogo) != COGO_PC_END) {
+    while (COGO_RESUME(&a0.cogo)) {
     }
     TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a0.cogo));
 }
@@ -204,7 +204,7 @@ static void test_fib(void) {
     };
 
     for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); i++) {
-        while (COGO_RESUME(&test_cases[i].fib->cogo) != COGO_PC_END) {
+        while (COGO_RESUME(&test_cases[i].fib->cogo)) {
         }
         TEST_ASSERT_EQUAL_INT(test_cases[i].fib->v, test_cases[i].v);
     }
