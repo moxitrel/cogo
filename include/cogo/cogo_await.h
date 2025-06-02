@@ -122,6 +122,9 @@ struct cogo_await_sched {
         COGO_POST_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                       \
     } while (0)
 
+#define COGO_SCHED_RESUME(AWAIT_SCHED) cogo_async_sched_resume(AWAIT_SCHED)
+cogo_await_t const* cogo_await_sched_resume(cogo_await_sched_t* sched);
+
 #define COGO_RESUME(AWAIT) cogo_await_resume(AWAIT)
 cogo_await_t const* cogo_await_resume(cogo_await_t* await);
 

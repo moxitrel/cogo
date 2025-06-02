@@ -1,7 +1,7 @@
 #include <cogo/cogo_async.h>
 
 // Run until yield. Return the yield coroutine.
-cogo_async_t const* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
+COGO_T const* cogo_async_sched_resume(COGO_SCHED_T* const sched) {
 #define TOP         COGO_SCHED_TOP_OF(sched)
 #define TOP_PC      COGO_PC(TOP)
 #define TOP_FUNC    COGO_FUNC_OF(TOP)
@@ -34,7 +34,7 @@ cogo_async_t const* cogo_async_sched_resume(cogo_async_sched_t* const sched) {
     }
 
 exit: {
-    cogo_async_t const* top0 = TOP;
+    COGO_T const* top0 = TOP;
     TOP = cogo_async_sched_remove(sched);
     return top0;
 }
@@ -112,26 +112,26 @@ cogo_async_t* cogo_async_sched_remove(cogo_async_sched_t* const sched) {
 }
 
 // run until yield, return the next coroutine will be run
-// cogo_async_t const* cogo_async_resume(cogo_async_t* const cogo) {
-// #define TOP COGO_TOP_OF(cogo)
-//     // COGO_ASSERT(COGO_IS_VALID(cogo));
-//     cogo_async_sched_t sched = COGO_ASYNC_SCHED_INIT(TOP);
-//     COGO_CQ_PUSH(&sched.cq, TOP->next);
-//     if (!COGO_CQ_IS_EMPTY(&sched.cq)) {
-//         while (sched.cq.tail->next) {
-//             sched.cq.tail = sched.cq.tail->next;
-//         }
-//     }
+COGO_T const* cogo_async_resume(COGO_T* const cogo) {
+    // COGO_ASSERT(COGO_IS_VALID(cogo));
+    COGO_T const* top0;
+    COGO_SCHED_T sched = COGO_SCHED_INIT(COGO_TOP_OF(cogo));
+    if (cogo->next) {
+        sched.cq.head = cogo->next;
+        sched.cq.tail = cogo->next;
+        while (sched.cq.tail->next) {
+            sched.cq.tail = sched.cq.tail->next;
+        }
+    }
 
-//     // save resume point
-//     TOP = cogo_async_sched_resume(&sched);
-//     // save q
-//     if (TOP) {
-//         TOP->next = sched.cq.head;
-//     }
-//     return TOP;
-// #undef TOP
-// }
+    top0 = cogo_async_sched_resume(&sched);
+
+    if (sched.cq.head) {
+        cogo->next = sched.cq.head;
+    }
+    COGO_TOP_OF(cogo) = COGO_SCHED_TOP_OF(&sched);
+    return top0;
+}
 
 void cogo_async_run(cogo_async_t* const cogo) {
     // COGO_ASSERT(COGO_IS_VALID(cogo));

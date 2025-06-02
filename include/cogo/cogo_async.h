@@ -269,13 +269,13 @@ int cogo_chan_read(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg_next)
 // Switch context if return non-zero.
 int cogo_chan_write(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg);
 
-#undef COGO_RESUME
-// #define COGO_RESUME(ASYNC) cogo_async_resume(ASYNC)
-// cogo_async_t const* cogo_async_resume(cogo_async_t* async);
-
 #undef COGO_SCHED_RESUME
 #define COGO_SCHED_RESUME(ASYNC_SCHED) cogo_async_sched_resume(ASYNC_SCHED)
 cogo_async_t const* cogo_async_sched_resume(cogo_async_sched_t* sched);
+
+#undef COGO_RESUME
+#define COGO_RESUME(ASYNC) cogo_async_resume(ASYNC)
+cogo_async_t const* cogo_async_resume(cogo_async_t* async);
 
 #define COGO_RUN(ASYNC) cogo_async_run(ASYNC)
 void cogo_async_run(cogo_async_t* async);
