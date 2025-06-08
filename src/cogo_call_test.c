@@ -1,100 +1,92 @@
 #include <assert.h>
-#include <cogo/cogo_await.h>
+#include <cogo/cogo_call.h>
 #include <stdlib.h>
 #include <unity.h>
 
-typedef struct yield2 {
+typedef struct yield {
     COGO_T cogo;
-} yield2_t;
+} yield_t;
 
-static void yield2_func(COGO_T* COGO_THIS) {
+static void yield_func(COGO_T* COGO_THIS) {
 CO_BEGIN:
 
-    CO_YIELD;
     CO_YIELD;
 
 CO_END:;
 }
 
-typedef struct await1 {
+typedef struct await {
     COGO_T cogo;
-    yield2_t* a2;
-} await1_t;
+    yield_t* y;
+} await_t;
 
-static void await1_func(COGO_T* COGO_THIS) {
-    await1_t* a1 = (await1_t*)COGO_THIS;
-CO_BEGIN:
+static void await_func(COGO_T* cogo) {
+    await_t* thiz = (await_t*)cogo;
+COGO_BEGIN(cogo):
 
-    CO_AWAIT(&a1->a2->cogo);
+    COGO_AWAIT(cogo, &thiz->y->cogo);
 
-CO_END:;
+COGO_END(cogo):;
 }
 
 static void test_resume(void) {
-    yield2_t a2 = {
-            .cogo = COGO_INIT(&a2.cogo, yield2_func),
+    yield_t y = {
+            .cogo = COGO_INIT(&y.cogo, yield_func),
     };
-    await1_t a1 = {
-            .cogo = COGO_INIT(&a1.cogo, await1_func),
-            .a2 = &a2,
+    await_t a = {
+            .cogo = COGO_INIT(&a.cogo, await_func),
+            .y = &y,
     };
 
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&a1.cogo));
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_BEGIN, COGO_PC(&a2.cogo));
+    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
 
-    // yield2 yield: stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
-    COGO_RESUME(&a1.cogo);
-    TEST_ASSERT_GREATER_THAN_INT64(COGO_PC_BEGIN, COGO_PC(&a2.cogo));
-    TEST_ASSERT_LESS_THAN_UINT64(COGO_PC_END, COGO_PC(&a2.cogo));
-    TEST_ASSERT_GREATER_THAN_INT64(COGO_PC_BEGIN, COGO_PC(&a1.cogo));
-    TEST_ASSERT_LESS_THAN_UINT64(COGO_PC_END, COGO_PC(&a1.cogo));
+    // yield yield: stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
+    COGO_RESUME(&a.cogo);
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
 
-    // yield2 yield
-    COGO_RESUME(&a1.cogo);
-    TEST_ASSERT_GREATER_THAN_INT64(COGO_PC_BEGIN, COGO_PC(&a2.cogo));
-    TEST_ASSERT_LESS_THAN_UINT64(COGO_PC_END, COGO_PC(&a2.cogo));
-    TEST_ASSERT_GREATER_THAN_INT64(COGO_PC_BEGIN, COGO_PC(&a1.cogo));
-    TEST_ASSERT_LESS_THAN_UINT64(COGO_PC_END, COGO_PC(&a1.cogo));
-
-    // await1 end: stop when root coroutine finished
-    COGO_RESUME(&a1.cogo);
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a2.cogo));
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a1.cogo));
+    // await end: stop when root coroutine finished
+    COGO_RESUME(&a.cogo);
+    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
 
     // noop when coroutine end
-    COGO_RESUME(&a1.cogo);
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a2.cogo));
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a1.cogo));
+    COGO_RESUME(&a.cogo);
+    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
 }
 
-typedef struct resumed {
+typedef struct resume {
     COGO_T cogo;
-    yield2_t a2;
-} resumed_t;
+    yield_t y;
+} resume_t;
 
-static void resumed_func(COGO_T* COGO_THIS) {
-    resumed_t* a0 = (resumed_t*)COGO_THIS;
-CO_BEGIN:
+static void resume_func(COGO_T* COGO_THIS) {
+    resume_t* thiz = (resume_t*)COGO_THIS;
+CO_BEGIN:;
 
-    COGO_RESUME(&a0->a2.cogo);
+    COGO_RESUME(&thiz->y.cogo);
     TEST_ASSERT_NOT_NULL(COGO_THIS->a.sched->top);
 
-    CO_AWAIT(&a0->a2.cogo);
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a0->a2.cogo));
+    CO_AWAIT(&thiz->y.cogo);
+    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&thiz->y.cogo));
 
 CO_END:;
 }
 
-static void test_await_resumed(void) {
-    resumed_t a0 = {
-            .cogo = COGO_INIT(&a0.cogo, resumed_func),
-            .a2 = {
-                    .cogo = COGO_INIT(&a0.a2.cogo, yield2_func),
+static void test_call_resume(void) {
+    resume_t r = {
+            .cogo = COGO_INIT(&r.cogo, resume_func),
+            .y = {
+                    .cogo = COGO_INIT(&r.y.cogo, yield_func),
             },
     };
-    while (COGO_RESUME(&a0.cogo)) {
+    while (COGO_RESUME(&r.cogo)) {
     }
-    TEST_ASSERT_EQUAL_INT64(COGO_PC_END, COGO_PC(&a0.cogo));
+    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&r.cogo));
 }
 
 typedef struct ng {
@@ -118,13 +110,15 @@ static void test_ng(void) {
             .cogo = COGO_INIT(&ng.cogo, ng_func),
             .v = 0,
     };
-    COGO_RESUME(&ng.cogo);
+    COGO_SCHED_T sched = COGO_SCHED_INIT(&ng.cogo);
+
+    COGO_SCHED_RESUME(&sched);
     TEST_ASSERT_EQUAL_INT(0, ng.v);
 
-    COGO_RESUME(&ng.cogo);
+    COGO_SCHED_RESUME(&sched);
     TEST_ASSERT_EQUAL_INT(1, ng.v);
 
-    COGO_RESUME(&ng.cogo);
+    COGO_SCHED_RESUME(&sched);
     TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 
@@ -221,7 +215,7 @@ int main(void) {
     UNITY_BEGIN();
 
     RUN_TEST(test_resume);
-    RUN_TEST(test_await_resumed);
+    RUN_TEST(test_call_resume);
     RUN_TEST(test_ng);
     RUN_TEST(test_fib);
 

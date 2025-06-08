@@ -81,20 +81,15 @@ extern "C" {
     #define COGO_ASSERT(...)  // noop
 #endif
 
-/// @hideinitializer An integer value indicates the coroutine has finished running.
-#define COGO_PC_END   (-1)
-/// The zero value that indicates the coroutine is initialized and ready to run.
-#define COGO_PC_BEGIN 0
-
 // The coroutine context type implement yield.
 // All fields are protected, and shouldn't be accessed by user directly.
 typedef struct cogo_pt {
     // The source line where function continues to run when reentered.
-    // It is initialized to `COGO_PC_BEGIN`, set to `__LINE__` when yield, or set to `COGO_PC_END` if finished running.
+    // It is initialized to `0`, set to `__LINE__` when yield, or set to `-1` if finished running.
     int pc;
 } cogo_pt_t;
 
-// Get the `cogo_pt_t` object pointer.
+// Get the `cogo_pt_t` base object pointer.
 #define COGO_PT_OF(PT)   (PT)
 // Get the `pc` field.
 #define COGO_PC_OF(COGO) (COGO_PT_OF(COGO)->pc)
@@ -111,16 +106,16 @@ typedef struct cogo_pt {
 #define COGO_BEGIN(COGO)                                                                            \
     COGO_ASSERT((COGO) == (COGO) && (COGO)); /* `COGO` must have no side effects and not `NULL`. */ \
     switch (COGO_PC_OF(COGO)) {                                                                     \
-        default:                    /* Invalid pc */                                                \
+        default:                    /* Invalid `pc` */                                              \
             COGO_ON_EPC((+(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */         \
             goto cogo_end;                                                                          \
             goto cogo_return; /* Redundant statement: to eliminate the warning of unused label. */  \
             goto cogo_begin;  /* Redundant statement: to eliminate the warning of unused label. */  \
-        case COGO_PC_END:                                                                           \
+        case -1:              /* Begin */                                                           \
             goto cogo_end;                                                                          \
-        case COGO_PC_BEGIN:                                                                         \
+        case 0: /* End */                                                                           \
             COGO_ON_BEGIN((+(COGO)));                                                               \
-            cogo_begin /* coroutine begin label */
+            cogo_begin /* The coroutine begin label. */
 
 /// @hideinitializer Jump to `COGO_END`, and the next run will start from here.
 /// - Undefined behavior if `COGO_YIELD` used in the **case** statements.
@@ -138,11 +133,11 @@ typedef struct cogo_pt {
         COGO_ON_RESUME((+(COGO)));               \
     } while (0)
 
-#define COGO_DO_YIELD(COGO)                                                          \
-    do {                                                                             \
-        COGO_PC_OF(COGO) = __LINE__; /* 1. save the resume point (case __LINE__:) */ \
-        goto cogo_end;               /* 2. return */                                 \
-        case __LINE__:;              /* 3. resume point */                           \
+#define COGO_DO_YIELD(COGO)                                                                  \
+    do {                                                                                     \
+        COGO_PC_OF(COGO) = __LINE__; /* 1. save the resume point (i.e., `case __LINE__:`) */ \
+        goto cogo_end;               /* 2. return */                                         \
+        case __LINE__:;              /* 3. resume point */                                   \
     } while (0)
 
 /// @hideinitializer Jump to COGO_END, and finish the coroutine.
@@ -155,7 +150,7 @@ typedef struct cogo_pt {
     do {                                         \
         COGO_ASSERT((COGO) == (COGO) && (COGO)); \
         COGO_ON_RETURN((+(COGO)));               \
-        goto cogo_return; /* end coroutine */    \
+        goto cogo_return;                        \
     } while (0)
 
 /// @hideinitializer A label-like macro marks the end of the coroutine.
@@ -169,30 +164,34 @@ typedef struct cogo_pt {
 cogo_return:                                 \
     COGO_ASSERT((COGO) == (COGO) && (COGO)); \
     COGO_ON_END((+(COGO)));                  \
-    COGO_PC_OF(COGO) = COGO_PC_END;          \
-    } /* switch */                           \
-    cogo_end
+    COGO_PC_OF(COGO) = -1;                   \
+    } /* End of switch */                    \
+    cogo_end /* The coroutine end label. */
+
+/// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_STATUS(COGO) = 0`.
+/// @pre `COGO != NULL`.
+#define COGO_STATUS(COGO) (+COGO_PC_OF(COGO))
+/// @hideinitializer The zero value that indicates the coroutine is initialized and ready to run.
+#define COGO_STATUS_BEGIN 0
+/// @hideinitializer An integer value indicates the coroutine has finished running.
+#define COGO_STATUS_END   (-1)
+
+#define CO_BEGIN          COGO_BEGIN(COGO_THIS)
+#define CO_YIELD          COGO_YIELD(COGO_THIS)
+#define CO_RETURN         COGO_RETURN(COGO_THIS)
+#define CO_END            COGO_END(COGO_THIS)
 
 /// @hideinitializer An opaque object type that saves the coroutine states.
 #ifndef COGO_T
     #define COGO_T cogo_pt_t
 #endif
 
-/// @hideinitializer Get pc as rvalue to prevent it from being tampered with by assignment. e.g., `COGO_PC(COGO) = 0`.
-/// @pre `COGO != NULL`.
-#define COGO_PC(COGO)          (+COGO_PC_OF(COGO))
-
-#define CO_BEGIN               COGO_BEGIN(COGO_THIS)
-#define CO_YIELD               COGO_YIELD(COGO_THIS)
-#define CO_RETURN              COGO_RETURN(COGO_THIS)
-#define CO_END                 COGO_END(COGO_THIS)
-
 // `COGO_T` initializer.
 #define COGO_INIT(PT, FUNC)    COGO_PT_INIT()
 #define COGO_PT_INIT()         {/*pc=*/0}
 
 #define COGO_IS_VALID(PT)      ((PT) == (PT) && (PT) && COGO_PT_IS_VALID(PT))
-#define COGO_PT_IS_VALID(COGO) (COGO_PC_OF(COGO) >= COGO_PC_END)
+#define COGO_PT_IS_VALID(COGO) (COGO_PC_OF(COGO) >= -1)
 
 #ifdef __cplusplus
 }

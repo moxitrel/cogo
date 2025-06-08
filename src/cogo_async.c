@@ -2,11 +2,11 @@
 
 // Run until yield. Return the yield coroutine.
 COGO_T const* cogo_async_sched_resume(COGO_SCHED_T* const sched) {
-#define TOP         COGO_SCHED_TOP_OF(sched)
-#define TOP_PC      COGO_PC(TOP)
-#define TOP_FUNC    COGO_FUNC_OF(TOP)
-#define TOP_AWAITER COGO_AWAITER_OF(TOP)
-#define TOP_SCHED   COGO_SCHED_OF(TOP)
+#define TOP        COGO_SCHED_TOP_OF(sched)
+#define TOP_PC     COGO_STATUS(TOP)
+#define TOP_FUNC   COGO_FUNC_OF(TOP)
+#define TOP_CALLER COGO_CALLER_OF(TOP)
+#define TOP_SCHED  COGO_SCHED_OF(TOP)
     COGO_ASSERT(COGO_SCHED_IS_VALID(sched));
 
     for (;;) {
@@ -21,10 +21,10 @@ COGO_T const* cogo_async_sched_resume(COGO_SCHED_T* const sched) {
         TOP_FUNC(TOP);
         if (TOP) {  // not blocked
             switch (TOP_PC) {
-                case COGO_PC_END:  // awaited | end
-                    TOP = TOP_AWAITER;
+                case COGO_STATUS_END:  // awaited | end
+                    TOP = TOP_CALLER;
                     continue;
-                case COGO_PC_BEGIN:  // awaiting
+                case COGO_STATUS_BEGIN:  // awaiting
                     continue;
                 default:  // yield
                     COGO_SCHED_ADD(sched, TOP);
@@ -40,7 +40,7 @@ exit: {
 }
 
 #undef TOP_SCHED
-#undef TOP_AWAITER
+#undef TOP_CALLER
 #undef TOP_FUNC
 #undef TOP_PC
 #undef TOP

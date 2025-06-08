@@ -22,7 +22,7 @@ file(GLOB_RECURSE cogo_PUBLIC_HEADER FOLLOW_SYMLINKS CONFIGURE_DEPENDS
 )
 
 add_library(cogo
-  src/cogo_await.c
+  src/cogo_call.c
   src/cogo_async.c
 )
 target_sources(cogo INTERFACE
@@ -102,9 +102,9 @@ if(COGO_TEST)
   add_executable(test_pt src/cogo_pt_test.c)
   add_test(NAME test_pt COMMAND test_pt)
 
-  # await
-  add_executable(test_await src/cogo_await_test.c)
-  add_test(NAME test_await COMMAND test_await)
+  # call
+  add_executable(test_call src/cogo_call_test.c)
+  add_test(NAME test_call COMMAND test_call)
 
   # async
   add_executable(test_async src/cogo_async_test.c)
@@ -115,7 +115,7 @@ if(COGO_TEST)
   )
   add_dependencies(_RunTests
     test_pt
-    test_await
+    test_call
     test_async
   )
 endif()

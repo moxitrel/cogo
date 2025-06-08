@@ -40,7 +40,7 @@ typedef struct cogo_async cogo_async_t;
 #endif
 typedef struct cogo_async_sched cogo_async_sched_t;
 
-#include "cogo_await.h"
+#include "cogo_call.h"
 
 // Add coroutine to the concurrent queue.
 // Switch context if return non-zero.
@@ -84,10 +84,10 @@ extern "C" {
 #endif
 
 /// Implement concurrency.
-/// @extends cogo_await_t
+/// @extends cogo_call_t
 struct cogo_async {
-    // inherit cogo_await_t (with scheduler)
-    cogo_await_t await;
+    // inherit cogo_call_t (with scheduler)
+    cogo_call_t call;
 
     // build coroutine list
     COGO_T* next;
@@ -95,20 +95,20 @@ struct cogo_async {
 
 #undef COGO_INIT
 #define COGO_INIT(ASYNC, FUNC) COGO_ASYNC_INIT(ASYNC, FUNC)
-#define COGO_ASYNC_INIT(COGO, FUNC)                 \
-    {                                               \
-            /*.await=*/COGO_AWAIT_INIT(COGO, FUNC), \
-            /*.next=*/0,                            \
+#define COGO_ASYNC_INIT(COGO, FUNC)               \
+    {                                             \
+            /*.call=*/COGO_CALL_INIT(COGO, FUNC), \
+            /*.next=*/0,                          \
     }
 
 #define COGO_ASYNC_OF(ASYNC) (ASYNC)
-#undef COGO_AWAIT_OF
-#define COGO_AWAIT_OF(COGO) (&COGO_ASYNC_OF(COGO)->await)
-#define COGO_NEXT_OF(COGO)  (&COGO_ASYNC_OF(COGO)->next)
+#undef COGO_CALL_OF
+#define COGO_CALL_OF(COGO) (&COGO_ASYNC_OF(COGO)->call)
+#define COGO_NEXT_OF(COGO) (&COGO_ASYNC_OF(COGO)->next)
 
 #undef COGO_IS_VALID
 #define COGO_IS_VALID(ASYNC)      ((ASYNC) == (ASYNC) && (ASYNC) && COGO_ASYNC_IS_VALID(ASYNC))
-#define COGO_ASYNC_IS_VALID(COGO) COGO_AWAIT_IS_VALID(COGO)
+#define COGO_ASYNC_IS_VALID(COGO) COGO_CALL_IS_VALID(COGO)
 
 #define COGO_QUEUE_VALUE_T        cogo_async_t
 #define COGO_QUEUE_NEXT(ASYNC)    ((ASYNC)->next)
@@ -122,7 +122,7 @@ struct cogo_async {
 #define COGO_CQ_POP          COGO_QUEUE_POP(cogo_async_t)
 #define COGO_CQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_async_t)
 struct cogo_async_sched {
-    cogo_await_sched_t await_sched;
+    cogo_call_sched_t call_sched;
 
     // other coroutines running concurrently
     COGO_CQ_T cq;
@@ -133,20 +133,20 @@ struct cogo_async_sched {
 
 #undef COGO_SCHED_INIT
 #define COGO_SCHED_INIT(ASYNC) COGO_ASYNC_SCHED_INIT(ASYNC)
-#define COGO_ASYNC_SCHED_INIT(COGO)                       \
-    {                                                     \
-            /*.await_sched=*/COGO_AWAIT_SCHED_INIT(COGO), \
-            /*.cq=*/COGO_CQ_MAKE(),                       \
+#define COGO_ASYNC_SCHED_INIT(COGO)                     \
+    {                                                   \
+            /*.call_sched=*/COGO_CALL_SCHED_INIT(COGO), \
+            /*.cq=*/COGO_CQ_MAKE(),                     \
     }
 
 #define COGO_ASYNC_SCHED_OF(ASYNC_SCHED) (ASYNC_SCHED)
-#undef COGO_AWAIT_SCHED_OF
-#define COGO_AWAIT_SCHED_OF(SCHED) (&COGO_ASYNC_SCHED_OF(SCHED)->await_sched)
-#define COGO_SCHED_CQ_OF(SCHED)    (&COGO_ASYNC_SCHED_OF(SCHED)->q)
+#undef COGO_CALL_SCHED_OF
+#define COGO_CALL_SCHED_OF(SCHED) (&COGO_ASYNC_SCHED_OF(SCHED)->call_sched)
+#define COGO_SCHED_CQ_OF(SCHED)   (&COGO_ASYNC_SCHED_OF(SCHED)->q)
 
 #undef COGO_SCHED_IS_VALID
 #define COGO_SCHED_IS_VALID(ASYNC_SCHED) ((ASYNC_SCHED) == (ASYNC_SCHED) && (ASYNC_SCHED) && COGO_ASYNC_SCHED_IS_VALID(ASYNC_SCHED))
-#define COGO_ASYNC_SCHED_IS_VALID(SCHED) COGO_AWAIT_SCHED_IS_VALID(SCHED)
+#define COGO_ASYNC_SCHED_IS_VALID(SCHED) COGO_CALL_SCHED_IS_VALID(SCHED)
 
 /// Start a new coroutine to run concurrently.
 #define CO_ASYNC(COGO_OTHER)             COGO_ASYNC(COGO_THIS, COGO_OTHER)
