@@ -111,9 +111,9 @@ typedef struct cogo_pt {
             goto cogo_end;                                                                          \
             goto cogo_return; /* Redundant statement: to eliminate the warning of unused label. */  \
             goto cogo_begin;  /* Redundant statement: to eliminate the warning of unused label. */  \
-        case -1:              /* Begin */                                                           \
+        case -1:              /* End */                                                             \
             goto cogo_end;                                                                          \
-        case 0: /* End */                                                                           \
+        case 0: /* Begin */                                                                         \
             COGO_ON_BEGIN((+(COGO)));                                                               \
             cogo_begin /* The coroutine begin label. */
 
