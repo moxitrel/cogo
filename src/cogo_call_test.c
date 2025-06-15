@@ -84,8 +84,10 @@ static void test_call_resume(void) {
                     .cogo = COGO_INIT(&r.y.cogo, yield_func),
             },
     };
+
     while (COGO_RESUME(&r.cogo)) {
     }
+
     TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&r.cogo));
 }
 
@@ -199,7 +201,8 @@ static void test_fib(void) {
     };
 
     for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); i++) {
-        while (COGO_RESUME(&test_cases[i].fib->cogo)) {
+        COGO_SCHED_T sched = COGO_SCHED_INIT(&test_cases[i].fib->cogo);
+        while (COGO_SCHED_RESUME(&sched)) {
         }
         TEST_ASSERT_EQUAL_INT(test_cases[i].fib->v, test_cases[i].v);
     }

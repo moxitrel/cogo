@@ -28,7 +28,7 @@ static ng_t ng_init(ng_t* thiz, int v) {
 }
 
 static int ng_resume(ng_t* thiz) {
-    return ((ng_t const*)COGO_SCHED_RESUME(&thiz->sched))->v;
+    return ((ng_t*)COGO_SCHED_RESUME(&thiz->sched))->v;
 }
 
 static void test_ng(void) {

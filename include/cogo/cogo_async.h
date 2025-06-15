@@ -42,14 +42,14 @@ typedef struct cogo_async_sched cogo_async_sched_t;
 
 #include "cogo_call.h"
 
-// Add coroutine to the concurrent queue.
-// Switch context if return non-zero.
+/// Add a coroutine to the running queue.
+/// @return Switch context if return non-zero.
 #ifndef COGO_SCHED_ADD
     #define COGO_SCHED_ADD(SCHED, COGO) cogo_async_sched_add((SCHED), (COGO))
 int cogo_async_sched_add(cogo_async_sched_t* sched, cogo_async_t* cogo);
 #endif
 
-// return the next coroutine to be run, and remove it from the queue
+// Pop the next coroutine to be run.
 #ifndef COGO_SCHED_REMOVE
     #define COGO_SCHED_REMOVE(SCHED) cogo_async_sched_remove(SCHED)
 COGO_T* cogo_async_sched_remove(cogo_async_sched_t* sched);
@@ -115,14 +115,14 @@ struct cogo_async {
 #include "private/cogo_queue_template.h"
 #undef COGO_QUEUE_VALUE_T
 #undef COGO_QUEUE_NEXT
-#define COGO_CQ_T            COGO_QUEUE_T(cogo_async_t)
-#define COGO_CQ_MAKE         COGO_QUEUE_MAKE(cogo_async_t)
-#define COGO_CQ_IS_EMPTY     COGO_QUEUE_IS_EMPTY(cogo_async_t)
-#define COGO_CQ_PUSH         COGO_QUEUE_PUSH(cogo_async_t)
-#define COGO_CQ_POP          COGO_QUEUE_POP(cogo_async_t)
-#define COGO_CQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_async_t)
+#define COGO_CQ_T               COGO_QUEUE_T(cogo_async_t)
+#define COGO_CQ_MAKE            COGO_QUEUE_MAKE(cogo_async_t)
+#define COGO_CQ_IS_EMPTY        COGO_QUEUE_IS_EMPTY(cogo_async_t)
+#define COGO_CQ_ADD             COGO_QUEUE_ADD(cogo_async_t)
+#define COGO_CQ_REMOVE          COGO_QUEUE_REMOVE(cogo_async_t)
+#define COGO_CQ_REMOVE_NONEMPTY COGO_QUEUE_REMOVE_NONEMPTY(cogo_async_t)
 struct cogo_async_sched {
-    cogo_call_sched_t call_sched;
+    cogo_call_sched_t sched_c;
 
     // other coroutines running concurrently
     COGO_CQ_T cq;
@@ -133,15 +133,15 @@ struct cogo_async_sched {
 
 #undef COGO_SCHED_INIT
 #define COGO_SCHED_INIT(ASYNC) COGO_ASYNC_SCHED_INIT(ASYNC)
-#define COGO_ASYNC_SCHED_INIT(COGO)                     \
-    {                                                   \
-            /*.call_sched=*/COGO_CALL_SCHED_INIT(COGO), \
-            /*.cq=*/COGO_CQ_MAKE(),                     \
+#define COGO_ASYNC_SCHED_INIT(COGO)                  \
+    {                                                \
+            /*.sched_c=*/COGO_CALL_SCHED_INIT(COGO), \
+            /*.cq=*/COGO_CQ_MAKE(),                  \
     }
 
 #define COGO_ASYNC_SCHED_OF(ASYNC_SCHED) (ASYNC_SCHED)
 #undef COGO_CALL_SCHED_OF
-#define COGO_CALL_SCHED_OF(SCHED) (&COGO_ASYNC_SCHED_OF(SCHED)->call_sched)
+#define COGO_CALL_SCHED_OF(SCHED) (&COGO_ASYNC_SCHED_OF(SCHED)->sched_c)
 #define COGO_SCHED_CQ_OF(SCHED)   (&COGO_ASYNC_SCHED_OF(SCHED)->q)
 
 #undef COGO_SCHED_IS_VALID
@@ -170,7 +170,7 @@ typedef struct cogo_msg {
         long as_long;
         float as_float;
         double as_double;
-        void* as_pointer;
+        void* as_void_p;
     } data;
 } cogo_msg_t;
 
@@ -179,12 +179,12 @@ typedef struct cogo_msg {
 #include "private/cogo_queue_template.h"
 #undef COGO_QUEUE_VALUE_T
 #undef COGO_QUEUE_NEXT
-#define COGO_MQ_T            COGO_QUEUE_T(cogo_msg_t)
-#define COGO_MQ_MAKE         COGO_QUEUE_MAKE(cogo_msg_t)
-#define COGO_MQ_IS_EMPTY     COGO_QUEUE_IS_EMPTY(cogo_msg_t)
-#define COGO_MQ_PUSH         COGO_QUEUE_PUSH(cogo_msg_t)
-#define COGO_MQ_POP          COGO_QUEUE_POP(cogo_msg_t)
-#define COGO_MQ_POP_NONEMPTY COGO_QUEUE_POP_NONEMPTY(cogo_msg_t)
+#define COGO_MQ_T               COGO_QUEUE_T(cogo_msg_t)
+#define COGO_MQ_MAKE            COGO_QUEUE_MAKE(cogo_msg_t)
+#define COGO_MQ_IS_EMPTY        COGO_QUEUE_IS_EMPTY(cogo_msg_t)
+#define COGO_MQ_ADD             COGO_QUEUE_ADD(cogo_msg_t)
+#define COGO_MQ_REMOVE          COGO_QUEUE_REMOVE(cogo_msg_t)
+#define COGO_MQ_REMOVE_NONEMPTY COGO_QUEUE_REMOVE_NONEMPTY(cogo_msg_t)
 typedef struct cogo_chan {
     // all coroutines blocked by this channel
     COGO_CQ_T cq;
@@ -273,11 +273,11 @@ int cogo_chan_write(cogo_async_t* async, cogo_chan_t* chan, cogo_msg_t* msg);
 
 #undef COGO_SCHED_RESUME
 #define COGO_SCHED_RESUME(ASYNC_SCHED) cogo_async_sched_resume(ASYNC_SCHED)
-cogo_async_t const* cogo_async_sched_resume(cogo_async_sched_t* sched);
+cogo_async_t* cogo_async_sched_resume(cogo_async_sched_t* sched);
 
 #undef COGO_RESUME
 #define COGO_RESUME(ASYNC) cogo_async_resume(ASYNC)
-cogo_async_t const* cogo_async_resume(cogo_async_t* async);
+cogo_async_t* cogo_async_resume(cogo_async_t* async);
 
 #define COGO_RUN(ASYNC) cogo_async_run(ASYNC)
 void cogo_async_run(cogo_async_t* async);

@@ -102,10 +102,10 @@ struct cogo_call_sched {
             /*.top=*/(COGO),       \
     }
 
-#define COGO_CALL_SCHED_OF(CALL_SCHED)  (CALL_SCHED)
+#define COGO_CALL_SCHED_OF(SCHED_C)     (SCHED_C)
 #define COGO_SCHED_TOP_OF(SCHED)        (COGO_CALL_SCHED_OF(SCHED)->top)
 
-#define COGO_SCHED_IS_VALID(CALL_SCHED) ((CALL_SCHED) == (CALL_SCHED) && (CALL_SCHED) && COGO_CALL_SCHED_IS_VALID(CALL_SCHED))
+#define COGO_SCHED_IS_VALID(SCHED_C)    ((SCHED_C) == (SCHED_C) && (SCHED_C) && COGO_CALL_SCHED_IS_VALID(SCHED_C))
 #define COGO_CALL_SCHED_IS_VALID(SCHED) (COGO_SCHED_TOP_OF(SCHED) && COGO_IS_VALID(COGO_SCHED_TOP_OF(SCHED)) || !COGO_SCHED_TOP_OF(SCHED))
 
 /// Run another coroutine until finished.
@@ -122,11 +122,11 @@ struct cogo_call_sched {
         COGO_POST_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                       \
     } while (0)
 
-#define COGO_SCHED_RESUME(CALL_SCHED) cogo_call_sched_resume(CALL_SCHED)
-cogo_call_t const* cogo_call_sched_resume(cogo_call_sched_t* sched);
+#define COGO_SCHED_RESUME(SCHED_C) cogo_call_sched_resume(SCHED_C)
+cogo_call_t* cogo_call_sched_resume(cogo_call_sched_t* sched);
 
 #define COGO_RESUME(CALL) cogo_call_resume(CALL)
-cogo_call_t const* cogo_call_resume(cogo_call_t* call);
+cogo_call_t* cogo_call_resume(cogo_call_t* call);
 
 #ifdef __cplusplus
 }

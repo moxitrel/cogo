@@ -1,6 +1,6 @@
 #include <cogo/cogo_call.h>
 
-COGO_T const* cogo_call_sched_resume(COGO_SCHED_T* sched) {
+COGO_T* cogo_call_sched_resume(COGO_SCHED_T* const sched) {
 #define TOP        COGO_SCHED_TOP_OF(sched)
 #define TOP_PC     COGO_STATUS(TOP)
 #define TOP_FUNC   COGO_FUNC_OF(TOP)
@@ -33,9 +33,8 @@ exit:
 }
 
 // Run until CO_YIELD().
-COGO_T const* cogo_call_resume(COGO_T* const cogo) {
+COGO_T* cogo_call_resume(COGO_T* const cogo) {
     COGO_ASSERT(COGO_IS_VALID(cogo));
     COGO_SCHED_T sched = COGO_SCHED_INIT(COGO_TOP_OF(cogo));  // Restore the resume point.
-    COGO_SCHED_RESUME(&sched);
-    return COGO_TOP_OF(cogo) = COGO_SCHED_TOP_OF(&sched);  // Save the resume point.
+    return COGO_TOP_OF(cogo) = COGO_SCHED_RESUME(&sched);     // Save the resume point.
 }
