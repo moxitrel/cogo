@@ -8,14 +8,15 @@ COGO_T* cogo_call_sched_resume(COGO_SCHED_T* const sched) {
 #define TOP_SCHED  COGO_SCHED_OF(TOP)
     COGO_ASSERT(COGO_SCHED_IS_VALID(sched));
 
-    while (TOP) {
+    while (TOP) {  // end
         COGO_ASSERT(COGO_IS_VALID(TOP));
-        if (TOP_STATUS == COGO_STATUS_END) {  // end (awaited)
+        if (TOP_STATUS == COGO_STATUS_END) {  // awaited
             TOP = TOP_CALLER;
-        } else {  // resume | awaiting
+        } else {
+            COGO_T* top0 = TOP;
             TOP_SCHED = sched;
             TOP_FUNC(TOP);
-            if (TOP_STATUS > COGO_STATUS_BEGIN) {  // TODO: distinguish await resumed coroutine from yield
+            if (TOP_STATUS > COGO_STATUS_BEGIN && TOP == top0) {  // yield
                 break;
             }
         }

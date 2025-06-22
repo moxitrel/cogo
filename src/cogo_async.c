@@ -7,41 +7,61 @@ COGO_T* cogo_async_sched_resume(COGO_SCHED_T* const sched) {
 #define TOP_FUNC   COGO_FUNC_OF(TOP)
 #define TOP_CALLER COGO_CALLER_OF(TOP)
 #define TOP_SCHED  COGO_SCHED_OF(TOP)
+    COGO_T* top0;
     COGO_ASSERT(COGO_SCHED_IS_VALID(sched));
 
     for (;;) {
-        if (!TOP && !(TOP = COGO_SCHED_REMOVE(sched))) {  // blocked | end | over
-            goto exit;
+        // end | blocked | over
+        if (!(top0 = TOP) && !(top0 = TOP = COGO_SCHED_REMOVE(sched))) {
+            break;
         }
 
         COGO_ASSERT(COGO_IS_VALID(TOP));
+
+        // awaited
+        if (TOP_STATUS == COGO_STATUS_END) {
+            TOP = TOP_CALLER;
+            continue;
+        }
+
         TOP_SCHED = sched;
         TOP_FUNC(TOP);
-        if (TOP) {  // not blocked
-            switch (TOP_STATUS) {
-                case COGO_STATUS_END:  // awaited | end
-                    TOP = TOP_CALLER;
-                    continue;
-                case COGO_STATUS_BEGIN:  // awaiting
-                    continue;
-                default:  // yield
-                    COGO_SCHED_ADD(sched, TOP);
-                    goto exit;
-            }
+        if (TOP && TOP_STATUS > COGO_STATUS_BEGIN && TOP == top0) {  // blocked | awaiting (resumed) | yield
+            COGO_SCHED_ADD(sched, TOP);
+            TOP = COGO_SCHED_REMOVE(sched);
+            break;
         }
     }
 
-exit: {
-    COGO_T* v = TOP;
-    TOP = COGO_SCHED_REMOVE(sched);
-    return v;
-}
+    return top0;
 
 #undef TOP_SCHED
 #undef TOP_CALLER
 #undef TOP_FUNC
 #undef TOP_STATUS
 #undef TOP
+}
+
+// run until yield, return the next coroutine will be run
+COGO_T* cogo_async_resume(COGO_T* const cogo) {
+    // COGO_ASSERT(COGO_IS_VALID(cogo));
+    COGO_T* v;
+    COGO_SCHED_T sched = COGO_SCHED_INIT(COGO_TOP_OF(cogo));
+    if (cogo->next) {
+        sched.cq.head = cogo->next;
+        sched.cq.tail = cogo->next;
+        while (sched.cq.tail->next) {
+            sched.cq.tail = sched.cq.tail->next;
+        }
+    }
+
+    v = COGO_SCHED_RESUME(&sched);
+
+    if (sched.cq.head) {
+        cogo->next = sched.cq.head;
+    }
+    COGO_TOP_OF(cogo) = COGO_SCHED_TOP_OF(&sched);
+    return v;
 }
 
 int cogo_chan_read(COGO_T* const cogo, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
@@ -96,28 +116,6 @@ int cogo_chan_write(COGO_T* const cogo, cogo_chan_t* const chan, cogo_msg_t* con
 
 #undef SCHED_TOP
 #undef SCHED
-}
-
-// run until yield, return the next coroutine will be run
-COGO_T* cogo_async_resume(COGO_T* const cogo) {
-    // COGO_ASSERT(COGO_IS_VALID(cogo));
-    COGO_T* v;
-    COGO_SCHED_T sched = COGO_SCHED_INIT(COGO_TOP_OF(cogo));
-    if (cogo->next) {
-        sched.cq.head = cogo->next;
-        sched.cq.tail = cogo->next;
-        while (sched.cq.tail->next) {
-            sched.cq.tail = sched.cq.tail->next;
-        }
-    }
-
-    v = COGO_SCHED_RESUME(&sched);
-
-    if (sched.cq.head) {
-        cogo->next = sched.cq.head;
-    }
-    COGO_TOP_OF(cogo) = COGO_SCHED_TOP_OF(&sched);
-    return v;
 }
 
 void cogo_async_run(COGO_T* const cogo) {

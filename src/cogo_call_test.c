@@ -11,6 +11,7 @@ static void yield_func(COGO_T* COGO_THIS) {
 CO_BEGIN:
 
     CO_YIELD;
+    CO_YIELD;
 
 CO_END:;
 }
@@ -41,14 +42,21 @@ static void test_resume(void) {
     TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
     TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
 
-    // yield yield: stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
+    // yield_func yield (1): stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
     COGO_RESUME(&a.cogo);
     TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
     TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
     TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
     TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
 
-    // await end: stop when root coroutine finished
+    // yield_func yield (2): stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
+    COGO_RESUME(&a.cogo);
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
+
+    // await_func end: stop when root coroutine finished
     COGO_RESUME(&a.cogo);
     TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
     TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
@@ -68,6 +76,7 @@ static void resume_func(COGO_T* COGO_THIS) {
     resume_t* thiz = (resume_t*)COGO_THIS;
 CO_BEGIN:;
 
+    // yield_func yield (1)
     COGO_RESUME(&thiz->y.cogo);
     TEST_ASSERT_NOT_NULL(COGO_THIS->a.sched->top);
 
@@ -85,9 +94,11 @@ static void test_call_resume(void) {
             },
     };
 
-    while (COGO_RESUME(&r.cogo)) {
-    }
+    // yield_func yield (2)
+    COGO_RESUME(&r.cogo);
+    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&r.cogo));
 
+    COGO_RESUME(&r.cogo);
     TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&r.cogo));
 }
 
