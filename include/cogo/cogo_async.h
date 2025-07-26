@@ -108,7 +108,7 @@ struct cogo_async {
 
 #undef COGO_IS_VALID
 #define COGO_IS_VALID(ASYNC)      ((ASYNC) == (ASYNC) && (ASYNC) && COGO_ASYNC_IS_VALID(ASYNC))
-#define COGO_ASYNC_IS_VALID(COGO) COGO_CALL_IS_VALID(COGO)
+#define COGO_ASYNC_IS_VALID(COGO) COGO_IS_VALID_CALL(COGO)
 
 #define COGO_QUEUE_VALUE_T        cogo_async_t
 #define COGO_QUEUE_NEXT(ASYNC)    ((ASYNC)->next)
@@ -154,7 +154,7 @@ struct cogo_async_sched {
     do {                                                               \
         COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER)); \
         COGO_PRE_ASYNC((+(COGO)), (+(COGO_OTHER)));                    \
-        if (COGO_SCHED_ADD(COGO_SCHED_OF(COGO), COGO_OTHER)) {         \
+        if (COGO_SCHED_ADD(COGO_SCH_OF(COGO), COGO_OTHER)) {           \
             COGO_DO_YIELD(COGO);                                       \
         }                                                              \
         COGO_POST_ASYNC((+(COGO)), (+(COGO_OTHER)));                   \

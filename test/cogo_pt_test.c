@@ -16,21 +16,21 @@ COGO_END(cogo):;
 static void test_yield(void) {
     COGO_T cogo = {0};
     int v = 0;
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&cogo));
 
     func_yield(&cogo, &v);
     TEST_ASSERT_EQUAL_INT(1, v);
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&cogo));
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&cogo));
+    TEST_ASSERT_GREATER_THAN_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&cogo));
+    TEST_ASSERT_LESS_THAN_UINT64(COGO_STATUS_END, COGO_STATUS(&cogo));
 
     func_yield(&cogo, &v);
     TEST_ASSERT_EQUAL_INT(2, v);
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&cogo));
 
     // Noop if coroutine end.
     func_yield(&cogo, &v);
     TEST_ASSERT_EQUAL_INT(2, v);
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&cogo));
 }
 
 typedef struct func_return {
@@ -52,16 +52,16 @@ static void test_return(void) {
     func_return_t args = {
             .v = 0,
     };
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&args.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&args.cogo));
 
     func_return(&args);
     TEST_ASSERT_EQUAL_INT(1, args.v);
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&args.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&args.cogo));
 
     // Noop if coroutine end.
     func_return(&args);
     TEST_ASSERT_EQUAL_INT(1, args.v);
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&args.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&args.cogo));
 }
 
 typedef struct prologue {

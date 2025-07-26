@@ -39,32 +39,32 @@ static void test_resume(void) {
             .y = &y,
     };
 
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
 
     // yield_func yield (1): stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
     COGO_RESUME(&a.cogo);
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_GREATER_THAN_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_GREATER_THAN_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_LESS_THAN_UINT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_LESS_THAN_UINT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
 
     // yield_func yield (2): stop when CO_YIELD, but not CO_AWAIT or CO_RETURN
     COGO_RESUME(&a.cogo);
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_GREATER_THAN_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_GREATER_THAN_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_LESS_THAN_UINT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_LESS_THAN_UINT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
 
     // await_func end: stop when root coroutine finished
     COGO_RESUME(&a.cogo);
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
 
     // noop when coroutine end
     COGO_RESUME(&a.cogo);
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&y.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&a.cogo));
 }
 
 typedef struct resume {
@@ -78,10 +78,10 @@ CO_BEGIN:;
 
     // yield_func yield (1)
     COGO_RESUME(&thiz->y.cogo);
-    TEST_ASSERT_NOT_NULL(COGO_THIS->a.sched->top);
+    TEST_ASSERT_NOT_NULL(COGO_THIS->a.sch->top);
 
     CO_AWAIT(&thiz->y.cogo);
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&thiz->y.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&thiz->y.cogo));
 
 CO_END:;
 }
@@ -96,10 +96,10 @@ static void test_call_resume(void) {
 
     // yield_func yield (2)
     COGO_RESUME(&r.cogo);
-    TEST_ASSERT_NOT_EQUAL_INT64(COGO_STATUS_BEGIN, COGO_STATUS(&r.cogo));
+    TEST_ASSERT_GREATER_THAN_UINT64(COGO_STATUS_BEGIN, COGO_STATUS(&r.cogo));
 
     COGO_RESUME(&r.cogo);
-    TEST_ASSERT_EQUAL_INT64(COGO_STATUS_END, COGO_STATUS(&r.cogo));
+    TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&r.cogo));
 }
 
 typedef struct ng {
@@ -123,15 +123,14 @@ static void test_ng(void) {
             .cogo = COGO_INIT(&ng.cogo, ng_func),
             .v = 0,
     };
-    COGO_SCHED_T sched = COGO_SCHED_INIT(&ng.cogo);
 
-    COGO_SCHED_RESUME(&sched);
+    COGO_RESUME(&ng.cogo);
     TEST_ASSERT_EQUAL_INT(0, ng.v);
 
-    COGO_SCHED_RESUME(&sched);
+    COGO_RESUME(&ng.cogo);
     TEST_ASSERT_EQUAL_INT(1, ng.v);
 
-    COGO_SCHED_RESUME(&sched);
+    COGO_RESUME(&ng.cogo);
     TEST_ASSERT_EQUAL_INT(2, ng.v);
 }
 
@@ -212,8 +211,7 @@ static void test_fib(void) {
     };
 
     for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); i++) {
-        COGO_SCHED_T sched = COGO_SCHED_INIT(&test_cases[i].fib->cogo);
-        while (COGO_SCHED_RESUME(&sched)) {
+        while (COGO_RESUME(&test_cases[i].fib->cogo)) {
         }
         TEST_ASSERT_EQUAL_INT(test_cases[i].fib->v, test_cases[i].v);
     }

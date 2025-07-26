@@ -99,15 +99,15 @@ if(COGO_TEST)
     link_libraries(cogo unity)
 
     # pt
-    add_executable(test_pt src/cogo_pt_test.c)
+    add_executable(test_pt test/cogo_pt_test.c)
     add_test(NAME test_pt COMMAND test_pt)
 
     # call
-    add_executable(test_call src/cogo_call_test.c)
+    add_executable(test_call test/cogo_call_test.c)
     add_test(NAME test_call COMMAND test_call)
 
     # async
-    add_executable(test_async src/cogo_async_test.c)
+    add_executable(test_async test/cogo_async_test.c)
     add_test(NAME test_async COMMAND test_async)
 
     add_custom_target(_RunTests ALL VERBATIM
