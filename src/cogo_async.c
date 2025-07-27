@@ -4,9 +4,9 @@
 COGO_T* cogo_async_sched_resume(COGO_SCHED_T* const sched) {
 #define TOP        COGO_SCHED_TOP_OF(sched)
 #define TOP_STATUS COGO_STATUS(TOP)
-#define TOP_FUN    COGO_FUN_OF(TOP)
+#define TOP_FUNC   COGO_FUNC_OF(TOP)
 #define TOP_CALLER COGO_CALLER_OF(TOP)
-#define TOP_SCH    COGO_SCH_OF(TOP)
+#define TOP_SCHED  COGO_SCHED_OF(TOP)
     COGO_T* top0;
     COGO_ASSERT(COGO_SCHED_IS_VALID(sched));
 
@@ -24,48 +24,50 @@ COGO_T* cogo_async_sched_resume(COGO_SCHED_T* const sched) {
             continue;
         }
 
-        TOP_SCH = sched;
-        TOP_FUN(TOP);
-        if (TOP && TOP_STATUS > COGO_STATUS_BEGIN && TOP == top0) {  // blocked | awaiting (resumed) | yield
+        TOP_SCHED = sched;
+        TOP_FUNC(TOP);
+        if (TOP && TOP_STATUS > COGO_STATUS_BEGIN && TOP == top0) {  // yield
             COGO_SCHED_ADD(sched, TOP);
             TOP = COGO_SCHED_REMOVE(sched);
             break;
         }
+
+        // blocked | awaiting (resumed)
     }
 
     return top0;
 
-#undef TOP_SCH
+#undef TOP_SCHED
 #undef TOP_CALLER
-#undef TOP_FUN
+#undef TOP_FUNC
 #undef TOP_STATUS
 #undef TOP
 }
 
 // run until yield, return the next coroutine will be run
-COGO_T* cogo_async_resume(COGO_T* const cogo) {
-    // COGO_ASSERT(COGO_IS_VALID(cogo));
-    COGO_T* v;
+const COGO_T* cogo_async_resume(COGO_T* const cogo) {
+    COGO_T* top;
+    COGO_ASSERT(COGO_IS_VALID(cogo));
     COGO_SCHED_T sched = COGO_SCHED_INIT(COGO_TOP_OF(cogo));
-    if (cogo->next) {
-        sched.cq.head = cogo->next;
-        sched.cq.tail = cogo->next;
-        while (sched.cq.tail->next) {
-            sched.cq.tail = sched.cq.tail->next;
+    if (COGO_NEXT_OF(cogo)) {
+        COGO_SCHED_CQ_OF(&sched)->head = COGO_NEXT_OF(cogo);
+        COGO_SCHED_CQ_OF(&sched)->tail = COGO_NEXT_OF(cogo);
+        while (COGO_NEXT_OF(COGO_SCHED_CQ_OF(&sched)->tail)) {
+            COGO_SCHED_CQ_OF(&sched)->tail = COGO_NEXT_OF(COGO_SCHED_CQ_OF(&sched)->tail);
         }
     }
 
-    v = COGO_SCHED_RESUME(&sched);
+    top = COGO_SCHED_RESUME(&sched);
 
-    if (sched.cq.head) {
-        cogo->next = sched.cq.head;
+    if (COGO_SCHED_CQ_OF(&sched)->head) {
+        COGO_NEXT_OF(cogo) = COGO_SCHED_CQ_OF(&sched)->head;
     }
     COGO_TOP_OF(cogo) = COGO_SCHED_TOP_OF(&sched);
-    return v;
+    return top;
 }
 
 int cogo_chan_read(COGO_T* const cogo, cogo_chan_t* const chan, cogo_msg_t* const msg_next) {
-#define SCHED     COGO_SCH_OF(cogo)
+#define SCHED     COGO_SCHED_OF(cogo)
 #define SCHED_TOP COGO_SCHED_TOP_OF(SCHED)
     long chan_size;
     COGO_ASSERT(COGO_IS_VALID(cogo) && COGO_CHAN_IS_VALID(chan) && msg_next);
@@ -92,7 +94,7 @@ int cogo_chan_read(COGO_T* const cogo, cogo_chan_t* const chan, cogo_msg_t* cons
 }
 
 int cogo_chan_write(COGO_T* const cogo, cogo_chan_t* const chan, cogo_msg_t* const msg) {
-#define SCHED     COGO_SCH_OF(cogo)
+#define SCHED     COGO_SCHED_OF(cogo)
 #define SCHED_TOP COGO_SCHED_TOP_OF(SCHED)
     long chan_size;
     COGO_ASSERT(COGO_IS_VALID(cogo) && COGO_CHAN_IS_VALID(chan) && msg);
@@ -139,11 +141,11 @@ void cogo_async_run(COGO_T* const cogo) {
 
 int cogo_async_sched_add(COGO_SCHED_T* const sched, COGO_T* const cogo) {
     COGO_ASSERT(COGO_SCHED_IS_VALID(sched) && COGO_IS_VALID(cogo));
-    COGO_CQ_ADD(&sched->cq, cogo);
+    COGO_CQ_ADD(COGO_SCHED_CQ_OF(sched), cogo);
     return 1;  // switch context
 }
 
 COGO_T* cogo_async_sched_remove(COGO_SCHED_T* const sched) {
     COGO_ASSERT(COGO_SCHED_IS_VALID(sched));
-    return COGO_CQ_REMOVE(&sched->cq);
+    return COGO_CQ_REMOVE(COGO_SCHED_CQ_OF(sched));
 }

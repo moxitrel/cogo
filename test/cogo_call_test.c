@@ -78,7 +78,7 @@ CO_BEGIN:;
 
     // yield_func yield (1)
     COGO_RESUME(&thiz->y.cogo);
-    TEST_ASSERT_NOT_NULL(COGO_THIS->a.sch->top);
+    TEST_ASSERT_NOT_NULL(COGO_SCHED_TOP_OF(COGO_SCHED_OF(COGO_THIS)));
 
     CO_AWAIT(&thiz->y.cogo);
     TEST_ASSERT_EQUAL_UINT64(COGO_STATUS_END, COGO_STATUS(&thiz->y.cogo));

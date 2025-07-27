@@ -14,7 +14,7 @@ COGO_QUEUE_NEXT()   : return the next element
     #define COGO_QUEUE_DO1_T(T)               cogo_queue_t_##T
 
     #define COGO_QUEUE_MAKE(T)                COGO_QUEUE_DO1_MAKE(T)
-    #define COGO_QUEUE_DO1_MAKE(T)            cogo_queue_make##T
+    #define COGO_QUEUE_DO1_MAKE(T)            cogo_queue_make_##T
 
     #define COGO_QUEUE_IS_EMPTY(T)            COGO_QUEUE_DO1_IS_EMPTY(T)
     #define COGO_QUEUE_DO1_IS_EMPTY(T)        cogo_queue_is_empty_##T
