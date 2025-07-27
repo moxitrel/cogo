@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(cogo
-    VERSION 3.0.0
+    VERSION 1.0.0
     HOMEPAGE_URL "https://github.com/moxitrel/cogo"
     LANGUAGES C
 )
