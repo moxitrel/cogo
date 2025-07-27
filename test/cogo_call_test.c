@@ -1,5 +1,6 @@
+#include "cogo/cogo_call.h"
+
 #include <assert.h>
-#include <cogo/cogo_call.h>
 #include <stdlib.h>
 #include <unity.h>
 

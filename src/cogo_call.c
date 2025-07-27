@@ -1,4 +1,4 @@
-#include <cogo/cogo_call.h>
+#include "cogo/cogo_call.h"
 
 static COGO_T* cogo_call_sched_resume(COGO_SCHED_T* const sched) {
 #define TOP        COGO_SCHED_TOP_OF(sched)

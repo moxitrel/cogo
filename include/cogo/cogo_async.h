@@ -209,7 +209,7 @@ typedef struct cogo_chan {
             /*.capacity=*/(N),      \
     }
 
-#define COGO_CHAN_IS_VALID(CHAN) ((CHAN) == (CHAN) && (CHAN) && (CHAN)->capacity >= 0 && (CHAN)->size > PTRDIFF_MIN)
+#define COGO_CHAN_IS_VALID(CHAN) ((CHAN) == (CHAN) && (CHAN) && (CHAN)->capacity >= 0)
 
 /** Receive a message from channel.
  If there's no message in channel, block until one arrived.

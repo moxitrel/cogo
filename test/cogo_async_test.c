@@ -1,5 +1,6 @@
+#include "cogo/cogo_async.h"
+
 #include <assert.h>
-#include <cogo/cogo_async.h>
 #include <unity.h>
 
 typedef struct ng {

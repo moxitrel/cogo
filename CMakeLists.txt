@@ -77,6 +77,7 @@ if(COGO_TEST)
         ${ZY_COMPILE_OPTIONS_DIAGNOSTIC}
         -Wno-padded
         -Wno-unsafe-buffer-usage
+        -include assert.h
     )
     target_compile_features(cogo PRIVATE
         c_std_90
@@ -94,6 +95,7 @@ if(COGO_TEST)
         ${ZY_COMPILE_OPTIONS_DIAGNOSTIC}
         -Wno-padded
         -Wno-unsafe-buffer-usage
+        -include assert.h
     )
 
     link_libraries(cogo unity)

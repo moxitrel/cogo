@@ -1,4 +1,4 @@
-#include <cogo/cogo_async.h>
+#include "cogo/cogo_async.h"
 
 // Run until yield. Return the yield coroutine.
 COGO_T* cogo_async_sched_resume(COGO_SCHED_T* const sched) {

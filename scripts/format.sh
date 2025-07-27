@@ -3,7 +3,7 @@
 # Project root
 cd $(dirname $0)/.. || exit
 
-find include src -type f \( \
+find include src test -type f \( \
   -iname '*.c' -or \
   -iname '*.h' \) \
   -exec \
