@@ -94,9 +94,9 @@ typedef struct cogo_pt {
 #define COGO_PT_PC(PT)       ((PT)->pc)
 #define COGO_PT_IS_VALID(PT) (COGO_PT_PC(PT) >= COGO_PC_END)
 
-#define COGO_PT_OF(COGO)     (COGO)
-#define COGO_PC_OF(COGO)     COGO_PT_PC(COGO_PT_OF(COGO))
-#define COGO_IS_VALID(COGO)  ((COGO) == (COGO) && (COGO) && COGO_PT_IS_VALID(COGO_PT_OF(COGO)))
+#define COGO_OF_PT(COGO)     (COGO)
+#define COGO_OF_PC(COGO)     COGO_PT_PC(COGO_OF_PT(COGO))
+#define COGO_IS_VALID(COGO)  ((COGO) == (COGO) && (COGO) && COGO_PT_IS_VALID(COGO_OF_PT(COGO)))
 
 /// @hideinitializer A label-like macro marks the start of the coroutine.
 /// - If the coroutine runs for the first time, `COGO_ON_BEGIN(COGO)` is invoked, and then continues its execution.
@@ -109,7 +109,7 @@ typedef struct cogo_pt {
 /// @pre There should be one and only one `COGO_END(COGO)` after the `COGO_BEGIN(COGO)` in a function.
 #define COGO_BEGIN(COGO)                                                                           \
     COGO_ASSERT(COGO_IS_VALID(COGO));                                                              \
-    switch (COGO_PC_OF(COGO)) {                                                                    \
+    switch (COGO_OF_PC(COGO)) {                                                                    \
         default:                    /* Invalid `pc` */                                             \
             COGO_ON_EPC((+(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */        \
             goto cogo_end;                                                                         \
@@ -139,7 +139,7 @@ typedef struct cogo_pt {
 
 #define COGO_DO_YIELD(COGO)                                                                  \
     do {                                                                                     \
-        COGO_PC_OF(COGO) = __LINE__; /* 1. save the resume point (i.e., `case __LINE__:`) */ \
+        COGO_OF_PC(COGO) = __LINE__; /* 1. save the resume point (i.e., `case __LINE__:`) */ \
         goto cogo_end;               /* 2. return */                                         \
         case __LINE__:;              /* 3. resume point */                                   \
     } while (0)
@@ -168,7 +168,7 @@ typedef struct cogo_pt {
 cogo_return:                          \
     COGO_ASSERT(COGO_IS_VALID(COGO)); \
     COGO_ON_END((+(COGO)));           \
-    COGO_PC_OF(COGO) = COGO_PC_END;   \
+    COGO_OF_PC(COGO) = COGO_PC_END;   \
     } /* End of switch */             \
     cogo_end /* The coroutine end label. */
 
@@ -178,7 +178,7 @@ cogo_return:                          \
 /// - Or an integer value indicates the coroutine is in running.
 /// @param[in] COGO COGO_T*, the coroutine object.
 /// @pre `COGO_IS_VALID(COGO)`
-#define COGO_STATUS(COGO) (+COGO_PC_OF(COGO))
+#define COGO_STATUS(COGO) (+COGO_OF_PC(COGO))
 /// @hideinitializer An integer value indicates the coroutine is initialized and ready to run.
 #define COGO_STATUS_BEGIN COGO_PC_BEGIN
 /// @hideinitializer An integer value indicates the coroutine has finished running.

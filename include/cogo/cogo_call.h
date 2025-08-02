@@ -31,16 +31,16 @@ typedef struct cogo_call cogo_call_t;
 #include "cogo_pt.h"
 
 #ifndef COGO_SCHED_T
-    #define COGO_SCHED_T cogo_call_sched_t
+    #define COGO_SCHED_T cogo_callsched_t
 #endif
-typedef struct cogo_call_sched cogo_call_sched_t;
+typedef struct cogo_callsched cogo_callsched_t;
 
 #ifndef COGO_BEFORE_AWAIT
-    #define COGO_BEFORE_AWAIT(COGO, COGO_CALLEE)  // noop
+    #define COGO_BEFORE_AWAIT(COGO, COGO_OTHER)  // noop
 #endif
 
 #ifndef COGO_AFTER_AWAIT
-    #define COGO_AFTER_AWAIT(COGO, COGO_CALLEE)  // noop
+    #define COGO_AFTER_AWAIT(COGO, COGO_OTHER)  // noop
 #endif
 
 #ifdef __cplusplus
@@ -81,18 +81,18 @@ struct cogo_call {
 #define COGO_CALL_SCHED(CALL)    ((CALL)->a.sched)
 #define COGO_CALL_IS_VALID(CALL) (COGO_PT_IS_VALID(COGO_CALL_PT(CALL)) && COGO_CALL_FUNC(CALL))
 
-#undef COGO_PT_OF
+#undef COGO_OF_PT
 #undef COGO_IS_VALID
 #define COGO_INIT(COGO, FUNC) COGO_CALL_INIT(COGO, FUNC)
-#define COGO_CALL_OF(COGO)    (COGO)
-#define COGO_PT_OF(COGO)      COGO_CALL_PT(COGO_CALL_OF(COGO))
-#define COGO_FUNC_OF(COGO)    COGO_CALL_FUNC(COGO_CALL_OF(COGO))
-#define COGO_CALLER_OF(COGO)  COGO_CALL_CALLER(COGO_CALL_OF(COGO))
-#define COGO_TOP_OF(COGO)     COGO_CALL_TOP(COGO_CALL_OF(COGO))
-#define COGO_SCHED_OF(COGO)   COGO_CALL_SCHED(COGO_CALL_OF(COGO))
-#define COGO_IS_VALID(COGO)   ((COGO) == (COGO) && (COGO) && COGO_CALL_IS_VALID(COGO_CALL_OF(COGO)))
+#define COGO_OF_CALL(COGO)    (COGO)
+#define COGO_OF_PT(COGO)      COGO_CALL_PT(COGO_OF_CALL(COGO))
+#define COGO_OF_FUNC(COGO)    COGO_CALL_FUNC(COGO_OF_CALL(COGO))
+#define COGO_OF_CALLER(COGO)  COGO_CALL_CALLER(COGO_OF_CALL(COGO))
+#define COGO_OF_TOP(COGO)     COGO_CALL_TOP(COGO_OF_CALL(COGO))
+#define COGO_OF_SCHED(COGO)   COGO_CALL_SCHED(COGO_OF_CALL(COGO))
+#define COGO_IS_VALID(COGO)   ((COGO) == (COGO) && (COGO) && COGO_CALL_IS_VALID(COGO_OF_CALL(COGO)))
 
-struct cogo_call_sched {
+struct cogo_callsched {
     // call stack top
     COGO_T* top;
 };
@@ -105,28 +105,27 @@ struct cogo_call_sched {
 #define COGO_CALLSCHED_IS_VALID(CALLSCHED) ((COGO_CALLSCHED_TOP(CALLSCHED) && COGO_IS_VALID(COGO_CALLSCHED_TOP(CALLSCHED))) || !COGO_CALLSCHED_TOP(CALLSCHED))
 
 #define COGO_SCHED_INIT(COGO)              COGO_CALLSCHED_INIT(COGO)
-#define COGO_CALLSCHED_OF(SCHED)           (SCHED)
-#define COGO_SCHED_TOP_OF(SCHED)           COGO_CALLSCHED_TOP(COGO_CALLSCHED_OF(SCHED))
-
-#define COGO_SCHED_IS_VALID(SCHED)         ((SCHED) == (SCHED) && (SCHED) && COGO_CALLSCHED_IS_VALID(COGO_CALLSCHED_OF(SCHED)))
+#define COGO_SCHED_CALLSCHED(SCHED)           (SCHED)
+#define COGO_SCHED_TOP(SCHED)           COGO_CALLSCHED_TOP(COGO_SCHED_CALLSCHED(SCHED))
+#define COGO_SCHED_IS_VALID(SCHED)         ((SCHED) == (SCHED) && (SCHED) && COGO_CALLSCHED_IS_VALID(COGO_SCHED_CALLSCHED(SCHED)))
 
 /// Run another coroutine until finished.
-#define COGO_AWAIT(COGO, COGO_CALLEE)                                                                       \
+#define COGO_AWAIT(COGO, COGO_OTHER)                                                                       \
     do {                                                                                                    \
-        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_CALLEE));                                     \
-        COGO_BEFORE_AWAIT((+(COGO)), (+(COGO_CALLEE)));                                                     \
+        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER));                                     \
+        COGO_BEFORE_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                     \
                                                                                                             \
-        COGO_CALLER_OF(COGO_CALLEE) = (COGO);                              /* call stack push */            \
-        COGO_SCHED_TOP_OF(COGO_SCHED_OF(COGO)) = COGO_TOP_OF(COGO_CALLEE); /* continue from resume point */ \
+        COGO_OF_CALLER(COGO_OTHER) = (COGO);                              /* call stack push */            \
+        COGO_SCHED_TOP(COGO_OF_SCHED(COGO)) = COGO_OF_TOP(COGO_OTHER); /* continue from resume point */ \
         COGO_DO_YIELD(COGO);                                                                                \
                                                                                                             \
-        COGO_AFTER_AWAIT((+(COGO)), (+(COGO_CALLEE)));                                                      \
+        COGO_AFTER_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                      \
     } while (0)
 
 #define COGO_RESUME(COGO) cogo_call_resume(COGO)
 const cogo_call_t* cogo_call_resume(cogo_call_t* cogo);
 
-#define CO_AWAIT(COGO_CALLEE) COGO_AWAIT(COGO_THIS, COGO_CALLEE)
+#define CO_AWAIT(COGO_OTHER) COGO_AWAIT(COGO_THIS, COGO_OTHER)
 
 #ifdef __cplusplus
 }

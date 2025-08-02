@@ -1,4 +1,4 @@
-#include "cogo/cogo_async.h"
+#include "cogo/cogo_paral.h"
 
 #include <assert.h>
 #include <unity.h>

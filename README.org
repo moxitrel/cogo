@@ -9,7 +9,7 @@ An asymmetric stackless coroutine library written in pure C for embedded program
 
 * Overview
 #+BEGIN_SRC C
-#include "cogo/cogo_async.h"
+#include "cogo/cogo_paral.h"
 
 CO_DECLARE(coroutine_name, T parameter, ...)
 {
