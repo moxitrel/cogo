@@ -84,10 +84,9 @@ extern "C" {
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
 
-// Coroutine context.
 typedef struct cogo_pt {
     // The source line where function continues to run when reentered.
-    // It is initialized to `0`, set to `__LINE__` when yield, and set to `-1` if finished.
+    // It should be initialized to `0`, and set to `-1` if the coroutine finished running.
     int pc;
 } cogo_pt_t;
 
@@ -96,6 +95,11 @@ typedef struct cogo_pt {
 
 #define COGO_OF_PT(COGO)     (COGO)
 #define COGO_OF_PC(COGO)     COGO_PT_PC(COGO_OF_PT(COGO))
+
+/// @hideinitializer Whether the coroutine is valid.
+/// @param[in] COGO The coroutine object pointer.
+/// @retval true The coroutine is valid.
+/// @retval false The coroutine isn't valid.
 #define COGO_IS_VALID(COGO)  ((COGO) == (COGO) && (COGO) && COGO_PT_IS_VALID(COGO_OF_PT(COGO)))
 
 /// @hideinitializer A label-like macro marks the start of the coroutine.
@@ -172,11 +176,11 @@ cogo_return:                          \
     } /* End of switch */             \
     cogo_end /* The coroutine end label. */
 
-/// @hideinitializer Get the current running status.
-/// - Return `COGO_STATUS_BEGIN` if the coroutine is initialized but not started yet.
-/// - Return `COGO_STATUS_END` if the coroutine has finished running.
-/// - Or an integer value indicates the coroutine is in running.
-/// @param[in] COGO COGO_T*, the coroutine object.
+/// @hideinitializer Get the current running status of coroutine.
+/// @param[in] COGO Point to a coroutine object.
+/// @return An integer value indicates the coroutine is in running.
+/// @retval COGO_STATUS_BEGIN The coroutine is initialized and not invoked yet.
+/// @retval COGO_STATUS_END The coroutine has finished running.
 /// @pre `COGO_IS_VALID(COGO)`
 #define COGO_STATUS(COGO) (+COGO_OF_PC(COGO))
 /// @hideinitializer An integer value indicates the coroutine is initialized and ready to run.
@@ -184,9 +188,13 @@ cogo_return:                          \
 /// @hideinitializer An integer value indicates the coroutine has finished running.
 #define COGO_STATUS_END   COGO_PC_END
 
+/// Abbr of `COGO_BEGIN(COGO_THIS)`.
 #define CO_BEGIN          COGO_BEGIN(COGO_THIS)
+/// Abbr of `COGO_YIELD(COGO_THIS)`.
 #define CO_YIELD          COGO_YIELD(COGO_THIS)
+/// Abbr of `COGO_RETURN(COGO_THIS)`.
 #define CO_RETURN         COGO_RETURN(COGO_THIS)
+/// Abbr of `COGO_END(COGO_THIS)`.
 #define CO_END            COGO_END(COGO_THIS)
 
 /// @hideinitializer An opaque object type that saves the coroutine states.

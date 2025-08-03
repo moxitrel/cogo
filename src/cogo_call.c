@@ -34,6 +34,6 @@ static COGO_T* cogo_callsched_resume(COGO_SCHED_T* const sched) {
 // Run until CO_YIELD().
 const COGO_T* cogo_call_resume(COGO_T* const cogo) {
     COGO_ASSERT(COGO_IS_VALID(cogo));
-    COGO_SCHED_T sched = COGO_SCHED_INIT(COGO_OF_TOP(cogo));    // Restore the resume point.
+    COGO_SCHED_T sched = COGO_SCHED_INIT(COGO_OF_TOP(cogo));   // Restore the resume point.
     return COGO_OF_TOP(cogo) = cogo_callsched_resume(&sched);  // Save the resume point.
 }

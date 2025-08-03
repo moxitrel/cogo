@@ -65,6 +65,11 @@ struct cogo_call {
     } a;
 };
 
+#define COGO_CALL_PT(CALL)     (&(CALL)->pt)
+#define COGO_CALL_FUNC(CALL)   ((CALL)->func)
+#define COGO_CALL_CALLER(CALL) ((CALL)->caller)
+#define COGO_CALL_TOP(CALL)    ((CALL)->a.top)
+#define COGO_CALL_SCHED(CALL)  ((CALL)->a.sched)
 #define COGO_CALL_INIT(COGO, FUNC)   \
     {                                \
             /*.pt=*/{0},             \
@@ -74,57 +79,59 @@ struct cogo_call {
                     /*.top=*/(COGO), \
             },                       \
     }
-#define COGO_CALL_PT(CALL)       (&(CALL)->pt)
-#define COGO_CALL_FUNC(CALL)     ((CALL)->func)
-#define COGO_CALL_CALLER(CALL)   ((CALL)->caller)
-#define COGO_CALL_TOP(CALL)      ((CALL)->a.top)
-#define COGO_CALL_SCHED(CALL)    ((CALL)->a.sched)
 #define COGO_CALL_IS_VALID(CALL) (COGO_PT_IS_VALID(COGO_CALL_PT(CALL)) && COGO_CALL_FUNC(CALL))
 
+#define COGO_OF_CALL(COGO)       (COGO)
 #undef COGO_OF_PT
-#undef COGO_IS_VALID
-#define COGO_INIT(COGO, FUNC) COGO_CALL_INIT(COGO, FUNC)
-#define COGO_OF_CALL(COGO)    (COGO)
 #define COGO_OF_PT(COGO)      COGO_CALL_PT(COGO_OF_CALL(COGO))
 #define COGO_OF_FUNC(COGO)    COGO_CALL_FUNC(COGO_OF_CALL(COGO))
 #define COGO_OF_CALLER(COGO)  COGO_CALL_CALLER(COGO_OF_CALL(COGO))
 #define COGO_OF_TOP(COGO)     COGO_CALL_TOP(COGO_OF_CALL(COGO))
 #define COGO_OF_SCHED(COGO)   COGO_CALL_SCHED(COGO_OF_CALL(COGO))
-#define COGO_IS_VALID(COGO)   ((COGO) == (COGO) && (COGO) && COGO_CALL_IS_VALID(COGO_OF_CALL(COGO)))
+
+/// @hideinitializer Initialize a coroutine object.
+/// @param[in] COGO The coroutine object pointer.
+/// @param[in] FUNC The coroutine function pointer.
+#define COGO_INIT(COGO, FUNC) COGO_CALL_INIT(COGO, FUNC)
+#undef COGO_IS_VALID
+#define COGO_IS_VALID(COGO) ((COGO) == (COGO) && (COGO) && COGO_CALL_IS_VALID(COGO_OF_CALL(COGO)))
 
 struct cogo_callsched {
     // call stack top
     COGO_T* top;
 };
 
+#define COGO_CALLSCHED_TOP(CALLSCHED) ((CALLSCHED)->top)
 #define COGO_CALLSCHED_INIT(COGO) \
     {                             \
             /*.top=*/(COGO),      \
     }
-#define COGO_CALLSCHED_TOP(CALLSCHED)      ((CALLSCHED)->top)
 #define COGO_CALLSCHED_IS_VALID(CALLSCHED) ((COGO_CALLSCHED_TOP(CALLSCHED) && COGO_IS_VALID(COGO_CALLSCHED_TOP(CALLSCHED))) || !COGO_CALLSCHED_TOP(CALLSCHED))
 
+#define COGO_SCHED_CALLSCHED(SCHED)        (SCHED)
+#define COGO_SCHED_TOP(SCHED)              COGO_CALLSCHED_TOP(COGO_SCHED_CALLSCHED(SCHED))
 #define COGO_SCHED_INIT(COGO)              COGO_CALLSCHED_INIT(COGO)
-#define COGO_SCHED_CALLSCHED(SCHED)           (SCHED)
-#define COGO_SCHED_TOP(SCHED)           COGO_CALLSCHED_TOP(COGO_SCHED_CALLSCHED(SCHED))
 #define COGO_SCHED_IS_VALID(SCHED)         ((SCHED) == (SCHED) && (SCHED) && COGO_CALLSCHED_IS_VALID(COGO_SCHED_CALLSCHED(SCHED)))
 
 /// Run another coroutine until finished.
-#define COGO_AWAIT(COGO, COGO_OTHER)                                                                       \
-    do {                                                                                                    \
-        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER));                                     \
-        COGO_BEFORE_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                     \
-                                                                                                            \
-        COGO_OF_CALLER(COGO_OTHER) = (COGO);                              /* call stack push */            \
+#define COGO_AWAIT(COGO, COGO_OTHER)                                                                    \
+    do {                                                                                                \
+        COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER));                                  \
+        COGO_BEFORE_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                  \
+                                                                                                        \
+        COGO_OF_CALLER(COGO_OTHER) = (COGO);                           /* call stack push */            \
         COGO_SCHED_TOP(COGO_OF_SCHED(COGO)) = COGO_OF_TOP(COGO_OTHER); /* continue from resume point */ \
-        COGO_DO_YIELD(COGO);                                                                                \
-                                                                                                            \
-        COGO_AFTER_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                      \
+        COGO_DO_YIELD(COGO);                                                                            \
+                                                                                                        \
+        COGO_AFTER_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                   \
     } while (0)
 
+/// @hideinitializer Resume a coroutine.
+/// @param[in] COGO The coroutine object pointer.
 #define COGO_RESUME(COGO) cogo_call_resume(COGO)
 const cogo_call_t* cogo_call_resume(cogo_call_t* cogo);
 
+/// Abbr of `COGO_AWAIT(COGO_THIS, COGO_OTHER)`.
 #define CO_AWAIT(COGO_OTHER) COGO_AWAIT(COGO_THIS, COGO_OTHER)
 
 #ifdef __cplusplus

@@ -91,22 +91,23 @@ struct cogo_paral {
     COGO_T* next;
 };
 
+#define COGO_PARAL_CALL(PARAL) (&(PARAL)->call)
+#define COGO_PARAL_NEXT(PARAL) ((PARAL)->next)
 #define COGO_PARAL_INIT(COGO, FUNC)               \
     {                                             \
             /*.call=*/COGO_CALL_INIT(COGO, FUNC), \
             /*.next=*/0,                          \
     }
-#define COGO_PARAL_CALL(PARAL)     (&(PARAL)->call)
-#define COGO_PARAL_NEXT(PARAL)     ((PARAL)->next)
 #define COGO_PARAL_IS_VALID(PARAL) COGO_CALL_IS_VALID(COGO_PARAL_CALL(PARAL))
 
-#undef COGO_INIT
+#define COGO_OF_PARAL(COGO)        (COGO)
 #undef COGO_OF_CALL
+#define COGO_OF_CALL(COGO) COGO_PARAL_CALL(COGO_OF_PARAL(COGO))
+#define COGO_OF_NEXT(COGO) COGO_PARAL_NEXT(COGO_OF_PARAL(COGO))
+
+#undef COGO_INIT
+#define COGO_INIT(COGO, FUNC) COGO_PARAL_INIT(COGO, FUNC)
 #undef COGO_IS_VALID
-#define COGO_INIT(COGO, FUNC)  COGO_PARAL_INIT(COGO, FUNC)
-#define COGO_OF_PARAL(COGO)    (COGO)
-#define COGO_OF_CALL(COGO)     COGO_PARAL_CALL(COGO_OF_PARAL(COGO))
-#define COGO_OF_NEXT(COGO)     COGO_PARAL_NEXT(COGO_OF_PARAL(COGO))
 #define COGO_IS_VALID(COGO)    ((COGO) == (COGO) && (COGO) && COGO_PARAL_IS_VALID(COGO_OF_PARAL(COGO)))
 
 #define COGO_QUEUE_VALUE_T     cogo_paral_t
@@ -139,25 +140,25 @@ struct cogo_paralsched {
 #define COGO_PARALSCHED_CQ(PARALSCHED)        (&(PARALSCHED)->cq)
 #define COGO_PARALSCHED_IS_VALID(PARALSCHED)  COGO_CALLSCHED_IS_VALID(COGO_PARALSCHED_CALLSCHED(PARALSCHED))
 
-#undef COGO_SCHED_INIT
+#define COGO_SCHED_PARALSCHED(SCHED)          (SCHED)
 #undef COGO_SCHED_CALLSCHED
+#define COGO_SCHED_CALLSCHED(SCHED) COGO_PARALSCHED_CALLSCHED(COGO_SCHED_PARALSCHED(SCHED))
+#define COGO_SCHED_CQ(SCHED)        COGO_PARALSCHED_CQ(COGO_SCHED_PARALSCHED(SCHED))
+#undef COGO_SCHED_INIT
+#define COGO_SCHED_INIT(COGO) COGO_PARALSCHED_INIT(COGO)
 #undef COGO_SCHED_IS_VALID
-#define COGO_SCHED_INIT(COGO)     COGO_PARALSCHED_INIT(COGO)
-#define COGO_SCHED_PARALSCHED(SCHED) (SCHED)
-#define COGO_SCHED_CALLSCHED(SCHED)  COGO_PARALSCHED_CALLSCHED(COGO_SCHED_PARALSCHED(SCHED))
-#define COGO_SCHED_CQ(SCHED)   COGO_PARALSCHED_CQ(COGO_SCHED_PARALSCHED(SCHED))
 #define COGO_SCHED_IS_VALID(SCHED) ((SCHED) == (SCHED) && (SCHED) && COGO_PARALSCHED_IS_VALID(COGO_SCHED_PARALSCHED(SCHED)))
 
 /// Start a new coroutine to run concurrently.
 #define COGO_ASYNC(COGO, COGO_OTHER)                                   \
-    do {                                                                 \
+    do {                                                               \
         COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_IS_VALID(COGO_OTHER)); \
         COGO_BEFORE_ASYNC((+(COGO)), (+(COGO_OTHER)));                 \
-        \
+                                                                       \
         if (COGO_SCHED_ADD(COGO_OF_SCHED(COGO), COGO_OTHER)) {         \
-            COGO_DO_YIELD(COGO);                                         \
-        }                                                                \
-        \
+            COGO_DO_YIELD(COGO);                                       \
+        }                                                              \
+                                                                       \
         COGO_AFTER_ASYNC((+(COGO)), (+(COGO_OTHER)));                  \
     } while (0)
 
@@ -242,11 +243,11 @@ CO_END:;
     do {                                                                                                        \
         COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_CHAN_IS_VALID(CHAN) && (MSG_NEXT) == (MSG_NEXT) && (MSG_NEXT)); \
         COGO_BEFORE_CHAN_READ((+(COGO)), (+(CHAN)), (+(MSG_NEXT)));                                             \
-        \
+                                                                                                                \
         if (cogo_chan_read(COGO_OF_PARAL(COGO), (CHAN), (MSG_NEXT))) {                                          \
             COGO_DO_YIELD(COGO);                                                                                \
         }                                                                                                       \
-        \
+                                                                                                                \
         COGO_AFTER_CHAN_READ((+(COGO)), (+(CHAN)), (+(MSG_NEXT)));                                              \
     } while (0)
 // Switch context if return non-zero.
@@ -264,11 +265,11 @@ int cogo_chan_read(cogo_paral_t* cogo, cogo_chan_t* chan, cogo_msg_t* msg_next);
     do {                                                                                         \
         COGO_ASSERT(COGO_IS_VALID(COGO) && COGO_CHAN_IS_VALID(CHAN) && (MSG) == (MSG) && (MSG)); \
         COGO_BEFORE_CHAN_WRITE((+(COGO)), (+(CHAN)), (+(MSG)));                                  \
-        \
+                                                                                                 \
         if (cogo_chan_write(COGO_OF_PARAL(COGO), (CHAN), (MSG))) {                               \
             COGO_DO_YIELD(COGO);                                                                 \
         }                                                                                        \
-        \
+                                                                                                 \
         COGO_AFTER_CHAN_WRITE((+(COGO)), (+(CHAN)), (+(MSG)));                                   \
     } while (0)
 // Switch context if return non-zero.
@@ -284,8 +285,11 @@ const cogo_paral_t* cogo_paral_resume(cogo_paral_t* cogo);
 #define COGO_RUN(COGO) cogo_paral_run(COGO)
 void cogo_paral_run(cogo_paral_t* cogo);
 
-#define CO_ASYNC(COGO_OTHER)       COGO_ASYNC(COGO_THIS, COGO_OTHER)
+/// Abbr of `COGO_ASYNC(COGO_THIS, COGO_OTHER)`.
+#define CO_ASYNC(COGO_OTHER)         COGO_ASYNC(COGO_THIS, COGO_OTHER)
+/// Abbr of `COGO_CHAN_READ(COGO_THIS, CHAN, MSG_NEXT)`.
 #define CO_CHAN_READ(CHAN, MSG_NEXT) COGO_CHAN_READ(COGO_THIS, CHAN, MSG_NEXT)
+/// Abbr of `COGO_CHAN_WRITE(COGO_THIS, CHAN, MSG)`.
 #define CO_CHAN_WRITE(CHAN, MSG)     COGO_CHAN_WRITE(COGO_THIS, CHAN, MSG)
 
 #ifdef __cplusplus
