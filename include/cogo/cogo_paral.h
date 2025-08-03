@@ -220,9 +220,11 @@ typedef struct cogo_chan {
  @param[out] MSG_NEXT the address of received message is stored in MSG_NEXT->next.
 
  @pre This macro can only be called in the coroutine function, i.e. between CO_BEGIN and CO_END.
- @pre CHAN != NULL && MSG_NEXT != NULL
+ @pre `(COGO) != nullptr && !__has_side_effects(COGO)`
+ @pre `(CHAN) != nullptr && !__has_side_effects(CHAN)`
+ @pre `(MSG_NEXT) != nullptr && !__has_side_effects(MSG_NEXT)`
  @post At the time of read success (and before any other messages written by other coroutines), the size of channel is decreased by 1.
- @post MSG_NEXT->next != NULL
+ @post MSG_NEXT->next != nullptr
 
  @par Example
  @code
@@ -257,7 +259,9 @@ int cogo_chan_read(cogo_paral_t* cogo, cogo_chan_t* chan, cogo_msg_t* msg_next);
  @param[in] CHAN the channel where to send message.
  @param[out] MSG the message to send.
  @pre This macro can only be called in the coroutine function, i.e. between CO_BEGIN and CO_END, or COGO_BEGIN() and COGO_END()
- @pre CHAN != NULL && MSG != NULL
+ @pre `(COGO) != nullptr && !__has_side_effects(COGO)`
+ @pre `(CHAN) != nullptr && !__has_side_effects(CHAN)`
+ @pre `(MSG) != nullptr && !__has_side_effects(MSG)`
  @post At the time of writing success (and before any message has been read by other coroutines), the size of channel is increased by 1.
  @invariant the MSG body is not modified.
 */

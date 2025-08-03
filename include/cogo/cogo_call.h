@@ -88,6 +88,8 @@ struct cogo_call {
 /// @hideinitializer Initialize a coroutine object.
 /// @param[in] COGO The coroutine object pointer.
 /// @param[in] FUNC The coroutine function pointer.
+/// @pre `(COGO) != nullptr`
+/// @pre `(FUNC) != nullptr`
 #define COGO_INIT(COGO, FUNC)    COGO_CALL_INIT(COGO, FUNC)
 #define COGO_OF_CALL(COGO)       (COGO)
 #define COGO_OF_PT(COGO)         COGO_CALL_PT(COGO_OF_CALL(COGO))
@@ -118,7 +120,8 @@ struct cogo_callsched {
 #define COGO_SCHED_IS_VALID(SCHED)         ((SCHED) == (SCHED) && (SCHED) && COGO_CALLSCHED_IS_VALID(COGO_SCHED_CALLSCHED(SCHED)))
 
 /// Run another coroutine until finished.
-/// @pre `COGO != nullptr && !__has_side_effects(COGO) && COGO_OTHER != nullptr && !__has_side_effects(COGO_OTHER)`
+/// @pre `!__has_side_effects(COGO) && (COGO) != nullptr`
+/// @pre `!__has_side_effects(COGO_OTHER) && (COGO_OTHER) != nullptr`
 #define COGO_AWAIT(COGO, COGO_OTHER)                                                                    \
     do {                                                                                                \
         COGO_BEFORE_AWAIT((+(COGO)), (+(COGO_OTHER)));                                                  \
