@@ -23,10 +23,15 @@
 #ifndef COGO_PT_H_
 #define COGO_PT_H_
 
-/// @hideinitializer The coroutine start handler, which is invoked when the coroutine function reaches the `COGO_BEGIN` label for the first time during its execution.
+#ifndef COGO_T
+    #define COGO_T cogo_pt_t
+#endif
+typedef struct cogo_pt cogo_pt_t;
+
+/// @hideinitializer The coroutine start handler, which is invoked when the function reaches the `COGO_BEGIN` label for the first time during its execution.
 /// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
-/// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
+/// @note You should define this macro before including the header file, or redefine it after inclusion.
 #ifndef COGO_ON_BEGIN
     #define COGO_ON_BEGIN(COGO)  // noop
 #endif
@@ -84,11 +89,11 @@ extern "C" {
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
 
-typedef struct cogo_pt {
+struct cogo_pt {
     // The source line where function continues to run when reentered.
     // It should be initialized to `0`, and set to `-1` if the coroutine finished running.
     int pc;
-} cogo_pt_t;
+};
 
 #define COGO_PT_INIT()        {/*.pc=*/0}
 #define COGO_PT_PC(PT)        ((PT)->pc)
@@ -134,7 +139,6 @@ typedef struct cogo_pt {
         COGO_ON_RESUME((+(COGO))); \
     } while (0)
 
-// @pre `(COGO) != nullptr`
 #define COGO_DO_YIELD(COGO)                                                                  \
     do {                                                                                     \
         COGO_OF_PC(COGO) = __LINE__; /* 1. save the resume point (i.e., `case __LINE__:`) */ \
@@ -144,9 +148,8 @@ typedef struct cogo_pt {
 
 /// @hideinitializer Jump to COGO_END, and finish the coroutine.
 /// When a coroutine is finished, the coroutine body (between COGO_BEGIN and COGO_END) will be skipped if run again.
-/// @param[in] COGO The value of COGO should point to an object which inherit from COGO_T.
-/// And the object referenced by COGO must be the same one as passed to COGO_BEGIN and COGO_END.
-/// It must not be NULL.
+/// @param[in] COGO The value of `COGO` should point to an object which inherit from `COGO_T`.
+/// And the object referenced by `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
 /// @pre `(COGO) != nullptr`
 #define COGO_RETURN(COGO)          \
     do {                           \
@@ -155,9 +158,9 @@ typedef struct cogo_pt {
     } while (0)
 
 /// @hideinitializer A label-like macro marks the end of the coroutine.
-/// There must be a corresponding @ref COGO_BEGIN before in the same function.
-/// And there should be only one COGO_BEGIN and COGO_END in a function.
-/// @param[in] COGO The value of COGO should point to an object which inherit from COGO_T.
+/// There must be a corresponding `COGO_BEGIN` before in the same function.
+/// And there should be only one `COGO_BEGIN` and `COGO_END` in a function.
+/// @param[in] COGO The value of `COGO` should point to an object which inherit from `COGO_T`.
 /// @pre `(COGO) != nullptr && !__has_side_effects(COGO)`
 /// @pre The object referenced by `COGO` must be the same one that was passed to `COGO_BEGIN`.
 #define COGO_END(COGO)              \
@@ -170,8 +173,8 @@ cogo_return:                        \
 /// @hideinitializer Get the current running status of coroutine.
 /// @param[in] COGO Point to a coroutine object.
 /// @return An integer value indicates the coroutine is in running.
-/// @retval COGO_STATUS_BEGIN The coroutine is initialized and not invoked yet.
-/// @retval COGO_STATUS_END The coroutine has finished running.
+/// @retval `COGO_STATUS_BEGIN` The coroutine is initialized and not invoked yet.
+/// @retval `COGO_STATUS_END` The coroutine has finished running.
 /// @pre `(COGO) != nullptr`.
 #define COGO_STATUS(COGO) (+COGO_OF_PC(COGO))
 /// @hideinitializer An integer value indicates the coroutine is initialized and ready to run.
@@ -187,10 +190,6 @@ cogo_return:                        \
 #define CO_RETURN         COGO_RETURN(COGO_THIS)
 /// Abbr of `COGO_END(COGO_THIS)`.
 #define CO_END            COGO_END(COGO_THIS)
-
-#ifndef COGO_T
-    #define COGO_T cogo_pt_t
-#endif
 
 #ifdef __cplusplus
 }

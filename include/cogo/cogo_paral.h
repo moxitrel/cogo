@@ -83,11 +83,11 @@ COGO_T* cogo_paralsched_remove(cogo_paralsched_t* sched);
 extern "C" {
 #endif
 
-#undef COGO_OF_CALL
 #undef COGO_INIT
+#undef COGO_OF_CALL
 #undef COGO_IS_VALID
-#undef COGO_SCHED_CALLSCHED
 #undef COGO_SCHED_INIT
+#undef COGO_SCHED_CALLSCHED
 #undef COGO_SCHED_IS_VALID
 #undef COGO_SCHED_RESUME
 #undef COGO_RESUME

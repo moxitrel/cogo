@@ -47,8 +47,8 @@ typedef struct cogo_callsched cogo_callsched_t;
 extern "C" {
 #endif
 
-#undef COGO_OF_PT
 #undef COGO_INIT
+#undef COGO_OF_PT
 #undef COGO_IS_VALID
 
 struct cogo_call {
