@@ -13,12 +13,6 @@ COGO_QUEUE_NEXT()   : return the next element
     #define COGO_QUEUE_T(T)                   COGO_QUEUE_DO1_T(T)
     #define COGO_QUEUE_DO1_T(T)               cogo_queue_t_##T
 
-    #define COGO_QUEUE_MAKE(T)                COGO_QUEUE_DO1_MAKE(T)
-    #define COGO_QUEUE_DO1_MAKE(T)            cogo_queue_make_##T
-
-    #define COGO_QUEUE_IS_EMPTY(T)            COGO_QUEUE_DO1_IS_EMPTY(T)
-    #define COGO_QUEUE_DO1_IS_EMPTY(T)        cogo_queue_is_empty_##T
-
     #define COGO_QUEUE_REMOVE(T)              COGO_QUEUE_DO1_REMOVE(T)
     #define COGO_QUEUE_DO1_REMOVE(T)          cogo_queue_remove_##T
 
@@ -28,11 +22,14 @@ COGO_QUEUE_NEXT()   : return the next element
     #define COGO_QUEUE_REMOVE_NONEMPTY(T)     COGO_QUEUE_DO1_REMOVE_NONEMPTY(T)
     #define COGO_QUEUE_DO1_REMOVE_NONEMPTY(T) cogo_queue_remove_nonempty_##T
 
+    #define COGO_QUEUE_INITIALIZER()          {/*head=*/0, /*tail=*/0}
+    #define COGO_QUEUE_HEAD(QUEUE)            ((QUEUE)->head)
+    #define COGO_QUEUE_TAIL(QUEUE)            ((QUEUE)->tail)
+    #define COGO_QUEUE_IS_EMPTY(QUEUE)        (!(QUEUE)->head)
+
 #endif  // COGO_QUEUE_TEMPLATE_H_
 
 #define COGO_Q_T               COGO_QUEUE_T(COGO_QUEUE_VALUE_T)
-#define COGO_Q_MAKE            COGO_QUEUE_MAKE(COGO_QUEUE_VALUE_T)
-#define COGO_Q_IS_EMPTY        COGO_QUEUE_IS_EMPTY(COGO_QUEUE_VALUE_T)
 #define COGO_Q_REMOVE          COGO_QUEUE_REMOVE(COGO_QUEUE_VALUE_T)
 #define COGO_Q_ADD             COGO_QUEUE_ADD(COGO_QUEUE_VALUE_T)
 #define COGO_Q_REMOVE_NONEMPTY COGO_QUEUE_REMOVE_NONEMPTY(COGO_QUEUE_VALUE_T)
@@ -42,46 +39,33 @@ typedef struct COGO_Q_T {
     COGO_QUEUE_VALUE_T* tail;
 } COGO_Q_T;
 
-static inline COGO_Q_T COGO_Q_MAKE(void) {
-    COGO_Q_T q = {
-            /*head=*/0,
-            /*tail=*/0,
-    };
-    return q;
-}
-
-static inline int COGO_Q_IS_EMPTY(COGO_Q_T const* const q) {
-    return !q->head;
-}
-
 // dequeue, return NULL if empty
 static inline COGO_QUEUE_VALUE_T* COGO_Q_REMOVE(COGO_Q_T* const q) {
-    COGO_QUEUE_VALUE_T* node = q->head;
+    COGO_QUEUE_VALUE_T* node = COGO_QUEUE_HEAD(q);
     if (node) {
-        q->head = COGO_QUEUE_NEXT(q->head);
+        COGO_QUEUE_HEAD(q) = COGO_QUEUE_NEXT(COGO_QUEUE_HEAD(q));
     }
     return node;
 }
 
 // enqueue
 static inline void COGO_Q_ADD(COGO_Q_T* const q, COGO_QUEUE_VALUE_T* const node) {
-    if (COGO_Q_IS_EMPTY(q)) {
-        q->head = node;
+    if (COGO_QUEUE_IS_EMPTY(q)) {
+        COGO_QUEUE_HEAD(q) = node;
     } else {
-        COGO_QUEUE_NEXT(q->tail) = node;
+        COGO_QUEUE_NEXT(COGO_QUEUE_TAIL(q)) = node;
     }
-    q->tail = node;
+    COGO_QUEUE_TAIL(q) = node;
     COGO_QUEUE_NEXT(node) = 0;
 }
 
 static inline COGO_QUEUE_VALUE_T* COGO_Q_REMOVE_NONEMPTY(COGO_Q_T* const q) {
-    COGO_QUEUE_VALUE_T* node = q->head;
-    q->head = COGO_QUEUE_NEXT(q->head);
+    COGO_QUEUE_VALUE_T* node = COGO_QUEUE_HEAD(q);
+    COGO_QUEUE_HEAD(q) = COGO_QUEUE_NEXT(COGO_QUEUE_HEAD(q));
     return node;
 }
 
 #undef COGO_Q_REMOVE_NONEMPTY
 #undef COGO_Q_ADD
 #undef COGO_Q_REMOVE
-#undef COGO_Q_IS_EMPTY
 #undef COGO_Q_T

@@ -1,6 +1,6 @@
 #include "cogo/cogo_call.h"
 
-static COGO_T* cogo_callsched_resume(COGO_SCHED_T* const sched) {
+COGO_T* cogo_callsched_resume(COGO_SCHED_T* const sched) {
 #define TOP        COGO_SCHED_TOP(sched)
 #define TOP_STATUS COGO_STATUS(TOP)
 #define TOP_FUNC   COGO_OF_FUNC(TOP)
