@@ -69,11 +69,6 @@ struct cogo_call {
     } a;
 };
 
-#define COGO_CALL_PT(CALL)     (&(CALL)->pt)
-#define COGO_CALL_FUNC(CALL)   ((CALL)->func)
-#define COGO_CALL_CALLER(CALL) ((CALL)->caller)
-#define COGO_CALL_TOP(CALL)    ((CALL)->a.top)
-#define COGO_CALL_SCHED(CALL)  ((CALL)->a.sched)
 #define COGO_CALL_INIT(COGO, FUNC)   \
     {                                \
             /*.pt=*/COGO_PT_INIT(),  \
@@ -83,19 +78,23 @@ struct cogo_call {
                     /*.top=*/(COGO), \
             },                       \
     }
+#define COGO_CALL_PT(CALL)       (&(CALL)->pt)
+#define COGO_CALL_FUNC(CALL)     ((CALL)->func)
+#define COGO_CALL_CALLER(CALL)   ((CALL)->caller)
+#define COGO_CALL_TOP(CALL)      ((CALL)->a.top)
+#define COGO_CALL_SCHED(CALL)    ((CALL)->a.sched)
 #define COGO_CALL_IS_VALID(CALL) (COGO_PT_IS_VALID(COGO_CALL_PT(CALL)) && COGO_CALL_FUNC(CALL))
 
+/// @hideinitializer Initialize a coroutine object.
+/// @param[in] COGO The coroutine object pointer.
+/// @param[in] FUNC The coroutine function pointer.
+#define COGO_INIT(COGO, FUNC)    COGO_CALL_INIT(COGO, FUNC)
 #define COGO_OF_CALL(COGO)       (COGO)
 #define COGO_OF_PT(COGO)         COGO_CALL_PT(COGO_OF_CALL(COGO))
 #define COGO_OF_FUNC(COGO)       COGO_CALL_FUNC(COGO_OF_CALL(COGO))
 #define COGO_OF_CALLER(COGO)     COGO_CALL_CALLER(COGO_OF_CALL(COGO))
 #define COGO_OF_TOP(COGO)        COGO_CALL_TOP(COGO_OF_CALL(COGO))
 #define COGO_OF_SCHED(COGO)      COGO_CALL_SCHED(COGO_OF_CALL(COGO))
-
-/// @hideinitializer Initialize a coroutine object.
-/// @param[in] COGO The coroutine object pointer.
-/// @param[in] FUNC The coroutine function pointer.
-#define COGO_INIT(COGO, FUNC)    COGO_CALL_INIT(COGO, FUNC)
 #define COGO_IS_VALID(COGO)      ((COGO) == (COGO) && (COGO) && COGO_CALL_IS_VALID(COGO_OF_CALL(COGO)))
 
 struct cogo_callsched {
@@ -103,19 +102,19 @@ struct cogo_callsched {
     COGO_T* top;
 };
 
-#define COGO_CALLSCHED_TOP(CALLSCHED) ((CALLSCHED)->top)
 #define COGO_CALLSCHED_INIT(COGO) \
     {                             \
             /*.top=*/(COGO),      \
     }
+#define COGO_CALLSCHED_TOP(CALLSCHED)      ((CALLSCHED)->top)
 #define COGO_CALLSCHED_IS_VALID(CALLSCHED) ((COGO_CALLSCHED_TOP(CALLSCHED) && COGO_IS_VALID(COGO_CALLSCHED_TOP(CALLSCHED))) || !COGO_CALLSCHED_TOP(CALLSCHED))
 
-#define COGO_SCHED_CALLSCHED(SCHED)        (SCHED)
-#define COGO_SCHED_TOP(SCHED)              COGO_CALLSCHED_TOP(COGO_SCHED_CALLSCHED(SCHED))
 /// @hideinitializer Initialize a scheduler object.
 /// @param[in] COGO The coroutine object pointer.
 /// @return A scheduler object initialized with the coroutine object.
 #define COGO_SCHED_INIT(COGO)              COGO_CALLSCHED_INIT(COGO)
+#define COGO_SCHED_CALLSCHED(SCHED)        (SCHED)
+#define COGO_SCHED_TOP(SCHED)              COGO_CALLSCHED_TOP(COGO_SCHED_CALLSCHED(SCHED))
 #define COGO_SCHED_IS_VALID(SCHED)         ((SCHED) == (SCHED) && (SCHED) && COGO_CALLSCHED_IS_VALID(COGO_SCHED_CALLSCHED(SCHED)))
 
 /// Run another coroutine until finished.

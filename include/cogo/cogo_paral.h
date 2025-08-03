@@ -100,20 +100,19 @@ struct cogo_paral {
     COGO_T* next;
 };
 
-#define COGO_PARAL_CALL(PARAL) (&(PARAL)->call)
-#define COGO_PARAL_NEXT(PARAL) ((PARAL)->next)
 #define COGO_PARAL_INIT(COGO, FUNC)               \
     {                                             \
             /*.call=*/COGO_CALL_INIT(COGO, FUNC), \
             /*.next=*/0,                          \
     }
+#define COGO_PARAL_CALL(PARAL)     (&(PARAL)->call)
+#define COGO_PARAL_NEXT(PARAL)     ((PARAL)->next)
 #define COGO_PARAL_IS_VALID(PARAL) COGO_CALL_IS_VALID(COGO_PARAL_CALL(PARAL))
 
+#define COGO_INIT(COGO, FUNC)      COGO_PARAL_INIT(COGO, FUNC)
 #define COGO_OF_PARAL(COGO)        (COGO)
 #define COGO_OF_CALL(COGO)         COGO_PARAL_CALL(COGO_OF_PARAL(COGO))
 #define COGO_OF_NEXT(COGO)         COGO_PARAL_NEXT(COGO_OF_PARAL(COGO))
-
-#define COGO_INIT(COGO, FUNC)      COGO_PARAL_INIT(COGO, FUNC)
 #define COGO_IS_VALID(COGO)        ((COGO) == (COGO) && (COGO) && COGO_PARAL_IS_VALID(COGO_OF_PARAL(COGO)))
 
 #define COGO_QUEUE_VALUE_T         cogo_paral_t
@@ -145,10 +144,10 @@ struct cogo_paralsched {
 #define COGO_PARALSCHED_CQ(PARALSCHED)        (&(PARALSCHED)->cq)
 #define COGO_PARALSCHED_IS_VALID(PARALSCHED)  COGO_CALLSCHED_IS_VALID(COGO_PARALSCHED_CALLSCHED(PARALSCHED))
 
+#define COGO_SCHED_INIT(COGO)                 COGO_PARALSCHED_INIT(COGO)
 #define COGO_SCHED_PARALSCHED(SCHED)          (SCHED)
 #define COGO_SCHED_CALLSCHED(SCHED)           COGO_PARALSCHED_CALLSCHED(COGO_SCHED_PARALSCHED(SCHED))
 #define COGO_SCHED_CQ(SCHED)                  COGO_PARALSCHED_CQ(COGO_SCHED_PARALSCHED(SCHED))
-#define COGO_SCHED_INIT(COGO)                 COGO_PARALSCHED_INIT(COGO)
 #define COGO_SCHED_IS_VALID(SCHED)            ((SCHED) == (SCHED) && (SCHED) && COGO_PARALSCHED_IS_VALID(COGO_SCHED_PARALSCHED(SCHED)))
 
 /// Start a new coroutine to run concurrently.
