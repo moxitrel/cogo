@@ -23,12 +23,21 @@
 #ifndef COGO_PT_H_
 #define COGO_PT_H_
 
+#ifndef COGO_PC_T
+    #define COGO_PC_T int
+#endif
+
+/// Coroutine type
+#ifndef COGO_T
+    #define COGO_T COGO_PT_T
+#endif
+
 /// @hideinitializer The coroutine start handler, which is invoked when the function reaches the `COGO_BEGIN` label for the first time during its execution.
 /// The default behavior results in no action.
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine it after inclusion.
 #ifndef COGO_ON_BEGIN
-    #define COGO_ON_BEGIN(COGO)  // noop
+    #define COGO_ON_BEGIN(COGO) COGO_NOOP(COGO)
 #endif
 
 /// @hideinitializer The coroutine finish handler, which is invoked when the function reaches the `COGO_END` label.
@@ -36,7 +45,7 @@
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (`#undef COGO_ON_END` first, and then `#define` again) it after inclusion.
 #ifndef COGO_ON_END
-    #define COGO_ON_END(COGO)  // noop
+    #define COGO_ON_END(COGO) COGO_NOOP(COGO)
 #endif
 
 /// @hideinitializer The coroutine yield handler, which is invoked when `COGO_YIELD` is called.
@@ -44,7 +53,7 @@
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
 #ifndef COGO_ON_YIELD
-    #define COGO_ON_YIELD(COGO)  // noop
+    #define COGO_ON_YIELD(COGO) COGO_NOOP(COGO)
 #endif
 
 /// @hideinitializer Invoked when coroutine resumed (continue to run).
@@ -52,7 +61,7 @@
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
 #ifndef COGO_ON_RESUME
-    #define COGO_ON_RESUME(COGO)  // noop
+    #define COGO_ON_RESUME(COGO) COGO_NOOP(COGO)
 #endif
 
 /// @hideinitializer The coroutine return handler, which is invoked when `COGO_RETURN` is called.
@@ -60,7 +69,7 @@
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (undef first, then define again) it after inclusion.
 #ifndef COGO_ON_RETURN
-    #define COGO_ON_RETURN(COGO)  // noop
+    #define COGO_ON_RETURN(COGO) COGO_NOOP(COGO)
 #endif
 
 /// @hideinitializer The invalid pc handler, which is invoked when the coroutine's pc value isn't valid.
@@ -68,24 +77,21 @@
 /// @param[in] COGO The pointer to the current coroutine context object, which holds the states for the ongoing coroutine execution.
 /// @note You should define this macro before including the header file, or redefine (`#undef COGO_ON_END` first, and then `#define` again) it after inclusion.
 #ifndef COGO_ON_EPC
-    #define COGO_ON_EPC(COGO)  // noop
+    #define COGO_ON_EPC(COGO) COGO_NOOP(COGO)
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define COGO_NOOP(...)  // noop
+
 #if defined(COGO_DEBUG) && defined(assert)
     #define COGO_ASSERT(...) assert(__VA_ARGS__)
 #else
-    #define COGO_ASSERT(...)  // noop
+    #define COGO_ASSERT(...) COGO_NOOP(__VA_ARGS__)
 #endif
 
-#define COGO_NOOP(...)  // noop
-
-#ifndef COGO_PC_T
-    #define COGO_PC_T int
-#endif
 #define COGO_PC_BEGIN 0
 #define COGO_PC_END   (-1)
 
@@ -95,24 +101,19 @@ typedef struct cogo_pt {
     COGO_PC_T pc;
 } cogo_pt_t;
 
-#define COGO_PT_T            cogo_pt_t
-#define COGO_PT_INIT()       {/*.pc=*/0}
-#define COGO_PT_PC(PT)       ((PT)->pc)
-#define COGO_PT_IS_VALID(PT) (COGO_PT_PC(PT) >= COGO_PC_END)
-#define COGO_PT_BEGIN(PT)    COGO_DO_BEGIN(PT, PT)
-#define COGO_PT_YIELD(PT)    COGO_DO_YIELD(PT, COGO_PT_PC(PT), COGO_ON_YIELD, COGO_ON_RESUME)
-#define COGO_PT_RETURN(PT)   COGO_DO_RETURN(PT, PT)
-#define COGO_PT_END(PT)      COGO_DO_END(PT, PT)
-#define COGO_PT_STATUS(PT)   (+COGO_PT_PC(PT))
-#define CO_PT_BEGIN          COGO_PT_BEGIN(COGO_THIS)
-#define CO_PT_YIELD          COGO_PT_YIELD(COGO_THIS)
-#define CO_PT_RETURN         COGO_PT_RETURN(COGO_THIS)
-#define CO_PT_END            COGO_PT_END(COGO_THIS)
-
-/// Coroutine type
-#ifndef COGO_T
-    #define COGO_T COGO_PT_T
-#endif
+#define COGO_PT_T             cogo_pt_t
+#define COGO_PT_INIT()        {/*.pc=*/0}
+#define COGO_PT_PC(PT)        ((PT)->pc)
+#define COGO_PT_IS_VALID(PT)  (COGO_PT_PC(PT) >= COGO_PC_END)
+#define COGO_PT_BEGIN(PT)     COGO_DO_BEGIN(PT, PT)
+#define COGO_PT_YIELD(PT)     COGO_DO_YIELD(PT, COGO_ON_YIELD, COGO_ON_RESUME, PT)
+#define COGO_PT_RETURN(PT)    COGO_DO_RETURN(PT)
+#define COGO_PT_END(PT)       COGO_DO_END(PT, PT)
+#define COGO_PT_STATUS(PT)    (+COGO_PT_PC(PT))
+#define CO_PT_BEGIN           COGO_PT_BEGIN(COGO_THIS)
+#define CO_PT_YIELD           COGO_PT_YIELD(COGO_THIS)
+#define CO_PT_RETURN          COGO_PT_RETURN(COGO_THIS)
+#define CO_PT_END             COGO_PT_END(COGO_THIS)
 
 /// @hideinitializer Initialize a coroutine object.
 /// @param[in] COGO The coroutine object pointer.
@@ -132,7 +133,7 @@ typedef struct cogo_pt {
 /// @param[in] COGO The coroutine object pointer.
 /// @pre `(COGO) != nullptr && !__has_side_effects(COGO)`
 /// @pre There should be one and only one `COGO_END(COGO)` after the `COGO_BEGIN(COGO)` in a function.
-#define COGO_BEGIN(COGO)      COGO_DO_BEGIN(COGO, COGO_PT_OF(COGO))
+#define COGO_BEGIN(COGO)      COGO_DO_BEGIN(COGO_PT_OF(COGO), COGO)
 
 /// @hideinitializer Jump to `COGO_END`, and the next run will start from here.
 /// - Undefined behavior if `COGO_YIELD` used in the **case** statements.
@@ -141,14 +142,14 @@ typedef struct cogo_pt {
 /// @pre `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
 /// @post `COGO_ON_YIELD` is called if it's defined before yield.
 /// @post `COGO_ON_RESUME` is called if it's defined and the coroutine is reentered.
-#define COGO_YIELD(COGO)      COGO_DO_YIELD(COGO, COGO_PT_OF(COGO), COGO_ON_YIELD, COGO_ON_RESUME)
+#define COGO_YIELD(COGO)      COGO_DO_YIELD(COGO_PT_OF(COGO), COGO_ON_YIELD, COGO_ON_RESUME, COGO)
 
 /// @hideinitializer Jump to COGO_END, and finish the coroutine.
 /// When a coroutine is finished, the coroutine body (between COGO_BEGIN and COGO_END) will be skipped if run again.
 /// @param[in] COGO The value of `COGO` should point to an object which inherit from `COGO_T`.
 /// And the object referenced by `COGO` must be the same one as passed to `COGO_BEGIN` and `COGO_END`.
 /// @pre `(COGO) != nullptr`
-#define COGO_RETURN(COGO)     COGO_DO_RETURN(COGO, COGO_PT_OF(COGO))
+#define COGO_RETURN(COGO)     COGO_DO_RETURN(COGO)
 
 /// @hideinitializer A label-like macro marks the end of the coroutine.
 /// There must be a corresponding `COGO_BEGIN` before in the same function.
@@ -156,7 +157,7 @@ typedef struct cogo_pt {
 /// @param[in] COGO The value of `COGO` should point to an object which inherit from `COGO_T`.
 /// @pre `(COGO) != nullptr && !__has_side_effects(COGO)`
 /// @pre The object referenced by `COGO` must be the same one that was passed to `COGO_BEGIN`.
-#define COGO_END(COGO)        COGO_DO_END(COGO, COGO_PT_OF(COGO))
+#define COGO_END(COGO)        COGO_DO_END(COGO_PT_OF(COGO), COGO)
 
 /// @hideinitializer The return type of `COGO_STATUS(COGO)`.
 #define COGO_STATUS_T         COGO_PC_T
@@ -184,7 +185,7 @@ typedef struct cogo_pt {
 /// Abbr of `COGO_END(COGO_THIS)`.
 #define CO_END                COGO_END(COGO_THIS)
 
-#define COGO_DO_BEGIN(COGO, PT)                                                                    \
+#define COGO_DO_BEGIN(PT, COGO)                                                                    \
     switch (COGO_PT_PC(PT)) {                                                                      \
         default:                    /* `PC` isn't valid. */                                        \
             COGO_ON_EPC((+(COGO))); /* Convert `COGO` to an rvalue to prevent tampering. */        \
@@ -197,7 +198,7 @@ typedef struct cogo_pt {
             COGO_ON_BEGIN((+(COGO)));                                                              \
             cogo_begin /* The coroutine begin label. */
 
-#define COGO_DO_YIELD(COGO, PT, ON_YIELD, ON_RESUME)                                       \
+#define COGO_DO_YIELD(PT, ON_YIELD, ON_RESUME, COGO)                                       \
     do {                                                                                   \
         ON_YIELD((+(COGO)));                                                               \
         COGO_PT_PC(PT) = __LINE__; /* 1. save the resume point (i.e., `case __LINE__:`) */ \
@@ -206,13 +207,13 @@ typedef struct cogo_pt {
             ON_RESUME((+(COGO)));                                                          \
     } while (0)
 
-#define COGO_DO_RETURN(COGO, PT)   \
+#define COGO_DO_RETURN(COGO)       \
     do {                           \
         COGO_ON_RETURN((+(COGO))); \
         goto cogo_return;          \
     } while (0)
 
-#define COGO_DO_END(COGO, PT)     \
+#define COGO_DO_END(PT, COGO)     \
 cogo_return:                      \
     COGO_ON_END((+(COGO)));       \
     COGO_PT_PC(PT) = COGO_PC_END; \

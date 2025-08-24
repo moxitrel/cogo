@@ -1,4 +1,3 @@
-
 #include "cogo/cogo_pt.h"
 
 #include <assert.h>

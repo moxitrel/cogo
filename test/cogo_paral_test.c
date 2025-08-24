@@ -41,8 +41,8 @@ static void test_ng(void) {
 
 typedef struct consume {
     COGO_T cogo;
-    cogo_chan_t* chan;
-    cogo_msg_t msg;
+    COGO_CHAN_T* chan;
+    COGO_MSG_T msg;
 } consume_t;
 
 static void consume_func(COGO_T* COGO_THIS) {
@@ -54,7 +54,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-static consume_t consume_init(consume_t* thiz, cogo_chan_t* chan) {
+static consume_t consume_init(consume_t* thiz, COGO_CHAN_T* chan) {
     return *thiz = (consume_t){
                    .cogo = COGO_INIT(&thiz->cogo, consume_func),
                    .chan = chan,
@@ -63,8 +63,8 @@ static consume_t consume_init(consume_t* thiz, cogo_chan_t* chan) {
 
 typedef struct product {
     COGO_T cogo;
-    cogo_chan_t* chan;
-    cogo_msg_t msg;
+    COGO_CHAN_T* chan;
+    COGO_MSG_T msg;
 } product_t;
 
 static void product_func(COGO_T* COGO_THIS) {
@@ -76,7 +76,7 @@ CO_BEGIN:
 CO_END:;
 }
 
-static product_t product_init(product_t* thiz, cogo_chan_t* chan) {
+static product_t product_init(product_t* thiz, COGO_CHAN_T* chan) {
     return *thiz = (product_t){
                    .cogo = COGO_INIT(&thiz->cogo, product_func),
                    .chan = chan,
@@ -108,7 +108,7 @@ static entry_t entry_init(entry_t* thiz, consume_t* r, product_t* w) {
 }
 
 static void test_chan(void) {
-    cogo_chan_t c = COGO_CHAN_INIT(0);
+    COGO_CHAN_T c = COGO_CHAN_INIT(0);
     consume_t r = consume_init(&r, &c);
     product_t w = product_init(&w, &c);
     entry_t m = entry_init(&m, &r, &w);

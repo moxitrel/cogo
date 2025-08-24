@@ -100,20 +100,20 @@ int cogo_chan_read(COGO_T* const cogo, COGO_CHAN_T* const chan, COGO_MSG_T* cons
     long chan_size;
     COGO_ASSERT(COGO_IS_VALID(cogo) && COGO_CHAN_IS_VALID(chan) && msg_next);
 
-    chan_size = chan->size--;
+    chan_size = COGO_CHAN_SIZE(chan)--;
     if (chan_size <= 0) {
-        COGO_MQ_ADD(&chan->mq, msg_next);
+        COGO_CHAN_ADD_MSG(chan, msg_next);
         // sleep in background
-        COGO_CQ_ADD(&chan->cq, cogo);  // append to blocking queue
-        SCHED_TOP = 0;                 // remove from scheduler
-        return 1;                      // switch context
+        COGO_CHAN_ADD_COGO(chan, cogo);  // append to blocking queue
+        SCHED_TOP = 0;                   // remove from scheduler
+        return 1;                        // switch context
     } else {
-        msg_next->next = COGO_MQ_REMOVE_NONEMPTY(&chan->mq);
-        if (chan_size <= chan->capacity) {
+        COGO_MSG_NEXT(msg_next) = COGO_CHAN_REMOVE_MSG(chan);
+        if (chan_size <= COGO_CHAN_MAXSIZE(chan)) {
             return 0;
         } else {
             // wake up a writer
-            return COGO_SCHED_ADD(SCHED, COGO_CQ_REMOVE_NONEMPTY(&chan->cq));
+            return COGO_SCHED_ADD(SCHED, COGO_CHAN_REMOVE_COGO_NONEMPTY(chan));
         }
     }
 
@@ -127,18 +127,18 @@ int cogo_chan_write(COGO_T* const cogo, COGO_CHAN_T* const chan, COGO_MSG_T* con
     long chan_size;
     COGO_ASSERT(COGO_IS_VALID(cogo) && COGO_CHAN_IS_VALID(chan) && msg);
 
-    chan_size = chan->size++;
+    chan_size = COGO_CHAN_SIZE(chan)++;
     if (chan_size < 0) {
-        COGO_MQ_REMOVE_NONEMPTY(&chan->mq)->next = msg;
+        COGO_MSG_NEXT(COGO_CHAN_REMOVE_MSG_NONEMPTY(chan)) = msg;
         // wake up a reader
-        return COGO_SCHED_ADD(SCHED, COGO_CQ_REMOVE_NONEMPTY(&chan->cq));
+        return COGO_SCHED_ADD(SCHED, COGO_CHAN_REMOVE_COGO_NONEMPTY(chan));
     } else {
-        COGO_MQ_ADD(&chan->mq, msg);
-        if (chan_size < chan->capacity) {
+        COGO_CHAN_ADD_MSG(chan, msg);
+        if (chan_size < COGO_CHAN_MAXSIZE(chan)) {
             return 0;
         } else {
             // sleep in background
-            COGO_CQ_ADD(&chan->cq, cogo);
+            COGO_CHAN_ADD_COGO(chan, cogo);
             SCHED_TOP = 0;
             return 1;
         }
